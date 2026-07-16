@@ -159,12 +159,11 @@ function Footer() {
             </div>
           </div>
           <div className="footer-cols">
-            {f.cols.map((col) =>
-            <div className="footer-col" key={col.h}>
-                <h5>{col.h}</h5>
-                {col.links.map((l) => <a key={l} href="#">{l}</a>)}
-              </div>
-            )}
+<a href="/privacy-policy.html">Privacy Policy</a>  
+<a href="/terms.html">Terms & Conditions</a>       
+<a href="/terms.html">Terms & Conditions</a> 
+<a href="/refund-policy.html">Refund Policy</a>
+<a href="/contact.html">Contact Us</a>
           </div>
         </div>
         <p style={{ font: "var(--caption)", color: "rgba(243,245,239,.4)", marginTop: 40, maxWidth: 760 }}>{f.disclaimer}</p>

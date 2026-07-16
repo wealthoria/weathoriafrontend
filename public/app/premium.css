@@ -1,0 +1,204 @@
+/* =========================================================================
+   Wealthoria — Premium theme overlay (v2, retargeted to REAL page classes)
+   Minimalist skeuomorphism + glassmorphism, restrained and elegant:
+   - Glass: translucent surfaces + backdrop blur + light "glass edge"
+   - Soft skeuo: dual-light shadows, embossed icon chips, tactile presses
+   Loads AFTER site.css and only refines existing components.
+   Real surfaces: .pathcard .feat(.s-*) .prog .sem .formcard .lib .tst
+                  .faq-item .founder-card .metric — chips: .iconwrap .step .num
+   ========================================================================= */
+
+:root {
+  --glass-bg: rgba(255, 255, 255, .62);
+  --glass-bg-strong: rgba(255, 255, 255, .78);
+  --glass-edge: rgba(255, 255, 255, .85);
+  --glass-shadow: 0 18px 44px rgba(20, 21, 15, .10), 0 2px 8px rgba(20, 21, 15, .05);
+  --emboss-hi: rgba(255, 255, 255, .9);
+  --emboss-lo: rgba(20, 21, 15, .10);
+}
+[data-theme="dark"] {
+  --glass-bg: rgba(26, 28, 22, .55);
+  --glass-bg-strong: rgba(26, 28, 22, .74);
+  --glass-edge: rgba(255, 255, 255, .10);
+  --glass-shadow: 0 18px 44px rgba(0, 0, 0, .42), 0 2px 8px rgba(0, 0, 0, .3);
+  --emboss-hi: rgba(255, 255, 255, .06);
+  --emboss-lo: rgba(0, 0, 0, .5);
+}
+
+/* ---------- glass surfaces (white/neutral cards) ---------- */
+.pathcard,
+.feat.s-white,
+.prog,
+.sem,
+.formcard,
+.lib,
+.tst,
+.faq-item,
+.founder-card,
+.card {
+  background: var(--glass-bg) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--hair),
+    var(--glass-shadow) !important;
+}
+
+/* tinted feature variants keep their hue as translucent glass */
+.feat.s-pale {
+  background: color-mix(in srgb, var(--primary-pale) 72%, transparent) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: inset 0 1px 0 var(--glass-edge), var(--glass-shadow);
+}
+.feat.s-soft {
+  background: color-mix(in srgb, var(--canvas-soft) 62%, transparent) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--glass-edge), var(--glass-shadow);
+}
+/* the dark "polarity flip" card becomes smoked glass */
+.feat.s-ink {
+  background: color-mix(in srgb, var(--surface-ink) 82%, transparent) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 20px 46px rgba(0, 0, 0, .28) !important;
+}
+
+/* metric band: glass strip */
+.metric {
+  background: var(--glass-bg) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--glass-edge);
+}
+
+/* nav + drawer: deeper frosted glass */
+.nav {
+  background: color-mix(in srgb, var(--canvas) 55%, transparent) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: inset 0 -1px 0 var(--hair), 0 4px 24px rgba(20, 21, 15, .04) !important;
+}
+.drawer {
+  background: var(--glass-bg-strong) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+
+/* ---------- minimalist skeuomorphism ---------- */
+/* icon chips: gently embossed, lit from above */
+.iconwrap,
+.step .num,
+.tst .who .av,
+.pathcard .pnum {
+  background-image: linear-gradient(165deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 55%);
+  box-shadow:
+    inset 0 1px 0 var(--emboss-hi),
+    inset 0 -1px 2px var(--emboss-lo),
+    0 2px 5px rgba(20, 21, 15, .08);
+}
+[data-theme="dark"] .iconwrap, [data-theme="dark"] .step .num {
+  background-image: linear-gradient(165deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0) 55%);
+}
+
+/* primary buttons: top sheen + soft coral lift; pressed = sunken */
+.btn-green {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 46%), linear-gradient(120deg, var(--brand-coral, #e8473f), var(--brand-orange, #f4823c)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .32),
+    0 8px 20px rgba(232, 71, 63, .26),
+    0 2px 5px rgba(232, 71, 63, .18) !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .12);
+}
+.btn-green:hover { filter: brightness(1.05); }
+.btn-green:active {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .22), 0 2px 6px rgba(232, 71, 63, .16) !important;
+  transform: translateY(1px) scale(.985);
+}
+
+/* outline buttons: faint glass pills with a tactile press */
+.btn-outline, .btn-ghost {
+  background: color-mix(in srgb, var(--canvas) 40%, transparent) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--hair-strong) !important;
+}
+.btn-outline:active, .btn-ghost:active { box-shadow: inset 0 2px 5px var(--emboss-lo) !important; transform: translateY(1px); }
+
+/* inputs: softly carved-in fields */
+.input, .textarea, .select, .field input, .field textarea, .field select {
+  background: color-mix(in srgb, var(--canvas-soft) 55%, var(--canvas)) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(20, 21, 15, .07),
+    inset 0 0 0 1px var(--hair-strong) !important;
+}
+.input:focus, .textarea:focus, .select:focus, .field input:focus, .field textarea:focus {
+  box-shadow: inset 0 2px 4px rgba(20, 21, 15, .05), inset 0 0 0 2px var(--brand-coral, #e8473f) !important;
+}
+
+/* nav pills read as tactile glass toggles */
+.theme-toggle, .lang-toggle, .nav-login, .slider-ctl .arrow {
+  background: var(--glass-bg) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--hair) !important;
+}
+.theme-toggle:active, .slider-ctl .arrow:active { box-shadow: inset 0 2px 5px var(--emboss-lo) !important; }
+
+/* card hover: slightly more lift, still calm */
+.feat:hover, .prog:hover, .lib:hover {
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--hair-strong),
+    0 26px 56px rgba(20, 21, 15, .14), 0 4px 12px rgba(20, 21, 15, .06) !important;
+}
+.feat.s-ink:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 26px 56px rgba(0, 0, 0, .34) !important; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .pathcard, .feat, .prog, .lib, .tst { transition: transform .22s var(--ease, ease), box-shadow .22s var(--ease, ease); }
+}
+
+
+/* =========================================================================
+   PREMIUM PATTERNS (approved from rig.ai study)
+   #1 ticker  #2 numbered sections  #3 narrative band  #4 stat blocks
+   ========================================================================= */
+
+/* ---- #1 marquee ticker ---- */
+.ticker { overflow: hidden; background: var(--surface-ink); color: var(--on-ink); padding: 13px 0; position: relative; }
+.ticker-track { display: flex; width: max-content; animation: wl-tick 28s linear infinite; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker .ti { display: inline-flex; align-items: center; gap: 18px; padding: 0 18px; font: var(--body-sm-strong); letter-spacing: .04em; white-space: nowrap; color: rgba(244,243,236,.85); }
+.ticker .ti::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-orange, #f4823c); flex: 0 0 auto; }
+@keyframes wl-tick { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+
+/* ---- #2 numbered sections ---- */
+.idx { font-family: var(--font-display); font-weight: 800; font-size: 13px; letter-spacing: .14em; color: var(--brand-coral, #e8473f); opacity: .85; display: inline-flex; align-items: center; gap: 8px; }
+.idx::after { content: ""; width: 26px; height: 1.5px; background: currentColor; opacity: .45; }
+.feat .idx { margin-bottom: 2px; }
+.feat.s-ink .idx { color: var(--brand-orange, #f4823c); }
+.faq-num { font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--brand-coral, #e8473f); margin-right: 14px; flex: 0 0 auto; }
+
+/* ---- #3 narrative band ---- */
+.narrative { background: var(--surface-ink); color: var(--on-ink); border-radius: var(--rounded-xl); padding: 64px 48px; position: relative; overflow: hidden; }
+@media (max-width: 640px) { .narrative { padding: 44px 28px; } }
+.narrative::after { content: ""; position: absolute; right: -120px; bottom: -140px; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(232,71,63,.22), transparent 68%); pointer-events: none; }
+.narrative .n-idx { color: var(--brand-orange, #f4823c); }
+.narrative h2 { font: var(--display-md); font-size: clamp(28px, 4.4vw, 46px); color: rgba(244,243,236,.55); margin: 20px 0 0; max-width: 22ch; line-height: 1.12; }
+.narrative h2 em { font-style: normal; color: #fff; }
+.narrative .resolve { margin-top: 28px; display: flex; align-items: center; gap: 14px; }
+.narrative .resolve .line { flex: 0 0 44px; height: 2px; background: var(--brand-coral, #e8473f); }
+.narrative .resolve b { font-family: var(--font-display); font-weight: 800; font-size: clamp(22px, 3vw, 32px); color: var(--brand-coral, #e8473f); letter-spacing: -.01em; }
+.narrative p.sub { font: var(--body-md); color: rgba(244,243,236,.66); margin: 18px 0 0; max-width: 52ch; position: relative; z-index: 1; }
+
+/* ---- #4 stat blocks ---- */
+.statband { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border-radius: var(--rounded-xl); overflow: hidden; }
+@media (min-width: 860px) { .statband { grid-template-columns: repeat(4, 1fr); } }
+.statb { background: var(--glass-bg, var(--canvas)); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); padding: 28px 26px; box-shadow: inset 0 1px 0 var(--glass-edge); }
+.statb .sl { font: var(--caption); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--mute); display: flex; align-items: center; gap: 8px; }
+.statb .sl i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-coral, #e8473f); flex: 0 0 auto; }
+.statb .sn { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -.02em; color: var(--ink); line-height: 1.05; margin-top: 10px; }
+.statb .sc { font: var(--body-sm); color: var(--body); margin-top: 8px; }

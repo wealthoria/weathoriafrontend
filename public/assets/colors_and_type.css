@@ -1,0 +1,127 @@
+/* =========================================================================
+   Wealthoria Design System — Color & Type Foundations
+   -------------------------------------------------------------------------
+   Single source of truth for base tokens + semantic CSS variables.
+   Import this file anywhere: <link rel="stylesheet" href="colors_and_type.css">
+
+   NOTE ON FONTS:
+   The brand's proprietary display face ("Wise Sans", weight 900) is not
+   distributable. Per the brand's own substitution guidance we ship
+   **Manrope** (weight 800/900) as the display face and **Inter** for
+   sub-display + body. Swap @font-face / --font-display if licensed files
+   are provided.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Manrope:wght@600;700;800;900&display=swap');
+
+:root {
+  /* ---- Font families ---------------------------------------------------- */
+  --font-display: 'Manrope', 'Inter', system-ui, sans-serif; /* Wise Sans substitute */
+  --font-sans:    'Inter', system-ui, -apple-system, sans-serif;
+
+  /* =======================================================================
+     BRAND & ACCENT
+     ===================================================================== */
+  --primary:          #9fe870;  /* Wealthoria Green — universal CTA color   */
+  --primary-active:   #cdffad;  /* lighter green, active state              */
+  --primary-neutral:  #c5edab;  /* mid-saturation neutral active fill       */
+  --primary-pale:     #e2f6d5;  /* lightest green, soft surface / badge bg  */
+  --on-primary:       #163300;  /* deep-forest ink for text on green        */
+
+  /* =======================================================================
+     SURFACE
+     ===================================================================== */
+  --canvas:           #ffffff;  /* pure white — card interiors              */
+  --canvas-soft:      #e8ebe6;  /* sage-tinted page background (brand mood)  */
+
+  /* =======================================================================
+     TEXT
+     ===================================================================== */
+  --ink:              #0e0f0c;  /* near-black w/ olive warmth — default text */
+  --ink-deep:         #163300;  /* deep forest-green ink on positive surfaces*/
+  --body:             #454745;  /* secondary body text                      */
+  --mute:             #868685;  /* lowest priority — captions, placeholders  */
+
+  /* =======================================================================
+     SEMANTIC
+     ===================================================================== */
+  --positive:          #2ead4b;
+  --positive-deep:     #054d28;
+  --warning:           #ffd11a;
+  --warning-deep:      #b86700;
+  --warning-content:   #4a3b1c;
+  --negative:          #d03238;
+  --negative-deep:     #a72027;
+  --negative-darkest:  #a7000d;
+  --negative-bg:       #320707;
+
+  /* =======================================================================
+     TERTIARY / ILLUSTRATION ACCENTS (decorative use only — never CTAs)
+     ===================================================================== */
+  --accent-orange:    #ffc091;
+  --accent-cyan:      #38c8ff;
+
+  /* =======================================================================
+     SPACING  (base unit 4px)
+     ===================================================================== */
+  --space-xxs: 2px;
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  12px;
+  --space-lg:  16px;
+  --space-xl:  24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* =======================================================================
+     RADII
+     ===================================================================== */
+  --rounded-none: 0px;
+  --rounded-sm:   8px;
+  --rounded-md:   12px;
+  --rounded-lg:   16px;
+  --rounded-xl:   24px;   /* canonical button + card radius */
+  --rounded-pill: 9999px;
+  --rounded-full: 9999px;
+
+  /* =======================================================================
+     TYPE SCALE  (token: size / weight / line-height / tracking)
+     The brand has no shadow system — elevation is surface contrast.
+     ===================================================================== */
+  --display-mega:      900 126px/107.1px var(--font-display);
+  --display-xxl:       900 96px/81.6px   var(--font-display);
+  --display-xl:        900 64px/54.4px    var(--font-display);
+  --display-lg:        400 47px/70.5px    var(--font-sans);
+  --display-md:        900 40px/34px      var(--font-display);
+  --display-sm:        600 32px/38.4px    var(--font-sans);
+  --display-xs:        600 24px/31.2px    var(--font-sans);
+  --body-lg:           400 20px/30px      var(--font-sans);
+  --body-md:           400 16px/24px      var(--font-sans);
+  --body-md-strong:    600 16px/24px      var(--font-sans);
+  --body-sm:           400 14px/20px      var(--font-sans);
+  --body-sm-strong:    600 14px/20px      var(--font-sans);
+  --caption:           400 12px/16px      var(--font-sans);
+  --button-md:         600 16px/24px      var(--font-sans);
+}
+
+/* ==========================================================================
+   SEMANTIC TYPOGRAPHY HELPERS
+   Apply directly as classes, or copy the declarations into your own rules.
+   ========================================================================== */
+
+.t-display-mega { font: var(--display-mega); letter-spacing: 0;        color: var(--ink); }
+.t-display-xxl  { font: var(--display-xxl);  letter-spacing: 0;        color: var(--ink); }
+.t-display-xl   { font: var(--display-xl);   letter-spacing: 0;        color: var(--ink); }
+.t-display-lg   { font: var(--display-lg);   letter-spacing: -0.108px; color: var(--ink); }
+.t-display-md   { font: var(--display-md);   letter-spacing: 0;        color: var(--ink); }
+.t-display-sm   { font: var(--display-sm);   letter-spacing: -0.96px;  color: var(--ink); }
+.t-display-xs   { font: var(--display-xs);   letter-spacing: -0.48px;  color: var(--ink); }
+.t-body-lg      { font: var(--body-lg);      color: var(--body); }
+.t-body-md      { font: var(--body-md);      color: var(--body); }
+.t-body-md-strong { font: var(--body-md-strong); color: var(--ink); }
+.t-body-sm      { font: var(--body-sm);      color: var(--body); }
+.t-body-sm-strong { font: var(--body-sm-strong); color: var(--ink); }
+.t-caption      { font: var(--caption);      color: var(--mute); }
+
+/* Inter uses contextual alternates throughout the brand */
+body { font-feature-settings: "calt"; }

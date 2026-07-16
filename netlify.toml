@@ -1,0 +1,14 @@
+# SPA-ish multi-page: serve files directly; fall back to landing for unknown paths.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/"
+  to = "/Wealthoria.html"
+  status = 302
+
+[[redirects]]
+  from = "/*"
+  to = "/Wealthoria.html"
+  status = 404

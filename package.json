@@ -1,0 +1,15 @@
+{
+  "name": "wealthoria",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Wealthoria Education — marketing site, student portal, member workspace, control panel, and student dashboard. PWA-ready.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

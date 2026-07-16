@@ -1,0 +1,44 @@
+{
+  "name": "Wealthoria — Learning is the first investment",
+  "short_name": "Wealthoria",
+  "description": "Financial literacy and investment education for first-time investors across Karnataka. Learn in Kannada and English.",
+  "id": "/",
+  "start_url": "Wealthoria.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#e8ebe6",
+  "theme_color": "#e8473f",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "finance"],
+  "icons": [
+    { "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-any.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start learning",
+      "short_name": "Learn",
+      "description": "Browse Wealthoria learning programs",
+      "url": "Wealthoria.html#programs",
+      "icons": [{ "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Student login",
+      "short_name": "Student",
+      "description": "Access your courses and progress",
+      "url": "Student Portal.html",
+      "icons": [{ "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Member workspace",
+      "short_name": "Members",
+      "description": "Content, courses and admin tools",
+      "url": "Member Portal.html",
+      "icons": [{ "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

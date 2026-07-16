@@ -9,7 +9,32 @@
 
 <h1>🔴 Wealthoria Live Webinar</h1>
 
-<p>Loading webinar...</p>
+<div id="player">
+    Loading webinar...
+</div>
+
+<script>
+async function loadWebinar() {
+    try {
+
+        const response = await fetch("http://localhost:10000/api/live/token");
+
+        const data = await response.json();
+
+        console.log(data);
+
+        document.getElementById("player").innerHTML =
+            "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById("player").innerHTML =
+            "<h2>Unable to load webinar.</h2>";
+    }
+}
+
+loadWebinar();
+</script>
 
 </body>
 </html>

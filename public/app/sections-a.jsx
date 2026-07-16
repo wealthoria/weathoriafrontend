@@ -18,7 +18,11 @@ function NavBar({ onNav }) {
           <nav className="nav-links">
             {t.nav.links.map((l) =>
             <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>
+            
             )}
+             <a href="live-webinar.html">
+    🔴 Live Webinar
+  </a>
           </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">

@@ -1,41 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wealthoria Live Webinar</title>
-</head>
-<body>
+<div style="max-width:1000px;margin:auto;">
+  <!-- Live Player -->
+  <iframe
+    id="livePlayer"
+    style="border:0;width:100%;aspect-ratio:16/9;"
+    allow="autoplay; fullscreen"
+    allowfullscreen>
+  </iframe>
 
-<h1>🔴 Wealthoria Live Webinar</h1>
-
-<div id="player">
-    Loading webinar...
+  <!-- Chat -->
+  <iframe
+    id="liveChat"
+    style="border:0;width:100%;height:600px;margin-top:20px;">
+  </iframe>
 </div>
 
 <script>
-async function loadWebinar() {
+async function loadLive() {
     try {
-
-const response = await fetch(
-  "https://webinar-registration-backend.onrender.com/api/live/token"
-);
+        const response = await fetch("https://webinar-registration-backend.onrender.com/api/live/token");
         const data = await response.json();
 
-        console.log(data);
+        if (!data.success) {
+            throw new Error("Token generation failed");
+        }
 
-        document.getElementById("player").innerHTML =
-            "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        const token = data.token;
+        const liveId = "8c3fa815c4e04cefbd72b0e07b883675";
 
+        document.getElementById("livePlayer").src =
+            `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
+
+        document.getElementById("liveChat").src =
+            `https://zenstream.chat?liveId=${liveId}&token=${token}`;
     } catch (err) {
-        console.error(err);
-        document.getElementById("player").innerHTML =
-            "<h2>Unable to load webinar.</h2>";
+        console.error("Error loading live stream:", err);
     }
 }
 
-loadWebinar();
+loadLive();
 </script>
-
-</body>
-</html>

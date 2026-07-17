@@ -23,28 +23,31 @@
         style="border:0;width:100%;height:600px;margin-top:20px;">
     </iframe>
 </div>
-
 <script>
+const webinarStart = new Date("2026-07-18T19:00:00+05:30");
 
-const webinarStart = new Date("2026-07-18T19:00:00+05:30"); // Change this
+function showLive() {
+    document.getElementById("countdownContainer").style.display = "none";
+    document.getElementById("liveContainer").style.display = "block";
+    loadLive();
+}
 
 function startCountdown() {
+
+    // If webinar has already started
+    if (new Date() >= webinarStart) {
+        showLive();
+        return;
+    }
 
     const timer = setInterval(() => {
 
         const now = new Date();
-
         const diff = webinarStart - now;
 
         if (diff <= 0) {
-
             clearInterval(timer);
-
-            document.getElementById("countdownContainer").style.display = "none";
-            document.getElementById("liveContainer").style.display = "block";
-
-            loadLive();
-
+            showLive();
             return;
         }
 
@@ -60,10 +63,10 @@ function startCountdown() {
 }
 
 async function loadLive() {
-
     try {
-
-        const response = await fetch("https://webinar-registration-backend.onrender.com/api/live/token");
+        const response = await fetch(
+            "https://webinar-registration-backend.onrender.com/api/live/token"
+        );
 
         const data = await response.json();
 
@@ -81,10 +84,9 @@ async function loadLive() {
             `https://zenstream.chat?liveId=${liveId}&token=${token}`;
 
     } catch (err) {
-        console.error(err);
+        console.error("Live loading failed:", err);
     }
 }
 
 startCountdown();
-
 </script>

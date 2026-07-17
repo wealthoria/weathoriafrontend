@@ -31,22 +31,14 @@ function showLive() {
     document.getElementById("liveContainer").style.display = "block";
     loadLive();
 }
-
 function startCountdown() {
 
-    // If webinar has already started
-    if (new Date() >= webinarStart) {
-        showLive();
-        return;
-    }
-
-    const timer = setInterval(() => {
+    function updateCountdown() {
 
         const now = new Date();
         const diff = webinarStart - now;
 
         if (diff <= 0) {
-            clearInterval(timer);
             showLive();
             return;
         }
@@ -58,10 +50,18 @@ function startCountdown() {
 
         document.getElementById("countdown").innerHTML =
             `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
 
+    updateCountdown(); // Show immediately
+    const timer = setInterval(() => {
+        if (new Date() >= webinarStart) {
+            clearInterval(timer);
+            showLive();
+            return;
+        }
+        updateCountdown();
     }, 1000);
 }
-
 async function loadLive() {
     try {
         const response = await fetch(
@@ -88,5 +88,5 @@ async function loadLive() {
     }
 }
 
-showLive();
+startCountdown();
 </script>

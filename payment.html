@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webinar Registration</title>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f6f8;
+}
+
+.section{
+    padding:60px 20px;
+}
+
+.wrap{
+    max-width:500px;
+    margin:auto;
+}
+
+.form-card{
+    background:#fff;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+.eyebrow{
+    color:#0F766E;
+    font-weight:bold;
+    letter-spacing:1px;
+}
+
+h2{
+    margin-top:10px;
+    margin-bottom:25px;
+}
+
+.form-group{
+    margin-bottom:18px;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:600;
+}
+
+.required{
+    color:red;
+}
+
+input[type=text],
+input[type=email],
+input[type=tel]{
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    box-sizing:border-box;
+}
+
+.check{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:15px 0;
+    font-weight:normal;
+}
+
+.error{
+    color:red;
+    font-size:14px;
+}
+
+.error-input{
+    border:1px solid red;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:6px;
+    background:#0F766E;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:disabled{
+    opacity:.7;
+}
+</style>
+
+</head>
+<body>
+
+<section class="section">
+<div class="wrap">
+<div class="form-card">
+
+<span class="eyebrow">REGISTER NOW</span>
+
+<h2>Reserve Your Seat - TEST 123</h2>
+
+<form id="registrationForm">
+
+<div class="form-group">
+<label>Full Name <span class="required">*</span></label>
+
+<input
+type="text"
+id="fullName"
+placeholder="Enter your full name">
+
+<div id="fullNameError" class="error"></div>
+
+</div>
+
+<div class="form-group">
+
+<label>Email Address <span class="required">*</span></label>
+
+<input
+type="email"
+id="email"
+placeholder="Enter your email address">
+
+<div id="emailError" class="error"></div>
+
+</div>
+
+<div class="form-group">
+
+<label>WhatsApp Number <span class="required">*</span></label>
+
+<input
+type="tel"
+id="phone"
+maxlength="10"
+placeholder="Enter your WhatsApp Number">
+
+<div id="phoneError" class="error"></div>
+
+</div>
+
+<div class="form-group">
+
+<label>Place</label>
+
+<input
+type="text"
+id="place"
+placeholder="Enter your place (Optional)">
+
+</div>
+
+<label class="check">
+<input type="checkbox" id="agree">
+I agree to the Terms & Conditions.
+</label>
+
+<div id="agreeError" class="error"></div>
+
+<button id="submitBtn" type="submit">
+Proceed to Payment
+</button>
+
+</form>
+
+</div>
+</div>
+</section>
+
+<script>
+
+//========================
+// CHANGE THESE
+//========================
+
+const API_URL = "https://YOUR_BACKEND_URL";
+const RAZORPAY_KEY = "YOUR_RAZORPAY_KEY";
+
+//========================
+
+const form=document.getElementById("registrationForm");
+const submitBtn=document.getElementById("submitBtn");
+
+document.getElementById("phone").addEventListener("input",function(){
+
+this.value=this.value.replace(/\D/g,'').slice(0,10);
+
+});
+
+form.addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+document.querySelectorAll(".error").forEach(el=>el.innerHTML="");
+document.querySelectorAll("input").forEach(el=>el.classList.remove("error-input"));
+
+const fullName=document.getElementById("fullName").value.trim();
+const email=document.getElementById("email").value.trim();
+const phone=document.getElementById("phone").value.trim();
+const place=document.getElementById("place").value.trim();
+const agree=document.getElementById("agree").checked;
+
+let valid=true;
+
+if(fullName===""){
+document.getElementById("fullNameError").innerHTML="Full Name is required";
+document.getElementById("fullName").classList.add("error-input");
+valid=false;
+}
+
+if(email===""){
+document.getElementById("emailError").innerHTML="Email Address is required";
+document.getElementById("email").classList.add("error-input");
+valid=false;
+}
+else if(!/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(email)){
+document.getElementById("emailError").innerHTML="Please enter a valid Gmail address.";
+document.getElementById("email").classList.add("error-input");
+valid=false;
+}
+
+if(phone===""){
+document.getElementById("phoneError").innerHTML="WhatsApp Number is required";
+document.getElementById("phone").classList.add("error-input");
+valid=false;
+}
+else if(!/^[6-9][0-9]{9}$/.test(phone)){
+document.getElementById("phoneError").innerHTML="Enter a valid 10-digit WhatsApp number.";
+document.getElementById("phone").classList.add("error-input");
+valid=false;
+}
+
+if(!agree){
+document.getElementById("agreeError").innerHTML="Please accept the Terms & Conditions";
+valid=false;
+}
+
+if(!valid) return;
+
+submitBtn.disabled=true;
+submitBtn.innerHTML="Please Wait...";
+
+try{
+
+const orderResponse=await fetch(API_URL+"/api/payment/create-order",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+amount:5
+})
+
+});
+
+const order=await orderResponse.json();
+
+const options={
+
+key:RAZORPAY_KEY,
+
+amount:order.amount,
+
+currency:order.currency,
+
+name:"Wealthoria Education",
+
+description:"Webinar Registration",
+
+order_id:order.id,
+
+handler:async function(response){
+
+const registerResponse=await fetch(API_URL+"/api/webinar/register",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+fullName,
+
+email,
+
+phone,
+
+place,
+
+paymentId:response.razorpay_payment_id,
+
+orderId:response.razorpay_order_id
+
+})
+
+});
+
+const result=await registerResponse.json();
+
+if(result.success){
+
+alert("Registration Successful!");
+
+form.reset();
+
+}else{
+
+alert(result.message);
+
+}
+
+submitBtn.disabled=false;
+submitBtn.innerHTML="Proceed to Payment";
+
+},
+
+prefill:{
+name:fullName,
+email:email,
+contact:phone
+},
+
+theme:{
+color:"#0F766E"
+}
+
+};
+
+const rzp=new Razorpay(options);
+
+rzp.open();
+
+}catch(err){
+
+console.error(err);
+
+alert("Unable to connect to the server.");
+
+submitBtn.disabled=false;
+submitBtn.innerHTML="Proceed to Payment";
+
+}
+
+});
+
+</script>
+
+</body>
+</html>

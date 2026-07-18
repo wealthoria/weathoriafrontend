@@ -17,6 +17,8 @@ const CONTENT = {
         { id: "seminars", label: "Seminars" },
         { id: "resources", label: "Resources" },
         { id: "about", label: "About" },
+         { id: "register", label: "Register" },
+
       ],
       cta: "Book consultation",
     },
@@ -227,6 +229,7 @@ const CONTENT = {
         { h: "Company", links: ["About us", "Founder vision", "Careers", "Contact"] },
         { h: "Resources", links: ["Beginner's guide", "Calculators", "Glossary", "Blog"] },
         { h: "Legal", links: ["Privacy policy", "Terms of use", "Disclaimer", "Refund policy"] },
+
       ],
       disclaimer: "Wealthoria provides financial education only and does not offer investment advisory or guaranteed returns. Investments are subject to market risks.",
       copyright: "© 2026 Wealthoria Education Private Limited",

@@ -20,8 +20,8 @@ function NavBar({ onNav }) {
             <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>
             
             )}
-             <a href="live-webinar.html">
-    🔴 Live Webinar
+             <a href="payment.html">
+   Register for Live Webinar
   </a>
           </nav>
           <div className="nav-right">

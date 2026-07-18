@@ -3,7 +3,19 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "cleanUrls": false,
+
+  "rewrites": [
+    {
+      "source": "/wealthoria",
+      "destination": "/Wealthoria.html"
+    }
+  ],
+
   "redirects": [
-    { "source": "/", "destination": "/Wealthoria.html", "permanent": false }
+    {
+      "source": "/",
+      "destination": "/wealthoria",
+      "permanent": false
+    }
   ]
 }

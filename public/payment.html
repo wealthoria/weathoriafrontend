@@ -312,16 +312,11 @@ orderId:response.razorpay_order_id,amount:order.amount
 
 const result=await registerResponse.json();
 
-if(result.success){
-
-alert("Registration Successful!");
-
-form.reset();
-
-}else{
-
-alert(result.message);
-
+if (result.success) {
+    // Redirect to thank you page
+    window.location.href = "/thankyou.html";
+} else {
+    alert(result.message);
 }
 
 submitBtn.disabled=false;

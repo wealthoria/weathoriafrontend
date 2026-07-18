@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/wealthoria",
-      "destination": "/Wealthoria.html"
+      "destination": "/Wealthoria"
     }
   ],
 

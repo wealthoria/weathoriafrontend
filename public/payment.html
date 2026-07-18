@@ -252,6 +252,20 @@ submitBtn.innerHTML="Please Wait...";
 
 try{
 
+
+    const checkResponse = await fetch(
+  `${API_URL}/api/webinar/check-email?email=${encodeURIComponent(email)}`
+);
+
+const checkResult = await checkResponse.json();
+
+if (checkResult.exists) {
+  alert("This email is already registered for the webinar.");
+
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = "Proceed to Payment";
+  return;
+}
 const orderResponse=await fetch(API_URL+"/api/payment/create-order",{
 
 method:"POST",

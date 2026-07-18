@@ -164,6 +164,9 @@ function Footer() {
 <a href="/terms.html">Terms & Conditions</a> 
 <a href="/refund-policy.html">Refund Policy</a>
 <a href="/contact.html">Contact Us</a>
+      <a href="payment.html">
+   Register for Live Webinar
+  </a>
           </div>
         </div>
         <p style={{ font: "var(--caption)", color: "rgba(243,245,239,.4)", marginTop: 40, maxWidth: 760 }}>{f.disclaimer}</p>

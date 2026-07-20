@@ -42,8 +42,8 @@ async function loadLive() {
         document.getElementById("livePlayer").src =
             `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
 
-      //  document.getElementById("liveChat").src =
-          //  `https://zenstream.chat?liveId=${liveId}&token=${token}`;
+     document.getElementById("liveChat").src =
+    `https://zenstream.chat?liveId=${liveId}&token=${token}`;
 
     } catch (err) {
         console.error("Live loading failed:", err);

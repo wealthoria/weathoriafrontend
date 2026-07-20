@@ -1,15 +1,4 @@
-<div id="countdownContainer" style="text-align:center;padding:40px;">
-    <h2>🎓 Wealthoria Live Investment Webinar</h2>
-    <h3>The webinar will begin in</h3>
-
-    <div id="countdown"
-         style="font-size:40px;font-weight:bold;color:#0d6efd;margin:20px 0;">
-    </div>
-
-    <p>Please keep this page open. The live stream will start automatically.</p>
-</div>
-
-<div id="liveContainer" style="display:none;max-width:1200px;margin:auto;gap:20px;display:flex;flex-wrap:wrap;">
+<div style="max-width:1200px;margin:auto;display:flex;gap:20px;flex-wrap:wrap;">
 
     <!-- Live Player -->
     <div style="flex:2;min-width:600px;">
@@ -33,44 +22,7 @@
 </div>
 
 <script>
-
-// Set your webinar start time
-const webinarStart = new Date("2026-07-20T20:00:00").getTime();
-
-const countdown = document.getElementById("countdown");
-const countdownContainer = document.getElementById("countdownContainer");
-const liveContainer = document.getElementById("liveContainer");
-
-const timer = setInterval(() => {
-
-    const now = new Date().getTime();
-    const distance = webinarStart - now;
-
-    if (distance <= 0) {
-
-        clearInterval(timer);
-
-        countdownContainer.style.display = "none";
-        liveContainer.style.display = "flex";
-
-        loadLive();
-
-        return;
-    }
-
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-    countdown.innerHTML =
-        `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-}, 1000);
-
-
 async function loadLive() {
-
     try {
 
         const response = await fetch(
@@ -80,29 +32,27 @@ async function loadLive() {
         const data = await response.json();
 
         if (!data.success) {
-            alert("Unable to generate JWT token");
+            alert("Failed to generate JWT token");
             return;
         }
 
         const token = data.token;
-
         const liveId = "75bd31cf357d40b7ad24a199f1d28a0d";
 
-        // Player
+        // Load Player
         document.getElementById("livePlayer").src =
             `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
 
-        // Chat
+        // Load Chat
         document.getElementById("liveChat").src =
             `https://zenstream.chat?liveId=${liveId}&token=${token}`;
 
     } catch (err) {
-
         console.error(err);
-        alert("Failed to load livestream.");
-
+        alert("Unable to load live stream.");
     }
-
 }
 
+// Load immediately
+loadLive();
 </script>

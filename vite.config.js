@@ -14,3 +14,4 @@ export default defineConfig({
   server: { host: true, port: 5173, open: "/Wealthoria.html" },
   preview: { host: true, port: 4173 },
 });
+

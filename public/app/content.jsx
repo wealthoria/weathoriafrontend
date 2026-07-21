@@ -17,7 +17,7 @@ const CONTENT = {
         { id: "seminars", label: "Seminars" },
         { id: "resources", label: "Resources" },
         { id: "about", label: "About" },
-         { id: "register", label: "Register" },
+         
 
       ],
       cta: "Book consultation",

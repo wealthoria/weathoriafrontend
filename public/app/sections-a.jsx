@@ -48,7 +48,13 @@ function NavBar({ onNav }) {
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
         {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
-        <a href="payment.html" onClick={() => setOpen(false)}>
+     <a
+  href="payment.html"
+  onClick={(e) => {
+    setOpen(false);
+    window.location.href = "payment.html";
+  }}
+>
   Register for Live Webinar
 </a>
         <div className="drawer-foot">

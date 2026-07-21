@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,203 +13,108 @@
 <style>
 
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
 }
 
 body{
-
-background:linear-gradient(135deg,#eef5ff,#ffffff);
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-min-height:100vh;
-
-padding:20px;
-
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f5f7fb;
+    padding:20px;
 }
 
 .container{
-
-background:white;
-
-width:100%;
-
-max-width:720px;
-
-border-radius:25px;
-
-padding:50px;
-
-box-shadow:0 20px 60px rgba(0,0,0,.08);
-
-text-align:center;
-
+    width:100%;
+    max-width:500px;
+    background:#fff;
+    border-radius:20px;
+    padding:50px 35px;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,.10);
 }
 
 .logo{
-
-width:170px;
-
-margin-bottom:20px;
-
+    width:180px;
+    margin-bottom:30px;
 }
 
-.tick{
-
-width:110px;
-
-height:110px;
-
-background:#10b981;
-
-border-radius:50%;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-margin:auto;
-
-font-size:60px;
-
-color:white;
-
-animation:pop .5s ease;
-
-}
-
-@keyframes pop{
-
-0%{
-
-transform:scale(.5);
-
-opacity:0;
-
-}
-
-100%{
-
-transform:scale(1);
-
-opacity:1;
-
-}
-
+.success-img{
+    width:170px;
+    margin-bottom:25px;
 }
 
 h1{
-
-margin-top:25px;
-
-color:#0B5ED7;
-
-font-size:36px;
-
+    font-size:34px;
+    color:#16a34a;
+    margin-bottom:15px;
 }
 
-.subtitle{
-
-margin-top:10px;
-
-color:#666;
-
-font-size:18px;
-
-line-height:30px;
-
-}
-
-.card{
-
-margin-top:35px;
-
-background:#f8fbff;
-
-padding:30px;
-
-border-radius:18px;
-
-text-align:left;
-
-}
-
-.card p{
-
-margin:18px 0;
-
-font-size:17px;
-
-color:#444;
-
-}
-
-.notice{
-
-margin-top:25px;
-
-background:#fff8e6;
-
-padding:20px;
-
-border-left:6px solid orange;
-
-border-radius:10px;
-
-text-align:left;
-
-color:#555;
-
+p{
+    color:#666;
+    font-size:17px;
+    line-height:1.7;
+    margin-bottom:35px;
 }
 
 .btn{
-
-display:inline-block;
-
-margin-top:35px;
-
-padding:16px 35px;
-
-background:#0B5ED7;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:10px;
-
-font-size:18px;
-
-font-weight:600;
-
-transition:.3s;
-
+    display:inline-block;
+    padding:15px 35px;
+    text-decoration:none;
+    color:#fff;
+    font-size:17px;
+    font-weight:600;
+    border-radius:10px;
+    background:
+    linear-gradient(
+        180deg,
+        rgba(255,255,255,.22),
+        rgba(255,255,255,0) 46%
+    ),
+    linear-gradient(
+        120deg,
+        #e8473f,
+        #f4823c
+    );
+    transition:.3s;
 }
 
 .btn:hover{
-
-background:#084298;
-
+    transform:translateY(-2px);
+    box-shadow:0 10px 25px rgba(232,71,63,.35);
 }
 
 .footer{
+    margin-top:30px;
+    font-size:14px;
+    color:#888;
+}
 
-margin-top:35px;
+@media(max-width:600px){
 
-font-size:14px;
+.container{
+    padding:40px 25px;
+}
 
-color:#777;
+.logo{
+    width:150px;
+}
 
-line-height:28px;
+.success-img{
+    width:140px;
+}
+
+h1{
+    font-size:28px;
+}
+
+p{
+    font-size:16px;
+}
 
 }
 
@@ -220,98 +126,29 @@ line-height:28px;
 
 <div class="container">
 
-<!-- Replace with your Wealthoria logo -->
+    <!-- Logo -->
+    <img src="assets/logo.png" alt="Wealthoria Logo" class="logo">
 
-<img src="assets/logo.png" class="logo">
+    <!-- Success Image -->
+    <img src="assets/success.png" alt="Payment Successful" class="success-img">
 
-<div class="tick">
+    <h1>Payment Successful!</h1>
 
-✓
+    <p>
+        Thank you for registering for the
+        <strong>Wealthoria Live Webinar.</strong>
+    </p>
 
-</div>
+    <a href="https://wealthoria.in/live-webinar.html" class="btn">
+        Go to Webinar
+    </a>
 
-<h1>
-
-Payment Successful!
-
-</h1>
-
-<p class="subtitle">
-
-Thank you for registering for the
-
-<b>Wealthoria Live Webinar.</b>
-
-</p>
-
-<div class="card">
-
-<p>
-
-📅 <b>Date:</b> Sunday
-
-</p>
-
-<p>
-
-🕖 <b>Time:</b> 7:00 PM IST
-
-</p>
-
-<p>
-
-🎥 <b>Platform:</b> Wealthoria Learning Portal
-
-</p>
-
-<p>
-
-📧 <b>Email:</b> A confirmation email will be sent shortly.
-
-</p>
-
-</div>
-
-<div class="notice">
-
-<b>Important</b>
-
-<br><br>
-
-✔ Your registration has been confirmed.
-
-<br><br>
-
-✔ Please save the confirmation email.
-
-<br><br>
-
-✔ Use the webinar page on Sunday to attend the live session.
-
-</div>
-
-<a href="https://wealthoria.in/live-webinar.html" class="btn">
-
-Go to Webinar Page
-
-</a>
-
-<div class="footer">
-
-Need Help?
-
-<br>
-
-support@wealthoria.in
-
-<br>
-
-www.wealthoria.in
-
-</div>
+    <div class="footer">
+        © 2026 Wealthoria
+    </div>
 
 </div>
 
 </body>
-
 </html>
+```

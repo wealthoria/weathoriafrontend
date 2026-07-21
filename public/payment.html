@@ -457,7 +457,7 @@ headers:{
 },
 
 body:JSON.stringify({
-amount:199
+amount:1
 })
 
 });
@@ -477,47 +477,42 @@ name:"Wealthoria Education",
 description:"Webinar Registration",
 
 order_id:order.id,
+handler: async function(response) {
+  try {
+    const registerResponse = await fetch(API_URL + "/api/webinar/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        fullName,
+        email,
+        phone,
+        place,
+        paymentId: response.razorpay_payment_id,
+        orderId: response.razorpay_order_id,
+        amount: order.amount
+      })
+    });
 
-handler:async function(response){
+    console.log("Register API Status:", registerResponse.status);
 
-const registerResponse=await fetch(API_URL+"/api/webinar/register",{
+    const result = await registerResponse.json();
+    console.log("Register API Response:", result);
 
-method:"POST",
+    if (result.success) {
+      window.location.href = "/thankyou.html";
+    } else {
+      alert(result.message || "Registration failed.");
+    }
 
-headers:{
-"Content-Type":"application/json"
-},
+  } catch (err) {
+    console.error("Register API Error:", err);
+    alert("Registration failed after payment.");
+  }
 
-body:JSON.stringify({
-
-fullName,
-
-email,
-
-phone,
-
-place,
-
-paymentId:response.razorpay_payment_id,
-
-orderId:response.razorpay_order_id,amount:order.amount
-
-})
-
-});
-
-const result=await registerResponse.json();
-
-if (result.success) {
-    // Redirect to thank you page
-    window.location.href = "/thankyou.html";
-} else {
-    alert(result.message);
-}
-
-submitBtn.disabled=false;
-submitBtn.innerHTML="Proceed to Payment";
-
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = "Proceed to Payment";
 },
 
 prefill:{

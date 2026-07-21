@@ -1,11 +1,10 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Payment Successful | Wealthoria</title>
+<title>Thank You | Wealthoria</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +29,7 @@ body{
 
 .container{
     width:100%;
-    max-width:500px;
+    max-width:550px;
     background:#fff;
     border-radius:20px;
     padding:50px 35px;
@@ -40,25 +39,37 @@ body{
 
 .logo{
     width:180px;
-    margin-bottom:30px;
+    margin-bottom:25px;
 }
 
 .success-img{
-    width:170px;
+    width:180px;
     margin-bottom:25px;
 }
 
 h1{
-    font-size:34px;
     color:#16a34a;
-    margin-bottom:15px;
+    font-size:34px;
+    margin-bottom:18px;
 }
 
 p{
-    color:#666;
+    color:#555;
     font-size:17px;
+    line-height:1.8;
+    margin-bottom:30px;
+}
+
+.note{
+    background:#f8fafc;
+    border-left:5px solid #16a34a;
+    padding:18px;
+    border-radius:10px;
+    text-align:left;
+    color:#444;
+    margin-bottom:30px;
+    font-size:15px;
     line-height:1.7;
-    margin-bottom:35px;
 }
 
 .btn{
@@ -89,15 +100,15 @@ p{
 }
 
 .footer{
-    margin-top:30px;
-    font-size:14px;
+    margin-top:35px;
     color:#888;
+    font-size:14px;
 }
 
 @media(max-width:600px){
 
 .container{
-    padding:40px 25px;
+    padding:35px 22px;
 }
 
 .logo{
@@ -116,6 +127,10 @@ p{
     font-size:16px;
 }
 
+.note{
+    font-size:14px;
+}
+
 }
 
 </style>
@@ -126,29 +141,30 @@ p{
 
 <div class="container">
 
-    <!-- Logo -->
-    <img src="assets/logo.png" alt="Wealthoria Logo" class="logo">
+   
 
-    <!-- Success Image -->
-    <img src="assets/success.png" alt="Payment Successful" class="success-img">
-
-    <h1>Payment Successful!</h1>
+    <h1>Thank You!</h1>
 
     <p>
-        Thank you for registering for the
+        Your payment has been received successfully and your seat has been confirmed for the
         <strong>Wealthoria Live Webinar.</strong>
     </p>
 
+    <div class="note">
+        ✅ Your registration is complete.<br><br>
+        📧 The webinar access link has been sent to your registered email address.<br><br>
+        📅 Please join the webinar using the link shared in your email before the session begins.
+    </div>
+
     <a href="https://wealthoria.in/live-webinar.html" class="btn">
-        Go to Webinar
+        Join Webinar
     </a>
 
     <div class="footer">
-        © 2026 Wealthoria
+        © 2026 Wealthoria. All Rights Reserved.
     </div>
 
 </div>
 
 </body>
 </html>
-```

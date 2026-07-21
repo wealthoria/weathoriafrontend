@@ -48,6 +48,9 @@ function NavBar({ onNav }) {
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
         {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
+        <a href="payment.html" onClick={() => setOpen(false)}>
+  Register for Live Webinar
+</a>
         <div className="drawer-foot">
           <a className="btn btn-outline btn-block" href="Student Portal.html"><Icon name="user" size={17} />Student login</a>
           <a className="btn btn-outline btn-block" href="Member Portal.html"><Icon name="lock" size={16} />Member login</a>

@@ -428,6 +428,17 @@ try{
   `${API_URL}/api/webinar/check-email?email=${encodeURIComponent(email)}`
 );
 
+const seatResponse = await fetch(`${API_URL}/api/webinar/check-seats`);
+const seatResult = await seatResponse.json();
+
+if (!seatResult.seatsAvailable) {
+  alert("Sorry! Webinar registration is full. Maximum 510 participants are allowed.");
+
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = "Proceed to Payment";
+  return;
+}
+
 const checkResult = await checkResponse.json();
 
 if (checkResult.exists) {

@@ -253,6 +253,7 @@ window.onload = async function () {
         const data = await response.json();
 
         if (data.success) {
+
             localStorage.removeItem("webinarEmail");
 
             document.getElementById("loginSection").style.display = "none";
@@ -261,26 +262,16 @@ window.onload = async function () {
             const liveId = "368fd8f7617446e392ccf84277e15e82";
 
             document.getElementById("livePlayer").src =
-            `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${data.token}`;
+                `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${data.token}`;
 
             document.getElementById("liveChat").src =
-            `https://zenstream.chat?liveId=${liveId}&token=${data.token}`;
+                `https://zenstream.chat?liveId=${liveId}&token=${data.token}`;
         }
 
         return;
     }
 
-    // Auto Login User
-    const savedEmail = localStorage.getItem("webinarEmail");
-
-    if(savedEmail){
-
-        document.getElementById("email").value = savedEmail;
-
-        joinWebinar();
-
-    }
-
+    // NO USER AUTO LOGIN HERE
 };
 const webinarStartTime =
     new Date("2026-07-23T18:55:00+05:30");

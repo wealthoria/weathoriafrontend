@@ -96,66 +96,70 @@
 <!-- Login -->
 <div id="loginSection" class="login-container">
 
-<h2>Join Wealthoria Live Webinar</h2>
-
-
-<h2>Join Wealthoria Live Webinar</h2>
-
-<div style="
-    background:#f8fafc;
-    padding:15px;
-    border-radius:8px;
-    margin:15px 0;
-    text-align:left;
-    line-height:1.8;
-">
-
-    <div>
-        <strong>Created at:</strong>
-        23-Jul-2026, 14:44
-    </div>
-
-    <div>
-        <strong>Scheduled for:</strong>
-        23-Jul-2026, 18:55
-    </div>
+    <h2>Join Wealthoria Live Webinar</h2>
 
     <div style="
-        margin-top:12px;
-        text-align:center;
-        background:#eff6ff;
-        padding:12px;
-        border-radius:6px;
+        background:#f8fafc;
+        padding:15px;
+        border-radius:8px;
+        margin:15px 0;
+        line-height:1.8;
     ">
-        <strong>Webinar Starts In</strong>
 
-        <div id="webinarCountdown"
-             style="
-                font-size:22px;
-                font-weight:bold;
-                color:#2563eb;
-                margin-top:5px;
-             ">
-            Calculating...
+        <p>
+            <strong>Created at:</strong>
+            23-Jul-2026, 14:44
+        </p>
+
+        <p>
+            <strong>Scheduled for:</strong>
+            23-Jul-2026, 18:55
+        </p>
+
+        <div style="
+            background:#eff6ff;
+            padding:15px;
+            border-radius:8px;
+            margin-top:15px;
+        ">
+
+            <strong>Webinar Starts In</strong>
+
+            <div id="webinarCountdown"
+                 style="
+                    font-size:24px;
+                    font-weight:bold;
+                    color:#2563eb;
+                    margin-top:8px;
+                 ">
+                Calculating...
+            </div>
+
         </div>
+
     </div>
 
+    <p id="joinInfo">
+        Joining opens 30 minutes before the webinar.
+    </p>
+
+    <!-- HIDDEN UNTIL 6:25 PM -->
+    <div id="joinForm" style="display:none;">
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Enter your registered email">
+
+        <button onclick="joinWebinar()">
+            Join Webinar
+        </button>
+
+    </div>
+
+    <p id="message"></p>
+
 </div>
-
-<input
-type="email"
-id="email"
-placeholder="Enter your registered email">
-
-
-<button onclick="joinWebinar()">
-Join Webinar
-</button>
-
-<p id="message"></p>
-
-</div>
-
 <!-- Webinar -->
 <!-- Webinar -->
 <div id="webinarSection" class="webinar-container">

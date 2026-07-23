@@ -112,6 +112,67 @@ Join Webinar
 </div>
 
 <!-- Webinar -->
+
+
+<!-- ========================= -->
+<!-- ADMIN SCHEDULE SCREEN -->
+<!-- ========================= -->
+
+<div id="adminScheduleSection" class="login-container" style="display:none;">
+
+    <h2>Wealthoria Webinar</h2>
+
+    <div style="
+        text-align:left;
+        background:#f8fafc;
+        padding:20px;
+        border-radius:10px;
+        margin:20px 0;
+        line-height:1.8;
+    ">
+
+        <p>
+            <strong>Status:</strong>
+            <span style="color:#16a34a;">Scheduled</span>
+        </p>
+
+        <p><strong>Created at:</strong> 23-Jul-2026, 14:44</p>
+<p>
+    <strong>Scheduled for:</strong>
+    23-Jul-2026, 6:55 PM
+</p>
+
+<div style="
+    margin:20px 0;
+    padding:15px;
+    background:#eff6ff;
+    border-radius:8px;
+    text-align:center;
+">
+    <div style="font-weight:bold;margin-bottom:5px;">
+        Webinar Starts In
+    </div>
+
+    <div id="webinarCountdown"
+         style="font-size:24px;font-weight:bold;color:#2563eb;">
+        Calculating...
+    </div>
+</div>
+
+<p><strong>Chat:</strong> Authenticated</p>
+
+    </div>
+
+    <button onclick="startAdminWebinar()"
+            style="background:#16a34a;">
+        Start Webinar
+    </button>
+
+</div>
+<!-- Webinar -->
+
+
+
 <!-- Webinar -->
 <div id="webinarSection" class="webinar-container">
 
@@ -188,51 +249,132 @@ document.getElementById("liveChat").src=
 console.error(err);
 document.getElementById("message").innerHTML="Unable to join webinar.";
 }
-}
-window.onload = async function () {
+}window.onload = async function () {
 
     const params = new URLSearchParams(window.location.search);
     const adminToken = params.get("adminToken");
 
-    // Admin Login
+    // ADMIN LOGIN
     if (adminToken) {
 
-        const response = await fetch(
-            `https://webinar-registration-backend.onrender.com/api/live/token?adminToken=${encodeURIComponent(adminToken)}`
-        );
+        try {
 
-        const data = await response.json();
+            const response = await fetch(
+                `https://webinar-registration-backend.onrender.com/api/live/token?adminToken=${encodeURIComponent(adminToken)}`
+            );
 
-        if (data.success) {
-            localStorage.removeItem("webinarEmail");
+            const data = await response.json();
 
+            if (!data.success) {
+                document.getElementById("message").innerHTML =
+                    data.message || "Invalid admin access.";
+                return;
+            }
+
+            // Save admin VdoCipher token
+            sessionStorage.setItem("adminLiveToken", data.token);
+
+            // Hide login
             document.getElementById("loginSection").style.display = "none";
-            document.getElementById("webinarSection").style.display = "flex";
 
-            const liveId = "368fd8f7617446e392ccf84277e15e82";
+            // Hide video initially
+            document.getElementById("webinarSection").style.display = "none";
 
-            document.getElementById("livePlayer").src =
-            `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${data.token}`;
+            // SHOW SCHEDULE
+            document.getElementById("adminScheduleSection").style.display = "block";
 
-            document.getElementById("liveChat").src =
-            `https://zenstream.chat?liveId=${liveId}&token=${data.token}`;
+        } catch (error) {
+
+            console.error(error);
+
+            document.getElementById("message").innerHTML =
+                "Unable to verify admin.";
+
         }
 
         return;
     }
 
-    // Auto Login User
+
+    // NORMAL USER AUTO LOGIN
     const savedEmail = localStorage.getItem("webinarEmail");
 
-    if(savedEmail){
+    if (savedEmail) {
 
         document.getElementById("email").value = savedEmail;
 
         joinWebinar();
-
     }
 
 };
+
+
+// Webinar scheduled for 23 July 2026, 6:55 PM India time
+const webinarStartTime = new Date("2026-07-23T18:55:00+05:30");
+
+function updateWebinarCountdown() {
+
+    const countdown = document.getElementById("webinarCountdown");
+
+    if (!countdown) return;
+
+    const now = new Date();
+    const difference = webinarStartTime - now;
+
+    if (difference <= 0) {
+
+        countdown.innerHTML = "Webinar is ready to start";
+        return;
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+
+    const hours = Math.floor(
+        (difference / (1000 * 60 * 60)) % 24
+    );
+
+    const minutes = Math.floor(
+        (difference / (1000 * 60)) % 60
+    );
+
+    const seconds = Math.floor(
+        (difference / 1000) % 60
+    );
+
+    countdown.innerHTML =
+        `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+
+updateWebinarCountdown();
+
+setInterval(updateWebinarCountdown, 1000);
+
+function startAdminWebinar() {
+
+    const token = sessionStorage.getItem("adminLiveToken");
+
+    if (!token) {
+        alert("Admin session expired.");
+        return;
+    }
+
+    const liveId = "368fd8f7617446e392ccf84277e15e82";
+
+    // Hide schedule
+    document.getElementById("adminScheduleSection").style.display = "none";
+
+    // Show webinar
+    document.getElementById("webinarSection").style.display = "flex";
+
+    // Load video
+    document.getElementById("livePlayer").src =
+        `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
+
+    // Load chat
+    document.getElementById("liveChat").src =
+        `https://zenstream.chat?liveId=${liveId}&token=${token}`;
+}
+
 function logoutWebinar(){
 
     localStorage.removeItem("webinarEmail");

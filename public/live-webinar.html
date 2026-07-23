@@ -327,24 +327,63 @@ window.onload = async function () {
 };
 const webinarStartTime =
     new Date("2026-07-23T18:55:00+05:30");
-
 function updateCountdown() {
 
-    const countdown =
-        document.getElementById("webinarCountdown");
+    const countdown = document.getElementById("webinarCountdown");
+    const joinForm = document.getElementById("joinForm");
+    const joinInfo = document.getElementById("joinInfo");
 
     if (!countdown) return;
 
     const now = new Date();
 
+    const webinarStartTime =
+        new Date("2026-07-23T18:55:00+05:30");
+
+    // Joining opens 30 minutes before webinar
+    const joinOpenTime =
+        new Date(webinarStartTime.getTime() - (30 * 60 * 1000));
+
     const difference =
         webinarStartTime.getTime() - now.getTime();
 
+
+    // ==============================
+    // OPEN EMAIL FORM AT 6:25 PM
+    // ==============================
+
+    if (now >= joinOpenTime) {
+
+        joinForm.style.display = "block";
+
+        joinInfo.innerHTML =
+            "Joining is now open.";
+
+    } else {
+
+        joinForm.style.display = "none";
+
+        joinInfo.innerHTML =
+            "Joining opens 30 minutes before the webinar.";
+    }
+
+
+    // ==============================
+    // WEBINAR STARTED
+    // ==============================
+
     if (difference <= 0) {
 
-        countdown.innerHTML = "Webinar time has started";
+        countdown.innerHTML =
+            "Webinar has started";
+
         return;
     }
+
+
+    // ==============================
+    // COUNTDOWN
+    // ==============================
 
     const days = Math.floor(
         difference / (1000 * 60 * 60 * 24)
@@ -363,9 +402,12 @@ function updateCountdown() {
     );
 
     if (days > 0) {
+
         countdown.innerHTML =
             `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
     } else {
+
         countdown.innerHTML =
             `${hours}h ${minutes}m ${seconds}s`;
     }

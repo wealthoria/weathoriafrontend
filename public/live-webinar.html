@@ -197,46 +197,98 @@
 </div>
 
 <script>
+async function joinWebinar() {
 
-async function joinWebinar(){
+    const message = document.getElementById("message");
 
-const email=document.getElementById("email").value.trim();
+    // Webinar: 23 July 2026, 6:55 PM IST
+    const webinarTime = new Date("2026-07-23T18:55:00+05:30");
 
-if(email===""){
-document.getElementById("message").innerHTML="Please enter your registered email.";
-return;
-}
+    // Joining allowed from 6:25 PM
+    const joinOpenTime =
+        new Date(webinarTime.getTime() - (30 * 60 * 1000));
 
-try{
+    const now = new Date();
 
-const response=await fetch(
-`https://webinar-registration-backend.onrender.com/api/live/token?email=${encodeURIComponent(email)}`
-);
+    // IMPORTANT: BLOCK BEFORE 6:25 PM
+    if (now < joinOpenTime) {
 
-const data=await response.json();
+        // Make sure webinar cannot appear
+        document.getElementById("webinarSection").style.display = "none";
+        document.getElementById("loginSection").style.display = "block";
 
-if(!data.success){
-document.getElementById("message").innerHTML=data.message;
-return;
-}
-localStorage.setItem("webinarEmail", email);
-document.getElementById("loginSection").style.display="none";
-document.getElementById("webinarSection").style.display="flex";
+        localStorage.removeItem("webinarEmail");
 
-const token=data.token;
+        message.innerHTML =
+            "Joining opens 30 minutes before the webinar.";
 
-const liveId="368fd8f7617446e392ccf84277e15e82";
+        return;
+    }
 
-document.getElementById("livePlayer").src=
-`https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
 
-document.getElementById("liveChat").src=
-`https://zenstream.chat?liveId=${liveId}&token=${token}`;
+    // From here joining is allowed
 
-}catch(err){
-console.error(err);
-document.getElementById("message").innerHTML="Unable to join webinar.";
-}
+    const email =
+        document.getElementById("email").value.trim();
+
+    if (email === "") {
+
+        message.innerHTML =
+            "Please enter your registered email.";
+
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `https://webinar-registration-backend.onrender.com/api/live/token?email=${encodeURIComponent(email)}`
+        );
+
+        const data = await response.json();
+
+        if (!data.success) {
+
+            message.innerHTML = data.message;
+
+            return;
+        }
+
+        // CHECK TIME AGAIN after backend request
+        // Prevent delayed request from opening webinar
+        if (new Date() < joinOpenTime) {
+
+            document.getElementById("webinarSection").style.display = "none";
+            document.getElementById("loginSection").style.display = "block";
+
+            message.innerHTML =
+                "Joining opens 30 minutes before the webinar.";
+
+            return;
+        }
+
+        document.getElementById("loginSection").style.display = "none";
+
+        document.getElementById("webinarSection").style.display = "flex";
+
+        const token = data.token;
+
+        const liveId =
+            "368fd8f7617446e392ccf84277e15e82";
+
+        document.getElementById("livePlayer").src =
+            `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
+
+        document.getElementById("liveChat").src =
+            `https://zenstream.chat?liveId=${liveId}&token=${token}`;
+
+    } catch (err) {
+
+        console.error(err);
+
+        message.innerHTML =
+            "Unable to join webinar.";
+    }
 }
 window.onload = async function () {
 

@@ -180,11 +180,11 @@
     </div>
 
     <div class="player">
-        <iframe
-            id="livePlayer"
-            allow="autoplay; fullscreen"
-            allowfullscreen>
-        </iframe>
+       <iframe
+    id="livePlayer"
+    allow="encrypted-media; autoplay; fullscreen"
+    allowfullscreen>
+</iframe>
     </div>
 
     <div class="chat">
@@ -277,8 +277,12 @@ async function joinWebinar() {
 
 if (data.type === "recorded") {
 
-    document.getElementById("livePlayer").src =
-        `https://player.vdocipher.com/v2/?otp=${data.otp}&playbackInfo=${data.playbackInfo}`;
+    const playerUrl =
+    `https://player.vdocipher.com/v2/?otp=${data.otp}&playbackInfo=${data.playbackInfo}`;
+
+console.log(playerUrl);
+
+document.getElementById("livePlayer").src = playerUrl;
 
     document.querySelector(".chat").style.display = "none";
 

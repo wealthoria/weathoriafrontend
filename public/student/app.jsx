@@ -8,8 +8,15 @@ const { AppCtx } = window;
 const { AuthProvider, useAuth } = window;
 const { CourseProvider, useCourses } = window;
 const { RouterContext, useRouter, ToastProvider, useToast, PrivateRoute } = window;
-const { RegisterScreen,LoginScreen, DashboardScreen, CollectionScreen, PurchaseModal, PortalNav, ForgotPasswordScreen,
- } = window;
+const {
+  StudentRegister,
+  LoginScreen,
+  DashboardScreen,
+  CollectionScreen,
+  PurchaseModal,
+  PortalNav,
+  ForgotPasswordScreen,
+} = window;
 
 const ROUTES = [ "/student/register","/student/login", "/student/dashboard", "/student/collection", "/student/forgot-password",];
 
@@ -117,10 +124,9 @@ function Routed() {
   const { path } = useRouter();
 
 
-    if (path === "/student/register") {
-  
-    return <RegisterScreen />;
-  }
+  if (path === "/student/register") {
+  return <StudentRegister />;
+}
 
   if (path === "/student/login") {
     return <LoginGate />;

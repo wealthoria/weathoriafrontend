@@ -6,7 +6,6 @@
    token payload; useRole() exposes it for UI gating.
    ========================================================================= */
 const { createContext, useContext, useReducer, useEffect, useCallback } = React;
-const { MEMBERS } = window.MEMBER_DATA;
 
 const M_KEY = "wl-member-auth";
 const DEMO_OTP = "123456"; // shown to the user in the prototype
@@ -74,17 +73,54 @@ function MemberAuthProvider({ children }) {
   /* step 1: verify credentials. Returns { mfaRequired, user } without logging
      in if MFA is on; caller then calls verifyMfa(). */
   const verifyCredentials = useCallback((email, password, mfaEnabled) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const e = (email || "").trim().toLowerCase();
-        const m = MEMBERS.find((x) => x.email === e && x.password === password);
-        if (!m) { reject(new Error("Invalid email or password.")); return; }
-        if (mfaEnabled) { resolve({ mfaRequired: true, pending: m }); return; }
-        finishLogin(m);
-        resolve({ mfaRequired: false, user: m });
-      }, 600);
-    });
-  }, []);
+  return new Promise(async (resolve, reject) => {
+    try {
+      const e = (email || "").trim().toLowerCase();
+
+      // Firebase Login
+      const userCredential = await window.auth.signInWithEmailAndPassword(
+        e,
+        password
+      );
+
+      const firebaseUser = userCredential.user;
+
+      // Get member details from Firestore
+      const doc = await window.db
+        .collection("members")
+        .doc(firebaseUser.uid)
+        .get();
+
+      if (!doc.exists) {
+        reject(new Error("Member profile not found."));
+        return;
+      }
+
+      const m = {
+        id: firebaseUser.uid,
+        ...doc.data(),
+      };
+
+      if (mfaEnabled) {
+        resolve({
+          mfaRequired: true,
+          pending: m,
+        });
+        return;
+      }
+
+      finishLogin(m);
+
+      resolve({
+        mfaRequired: false,
+        user: m,
+      });
+
+    } catch (err) {
+      reject(new Error(err.message));
+    }
+  });
+}, []);
 
   const verifyMfa = useCallback((pending, code) => {
     return new Promise((resolve, reject) => {
@@ -95,18 +131,75 @@ function MemberAuthProvider({ children }) {
       }, 500);
     });
   }, []);
+function finishLogin(m) {
+  const user = {
+    id: m.id,
+    name: m.name,
+    email: m.email,
+    role: m.role,
+    title: m.title,
+  };
 
-  function finishLogin(m) {
-    const user = { id: m.id, name: m.name, email: m.email, role: m.role, title: m.title };
-    const token = memberMakeToken(user);
-    localStorage.setItem(M_KEY, JSON.stringify({ user, token }));
-    dispatch({ type: "LOGIN_SUCCESS", payload: { user, token } });
-  }
+  const token = memberMakeToken(user);
+  localStorage.setItem(M_KEY, JSON.stringify({ user, token }));
+  dispatch({
+    type: "LOGIN_SUCCESS",
+    payload: { user, token },
+  });
+}
+useEffect(() => {
+  const unsubscribe = window.auth.onAuthStateChanged(async (firebaseUser) => {
+    if (firebaseUser) {
+      try {
+        const doc = await window.db
+          .collection("members")
+          .doc(firebaseUser.uid)
+          .get();
 
-  const logout = useCallback(() => { localStorage.removeItem(M_KEY); dispatch({ type: "LOGOUT" }); }, []);
+        if (doc.exists) {
+          finishLogin({
+            id: firebaseUser.uid,
+            ...doc.data(),
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      localStorage.removeItem(M_KEY);
+      dispatch({ type: "LOGOUT" });
+    }
+  });
 
-  const value = { ...state, verifyCredentials, verifyMfa, logout, DEMO_OTP, decodeToken: memberDecode };
-  return <MemberAuthContext.Provider value={value}>{children}</MemberAuthContext.Provider>;
+  return () => unsubscribe();
+}, []);
+const logout = useCallback(async () => {
+  await window.auth.signOut();
+  localStorage.removeItem(M_KEY);
+  dispatch({ type: "LOGOUT" });
+}, []);
+
+// Context value
+const value = {
+  ...state,
+  verifyCredentials,
+  verifyMfa,
+  logout,
+  DEMO_OTP,
+  decodeToken: memberDecode,
+};
+
+return (
+  <MemberAuthContext.Provider value={value}>
+    {children}
+  </MemberAuthContext.Provider>
+);
 }
 
-Object.assign(window, { MemberAuthContext, useMemberAuth, useRole, MemberAuthProvider });
+Object.assign(window, {
+  MemberAuthContext,
+  useMemberAuth,
+  useRole,
+  MemberAuthProvider,
+});
+

@@ -63,22 +63,65 @@ function useAuth() { return useContext(AuthContext); }
 function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const refreshTimer = useRef(null);
+useEffect(() => {
+  const unsubscribe =
+    window.auth.onAuthStateChanged(async (firebaseUser) => {
 
-  /* restore session on mount (across refreshes) */
-  useEffect(() => {
-    let saved = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.token && tokenValid(parsed.token)) saved = parsed;
-        else { localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem(STORAGE_KEY); }
+      if (firebaseUser) {
+
+        try {
+
+          const doc = await window.db
+            .collection("students")
+            .doc(firebaseUser.uid)
+            .get();
+
+          if (doc.exists) {
+
+            const user = {
+              id: firebaseUser.uid,
+              ...doc.data(),
+            };
+
+            const token = makeToken(user, true);
+
+            dispatch({
+              type: "LOGIN_SUCCESS",
+              payload: {
+                user,
+                token,
+              },
+            });
+
+          } else {
+
+            dispatch({
+              type: "RESTORE",
+              payload: null,
+            });
+
+          }
+
+        } catch (err) {
+
+          console.error(err);
+
+        }
+
+      } else {
+
+        dispatch({
+          type: "RESTORE",
+          payload: null,
+        });
+
       }
-    } catch (e) { /* ignore */ }
-    // brief delay so the loading splash reads as a real session check
-    const t = setTimeout(() => dispatch({ type: "RESTORE", payload: saved }), 350);
-    return () => clearTimeout(t);
-  }, []);
+
+    });
+
+  return () => unsubscribe();
+
+}, []);
 
   const persist = useCallback((data, remember) => {
     const store = remember ? localStorage : sessionStorage;
@@ -93,55 +136,53 @@ function AuthProvider({ children }) {
   dispatch({ type: "LOGIN_START" });
 
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/auth/login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      }
-    );
+    const userCredential =
+      await window.auth.signInWithEmailAndPassword(
+        email.trim().toLowerCase(),
+        password
+      );
 
-    const data = await response.json();
+    const firebaseUser = userCredential.user;
 
-    console.log("LOGIN RESPONSE:", response.status, data);
+    const doc = await window.db
+      .collection("students")
+      .doc(firebaseUser.uid)
+      .get();
 
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed");
+    if (!doc.exists) {
+      await window.auth.signOut();
+      throw new Error("Student profile not found.");
     }
 
-    const user = data.user;
+    const user = {
+      id: firebaseUser.uid,
+      ...doc.data(),
+    };
 
     const token = makeToken(user, remember);
 
     const authData = {
-      user: user,
-      token: token
+      user,
+      token,
     };
 
     persist(authData, remember);
 
     dispatch({
       type: "LOGIN_SUCCESS",
-      payload: authData
+      payload: authData,
     });
 
     return user;
 
-  } catch (error) {
+  } catch (err) {
     dispatch({
-      type: "LOGIN_ERROR"
+      type: "LOGIN_ERROR",
     });
 
-    throw error;
+    throw err;
   }
 };
-
   const loginWithGoogle = useCallback((remember) => {
     dispatch({ type: "LOGIN_START" });
     return new Promise((resolve) => {
@@ -156,11 +197,18 @@ function AuthProvider({ children }) {
     });
   }, [persist]);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    sessionStorage.removeItem(STORAGE_KEY);
-    dispatch({ type: "LOGOUT" });
-  }, []);
+  const logout = useCallback(async () => {
+
+  await window.auth.signOut();
+
+  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
+
+  dispatch({
+    type: "LOGOUT",
+  });
+
+}, []);
 
   /* refreshToken: re-mint and re-persist before expiry (prototype stand-in for
      POST /auth/refresh with the httpOnly refresh cookie). */

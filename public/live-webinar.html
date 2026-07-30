@@ -273,15 +273,27 @@ async function joinWebinar() {
 
         const token = data.token;
 
-        const liveId =
-            "368fd8f7617446e392ccf84277e15e82";
+       const liveId = "368fd8f7617446e392ccf84277e15e82";
 
-        document.getElementById("livePlayer").src =
-            `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
+if (data.type === "recorded") {
 
-        document.getElementById("liveChat").src =
-            `https://zenstream.chat?liveId=${liveId}&token=${token}`;
+    document.getElementById("livePlayer").src =
+        `https://player.vdocipher.com/v2/?otp=${data.otp}&playbackInfo=${data.playbackInfo}`;
 
+    document.querySelector(".chat").style.display = "none";
+
+} else {
+
+    const token = data.token;
+
+    document.getElementById("livePlayer").src =
+        `https://player.vdocipher.com/live-v2?liveId=${liveId}&token=${token}`;
+
+    document.getElementById("liveChat").src =
+        `https://zenstream.chat?liveId=${liveId}&token=${token}`;
+
+    document.querySelector(".chat").style.display = "block";
+}
     } catch (err) {
 
         console.error(err);

@@ -22,7 +22,7 @@ async function sendMessage(){
 
     const phone = document.getElementById("phone").value;
 
-    const res = await fetch("http://localhost:5000/api/whatsapp/send-test",{
+    const res = await fetch("https://webinar-registration-backend.onrender.com/api/whatsapp/send-test", {
         method:"POST",
         headers:{
             "Content-Type":"application/json"

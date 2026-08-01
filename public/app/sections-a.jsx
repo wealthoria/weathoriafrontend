@@ -103,7 +103,10 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} style={{ fontSize: "58px" }}></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => onNav("programs")}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
+            <button className="btn btn-green" onClick={() => {
+  alert("Clicked");
+  window.open("subscription.html", "_self");
+}}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
             <button className="btn btn-outline" onClick={() => onNav("consult")}>{h.ctaSecondary}</button>
           </div>
           <div className="trustline">

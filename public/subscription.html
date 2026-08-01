@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -14,7 +15,7 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:'Poppins',sans-serif;
+font-family:Poppins,sans-serif;
 }
 
 body{
@@ -29,8 +30,8 @@ min-height:100vh;
 width:420px;
 background:#fff;
 padding:35px;
-border-radius:18px;
-box-shadow:0 15px 40px rgba(0,0,0,.12);
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,.15);
 }
 
 .logo{
@@ -44,65 +45,55 @@ width:80px;
 
 h2{
 text-align:center;
-margin-bottom:8px;
+margin-bottom:10px;
 }
 
 p{
 text-align:center;
 color:#666;
-margin-bottom:30px;
+margin-bottom:25px;
+}
+
+.price{
+font-size:28px;
+font-weight:bold;
+text-align:center;
+color:#00a86b;
+margin-bottom:25px;
 }
 
 .input{
 margin-bottom:18px;
 }
 
-.input label{
+label{
 display:block;
 margin-bottom:6px;
-font-weight:500;
+font-weight:600;
 }
 
-.input input{
+input{
 width:100%;
 padding:14px;
 border:1px solid #ddd;
-border-radius:10px;
+border-radius:8px;
 font-size:15px;
-outline:none;
-}
-
-.input input:focus{
-border-color:#009688;
 }
 
 button{
-
 width:100%;
 padding:15px;
 background:#00a86b;
-color:#fff;
 border:none;
-border-radius:10px;
+border-radius:8px;
+color:#fff;
 font-size:16px;
-font-weight:600;
+font-weight:bold;
 cursor:pointer;
-transition:.3s;
-
 }
 
 button:hover{
-background:#008d5a;
-}
-
-.price{
-
-text-align:center;
-font-size:28px;
-font-weight:bold;
-margin-bottom:25px;
-color:#00a86b;
-
+background:#00895d;
 }
 
 </style>
@@ -114,9 +105,7 @@ color:#00a86b;
 <div class="container">
 
 <div class="logo">
-
 <img src="assets/logo.png">
-
 </div>
 
 <h2>Wealthoria Premium</h2>
@@ -124,31 +113,22 @@ color:#00a86b;
 <p>Start Your Investment Learning Journey</p>
 
 <div class="price">
-₹1 <span style="font-size:15px;">/ Week (Test)</span>
+₹1 / Week (Test)
 </div>
 
 <div class="input">
 <label>Full Name</label>
-<input
-id="name"
-type="text"
-placeholder="Enter Full Name">
+<input id="name" placeholder="Enter Full Name">
 </div>
 
 <div class="input">
 <label>Email</label>
-<input
-id="email"
-type="email"
-placeholder="Enter Email">
+<input id="email" type="email" placeholder="Enter Email">
 </div>
 
 <div class="input">
 <label>Phone Number</label>
-<input
-id="phone"
-type="text"
-placeholder="Enter Phone Number">
+<input id="phone" placeholder="Enter Phone Number">
 </div>
 
 <button onclick="subscribeNow()">
@@ -156,52 +136,78 @@ Subscribe Now
 </button>
 
 </div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<!-- Your Firebase Config -->
+<script src="firebase/firebase.js"></script>
+
 <script>
+
 async function subscribeNow(){
 
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const phone = document.getElementById("phone").value.trim();
+const name=document.getElementById("name").value.trim();
+const email=document.getElementById("email").value.trim();
+const phone=document.getElementById("phone").value.trim();
 
-    if(!name || !email || !phone){
-        alert("Please fill all fields.");
-        return;
-    }
+if(!name || !email || !phone){
 
-    try{
+alert("Please fill all fields");
 
-        const docRef = await window.db.collection("subscriptions").add({
-
-            name: name,
-            email: email,
-            phone: phone,
-
-            plan: "Wealthoria Premium",
-
-            amount: 1,
-
-            status: "pending",
-
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-
-        });
-
-        console.log("Saved:", docRef.id);
-
-        alert("Details saved successfully!");
-
-        // Next Step:
-        // Call Subscription API
-
-    }catch(err){
-
-        console.error(err);
-
-        alert(err.message);
-
-    }
+return;
 
 }
+
+try{
+
+console.log(window.db);
+
+const docRef=await window.db.collection("subscriptions").add({
+
+name:name,
+
+email:email,
+
+phone:phone,
+
+plan:"Wealthoria Premium",
+
+amount:1,
+
+status:"pending",
+
+subscriptionId:"",
+
+paymentId:"",
+
+customerId:"",
+
+nextBillingDate:"",
+
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+
+});
+
+alert("Saved Successfully");
+
+console.log(docRef.id);
+
+// NEXT STEP
+// Call your backend subscription API here
+
+}catch(err){
+
+console.error(err);
+
+alert(err.message);
+
+}
+
+}
+
 </script>
 
 </body>

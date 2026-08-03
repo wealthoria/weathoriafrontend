@@ -144,6 +144,7 @@ Subscribe Now
 
 <!-- Your Firebase Config -->
 <script src="firebase/firebase.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
 
@@ -194,9 +195,46 @@ createdAt:firebase.firestore.FieldValue.serverTimestamp()
 alert("Saved Successfully");
 
 console.log(docRef.id);
+const response = fetch("https://webinar-registration-backend.onrender.com/api/subscription/create", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        name,
+        email,
+        phone,
+        firestoreId: docRef.id
+    })
+});
 
-// NEXT STEP
-// Call your backend subscription API here
+const data = await response.json();
+
+if (!data.success) {
+    throw new Error(data.message);
+}
+
+const options = {
+    key: data.key,
+    subscription_id: data.subscriptionId,
+    name: "Wealthoria Premium",
+    description: "₹1 Weekly Subscription",
+    handler: function (response) {
+        alert("Payment Successful");
+        console.log(response);
+    },
+    prefill: {
+        name,
+        email,
+        contact: phone
+    },
+    theme: {
+        color: "#00a86b"
+    }
+};
+
+const rzp = new Razorpay(options);
+rzp.open();
 
 }catch(err){
 

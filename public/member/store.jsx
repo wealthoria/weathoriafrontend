@@ -42,9 +42,21 @@ function MemberDataProvider({ children }) {
   const updateContent = useCallback((id, patch) => {
     dispatch({ type: "SET_CONTENT", value: state.content.map((c) => c.id === id ? { ...c, ...patch, modified: new Date().toISOString().slice(0, 10) } : c) });
   }, [state.content]);
-  const addContent = useCallback((item) => {
-    dispatch({ type: "SET_CONTENT", value: [item, ...state.content] });
-  }, [state.content]);
+
+ const addContent = useCallback(async (item) => {
+  try {
+    await window.db.collection("content").add(item);
+
+    dispatch({
+      type: "SET_CONTENT",
+      value: [item, ...state.content]
+    });
+
+    console.log("Content saved to Firestore");
+  } catch (error) {
+    console.error("Error saving content:", error);
+  }
+}, [state.content]);
 
   /* ---- uploads ---- */
   const addUpload = useCallback((asset) => {

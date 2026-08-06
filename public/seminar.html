@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Retirement & Wealth Planning Workshop</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+   :root{
+
+--brand-coral:#e8473f;
+--brand-orange:#f4823c;
+
+--brand-gradient:
+linear-gradient(
+120deg,
+#e8473f 0%,
+#f4823c 100%
+);
+
+--white:#ffffff;
+--black:#222;
+--text:#555;
+--border:#ececec;
+
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+
+background:#fafafa;
+
+min-height:100vh;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+padding:40px;
+
+}
+
+.container{
+
+width:100%;
+
+max-width:1450px;
+
+display:flex;
+
+border-radius:28px;
+
+overflow:hidden;
+
+background:#fff;
+
+box-shadow:
+0 20px 60px rgba(0,0,0,.12);
+
+}
+
+/*==========================
+LEFT
+===========================*/
+
+.left{
+
+width:55%;
+
+padding:70px;
+
+position:relative;
+
+overflow:hidden;
+
+background-image:
+linear-gradient(
+180deg,
+rgba(255,255,255,.18),
+rgba(255,255,255,0) 40%
+),
+var(--brand-gradient);
+
+color:#fff;
+
+}
+
+.left::before{
+
+content:"";
+
+position:absolute;
+
+width:450px;
+height:450px;
+
+border-radius:50%;
+
+background:rgba(255,255,255,.08);
+
+right:-160px;
+top:-160px;
+
+}
+
+.left::after{
+
+content:"";
+
+position:absolute;
+
+width:250px;
+height:250px;
+
+border-radius:50%;
+
+background:rgba(255,255,255,.05);
+
+left:-80px;
+bottom:-80px;
+
+}
+
+.logo{
+
+font-size:18px;
+
+font-weight:700;
+
+letter-spacing:3px;
+
+margin-bottom:35px;
+
+}
+
+.title{
+
+font-size:48px;
+
+font-weight:800;
+
+line-height:60px;
+
+margin-bottom:25px;
+
+}
+
+.subtitle{
+
+font-size:18px;
+
+line-height:32px;
+
+margin-bottom:40px;
+
+opacity:.95;
+
+}
+
+/*==========================
+RIGHT
+===========================*/
+
+.right{
+
+width:45%;
+
+padding:70px;
+
+display:flex;
+
+justify-content:center;
+
+align-items:start;
+
+background:#fff;
+
+}
+
+.form-card{
+
+width:100%;
+
+max-width:470px;
+
+background:#fff;
+
+padding:40px;
+
+border-radius:24px;
+
+box-shadow:
+0 15px 40px rgba(0,0,0,.10);
+
+}
+
+/*==========================
+WORKSHOP CARD
+===========================*/
+
+.card{
+
+background:rgba(255,255,255,.15);
+
+backdrop-filter:blur(12px);
+
+padding:28px;
+
+border-radius:20px;
+
+border:1px solid rgba(255,255,255,.25);
+
+margin-bottom:28px;
+
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+}
+
+.card h3{
+
+font-size:22px;
+
+font-weight:700;
+
+margin-bottom:20px;
+
+}
+
+.features{
+
+display:flex;
+
+flex-direction:column;
+
+gap:16px;
+
+margin-top:10px;
+
+}
+
+.feature{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:15px;
+
+font-size:17px;
+
+line-height:28px;
+
+}
+
+.tick{
+
+width:34px;
+
+height:34px;
+
+border-radius:50%;
+
+background:#fff;
+
+color:#e8473f;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-weight:700;
+
+flex-shrink:0;
+
+box-shadow:0 4px 10px rgba(0,0,0,.15);
+
+}
+
+/*==========================
+INFO BOXES
+===========================*/
+
+.info{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:18px;
+
+margin-top:35px;
+
+}
+
+.box{
+
+background:#fff;
+
+border-radius:18px;
+
+padding:22px;
+
+text-align:center;
+
+box-shadow:0 8px 20px rgba(0,0,0,.08);
+
+transition:.3s;
+
+}
+
+.box:hover{
+
+transform:translateY(-5px);
+
+}
+
+.box h4{
+
+font-size:14px;
+
+color:#888;
+
+margin-bottom:10px;
+
+text-transform:uppercase;
+
+letter-spacing:1px;
+
+}
+
+.box span{
+
+font-size:18px;
+
+font-weight:700;
+
+color:#222;
+
+}
+
+/*==========================
+PRICE BADGE
+===========================*/
+
+.price{
+
+display:inline-block;
+
+margin-top:40px;
+
+padding:16px 36px;
+
+border-radius:60px;
+
+font-size:34px;
+
+font-weight:800;
+
+background:linear-gradient(120deg,#FFD54F,#FFC107);
+
+color:#222;
+
+box-shadow:0 10px 30px rgba(0,0,0,.18);
+
+}
+
+/*==========================
+FORM
+===========================*/
+
+.form-card h2{
+
+font-size:34px;
+
+font-weight:700;
+
+color:#222;
+
+margin-bottom:10px;
+
+}
+
+.form-card p{
+
+font-size:16px;
+
+color:#666;
+
+margin-bottom:35px;
+
+line-height:28px;
+
+}
+
+.input-group{
+
+margin-bottom:22px;
+
+}
+
+.input-group label{
+
+display:block;
+
+font-size:15px;
+
+font-weight:600;
+
+margin-bottom:8px;
+
+color:#333;
+
+}
+
+.input-group input{
+
+width:100%;
+
+height:58px;
+
+padding:0 18px;
+
+border:1px solid #ddd;
+
+border-radius:14px;
+
+font-size:16px;
+
+outline:none;
+
+transition:.3s;
+
+background:#fafafa;
+
+}
+
+.input-group input:focus{
+
+background:#fff;
+
+border-color:#e8473f;
+
+box-shadow:0 0 0 4px rgba(232,71,63,.15);
+
+}
+
+/*==========================
+PAYMENT BOX
+===========================*/
+
+.pay-box{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:20px;
+
+border-radius:18px;
+
+background:#fff5f3;
+
+margin:30px 0;
+
+border:1px solid #ffd7cf;
+
+}
+
+.pay-box h3{
+
+font-size:18px;
+
+margin-bottom:6px;
+
+color:#222;
+
+}
+
+.pay-box p{
+
+margin:0;
+
+font-size:14px;
+
+color:#777;
+
+}
+
+.amount{
+
+font-size:34px;
+
+font-weight:800;
+
+color:#e8473f;
+
+}
+
+/*==========================
+BUTTON
+===========================*/
+
+button{
+
+width:100%;
+
+height:60px;
+
+border:none;
+
+border-radius:16px;
+
+cursor:pointer;
+
+font-size:18px;
+
+font-weight:700;
+
+color:#fff;
+
+background-image:
+linear-gradient(
+180deg,
+rgba(255,255,255,.22),
+rgba(255,255,255,0) 46%
+),
+linear-gradient(
+120deg,
+#e8473f,
+#f4823c
+);
+
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.35),
+0 10px 25px rgba(232,71,63,.28);
+
+transition:.3s;
+
+}
+
+button:hover{
+
+transform:translateY(-3px);
+
+box-shadow:
+0 15px 35px rgba(232,71,63,.35);
+
+filter:brightness(1.05);
+
+}
+
+.secure{
+
+margin-top:20px;
+
+text-align:center;
+
+font-size:14px;
+
+color:#777;
+
+}
+/*==========================
+RESPONSIVE
+===========================*/
+
+@media (max-width:1200px){
+
+.container{
+
+flex-direction:column;
+
+max-width:900px;
+
+}
+
+.left,
+.right{
+
+width:100%;
+
+}
+
+.left{
+
+padding:50px;
+
+}
+
+.right{
+
+padding:50px;
+
+}
+
+.form-card{
+
+max-width:100%;
+
+}
+
+}
+
+@media (max-width:768px){
+
+body{
+
+padding:15px;
+
+}
+
+.container{
+
+border-radius:20px;
+
+}
+
+.left,
+.right{
+
+padding:30px 25px;
+
+}
+
+.title{
+
+font-size:34px;
+
+line-height:44px;
+
+}
+
+.subtitle{
+
+font-size:16px;
+
+line-height:28px;
+
+}
+
+.card{
+
+padding:22px;
+
+}
+
+.card h3{
+
+font-size:20px;
+
+}
+
+.feature{
+
+font-size:15px;
+
+line-height:24px;
+
+}
+
+.info{
+
+grid-template-columns:1fr;
+
+gap:15px;
+
+}
+
+.price{
+
+width:100%;
+
+text-align:center;
+
+font-size:30px;
+
+}
+
+.form-card{
+
+padding:25px;
+
+border-radius:20px;
+
+}
+
+.form-card h2{
+
+font-size:28px;
+
+}
+
+.input-group input{
+
+height:54px;
+
+font-size:15px;
+
+}
+
+button{
+
+height:56px;
+
+font-size:17px;
+
+}
+
+.pay-box{
+
+flex-direction:column;
+
+gap:15px;
+
+text-align:center;
+
+}
+
+.amount{
+
+font-size:30px;
+
+}
+
+}
+
+@media (max-width:480px){
+
+.logo{
+
+font-size:16px;
+
+}
+
+.title{
+
+font-size:28px;
+
+line-height:38px;
+
+}
+
+.subtitle{
+
+font-size:15px;
+
+}
+
+.card{
+
+padding:18px;
+
+}
+
+.feature{
+
+gap:10px;
+
+}
+
+.tick{
+
+width:30px;
+
+height:30px;
+
+font-size:14px;
+
+}
+
+.box{
+
+padding:18px;
+
+}
+
+.box span{
+
+font-size:16px;
+
+}
+
+.price{
+
+font-size:28px;
+
+padding:14px 20px;
+
+}
+
+.form-card{
+
+padding:20px;
+
+}
+
+}
+
+/*==========================
+ANIMATIONS
+===========================*/
+
+@keyframes fadeUp{
+
+from{
+
+opacity:0;
+
+transform:translateY(30px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
+
+.left{
+
+animation:fadeUp .8s ease;
+
+}
+
+.right{
+
+animation:fadeUp 1s ease;
+
+}
+
+.card{
+
+transition:.35s ease;
+
+}
+
+.card:hover{
+
+transform:translateY(-6px);
+
+box-shadow:0 20px 40px rgba(0,0,0,.15);
+
+}
+
+.form-card{
+
+transition:.35s ease;
+
+}
+
+.form-card:hover{
+
+transform:translateY(-5px);
+
+box-shadow:0 25px 55px rgba(0,0,0,.15);
+
+}
+
+.box{
+
+transition:.3s;
+
+}
+
+.box:hover{
+
+transform:translateY(-6px) scale(1.03);
+
+}
+
+input{
+
+transition:.3s;
+
+}
+
+input:hover{
+
+border-color:#f4823c;
+
+}
+
+button{
+
+transition:.3s;
+
+}
+
+button:hover{
+
+transform:translateY(-3px);
+
+}
+
+button:active{
+
+transform:scale(.98);
+
+}
+
+/*==========================
+SCROLLBAR
+===========================*/
+
+::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:#e8473f;
+
+border-radius:20px;
+
+}
+
+::-webkit-scrollbar-track{
+
+background:#f5f5f5;
+
+}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LEFT SIDE START -->
+
+<div class="left">
+
+<div class="logo">
+WEALTHORIA
+</div>
+
+<h1 class="title">
+RETIREMENT &<br>
+WEALTH PLANNING<br>
+WORKSHOP
+</h1>
+
+<p class="subtitle">
+Build your Wealth Roadmap with Real Investors and Practical Strategies.
+</p>
+
+<!-- Workshop Details Card -->
+
+<div class="card">
+
+<h3>ಈ Meet ಯಾಕೆ ವಿಭಿನ್ನ?</h3>
+
+<div class="features">
+
+<div class="feature">
+<div class="tick">✖</div>
+<div>ಇದು Stock Tips Session ಅಲ್ಲ</div>
+</div>
+
+<div class="feature">
+<div class="tick">✖</div>
+<div>ಇದು Tomorrow Market Prediction Session ಅಲ್ಲ</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>ಇದು ನಿಮ್ಮ Wealth Creation Roadmap ಕಟ್ಟಿಕೊಳ್ಳುವ Practical Session</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Real Investors ಜೊತೆ Learning & Discussion</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>ಈ Session ನಲ್ಲಿ ಏನಿರುತ್ತದೆ?</h3>
+
+<div class="features">
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Real Investors ಅವರ Journey, Mistakes & Learnings</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Personal Wealth Roadmap ಹೇಗೆ ನಿರ್ಮಿಸಿಕೊಳ್ಳುವುದು</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Retirement Corpus ಅನ್ನು ವೈಜ್ಞಾನಿಕವಾಗಿ Plan ಮಾಡುವುದು</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Inflation ನಿಮ್ಮ Future Wealth ಮೇಲೆ ಬೀರುವ ಪರಿಣಾಮ</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Systematic Withdrawal Plan (SWP)</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Sustainable Retirement Income</div>
+</div>
+
+<div class="feature">
+<div class="tick">✓</div>
+<div>Wealth Building Framework</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="info">
+
+<div class="box">
+<h4>📅 DATE</h4>
+<span>15 Aug 2026</span>
+</div>
+
+<div class="box">
+<h4>🕙 TIME</h4>
+<span>10:00 AM</span>
+</div>
+
+<div class="box">
+<h4>📍 VENUE</h4>
+<span>Mysore</span>
+</div>
+
+</div>
+
+<div class="price">
+₹999
+</div>
+
+</div>
+
+<!-- LEFT SIDE END -->
+
+<!-- RIGHT SIDE START -->
+
+<div class="right">
+
+<div class="form-card">
+
+<h2>Register Now</h2>
+
+<p>
+Reserve your seat for the Wealth Planning Workshop.
+</p>
+
+<form id="registrationForm">
+
+<div class="input-group">
+<label>Full Name</label>
+<input
+type="text"
+id="fullName"
+placeholder="Enter your full name"
+required>
+</div>
+
+<div class="input-group">
+<label>Email Address</label>
+<input
+type="email"
+id="email"
+placeholder="Enter your email"
+required>
+</div>
+
+<div class="input-group">
+<label>Phone Number</label>
+<input
+type="tel"
+id="phone"
+placeholder="Enter your phone number"
+required>
+</div>
+
+<div class="input-group">
+<label>Place</label>
+<input
+type="text"
+id="place"
+placeholder="Enter your city"
+required>
+</div>
+
+<div class="pay-box">
+
+<div>
+
+<h3>Workshop Fee</h3>
+
+<p>One Time Payment</p>
+
+</div>
+
+<div class="amount">
+₹999
+</div>
+
+</div>
+
+<button type="submit">
+
+Register & Pay
+
+</button>
+
+<div class="secure">
+
+🔒 Secure payment powered by Razorpay
+
+</div>
+</form>
+
+</div>
+</div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
+  authDomain: "wealthoria-6fc11.firebaseapp.com",
+  projectId: "wealthoria-6fc11",
+  storageBucket: "wealthoria-6fc11.firebasestorage.app",
+  messagingSenderId: "141910518023",
+  appId: "1:141910518023:web:7198ed847f459cb71ebda2",
+  measurementId: "G-Q9955KR0G6"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+window.db = firebase.firestore();
+
+const form = document.getElementById("registrationForm");
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const phone = document.getElementById("phone").value.trim();
+    const place = document.getElementById("place").value.trim();
+
+    try {
+
+        // Check if email already exists
+        const snapshot = await window.db
+            .collection("seminar_registrations")
+            .where("email", "==", email)
+            .get();
+
+        if (!snapshot.empty) {
+            alert("This email is already registered.");
+            return;
+        }
+
+      const orderResponse = await fetch(
+  "https://webinar-registration-backend.onrender.com/api/payment/create-order",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      amount: 999
+    })
+  }
+);
+
+const order = await orderResponse.json();
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+});
+</script>
+</body>
+
+</html>

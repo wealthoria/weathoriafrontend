@@ -1164,6 +1164,8 @@ Register & Pay
 </div>
 </div>
 </div>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 
 <script>
 const firebaseConfig = {
@@ -1217,7 +1219,47 @@ form.addEventListener("submit", async (e) => {
   }
 );
 
+
 const order = await orderResponse.json();
+if (!order.id) {
+    alert("Unable to create Razorpay order.");
+    console.log(order);
+    return;
+}
+const options = {
+  key: "rzp_live_TLiTLMO10BehZc",
+  amount: order.amount,
+  currency: order.currency,
+  order_id: order.id,
+
+  name: "Wealthoria",
+  description: "Retirement & Wealth Planning Workshop",
+
+  handler: async function (response) {
+
+    await window.db.collection("seminar_registrations").doc(email).set({
+      full_name: fullName,
+      email,
+      phone,
+      place,
+
+      amount: 999,
+
+      order_id: response.razorpay_order_id,
+      transaction_id: response.razorpay_payment_id,
+
+      payment_status: "Paid",
+
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Payment Successful");
+  }
+};
+
+const rzp = new Razorpay(options);
+rzp.open();
+
 
     } catch (err) {
         console.error(err);

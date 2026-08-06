@@ -1234,26 +1234,57 @@ const options = {
 
   name: "Wealthoria",
   description: "Retirement & Wealth Planning Workshop",
+   prefill: {
+    name: fullName,
+    email: email,
+    contact: phone
+  },
 
   handler: async function (response) {
+await window.db.collection("seminar_registrations").doc(email).set({
+  full_name: fullName,
+  email,
+  phone,
+  place,
 
-    await window.db.collection("seminar_registrations").doc(email).set({
-      full_name: fullName,
+  amount: 999,
+
+  order_id: response.razorpay_order_id,
+  transaction_id: response.razorpay_payment_id,
+
+  payment_status: "Paid",
+
+  created_at: firebase.firestore.FieldValue.serverTimestamp()
+});
+const registerResponse = await fetch(
+  "https://webinar-registration-backend.onrender.com/api/seminar/register",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fullName,
       email,
       phone,
       place,
-
+      paymentId: response.razorpay_payment_id,
+      orderId: response.razorpay_order_id,
       amount: 1,
+    }),
+  }
+);
 
-      order_id: response.razorpay_order_id,
-      transaction_id: response.razorpay_payment_id,
+const result = await registerResponse.json();
+console.log(result);
 
-      payment_status: "Paid",
+if (!registerResponse.ok) {
+  alert(result.message || "Registration failed.");
+  return;
+}
 
-      created_at: firebase.firestore.FieldValue.serverTimestamp()
-    });
+alert("Payment Successful");
 
-    alert("Payment Successful");
   }
 };
 

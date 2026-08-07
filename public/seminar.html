@@ -1225,7 +1225,7 @@ if (registrations.size >= MAX_SEATS) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      amount: 1
+      amount: 999
     })
   }
 );
@@ -1281,7 +1281,7 @@ const registerResponse = await fetch(
       place,
       paymentId: response.razorpay_payment_id,
       orderId: response.razorpay_order_id,
-      amount: 1,
+      amount: 999,
     }),
   }
 );

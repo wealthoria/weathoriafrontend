@@ -1206,14 +1206,14 @@ form.addEventListener("submit", async (e) => {
             return;
         }
 
-        const MAX_SEATS = 1;
+        const MAX_SEATS = 55;
 
 const registrations = await window.db
     .collection("seminar_registrations")
     .get();
 
 if (registrations.size >= MAX_SEATS) {
-    alert("Sorry! All 55 seats have been booked.");
+    alert("Sorry! All seats have been booked.");
     return;
 }
 

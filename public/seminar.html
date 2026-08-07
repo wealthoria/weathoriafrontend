@@ -1282,8 +1282,10 @@ if (!registerResponse.ok) {
   alert(result.message || "Registration failed.");
   return;
 }
-
-alert("Payment Successful");
+// Redirect after 2 seconds
+setTimeout(() => {
+  window.location.href = "https://wealthoria.in";
+}, 2000);
 
   }
 };

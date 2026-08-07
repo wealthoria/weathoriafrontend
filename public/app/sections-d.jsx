@@ -153,10 +153,14 @@ function Footer() {
               <a key={ic} href={href} aria-label={ic}><Icon name={ic} size={18} /></a>
               )}
             </div>
-            <div className="footer-logins">
+          
+          { /*}
+           <div className="footer-logins">
               <a className="footer-login" href="Student Portal.html"><Icon name="user" size={16} />Student login</a>
               <a className="footer-login" href="Member Portal.html"><Icon name="lock" size={15} />Member login</a>
-            </div>
+            </div> 
+          */}
+            
           </div>
           <div className="footer-cols">
 <a href="/privacy-policy.html">Privacy Policy</a>  
@@ -164,8 +168,8 @@ function Footer() {
 <a href="/terms.html">Terms & Conditions</a> 
 <a href="/refund-policy.html">Refund Policy</a>
 <a href="/contact.html">Contact Us</a>
-      <a href="payment.html">
-   Register for Live Webinar
+      <a href="seminar.html">
+   Register for Seminar
   </a>
           </div>
         </div>

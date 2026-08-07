@@ -20,8 +20,8 @@ function NavBar({ onNav }) {
             <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>
             
             )}
-             <a href="payment.html">
-   Register for Live Webinar
+             <a href="seminar.html" class="seminar-link">
+   Register for Seminar
   </a>
           </nav>
           <div className="nav-right">
@@ -32,14 +32,16 @@ function NavBar({ onNav }) {
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
-         <a
+        
+        
+        {/*} <a
   className="nav-login"
   href="Student Portal.html#/student/register"
   aria-label="Student Register"
 >
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Student Register</span>
-</a>
+</a>*/}
             <button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" size={20} /></button>
           </div>
@@ -53,8 +55,8 @@ function NavBar({ onNav }) {
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
         {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
-        <a href="payment.html" onClick={() => setOpen(false)}>
-  Register for Live Webinar
+        <a href="seminar.html" onClick={() => setOpen(false)}>
+  Register Seminar
 </a>
         <div className="drawer-foot">
           <a className="btn btn-outline btn-block" href="Student Portal.html"><Icon name="user" size={17} />Student login</a>

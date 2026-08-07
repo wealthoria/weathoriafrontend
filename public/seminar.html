@@ -1206,6 +1206,17 @@ form.addEventListener("submit", async (e) => {
             return;
         }
 
+        const MAX_SEATS = 2;
+
+const registrations = await window.db
+    .collection("seminar_registrations")
+    .get();
+
+if (registrations.size >= MAX_SEATS) {
+    alert("Sorry! All 55 seats have been booked.");
+    return;
+}
+
       const orderResponse = await fetch(
   "https://webinar-registration-backend.onrender.com/api/payment/create-order",
   {

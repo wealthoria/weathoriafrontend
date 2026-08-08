@@ -804,11 +804,3 @@ a { color: inherit; }
     max-width: 100% !important;
   }
 }
-
-
-.seminar-link{
-  background: #ed6243;
-  padding: 12px 16px;
-  border-radius: var(--rounded-lg);color: #fff;
-  font: var(--body-sm-strong);text-transform: uppercase;letter-spacing: .08em;
-}

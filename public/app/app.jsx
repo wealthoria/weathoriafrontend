@@ -62,5 +62,25 @@ function App() {
     </AppCtx.Provider>
   );
 }
+function RootApp() {
+  const path = window.location.pathname;
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  console.log("Current path:", path);
+
+  if (path.startsWith("/members")) {
+    console.log("Opening Members Portal");
+
+    return <MembersRouter />;
+  }
+
+  console.log("Opening Public Wealthoria");
+
+  return <App />;
+}
+
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
+  <RootApp />
+);

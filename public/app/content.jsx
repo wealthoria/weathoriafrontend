@@ -12,10 +12,11 @@ const CONTENT = {
     nav: {
       links: [
         { id: "why", label: "Why us" },
-        { id: "programs", label: "Programs" },
+       /* { id: "programs", label: "Programs" },*/
+
         { id: "process", label: "How it works" },
-        { id: "seminars", label: "Seminars" },
-        { id: "resources", label: "Resources" },
+      /*  { id: "seminars", label: "Seminars" },*/
+      /*  { id: "resources", label: "Resources" },*/
         { id: "about", label: "About" },
          
 

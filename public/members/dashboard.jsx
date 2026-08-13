@@ -2,8 +2,147 @@
 
 const { useState, useEffect } = React;
 
+/* =========================================================
+   TRADINGVIEW CHART
+========================================================= */
+
+function TradingViewChart() {
+
+  const containerRef = React.useRef(null);
+
+  React.useEffect(() => {
+
+    if (!containerRef.current) return;
+
+    containerRef.current.innerHTML = "";
+
+    const widgetContainer = document.createElement("div");
+
+    widgetContainer.className =
+      "tradingview-widget-container__widget";
+
+    widgetContainer.style.width = "100%";
+    widgetContainer.style.height = "calc(100% - 32px)";
+
+    containerRef.current.appendChild(widgetContainer);
+
+
+    const copyright = document.createElement("div");
+
+    copyright.className =
+      "tradingview-widget-copyright";
+
+    copyright.innerHTML = `
+      <a
+        href="https://www.tradingview.com/symbols/NSE-NIFTY/"
+        rel="noopener nofollow"
+        target="_blank"
+      >
+        <span class="blue-text">
+          NIFTY chart
+        </span>
+      </a>
+
+      <span class="trademark">
+        by TradingView
+      </span>
+    `;
+
+    containerRef.current.appendChild(copyright);
+
+
+    const script = document.createElement("script");
+
+    script.type = "text/javascript";
+
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+
+    script.async = true;
+
+
+    script.innerHTML = JSON.stringify({
+
+      allow_symbol_change: true,
+
+      calendar: false,
+
+      details: false,
+
+      hide_side_toolbar: true,
+
+      hide_top_toolbar: false,
+
+      hide_legend: false,
+
+      hide_volume: false,
+
+      hotlist: false,
+
+      interval: "D",
+
+      locale: "en",
+
+      save_image: true,
+
+      style: "1",
+
+      symbol: "NSE:NIFTY",
+
+      theme: "light",
+
+      timezone: "Etc/UTC",
+
+      backgroundColor: "#ffffff",
+
+      gridColor: "rgba(46, 46, 46, 0.2)",
+
+      watchlist: [],
+
+      withdateranges: false,
+
+      compareSymbols: [],
+
+      studies: [],
+
+      autosize: true
+
+    });
+
+
+    containerRef.current.appendChild(script);
+
+
+    return () => {
+
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
+
+    };
+
+  }, []);
+
+
+  return (
+
+    <div
+      ref={containerRef}
+      className="tradingview-widget-container"
+      style={{
+        width: "100%",
+        height: "100%"
+      }}
+    />
+
+  );
+}
+
+
 function MemberDashboard() {
   const [member, setMember] = useState(null);
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
 
   useEffect(() => {
     const saved =
@@ -105,14 +244,14 @@ function MemberDashboard() {
           <button
             className="member-nav-item"
             onClick={() =>
-              navigate("/members/trading")
+              navigate("/members/courses")
             }
           >
             <span className="member-nav-icon">
               ▶
             </span>
 
-            Trading Videos
+            Course Videos
           </button>
 
 
@@ -126,7 +265,7 @@ function MemberDashboard() {
               ↗
             </span>
 
-            Market Roundup
+          Weekly Roundup
           </button>
 
 
@@ -149,47 +288,33 @@ function MemberDashboard() {
           </div>
 
 
-          <button
-            className="member-nav-item"
-            onClick={() =>
-              navigate("/members/nsc")
-            }
-          >
-            <span className="member-nav-icon">
-              ◫
-            </span>
+<button
+  className={`member-nav-item ${
+    showCharts ? "active" : ""
+  }`}
+  onClick={() => {
+    setShowCharts(true);
+    setShowCalculator(false);
+  }}
+>
+  <span className="member-nav-icon">
+    ◒
+  </span>
 
-            NSC Data
-          </button>
+  Charts
+</button>
+<button
+  className={`member-nav-item ${
+    showCalculator ? "active" : ""
+  }`}
+  onClick={() => setShowCalculator(true)}
+>
+  <span className="member-nav-icon">
+    =
+  </span>
 
-
-          <button
-            className="member-nav-item"
-            onClick={() =>
-              navigate("/members/bsc")
-            }
-          >
-            <span className="member-nav-icon">
-              ◫
-            </span>
-
-            BSC Data
-          </button>
-
-
-          <button
-            className="member-nav-item"
-            onClick={() =>
-              navigate("/members/charts")
-            }
-          >
-            <span className="member-nav-icon">
-              ◒
-            </span>
-
-            Charts
-          </button>
-
+  Calculators
+</button>
 
           <div className="member-nav-section">
             ACCOUNT
@@ -327,6 +452,72 @@ function MemberDashboard() {
 
         <div className="member-dashboard-content">
 
+
+         {showCharts ? (
+
+  <section className="member-chart-page">
+
+    <div className="member-chart-header">
+
+      <div>
+
+        <span className="member-eyebrow">
+          MARKET DATA
+        </span>
+
+        <h2>
+          Market Charts
+        </h2>
+
+        <p>
+          Track market movements and explore financial charts.
+        </p>
+
+      </div>
+
+
+      <button
+        className="member-panel-link"
+        onClick={() => setShowCharts(false)}
+      >
+        ← Back to Dashboard
+      </button>
+
+    </div>
+
+
+    <div className="member-chart-container">
+
+      <TradingViewChart />
+
+    </div>
+
+  </section>
+
+) : showCalculator ? (
+ <section className="member-calculator-page">
+
+    <div className="member-calculator-header">
+
+      
+
+    </div>
+
+    <div className="member-calculator-container">
+
+      <iframe
+  src="/ders-calculator.html"
+  title="Necessary Calculators"
+  className="member-calculator-frame"
+/>
+    </div>
+
+  </section>
+
+
+) : (
+
+  <>
           {/* WELCOME */}
 
           <section className="member-welcome">
@@ -377,7 +568,7 @@ function MemberDashboard() {
 
               <div>
                 <span>
-                  Trading Videos
+                 Course Videos
                 </span>
 
                 <strong>
@@ -564,10 +755,11 @@ function MemberDashboard() {
                     ▶
                   </span>
 
+
                   <div>
 
                     <strong>
-                      Trading Videos
+                      Course Videos
                     </strong>
 
                     <small>
@@ -585,7 +777,7 @@ function MemberDashboard() {
 
                 <button
                   onClick={() =>
-                    navigate("/members/market-roundup")
+                    navigate("/members/weekly-roundup")
                   }
                 >
 
@@ -596,7 +788,7 @@ function MemberDashboard() {
                   <div>
 
                     <strong>
-                      Market Roundup
+                     Weekly Roundup
                     </strong>
 
                     <small>
@@ -645,13 +837,17 @@ function MemberDashboard() {
             </div>
 
           </section>
-
+               </>
+  
+        )}
         </div>
 
-      </main>
+      </main> 
 
     </div>
-  );
+                  
+  );  
 }
+
 
 window.MemberDashboard = MemberDashboard;

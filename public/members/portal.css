@@ -1208,3 +1208,72 @@
   }
 
 }
+
+/* =========================================================
+   CALCULATOR PAGE
+========================================================= */
+
+.member-calculator-page {
+  width: 100%;
+  min-height: calc(100vh - 90px);
+  padding: 32px 36px;
+  box-sizing: border-box;
+}
+
+.member-calculator-header {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.member-calculator-container {
+  width: 100%;
+  height: calc(100vh - 230px);
+  min-height: 650px;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-sizing: border-box;
+}
+
+.member-calculator-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 650px;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.member-chart-page {
+  width: 100%;
+  min-height: calc(100vh - 90px);
+  padding: 32px 36px;
+  box-sizing: border-box;
+}
+
+.member-chart-header {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.member-chart-container {
+  width: 100%;
+  height: calc(100vh - 240px);
+  min-height: 650px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tradingview-widget-container {
+  width: 100%;
+  height: 100%;
+}
+
+.tradingview-widget-container__widget {
+  width: 100%;
+  height: calc(100% - 32px);
+}

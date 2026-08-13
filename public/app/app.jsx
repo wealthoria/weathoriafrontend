@@ -52,7 +52,7 @@ function App() {
         <Founder />
         <Testimonials />
         <YouTube />
-        <Seminars onNav={onNav} />
+      {/* <Seminars onNav={onNav} />  */}
         <Library />
         <Consultation />
         <FAQ />

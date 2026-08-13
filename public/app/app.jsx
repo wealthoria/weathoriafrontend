@@ -1,11 +1,12 @@
 /* global React, ReactDOM, window */
+
 const { useState, useEffect, useCallback } = React;
 const {
   AppCtx, CONTENT,
   NavBar, Hero, Ticker, Narrative, Metrics, Why,
   Programs, Process, Founder,
   Testimonials, YouTube, Seminars, Library,
-  Consultation, FAQ, Footer,
+ FAQ, Footer,
   SiteAnimations,
 } = window;
 
@@ -54,7 +55,7 @@ function App() {
         <YouTube />
       {/* <Seminars onNav={onNav} />  */}
         <Library />
-        <Consultation />
+<EnquiryForm />
         <FAQ />
       </main>
       <Footer />

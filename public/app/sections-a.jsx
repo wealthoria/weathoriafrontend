@@ -21,7 +21,7 @@ function NavBar({ onNav }) {
             
             )}
              <a href="seminar.html" class="seminar-link">
-   Register for Seminar
+   Seminar
   </a>
           </nav>
           <div className="nav-right">
@@ -42,7 +42,16 @@ function NavBar({ onNav }) {
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Member</span>
 </a>
-            <button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>
+   <a
+  className="nav-login"
+  href="Student Portal.html#/student/register"
+  aria-label="Student Register"
+>
+  <Icon name="user" size={17} />
+  <span className="nav-login-txt">Student</span>
+</a>
+          {/*
+          {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" size={20} /></button>
           </div>
         </div>
@@ -56,12 +65,12 @@ function NavBar({ onNav }) {
         </div>
         {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
         <a href="seminar.html" onClick={() => setOpen(false)}>
-  Register Seminar
+  Seminar
 </a>
         <div className="drawer-foot">
           <a className="btn btn-outline btn-block" href="Student Portal.html"><Icon name="user" size={17} />Student login</a>
           <a className="btn btn-outline btn-block" href="Member Portal.html"><Icon name="lock" size={16} />Member login</a>
-          <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>
+        {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
         </div>
       </aside>
     </React.Fragment>);

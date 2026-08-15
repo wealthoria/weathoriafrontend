@@ -25,6 +25,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/members/seminar-registrations",
+      "destination": "/index.html"
+    },
+    {
       "source": "/members/purchase-history",
       "destination": "/index.html"
     },

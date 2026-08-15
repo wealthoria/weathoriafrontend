@@ -7,6 +7,14 @@
     {
       "source": "/",
       "destination": "/Wealthoria.html"
+    },
+    {
+      "source": "/members",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/members/:path*",
+      "destination": "/index.html"
     }
   ]
 }

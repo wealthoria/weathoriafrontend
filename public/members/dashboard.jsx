@@ -1,12 +1,14 @@
 /* global React, window */
 
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 
-const CourseVideos = window.CourseVideos;
-const Newsletter = window.Newsletter;
-const SeminarRegistrations = window.SeminarRegistrations;
-const WeeklyRoundup = window.WeeklyRoundup;
-const PurchaseHistory = window.PurchaseHistory;
+/* =========================================================
+   OPTIONAL MEMBER PAGES
+   ========================================================= */
+
+function getComponent(name) {
+  return window[name] || null;
+}
 
 
 /* =========================================================
@@ -14,16 +16,12 @@ const PurchaseHistory = window.PurchaseHistory;
 ========================================================= */
 
 function TradingViewChart({ theme }) {
+  const containerRef = useRef(null);
 
-  const containerRef = React.useRef(null);
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-  React.useEffect(() => {
-
-    const container = containerRef.current;
-
-    if (!container) return;
-
-    container.innerHTML = "";
+    containerRef.current.innerHTML = "";
 
     const script = document.createElement("script");
 
@@ -34,60 +32,34 @@ function TradingViewChart({ theme }) {
     script.async = true;
 
     script.innerHTML = JSON.stringify({
-
       autosize: true,
-
       symbol: "NSE:NIFTY",
-
       interval: "D",
-
       timezone: "Asia/Kolkata",
-
-      theme:
-        theme === "dark"
-          ? "dark"
-          : "light",
-
+      theme: theme === "dark" ? "dark" : "light",
       style: "1",
-
       locale: "en",
-
-      allow_symbol_change: false,
-
-      hide_side_toolbar: false,
-
-      hide_top_toolbar: false,
-
-      hide_legend: false,
-
-      hide_volume: false,
-
-      withdateranges: true,
-
-      save_image: true,
-
+      enable_publishing: false,
+      allow_symbol_change: true,
       calendar: false,
-
+      hide_top_toolbar: false,
+      hide_legend: false,
+      hide_side_toolbar: false,
+      save_image: true,
       studies: [],
-
-      support_host:
-        "https://www.tradingview.com"
-
+      support_host: "https://www.tradingview.com"
     });
 
-    container.appendChild(script);
+    containerRef.current.appendChild(script);
 
     return () => {
-
-      container.innerHTML = "";
-
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
     };
-
   }, [theme]);
 
-
   return (
-
     <div
       ref={containerRef}
       className="tradingview-widget-container"
@@ -96,9 +68,7 @@ function TradingViewChart({ theme }) {
         height: "650px"
       }}
     />
-
   );
-
 }
 
 
@@ -108,330 +78,128 @@ function TradingViewChart({ theme }) {
 
 function MemberDashboard() {
 
-  /* =======================================================
-     MEMBER
-  ======================================================= */
+  const [member, setMember] = useState(null);
 
-  const [member, setMember] =
-    useState(null);
-
-
-  /* =======================================================
-     ACTIVE SECTION
-     
-     IMPORTANT:
-     Saved in localStorage so refresh will NOT reset page.
-  ======================================================= */
+  const [theme, setTheme] = useState(() => {
+    return (
+      localStorage.getItem("wealthoria-member-theme") ||
+      "light"
+    );
+  });
 
   const [activeSection, setActiveSection] =
-    useState(() => {
-
-      return (
-        localStorage.getItem(
-          "wealthoria-active-section"
-        ) || "dashboard"
-      );
-
-    });
+    useState("dashboard");
 
 
-  /* =======================================================
-     OPEN SECTION
-  ======================================================= */
-
-  const openSection = (section) => {
-
-    setActiveSection(section);
-
-    localStorage.setItem(
-      "wealthoria-active-section",
-      section
-    );
-
-    window.scrollTo(0, 0);
-
-  };
-
-
-  /* =======================================================
-     THEME
-  ======================================================= */
-
-  const [theme, setTheme] =
-    useState(
-      () =>
-        localStorage.getItem("wl-theme") ||
-        "light"
-    );
-
-
-  /* =======================================================
-     APPLY THEME
-  ======================================================= */
+  /* =========================================================
+     LOAD MEMBER SESSION
+  ========================================================= */
 
   useEffect(() => {
 
-    document.documentElement.setAttribute(
-      "data-theme",
-      theme
-    );
+    const loadMember = () => {
 
-    localStorage.setItem(
-      "wl-theme",
-      theme
-    );
+      const saved =
+        localStorage.getItem("wealthoria-member") ||
+        sessionStorage.getItem("wealthoria-member");
 
-  }, [theme]);
+      if (!saved) {
 
+        console.log(
+          "No member session found."
+        );
 
-  /* =======================================================
-     TOGGLE THEME
-  ======================================================= */
+        if (window.membersNavigate) {
+          window.membersNavigate(
+            "/members/login"
+          );
+        }
 
-  const toggleTheme = () => {
+        return;
+      }
 
-    setTheme((current) =>
-      current === "dark"
-        ? "light"
-        : "dark"
-    );
+      try {
 
-  };
+        const parsed =
+          JSON.parse(saved);
 
+        setMember(parsed);
 
-  /* =======================================================
-     CHECK MEMBER LOGIN
-  ======================================================= */
+        console.log(
+          "Member session loaded:",
+          parsed
+        );
 
-  const [authChecking, setAuthChecking] =
-    useState(true);
+      } catch (error) {
 
-
-  useEffect(() => {
-
-    if (!window.auth) {
-
-      console.error(
-        "Firebase Auth is not initialized."
-      );
-
-      setAuthChecking(false);
-
-      if (window.membersNavigate) {
-
-        window.membersNavigate(
-          "/members/login"
+        console.error(
+          "Session error:",
+          error
         );
 
       }
 
-      return;
+    };
 
-    }
-
-
-    const unsubscribe =
-      window.auth.onAuthStateChanged(
-        async (user) => {
-
-          console.log(
-            "Firebase current user:",
-            user
-          );
-
-
-          /* -----------------------------------------
-             NOT LOGGED IN
-          ----------------------------------------- */
-
-          if (!user) {
-
-            localStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            sessionStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            setMember(null);
-
-            setAuthChecking(false);
-
-            if (
-              window.membersNavigate
-            ) {
-
-              window.membersNavigate(
-                "/members/login"
-              );
-
-            } else {
-
-              window.location.href =
-                "/members/login";
-
-            }
-
-            return;
-
-          }
-
-
-          /* -----------------------------------------
-             LOGGED IN
-          ----------------------------------------- */
-
-          const saved =
-            localStorage.getItem(
-              "wealthoria-member"
-            ) ||
-            sessionStorage.getItem(
-              "wealthoria-member"
-            );
-
-
-          if (!saved) {
-
-            console.warn(
-              "Firebase user exists but member session is missing."
-            );
-
-            await window.auth.signOut();
-
-            setMember(null);
-
-            setAuthChecking(false);
-
-            if (
-              window.membersNavigate
-            ) {
-
-              window.membersNavigate(
-                "/members/login"
-              );
-
-            } else {
-
-              window.location.href =
-                "/members/login";
-
-            }
-
-            return;
-
-          }
-
-
-          try {
-
-            const parsedMember =
-              JSON.parse(saved);
-
-
-            /* -----------------------------------------
-               CHECK UID
-            ----------------------------------------- */
-
-            if (
-              parsedMember.uid &&
-              parsedMember.uid !== user.uid
-            ) {
-
-              console.warn(
-                "Member session does not match Firebase user."
-              );
-
-              localStorage.removeItem(
-                "wealthoria-member"
-              );
-
-              sessionStorage.removeItem(
-                "wealthoria-member"
-              );
-
-              await window.auth.signOut();
-
-              setMember(null);
-
-              setAuthChecking(false);
-
-              if (
-                window.membersNavigate
-              ) {
-
-                window.membersNavigate(
-                  "/members/login"
-                );
-
-              } else {
-
-                window.location.href =
-                  "/members/login";
-
-              }
-
-              return;
-
-            }
-
-
-            setMember(parsedMember);
-
-            setAuthChecking(false);
-
-
-          } catch (error) {
-
-            console.error(
-              "Invalid member session:",
-              error
-            );
-
-            localStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            sessionStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            await window.auth.signOut();
-
-            setMember(null);
-
-            setAuthChecking(false);
-
-            if (
-              window.membersNavigate
-            ) {
-
-              window.membersNavigate(
-                "/members/login"
-              );
-
-            } else {
-
-              window.location.href =
-                "/members/login";
-
-            }
-
-          }
-
-        }
-      );
-
-
-    return () =>
-      unsubscribe();
+    loadMember();
 
   }, []);
 
 
-  /* =======================================================
+  /* =========================================================
+     KEEP THE CURRENT SECTION AFTER REFRESH
+  ========================================================= */
+
+  useEffect(() => {
+
+    const path =
+      window.location.pathname;
+
+    if (
+      path === "/members/course-videos"
+    ) {
+      setActiveSection("courses");
+
+    } else if (
+      path === "/members/newsletter"
+    ) {
+      setActiveSection("newsletter");
+
+    } else if (
+      path === "/members/weekly-roundup"
+    ) {
+      setActiveSection("weekly-roundup");
+
+    } else if (
+      path === "/members/market-roundup"
+    ) {
+      setActiveSection("market-roundup");
+
+    } else if (
+      path === "/members/purchase-history"
+    ) {
+      setActiveSection("purchase-history");
+
+    } else if (
+      path === "/members/seminar-registrations"
+    ) {
+      setActiveSection("seminars");
+
+    } else if (
+      path === "/members/settings"
+    ) {
+      setActiveSection("settings");
+
+    } else {
+      setActiveSection("dashboard");
+    }
+
+  }, []);
+
+
+  /* =========================================================
      NAVIGATION
-  ======================================================= */
+  ========================================================= */
 
   const navigate = (path) => {
 
@@ -439,23 +207,94 @@ function MemberDashboard() {
 
       window.membersNavigate(path);
 
+    } else {
+
+      window.history.pushState(
+        {},
+        "",
+        path
+      );
+
+      window.dispatchEvent(
+        new PopStateEvent("popstate")
+      );
+
     }
 
   };
 
 
-  /* =======================================================
+  /* =========================================================
+     OPEN SECTION
+  ========================================================= */
+
+  const openSection = (section) => {
+
+    setActiveSection(section);
+
+    switch (section) {
+
+      case "courses":
+        navigate(
+          "/members/course-videos"
+        );
+        break;
+
+      case "newsletter":
+        navigate(
+          "/members/newsletter"
+        );
+        break;
+
+      case "weekly-roundup":
+        navigate(
+          "/members/weekly-roundup"
+        );
+        break;
+
+      case "market-roundup":
+        navigate(
+          "/members/market-roundup"
+        );
+        break;
+
+      case "purchase-history":
+        navigate(
+          "/members/purchase-history"
+        );
+        break;
+
+      case "seminars":
+        navigate(
+          "/members/seminar-registrations"
+        );
+        break;
+
+      case "settings":
+        navigate(
+          "/members/settings"
+        );
+        break;
+
+      default:
+        navigate(
+          "/members/dashboard"
+        );
+    }
+
+  };
+
+
+  /* =========================================================
      LOGOUT
-  ======================================================= */
+  ========================================================= */
 
   const logout = async () => {
 
     try {
 
       if (window.auth) {
-
         await window.auth.signOut();
-
       }
 
     } catch (error) {
@@ -467,7 +306,6 @@ function MemberDashboard() {
 
     }
 
-
     localStorage.removeItem(
       "wealthoria-member"
     );
@@ -476,32 +314,37 @@ function MemberDashboard() {
       "wealthoria-member"
     );
 
-    localStorage.removeItem(
-      "wealthoria-active-section"
+    navigate(
+      "/members/login"
     );
-
-
-    if (
-      window.membersNavigate
-    ) {
-
-      window.membersNavigate(
-        "/members/login"
-      );
-
-    } else {
-
-      window.location.href =
-        "/members/login";
-
-    }
 
   };
 
 
-  /* =======================================================
+  /* =========================================================
+     THEME
+  ========================================================= */
+
+  const toggleTheme = () => {
+
+    const next =
+      theme === "dark"
+        ? "light"
+        : "dark";
+
+    setTheme(next);
+
+    localStorage.setItem(
+      "wealthoria-member-theme",
+      next
+    );
+
+  };
+
+
+  /* =========================================================
      MEMBER DETAILS
-  ======================================================= */
+  ========================================================= */
 
   const name =
     member?.name ||
@@ -511,62 +354,613 @@ function MemberDashboard() {
     member?.role ||
     "Member";
 
+  const email =
+    member?.email ||
+    "";
 
-  /* =======================================================
+
+  /* =========================================================
+     PAGE COMPONENTS
+  ========================================================= */
+
+  const CourseVideos =
+    getComponent(
+      "CourseVideos"
+    );
+
+  const Newsletter =
+    getComponent(
+      "Newsletter"
+    );
+
+  const SeminarRegistrations =
+    getComponent(
+      "SeminarRegistrations"
+    );
+
+  const WeeklyRoundup =
+    getComponent(
+      "WeeklyRoundup"
+    );
+
+  const PurchaseHistory =
+    getComponent(
+      "PurchaseHistory"
+    );
+
+
+  /* =========================================================
      LOADING
-  ======================================================= */
+  ========================================================= */
 
-  if (authChecking) {
+  if (!member) {
 
     return (
-
-      <div className="member-loading">
-
-        Checking login...
-
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Arial"
+        }}
+      >
+        Loading member portal...
       </div>
-
     );
 
   }
 
 
-  if (!member) {
+  /* =========================================================
+     RENDER PAGE
+  ========================================================= */
 
-    return null;
-
-  }
+  const renderContent = () => {
 
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
+    /* =====================================================
+       COURSE VIDEOS
+    ===================================================== */
+
+    if (
+      activeSection === "courses"
+    ) {
+
+      if (!CourseVideos) {
+
+        return (
+          <MissingComponent
+            name="CourseVideos"
+            file="CourseVideos.jsx"
+            back={() =>
+              openSection("dashboard")
+            }
+          />
+        );
+
+      }
+
+      return (
+        <CourseVideos />
+      );
+
+    }
+
+
+    /* =====================================================
+       NEWSLETTER
+    ===================================================== */
+
+    if (
+      activeSection === "newsletter"
+    ) {
+
+      if (!Newsletter) {
+
+        return (
+          <MissingComponent
+            name="Newsletter"
+            file="Newsletter.jsx"
+            back={() =>
+              openSection("dashboard")
+            }
+          />
+        );
+
+      }
+
+      return (
+        <Newsletter />
+      );
+
+    }
+
+
+    /* =====================================================
+       WEEKLY ROUNDUP
+    ===================================================== */
+
+    if (
+      activeSection === "weekly-roundup"
+    ) {
+
+      if (!WeeklyRoundup) {
+
+        return (
+          <MissingComponent
+            name="WeeklyRoundup"
+            file="WeeklyRoundup.jsx"
+            back={() =>
+              openSection("dashboard")
+            }
+          />
+        );
+
+      }
+
+      return (
+        <WeeklyRoundup />
+      );
+
+    }
+
+
+    /* =====================================================
+       SEMINAR REGISTRATIONS
+    ===================================================== */
+
+    if (
+      activeSection === "seminars"
+    ) {
+
+      if (!SeminarRegistrations) {
+
+        return (
+          <MissingComponent
+            name="SeminarRegistrations"
+            file="SeminarRegistrations.jsx"
+            back={() =>
+              openSection("dashboard")
+            }
+          />
+        );
+
+      }
+
+      return (
+        <SeminarRegistrations />
+      );
+
+    }
+
+
+    /* =====================================================
+       PURCHASE HISTORY
+    ===================================================== */
+
+    if (
+      activeSection === "purchase-history"
+    ) {
+
+      if (!PurchaseHistory) {
+
+        return (
+          <MissingComponent
+            name="PurchaseHistory"
+            file="PurchaseHistory.jsx"
+            back={() =>
+              openSection("dashboard")
+            }
+          />
+        );
+
+      }
+
+      return (
+        <PurchaseHistory />
+      );
+
+    }
+
+
+    /* =====================================================
+       MARKET ROUNDUP
+    ===================================================== */
+
+    if (
+      activeSection === "market-roundup"
+    ) {
+
+      return (
+
+        <section className="member-chart-page">
+
+          <div className="member-chart-header">
+
+            <div>
+
+              <span className="member-eyebrow">
+                MARKET DATA
+              </span>
+
+              <h2>
+                Market Charts
+              </h2>
+
+              <p>
+                Track market movements
+                and explore financial
+                charts.
+              </p>
+
+            </div>
+
+            <button
+              className="member-panel-link"
+              onClick={() =>
+                openSection("dashboard")
+              }
+            >
+              ← Back to Dashboard
+            </button>
+
+          </div>
+
+
+          <div
+            className="member-chart-container"
+            style={{
+              width: "100%",
+              minHeight: "650px"
+            }}
+          >
+
+            <TradingViewChart
+              theme={theme}
+            />
+
+          </div>
+
+        </section>
+
+      );
+
+    }
+
+
+    /* =====================================================
+       SETTINGS
+    ===================================================== */
+
+    if (
+      activeSection === "settings"
+    ) {
+
+      return (
+
+        <section className="member-settings-page">
+
+          <div className="member-chart-header">
+
+            <div>
+
+              <span className="member-eyebrow">
+                ACCOUNT
+              </span>
+
+              <h2>
+                Settings
+              </h2>
+
+              <p>
+                Manage your member portal
+                preferences.
+              </p>
+
+            </div>
+
+            <button
+              className="member-panel-link"
+              onClick={() =>
+                openSection("dashboard")
+              }
+            >
+              ← Back to Dashboard
+            </button>
+
+          </div>
+
+
+          <div
+            className="member-settings-card"
+            style={{
+              marginTop: 25,
+              padding: 25,
+              borderRadius: 16,
+              background:
+                theme === "dark"
+                  ? "#1c1c1c"
+                  : "#ffffff"
+            }}
+          >
+
+            <h3>
+              Account
+            </h3>
+
+            <p>
+              <strong>Name:</strong>{" "}
+              {name}
+            </p>
+
+            <p>
+              <strong>Email:</strong>{" "}
+              {email}
+            </p>
+
+            <p>
+              <strong>Role:</strong>{" "}
+              {role}
+            </p>
+
+          </div>
+
+        </section>
+
+      );
+
+    }
+
+
+    /* =====================================================
+       DASHBOARD HOME
+    ===================================================== */
+
+    return (
+
+      <section className="member-home-page">
+
+        <div className="member-welcome">
+
+          <span className="member-eyebrow">
+            MEMBER PORTAL
+          </span>
+
+          <h1>
+            Welcome, {name}
+          </h1>
+
+          <p>
+            Continue learning and
+            explore your Wealthoria
+            member resources.
+          </p>
+
+        </div>
+
+
+        <div className="member-dashboard-grid">
+
+
+          {/* COURSES */}
+
+          <button
+            className="member-dashboard-card"
+            onClick={() =>
+              openSection("courses")
+            }
+          >
+
+            <span className="member-card-icon">
+              ▶
+            </span>
+
+            <h3>
+              Course Videos
+            </h3>
+
+            <p>
+              Watch your available
+              learning videos.
+            </p>
+
+            <span className="member-card-link">
+              Open Courses →
+            </span>
+
+          </button>
+
+
+          {/* NEWSLETTER */}
+
+          <button
+            className="member-dashboard-card"
+            onClick={() =>
+              openSection("newsletter")
+            }
+          >
+
+            <span className="member-card-icon">
+              ✉
+            </span>
+
+            <h3>
+              Newsletter
+            </h3>
+
+            <p>
+              Read Wealthoria
+              newsletters.
+            </p>
+
+            <span className="member-card-link">
+              Read Newsletter →
+            </span>
+
+          </button>
+
+
+          {/* WEEKLY ROUNDUP */}
+
+          <button
+            className="member-dashboard-card"
+            onClick={() =>
+              openSection("weekly-roundup")
+            }
+          >
+
+            <span className="member-card-icon">
+              📰
+            </span>
+
+            <h3>
+              Weekly Roundup
+            </h3>
+
+            <p>
+              Stay updated with
+              weekly market insights.
+            </p>
+
+            <span className="member-card-link">
+              View Roundup →
+            </span>
+
+          </button>
+
+
+          {/* MARKET */}
+
+          <button
+            className="member-dashboard-card"
+            onClick={() =>
+              openSection("market-roundup")
+            }
+          >
+
+            <span className="member-card-icon">
+              📈
+            </span>
+
+            <h3>
+              Market Charts
+            </h3>
+
+            <p>
+              View live market
+              charts.
+            </p>
+
+            <span className="member-card-link">
+              Open Charts →
+            </span>
+
+          </button>
+
+
+          {/* PURCHASE HISTORY */}
+
+          <button
+            className="member-dashboard-card"
+            onClick={() =>
+              openSection("purchase-history")
+            }
+          >
+
+            <span className="member-card-icon">
+              🧾
+            </span>
+
+            <h3>
+              Purchase History
+            </h3>
+
+            <p>
+              View your subscription
+              and purchase history.
+            </p>
+
+            <span className="member-card-link">
+              View Purchases →
+            </span>
+
+          </button>
+
+
+          {/* SEMINARS */}
+
+          <button
+            className="member-dashboard-card"
+            onClick={() =>
+              openSection("seminars")
+            }
+          >
+
+            <span className="member-card-icon">
+              📋
+            </span>
+
+            <h3>
+              Seminar Registrations
+            </h3>
+
+            <p>
+              View seminar
+              registrations.
+            </p>
+
+            <span className="member-card-link">
+              Open Registrations →
+            </span>
+
+          </button>
+
+
+        </div>
+
+      </section>
+
+    );
+
+  };
+
+
+  /* =========================================================
+     MAIN UI
+  ========================================================= */
 
   return (
 
-    <div className="member-dashboard">
+    <div
+      className={
+        theme === "dark"
+          ? "member-dashboard member-dark"
+          : "member-dashboard member-light"
+      }
+    >
 
 
-      {/* ===================================================
+      {/* =====================================================
           SIDEBAR
-      =================================================== */}
+      ===================================================== */}
 
       <aside className="member-sidebar">
 
-
-        {/* BRAND */}
-
-        <div className="member-sidebar-brand">
+        <div
+          className="member-sidebar-brand"
+          onClick={() => {
+            window.location.href =
+              "/";
+          }}
+          style={{
+            cursor: "pointer"
+          }}
+        >
 
           <img
             src="/assets/logo-mark.png"
             alt="Wealthoria"
-            onClick={() => {
-              window.location.href = "/";
-            }}
-            style={{
-              cursor: "pointer"
-            }}
           />
 
           <span>
@@ -576,26 +970,21 @@ function MemberDashboard() {
         </div>
 
 
-        <nav className="member-sidebar-nav">
-
-
-          {/* =================================================
-              OVERVIEW
-          ================================================= */}
+        <nav
+          className="member-sidebar-nav"
+        >
 
           <div className="member-nav-section">
-
             OVERVIEW
-
           </div>
 
 
           <button
-            className={`member-nav-item ${
+            className={
               activeSection === "dashboard"
-                ? "active"
-                : ""
-            }`}
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
             onClick={() =>
               openSection("dashboard")
             }
@@ -610,43 +999,17 @@ function MemberDashboard() {
           </button>
 
 
-          {/* =================================================
-              LEARNING
-          ================================================= */}
-
           <div className="member-nav-section">
-
             LEARNING
-
           </div>
 
 
           <button
-            className="member-nav-item"
-            onClick={() =>
-              navigate(
-                "/members/articles"
-              )
-            }
-          >
-
-            <span className="member-nav-icon">
-              ▤
-            </span>
-
-            Articles & Reports
-
-          </button>
-
-
-          {/* COURSE VIDEOS */}
-
-          <button
-            className={`member-nav-item ${
+            className={
               activeSection === "courses"
-                ? "active"
-                : ""
-            }`}
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
             onClick={() =>
               openSection("courses")
             }
@@ -661,38 +1024,12 @@ function MemberDashboard() {
           </button>
 
 
-          {/* WEEKLY ROUNDUP */}
-
           <button
-            className={`member-nav-item ${
-              activeSection === "weekly-roundup"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              openSection(
-                "weekly-roundup"
-              )
-            }
-          >
-
-            <span className="member-nav-icon">
-              ↗
-            </span>
-
-            Weekly Roundup
-
-          </button>
-
-
-          {/* NEWSLETTER */}
-
-          <button
-            className={`member-nav-item ${
+            className={
               activeSection === "newsletter"
-                ? "active"
-                : ""
-            }`}
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
             onClick={() =>
               openSection("newsletter")
             }
@@ -707,83 +1044,64 @@ function MemberDashboard() {
           </button>
 
 
-          {/* =================================================
-              DATA & RESEARCH
-          ================================================= */}
-
-          <div className="member-nav-section">
-
-            DATA & RESEARCH
-
-          </div>
-
-
-          {/* CHARTS */}
-
           <button
-            className={`member-nav-item ${
-              activeSection === "charts"
-                ? "active"
-                : ""
-            }`}
+            className={
+              activeSection === "weekly-roundup"
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
             onClick={() =>
-              openSection("charts")
+              openSection("weekly-roundup")
             }
           >
 
             <span className="member-nav-icon">
-              ◒
+              📰
             </span>
 
-            Charts
+            Weekly Roundup
 
           </button>
 
-
-          {/* CALCULATORS */}
-
-          <button
-            className={`member-nav-item ${
-              activeSection === "calculator"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              openSection("calculator")
-            }
-          >
-
-            <span className="member-nav-icon">
-              =
-            </span>
-
-            Calculators
-
-          </button>
-
-
-          {/* =================================================
-              ACCOUNT
-          ================================================= */}
 
           <div className="member-nav-section">
-
-            ACCOUNT
-
+            FINANCE
           </div>
 
 
           <button
-            className={`member-nav-item ${
-    activeSection === "purchase-history"
-      ? "active"
-      : ""
-  }`}
-  onClick={() =>
-    openSection("purchase-history")
-  }>
+            className={
+              activeSection === "market-roundup"
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
+            onClick={() =>
+              openSection("market-roundup")
+            }
+          >
+
             <span className="member-nav-icon">
-              ▣
+              📈
+            </span>
+
+            Market Charts
+
+          </button>
+
+
+          <button
+            className={
+              activeSection === "purchase-history"
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
+            onClick={() =>
+              openSection("purchase-history")
+            }
+          >
+
+            <span className="member-nav-icon">
+              🧾
             </span>
 
             Purchase History
@@ -791,121 +1109,96 @@ function MemberDashboard() {
           </button>
 
 
+          <div className="member-nav-section">
+            EVENTS
+          </div>
+
+
           <button
-            className="member-nav-item"
+            className={
+              activeSection === "seminars"
+                ? "member-nav-item active"
+                : "member-nav-item"
+            }
             onClick={() =>
-              navigate(
-                "/members/notifications"
-              )
+              openSection("seminars")
             }
           >
 
             <span className="member-nav-icon">
-              ♢
+              📋
             </span>
 
-            Notifications
-
-            <span className="member-notification-count">
-              3
-            </span>
+            Seminar Registrations
 
           </button>
-
 
         </nav>
 
 
-        {/* SIDEBAR USER */}
+        <div
+          className="member-sidebar-footer"
+        >
 
-        <div className="member-sidebar-bottom">
+          <button
+            className="member-nav-item"
+            onClick={() =>
+              openSection("settings")
+            }
+          >
 
-          <div className="member-sidebar-user">
+            ⚙ Settings
 
-            <div className="member-avatar">
-
-              {name
-                .charAt(0)
-                .toUpperCase()}
-
-            </div>
+          </button>
 
 
-            <div className="member-sidebar-user-info">
+          <button
+            className="member-nav-item"
+            onClick={logout}
+          >
 
-              <strong>
-                {name}
-              </strong>
+            ↪ Logout
 
-              <span>
-                {role}
-              </span>
-
-            </div>
-
-          </div>
+          </button>
 
         </div>
-
 
       </aside>
 
 
-      {/* ===================================================
+      {/* =====================================================
           MAIN
-      =================================================== */}
+      ===================================================== */}
 
-      <main className="member-dashboard-main">
+      <main className="member-main">
 
 
-        {/* =================================================
+        {/* ===================================================
             HEADER
-        ================================================= */}
+        =================================================== */}
 
-        <header className="member-dashboard-header">
-
+        <header className="member-header">
 
           <div>
 
-            <span className="member-page-label">
-              MEMBER PORTAL
+            <span className="member-header-title">
+              Wealthoria Members
             </span>
 
-            <h1>
-
-              {activeSection === "courses"
-                ? "Course Videos"
-                : activeSection ===
-                  "newsletter"
-                ? "Newsletters"
-                : activeSection ===
-                  "weekly-roundup"
-                ? "Weekly Roundup"
-                : activeSection ===
-                  "charts"
-                ? "Market Charts"
-                : activeSection ===
-                  "calculator"
-                ? "Calculators"
-                : activeSection ===
-                  "purchase-history"
-                ? "Purchase History"
-                : "Dashboard"}
-
-            </h1>
+            <span className="member-header-subtitle">
+              Learning is the first investment
+            </span>
 
           </div>
 
 
-          <div className="member-header-actions">
-
-
-            {/* DARK MODE */}
+          <div
+            className="member-header-actions"
+          >
 
             <button
               className="member-header-button"
               onClick={toggleTheme}
-              type="button"
             >
 
               {theme === "dark"
@@ -915,14 +1208,10 @@ function MemberDashboard() {
             </button>
 
 
-            {/* SETTINGS */}
-
             <button
               className="member-header-button"
               onClick={() =>
-                navigate(
-                  "/members/settings"
-                )
+                openSection("settings")
               }
             >
 
@@ -931,11 +1220,13 @@ function MemberDashboard() {
             </button>
 
 
-            {/* PROFILE */}
+            <div
+              className="member-profile"
+            >
 
-            <div className="member-profile">
-
-              <div className="member-avatar">
+              <div
+                className="member-avatar"
+              >
 
                 {name
                   .charAt(0)
@@ -944,7 +1235,9 @@ function MemberDashboard() {
               </div>
 
 
-              <div className="member-profile-info">
+              <div
+                className="member-profile-info"
+              >
 
                 <strong>
                   {name}
@@ -959,8 +1252,6 @@ function MemberDashboard() {
             </div>
 
 
-            {/* LOGOUT */}
-
             <button
               className="member-header-button"
               onClick={logout}
@@ -970,527 +1261,112 @@ function MemberDashboard() {
 
             </button>
 
-
           </div>
 
         </header>
 
 
-        {/* =================================================
+        {/* ===================================================
             CONTENT
-        ================================================= */}
+        =================================================== */}
 
-        <div className="member-dashboard-content">
+        <div
+          className="member-dashboard-content"
+        >
 
-
-          {/* =================================================
-              COURSE VIDEOS
-          ================================================= */}
-
-          {activeSection === "courses" ? (
-
-            <CourseVideos />
-
-          )
-
-
-          /* =================================================
-             NEWSLETTER
-          ================================================= */
-
-          : activeSection === "newsletter" ? (
-
-            <Newsletter />
-
-          )
-
-
-          /* =================================================
-             WEEKLY ROUNDUP
-          ================================================= */
-
-          : activeSection === "weekly-roundup" ? (
-
-            <WeeklyRoundup />
-
-          )
-
-
-          /* =================================================
-             CHARTS
-          ================================================= */
-
-          : activeSection === "charts" ? (
-
-            <section className="member-chart-page">
-
-
-              <div className="member-chart-header">
-
-                <div>
-
-                  <span className="member-eyebrow">
-                    MARKET DATA
-                  </span>
-
-                  <h2>
-                    Market Charts
-                  </h2>
-
-                  <p>
-                    Track market movements
-                    and explore financial
-                    charts.
-                  </p>
-
-                </div>
-
-
-                <button
-                  className="member-panel-link"
-                  onClick={() =>
-                    openSection("dashboard")
-                  }
-                >
-
-                  ← Back to Dashboard
-
-                </button>
-
-              </div>
-
-
-              <div className="member-chart-container">
-
-                <TradingViewChart
-                  theme={theme}
-                />
-
-              </div>
-
-
-            </section>
-
-          )
-
-
-          /* =================================================
-             CALCULATOR
-          ================================================= */
-
-          : activeSection === "calculator" ? (
-
-            <section className="member-calculator-page">
-
-
-              <div className="member-calculator-header">
-
-              </div>
-
-
-              <div className="member-calculator-container">
-
-                <iframe
-                  src="/ders-calculator.html"
-                  title="Necessary Calculators"
-                  className="member-calculator-frame"
-                />
-
-              </div>
-
-
-            </section>
-
-          )
-
-
-          /* =================================================
-             PURCHASE HISTORY
-          ================================================= */
-
-          : activeSection === "purchase-history" ? (
-
-            <PurchaseHistory />
-
-          )
-
-
-          /* =================================================
-             DEFAULT DASHBOARD
-          ================================================= */
-
-          : (
-
-            <>
-
-
-              {/* =================================================
-                  WELCOME
-              ================================================= */}
-
-              <section className="member-welcome">
-
-                <span className="member-eyebrow">
-                  WELCOME BACK
-                </span>
-
-                <h2>
-                  Good morning, {name} 👋
-                </h2>
-
-                <p>
-                  Welcome to your
-                  Wealthoria member portal.
-                </p>
-
-              </section>
-
-
-              {/* =================================================
-                  STATS
-              ================================================= */}
-
-              <section className="member-stats">
-
-
-                <div className="member-stat-card">
-
-                  <div className="member-stat-icon">
-                    ◈
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Total Content
-                    </span>
-
-                    <strong>
-                      24
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                <div className="member-stat-card">
-
-                  <div className="member-stat-icon">
-                    ▶
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Course Videos
-                    </span>
-
-                    <strong>
-                      18
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                <div className="member-stat-card">
-
-                  <div className="member-stat-icon">
-                    ◒
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Market Reports
-                    </span>
-
-                    <strong>
-                      12
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-                <div className="member-stat-card">
-
-                  <div className="member-stat-icon">
-                    ♢
-                  </div>
-
-                  <div>
-
-                    <span>
-                      Notifications
-                    </span>
-
-                    <strong>
-                      3
-                    </strong>
-
-                  </div>
-
-                </div>
-
-
-              </section>
-
-
-              {/* =================================================
-                  TWO PANELS
-              ================================================= */}
-
-              <section className="member-dashboard-grid">
-
-
-                {/* RECENT ARTICLES */}
-
-                <div className="member-panel">
-
-                  <div className="member-panel-header">
-
-                    <div>
-
-                      <span className="member-panel-label">
-                        LIBRARY
-                      </span>
-
-                      <h3>
-                        Recent Articles & Reports
-                      </h3>
-
-                    </div>
-
-
-                    <button
-                      className="member-panel-link"
-                      onClick={() =>
-                        navigate(
-                          "/members/articles"
-                        )
-                      }
-                    >
-
-                      View all →
-
-                    </button>
-
-                  </div>
-
-
-                  <div className="member-content-list">
-
-
-                    <div className="member-content-row">
-
-                      <div className="member-content-icon">
-                        PDF
-                      </div>
-
-                      <div className="member-content-info">
-
-                        <strong>
-                          Wealth Building Basics
-                        </strong>
-
-                        <span>
-                          Financial Education
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="member-content-row">
-
-                      <div className="member-content-icon">
-                        RPT
-                      </div>
-
-                      <div className="member-content-info">
-
-                        <strong>
-                          Monthly Market Report
-                        </strong>
-
-                        <span>
-                          Market Research
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="member-content-row">
-
-                      <div className="member-content-icon">
-                        PDF
-                      </div>
-
-                      <div className="member-content-info">
-
-                        <strong>
-                          Investment Planning Guide
-                        </strong>
-
-                        <span>
-                          Personal Finance
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                  </div>
-
-                </div>
-
-
-                {/* QUICK ACCESS */}
-
-                <div className="member-panel">
-
-
-                  <div className="member-panel-header">
-
-                    <div>
-
-                      <span className="member-panel-label">
-                        QUICK ACCESS
-                      </span>
-
-                      <h3>
-                        Explore
-                      </h3>
-
-                    </div>
-
-                  </div>
-
-
-                  <div className="member-actions">
-
-
-                    {/* COURSE */}
-
-                    <button
-                      onClick={() =>
-                        openSection("courses")
-                      }
-                    >
-
-                      <span className="action-icon">
-                        ▶
-                      </span>
-
-                      <div>
-
-                        <strong>
-                          Course Videos
-                        </strong>
-
-                        <small>
-                          Learn trading concepts
-                        </small>
-
-                      </div>
-
-                      <span>
-                        →
-                      </span>
-
-                    </button>
-
-
-                    {/* WEEKLY ROUNDUP */}
-
-                    <button
-                      onClick={() =>
-                        openSection(
-                          "weekly-roundup"
-                        )
-                      }
-                    >
-
-                      <span className="action-icon">
-                        ↗
-                      </span>
-
-                      <div>
-
-                        <strong>
-                          Weekly Roundup
-                        </strong>
-
-                        <small>
-                          Latest market updates
-                        </small>
-
-                      </div>
-
-                      <span>
-                        →
-                      </span>
-
-                    </button>
-
-
-                    {/* CHARTS */}
-
-                    <button
-                      onClick={() =>
-                        openSection("charts")
-                      }
-                    >
-
-                      <span className="action-icon">
-                        ◒
-                      </span>
-
-                      <div>
-
-                        <strong>
-                          Market Charts
-                        </strong>
-
-                        <small>
-                          View market data
-                        </small>
-
-                      </div>
-
-                      <span>
-                        →
-                      </span>
-
-                    </button>
-
-
-                  </div>
-
-
-                </div>
-
-
-              </section>
-
-
-            </>
-
-          )}
+          {renderContent()}
 
         </div>
 
       </main>
 
     </div>
+
+  );
+
+}
+
+
+/* =========================================================
+   MISSING COMPONENT MESSAGE
+========================================================= */
+
+function MissingComponent({
+  name,
+  file,
+  back
+}) {
+
+  return (
+
+    <section
+      style={{
+        padding: "40px",
+        maxWidth: "700px",
+        margin: "40px auto",
+        textAlign: "center",
+        fontFamily: "Arial"
+      }}
+    >
+
+      <div
+        style={{
+          padding: "30px",
+          borderRadius: "16px",
+          background: "#fff",
+          border: "1px solid #e5e7eb",
+          boxShadow:
+            "0 10px 30px rgba(0,0,0,0.08)"
+        }}
+      >
+
+        <div
+          style={{
+            fontSize: "42px",
+            marginBottom: "15px"
+          }}
+        >
+          ⚠️
+        </div>
+
+        <h2>
+          {name} is not loaded
+        </h2>
+
+        <p
+          style={{
+            color: "#666",
+            lineHeight: 1.6
+          }}
+        >
+          Please make sure{" "}
+          <strong>
+            /members/{file}
+          </strong>{" "}
+          is loaded before{" "}
+          <strong>
+            dashboard.jsx
+          </strong>.
+        </p>
+
+        <button
+          onClick={back}
+          style={{
+            marginTop: "15px",
+            padding: "12px 22px",
+            border: "none",
+            borderRadius: "8px",
+            background: "#e8473f",
+            color: "#fff",
+            cursor: "pointer"
+          }}
+        >
+          ← Back to Dashboard
+        </button>
+
+      </div>
+
+    </section>
 
   );
 

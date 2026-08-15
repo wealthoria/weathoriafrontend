@@ -102,4 +102,13 @@ function MemberApp() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<MemberApp />);
+const memberRoot = document.getElementById("root");
+
+if (memberRoot && !memberRoot.dataset.memberMounted) {
+  memberRoot.dataset.memberMounted = "true";
+
+  const root = ReactDOM.createRoot(memberRoot);
+  root.render(<MemberApp />);
+
+  window.__memberRoot = root;
+}

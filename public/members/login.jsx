@@ -240,19 +240,20 @@ function MemberLogin() {
       {/* =========================================
           BRAND
       ========================================= */}
+<a
+  href="/"
+  className="members-login-brand"
+  aria-label="Go to Wealthoria website" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "inherit" }}
+>
+  <img
+    src="/assets/logo-mark.png"
+    alt="Wealthoria"
+  />
 
-      <div className="members-login-brand">
-
-        <img
-          src="/assets/logo-mark.png"
-          alt="Wealthoria"
-        />
-
-        <span>
-          Wealthoria
-        </span>
-
-      </div>
+  <span>
+    Wealthoria
+  </span>
+</a>
 
 
       {/* =========================================
@@ -432,6 +433,7 @@ function MemberLogin() {
         </form>
 
       </div>
+      
 
     </div>
   );

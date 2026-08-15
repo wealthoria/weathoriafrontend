@@ -10,9 +10,7 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <title>
-    Wealthoria - Learning is the first investment
-  </title>
+  <title>Wealthoria - Learning is the first investment</title>
 
   <meta
     name="description"
@@ -24,15 +22,11 @@
     content="#e8473f"
   >
 
-  <!-- Favicon -->
-
   <link
     rel="icon"
     type="image/png"
     href="/assets/logo-mark.png"
   >
-
-  <!-- PWA -->
 
   <link
     rel="manifest"
@@ -65,7 +59,9 @@
   >
 
 
-  <!-- Google Font -->
+  <!-- =====================================================
+       GOOGLE FONT
+       ===================================================== -->
 
   <link
     rel="preconnect"
@@ -84,7 +80,9 @@
   >
 
 
-  <!-- Existing Wealthoria CSS -->
+  <!-- =====================================================
+       WEALTHORIA CSS
+       ===================================================== -->
 
   <link
     rel="stylesheet"
@@ -106,8 +104,17 @@
     href="/app/calc.css"
   >
 
+  <!-- MEMBERS CSS -->
 
-  <!-- Open Graph -->
+  <link
+    rel="stylesheet"
+    href="/members/portal.css"
+  >
+
+
+  <!-- =====================================================
+       OPEN GRAPH
+       ===================================================== -->
 
   <meta
     property="og:title"
@@ -165,6 +172,90 @@
     src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js">
   </script>
 
+
+  <!-- =====================================================
+       FIREBASE
+       ===================================================== -->
+
+  <script
+    src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
+  </script>
+
+  <script
+    src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js">
+  </script>
+
+  <script
+    src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
+  </script>
+
+
+  <!-- =====================================================
+       FIREBASE CONFIGURATION
+       ===================================================== -->
+
+  <script>
+
+    const firebaseConfig = {
+
+      apiKey:
+        "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
+
+      authDomain:
+        "wealthoria-6fc11.firebaseapp.com",
+
+      projectId:
+        "wealthoria-6fc11",
+
+      storageBucket:
+        "wealthoria-6fc11.firebasestorage.app",
+
+      messagingSenderId:
+        "141910518023",
+
+      appId:
+        "1:141910518023:web:7198ed847f459cb71ebda2",
+
+      measurementId:
+        "G-Q9955KR0G6"
+
+    };
+
+
+    if (!firebase.apps.length) {
+
+      firebase.initializeApp(
+        firebaseConfig
+      );
+
+    }
+
+
+    window.firebase = firebase;
+
+    window.auth =
+      firebase.auth();
+
+    window.db =
+      firebase.firestore();
+
+
+    console.log(
+      "Firebase initialized"
+    );
+
+    console.log(
+      "Firebase Auth:",
+      window.auth
+    );
+
+    console.log(
+      "Firestore:",
+      window.db
+    );
+
+  </script>
+
 </head>
 
 
@@ -174,17 +265,54 @@
 
 
   <!-- =====================================================
-       NEW MEMBERS PORTAL
+       MEMBERS PORTAL
        
-       IMPORTANT:
-       login.jsx must load BEFORE members/app.jsx
-       members/app.jsx must load BEFORE app/app.jsx
+       IMPORTANT ORDER:
+       
+       1. login.jsx
+       2. CourseVideos.jsx
+       3. dashboard.jsx
+       4. app.jsx
+       
+       Do NOT load these files twice.
        ===================================================== -->
+
+
+  <!-- MEMBER LOGIN -->
 
   <script
     type="text/babel"
     src="/members/login.jsx">
   </script>
+
+
+  <!-- COURSE VIDEOS -->
+
+  <script
+    type="text/babel"
+    src="/members/CourseVideos.jsx">
+  </script>
+
+
+<!-- NEWSLETTER -->
+<script
+  type="text/babel"
+  src="/members/Newsletter.jsx">
+</script>
+
+<script
+  type="text/babel"
+  src="/members/SeminarRegistrations.jsx">
+</script>
+  <!-- MEMBER DASHBOARD -->
+
+  <script
+    type="text/babel"
+    src="/members/dashboard.jsx">
+  </script>
+
+
+  <!-- MEMBERS ROUTER -->
 
   <script
     type="text/babel"
@@ -193,7 +321,7 @@
 
 
   <!-- =====================================================
-       EXISTING WEALTHORIA WEBSITE
+       PUBLIC WEBSITE
        ===================================================== -->
 
   <script
@@ -236,85 +364,32 @@
     src="/app/anim.jsx">
   </script>
 
-  <!-- MAIN APP -->
-
   <script
     type="text/babel"
     src="/app/app.jsx?v=2">
   </script>
 
 
-  <!-- Existing PWA -->
+  <!-- =====================================================
+       PWA
+       ===================================================== -->
 
   <script
     src="/pwa-register.js"
     defer>
   </script>
 
+
+  <!-- =====================================================
+       CURSOR
+       ===================================================== -->
+
   <script
     src="/app/cursor.js?v=2"
     defer>
   </script>
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<link rel="stylesheet" href="/members/portal.css">
-
-<!-- Firebase Configuration -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
-    authDomain: "wealthoria-6fc11.firebaseapp.com",
-    projectId: "wealthoria-6fc11",
-    storageBucket: "wealthoria-6fc11.firebasestorage.app",
-    messagingSenderId: "141910518023",
-    appId: "1:141910518023:web:7198ed847f459cb71ebda2",
-    measurementId: "G-Q9955KR0G6"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-
-  window.firebase = firebase;
-  window.auth = firebase.auth();
-  window.db = firebase.firestore();
-
-  console.log("Firebase initialized");
-  console.log("Firebase Auth:", window.auth);
-  console.log("Firestore:", window.db);
-</script>
-
-
-<!-- React -->
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
-
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
-
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-
-
-<!-- Members Portal -->
-<script
-  type="text/babel"
-  src="/members/login.jsx">
-</script>
-
-<script
-  type="text/babel"
-  src="/members/dashboard.jsx">
-</script>
-
-<script
-  type="text/babel"
-  src="/members/app.jsx">
-</script>
-
-
-<!-- Public Website files -->
-<!-- Keep your existing public website scripts here -->
 
 
 </body>
+
 </html>

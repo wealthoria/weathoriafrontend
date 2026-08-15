@@ -34,17 +34,17 @@ function NavBar({ onNav }) {
             </button>
         
         
-         <a
+   <a
   className="nav-login"
-  href="Student Portal.html#/student/register"
-  aria-label="Student Register"
+  href="/members/login"
+  aria-label="Member Login"
 >
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Member</span>
 </a>
    <a
   className="nav-login"
-  href="Student Portal.html#/student/register"
+  href="/students/register"
   aria-label="Student Register"
 >
   <Icon name="user" size={17} />

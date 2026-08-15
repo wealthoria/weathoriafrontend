@@ -68,8 +68,8 @@ function NavBar({ onNav }) {
   Seminar
 </a>
         <div className="drawer-foot">
-          <a className="btn btn-outline btn-block" href="Student Portal.html"><Icon name="user" size={17} />Student login</a>
-          <a className="btn btn-outline btn-block" href="Member Portal.html"><Icon name="lock" size={16} />Member login</a>
+          <a className="btn btn-outline btn-block" href="/students/login"><Icon name="user" size={17} />Student login</a>
+          <a className="btn btn-outline btn-block" href="/members/login"><Icon name="lock" size={16} />Member login</a>
         {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
         </div>
       </aside>

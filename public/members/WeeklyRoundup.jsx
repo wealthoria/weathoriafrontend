@@ -1,15 +1,179 @@
 /* global React, window */
 
-function WeeklyRoundup() {
-  return (
-    <section className="member-roundup-page">
+const { useState, useEffect } = React;
 
-      {/* HEADER */}
-      <div className="member-roundup-header">
+/* =========================================================
+   WEEKLY ROUNDUP
+   Displays inside the Members dashboard content area.
+========================================================= */
+
+function WeeklyRoundup() {
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRoundup, setSelectedRoundup] = useState(null);
+
+  const roundups = [
+    {
+      id: 1,
+      title: "Weekly Market Roundup",
+      date: "This Week",
+      category: "Market Insights",
+      summary:
+        "A concise overview of the important market movements, trends and developments from the week.",
+      content:
+        "Use this space to publish the weekly Wealthoria market roundup. Add the week's key market movements, important events, sector updates and educational observations here."
+    },
+    {
+      id: 2,
+      title: "Markets & Economy",
+      date: "Latest",
+      category: "Economy",
+      summary:
+        "Key economic developments and what they mean for investors.",
+      content:
+        "Add the latest economic developments, policy updates, inflation information and other important investor-focused observations here."
+    },
+    {
+      id: 3,
+      title: "Investor Learning Corner",
+      date: "Latest",
+      category: "Education",
+      summary:
+        "Simple financial concepts and practical lessons for members.",
+      content:
+        "Add educational content here to help members understand investing concepts before making investment decisions."
+    }
+  ];
+
+  const filteredRoundups =
+    roundups.filter((item) => {
+
+      const query =
+        searchQuery.trim().toLowerCase();
+
+      if (!query) return true;
+
+      return (
+        item.title.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        item.summary.toLowerCase().includes(query) ||
+        item.content.toLowerCase().includes(query)
+      );
+
+    });
+
+
+  /* =======================================================
+     DETAIL VIEW
+  ======================================================= */
+
+  if (selectedRoundup) {
+
+    return (
+
+      <section className="member-weekly-roundup-page">
+
+        <div className="member-chart-header">
+
+          <div>
+
+            <span className="member-eyebrow">
+              WEEKLY ROUNDUP
+            </span>
+
+            <h2>
+              {selectedRoundup.title}
+            </h2>
+
+            <p>
+              {selectedRoundup.date}
+              {" • "}
+              {selectedRoundup.category}
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            className="member-panel-link"
+            onClick={() =>
+              setSelectedRoundup(null)
+            }
+          >
+            ← Back to Weekly Roundup
+          </button>
+
+        </div>
+
+
+        <article
+          className="member-weekly-roundup-article"
+          style={{
+            marginTop: 24,
+            padding: 28,
+            borderRadius: 18,
+            background:
+              "var(--member-card-bg, #ffffff)",
+            border:
+              "1px solid var(--member-border, #e7e7e7)"
+          }}
+        >
+
+          <span
+            style={{
+              display: "inline-block",
+              marginBottom: 14,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#e8473f"
+            }}
+          >
+            {selectedRoundup.category}
+          </span>
+
+          <h3
+            style={{
+              marginTop: 0,
+              marginBottom: 14
+            }}
+          >
+            {selectedRoundup.title}
+          </h3>
+
+          <p
+            style={{
+              lineHeight: 1.8,
+              marginBottom: 0
+            }}
+          >
+            {selectedRoundup.content}
+          </p>
+
+        </article>
+
+      </section>
+
+    );
+
+  }
+
+
+  /* =======================================================
+     LIST VIEW
+  ======================================================= */
+
+  return (
+
+    <section className="member-weekly-roundup-page">
+
+      <div className="member-chart-header">
 
         <div>
+
           <span className="member-eyebrow">
-            WEALTHORIA
+            MEMBER LEARNING
           </span>
 
           <h2>
@@ -17,263 +181,204 @@ function WeeklyRoundup() {
           </h2>
 
           <p>
-            Stay updated with the latest market developments,
-            financial insights and important investment updates.
+            Stay updated with weekly market
+            insights and investor-focused updates.
           </p>
+
         </div>
+
+        <button
+          type="button"
+          className="member-panel-link"
+          onClick={() => {
+
+            if (window.membersNavigate) {
+              window.membersNavigate(
+                "/members/dashboard"
+              );
+            }
+
+          }}
+        >
+          ← Back to Dashboard
+        </button>
 
       </div>
 
 
-      {/* SEARCH */}
-      <div className="member-roundup-search">
+      {/* =====================================================
+          SEARCH
+      ===================================================== */}
 
-        <span className="member-roundup-search-icon">
-          🔍
-        </span>
+      <div
+        style={{
+          marginTop: 22,
+          marginBottom: 24
+        }}
+      >
 
-        <input
-          type="text"
-          placeholder="Search weekly updates..."
-        />
+        <div
+          style={{
+            position: "relative",
+            maxWidth: 620
+          }}
+        >
 
-      </div>
-
-
-      {/* CURRENT WEEK */}
-      <div className="member-roundup-card">
-
-        <div className="member-roundup-card-top">
-
-          <div>
-            <span className="member-roundup-label">
-              WEEKLY MARKET UPDATE
-            </span>
-
-            <h3>
-              Weekly Market Roundup
-            </h3>
-          </div>
-
-          <span className="member-roundup-date">
-            August 2026
-          </span>
-
-        </div>
-
-
-        <div className="member-roundup-divider"></div>
-
-
-        <p className="member-roundup-description">
-          Get a quick overview of the important market
-          movements, investment developments and financial
-          news from the week.
-        </p>
-
-
-        {/* MARKET ITEMS */}
-        <div className="member-roundup-items">
-
-          <div className="member-roundup-item">
-
-            <span className="member-roundup-number">
-              01
-            </span>
-
-            <div>
-              <h4>
-                Market Overview
-              </h4>
-
-              <p>
-                Key movements and developments in the
-                financial markets this week.
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="member-roundup-item">
-
-            <span className="member-roundup-number">
-              02
-            </span>
-
-            <div>
-              <h4>
-                Important Developments
-              </h4>
-
-              <p>
-                Important financial and economic developments
-                investors should know about.
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="member-roundup-item">
-
-            <span className="member-roundup-number">
-              03
-            </span>
-
-            <div>
-              <h4>
-                Investor Insights
-              </h4>
-
-              <p>
-                Simple insights to help members understand
-                the week's market activity.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* PDF / REPORT AREA */}
-        <div className="member-roundup-report">
-
-          <div className="member-roundup-report-icon">
-            PDF
-          </div>
-
-          <div className="member-roundup-report-info">
-
-            <strong>
-              Weekly Market Report
-            </strong>
-
-            <span>
-              Latest weekly investment insights
-            </span>
-
-          </div>
-
-          <button
-            className="member-roundup-report-button"
-            onClick={() => {
-              alert("Weekly report will be available here.");
+          <span
+            style={{
+              position: "absolute",
+              left: 16,
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: 18,
+              opacity: 0.55
             }}
           >
-            Read Report →
-          </button>
+            🔍
+          </span>
+
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) =>
+              setSearchQuery(
+                event.target.value
+              )
+            }
+            placeholder="Search weekly roundup..."
+            aria-label="Search weekly roundup"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding:
+                "14px 18px 14px 46px",
+              borderRadius: 12,
+              border:
+                "1px solid var(--member-border, #dddddd)",
+              background:
+                "var(--member-input-bg, #ffffff)",
+              color:
+                "var(--member-text, #222222)",
+              outline: "none",
+              fontSize: 15
+            }}
+          />
 
         </div>
 
       </div>
 
 
-      {/* PREVIOUS WEEKS */}
-      <div className="member-roundup-section-title">
+      {/* =====================================================
+          CARDS
+      ===================================================== */}
 
-        <div>
-          <span className="member-eyebrow">
-            ARCHIVE
-          </span>
+      {filteredRoundups.length === 0 ? (
+
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center",
+            borderRadius: 16,
+            border:
+              "1px solid var(--member-border, #e7e7e7)"
+          }}
+        >
 
           <h3>
-            Previous Roundups
+            No roundup found
           </h3>
-        </div>
-
-      </div>
-
-
-      <div className="member-roundup-grid">
-
-        {/* WEEK 1 */}
-        <div className="member-roundup-small-card">
-
-          <span className="member-roundup-small-date">
-            August 2026
-          </span>
-
-          <h4>
-            Weekly Market Roundup
-          </h4>
 
           <p>
-            Market movements and important investment
-            developments from the week.
+            Try another search.
           </p>
-
-          <button
-            onClick={() => {
-              alert("Report will be available here.");
-            }}
-          >
-            Read More →
-          </button>
 
         </div>
 
+      ) : (
 
-        {/* WEEK 2 */}
-        <div className="member-roundup-small-card">
+        <div
+          className="member-dashboard-grid"
+        >
 
-          <span className="member-roundup-small-date">
-            July 2026
-          </span>
+          {filteredRoundups.map(
+            (item) => (
 
-          <h4>
-            Weekly Investment Update
-          </h4>
+              <article
+                key={item.id}
+                className="member-panel"
+                style={{
+                  cursor: "default"
+                }}
+              >
 
-          <p>
-            A simple overview of the week's important
-            financial developments.
-          </p>
+                <div
+                  className="member-panel-header"
+                >
 
-          <button
-            onClick={() => {
-              alert("Report will be available here.");
-            }}
-          >
-            Read More →
-          </button>
+                  <div>
+
+                    <span
+                      className="member-panel-label"
+                    >
+                      {item.category}
+                    </span>
+
+                    <h3>
+                      {item.title}
+                    </h3>
+
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: 13,
+                      opacity: 0.65
+                    }}
+                  >
+                    {item.date}
+                  </span>
+
+                </div>
+
+
+                <p>
+                  {item.summary}
+                </p>
+
+
+                <button
+                  type="button"
+                  className="member-panel-link"
+                  onClick={() =>
+                    setSelectedRoundup(item)
+                  }
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+                  Read roundup →
+                </button>
+
+              </article>
+
+            )
+          )}
 
         </div>
 
-
-        {/* WEEK 3 */}
-        <div className="member-roundup-small-card">
-
-          <span className="member-roundup-small-date">
-            July 2026
-          </span>
-
-          <h4>
-            Market Insights
-          </h4>
-
-          <p>
-            Key insights and developments for investors
-            from the previous week.
-          </p>
-
-          <button
-            onClick={() => {
-              alert("Report will be available here.");
-            }}
-          >
-            Read More →
-          </button>
-
-        </div>
-
-      </div>
+      )}
 
     </section>
+
   );
+
 }
 
 
-/* EXPORT */
-window.WeeklyRoundup = WeeklyRoundup;
+/* =========================================================
+   EXPORT
+========================================================= */
+
+window.WeeklyRoundup =
+  WeeklyRoundup;

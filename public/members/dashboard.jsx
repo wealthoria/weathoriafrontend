@@ -1,34 +1,6 @@
-/*global React, window */
+/* global React, window */
 
 const { useState, useEffect } = React;
-
-function getMemberComponent(name) {
-  const component = window[name];
-  return typeof component === "function" ? component : null;
-}
-
-function MissingMemberPage({ name, file, back }) {
-  return (
-    <section style={{ padding: "40px", textAlign: "center", maxWidth: "700px", margin: "40px auto" }}>
-      <h2>{name} is not available</h2>
-      <p>Make sure /members/{file} is loaded before dashboard.jsx.</p>
-      <button
-        onClick={back}
-        style={{
-          marginTop: "15px",
-          padding: "12px 22px",
-          border: "none",
-          borderRadius: "8px",
-          background: "#e8473f",
-          color: "#fff",
-          cursor: "pointer"
-        }}
-      >
-        ← Back to Dashboard
-      </button>
-    </section>
-  );
-}
 
 /* =========================================================
    TRADINGVIEW CHART
@@ -136,6 +108,12 @@ function TradingViewChart({ theme }) {
 
 function MemberDashboard() {
 
+  // Resolve child pages during render so Babel's asynchronous
+  // loading cannot leave us with an old undefined reference.
+  const CourseVideos = window.CourseVideos;
+  const Newsletter = window.Newsletter;
+  const SeminarRegistrations = window.SeminarRegistrations;
+  const WeeklyRoundup = window.WeeklyRoundup;
 
   /* =======================================================
      MEMBER
@@ -411,18 +389,6 @@ const logout = async () => {
 if (!member) {
   return null;
 }
-
-// Resolve member pages at render time.
-// Do NOT capture window.CourseVideos etc. at file-load time.
-const CourseVideos = getMemberComponent("CourseVideos");
-const Newsletter = getMemberComponent("Newsletter");
-const WeeklyRoundup = getMemberComponent("WeeklyRoundup");
-
-console.log("Member components:", {
-  CourseVideos: !!CourseVideos,
-  Newsletter: !!Newsletter,
-  WeeklyRoundup: !!WeeklyRoundup
-});
 
 return (
   <div className="member-dashboard">
@@ -829,35 +795,22 @@ return (
               ================================================= */}
 
          {showCourses ? (
-  CourseVideos ? (
-    React.createElement(CourseVideos)
-  ) : (
-    <MissingMemberPage
-      name="Course Videos"
-      file="CourseVideos.jsx"
-      back={() => setShowCourses(false)}
-    />
-  )
-) : showNewsletter ? (
-  Newsletter ? (
-    React.createElement(Newsletter)
-  ) : (
-    <MissingMemberPage
-      name="Newsletter"
-      file="Newsletter.jsx"
-      back={() => setShowNewsletter(false)}
-    />
-  )
+  <CourseVideos />
+)  :  showNewsletter ? (
+
+  <Newsletter />
+
 ) : showWeeklyRoundup ? (
+
   WeeklyRoundup ? (
-    React.createElement(WeeklyRoundup)
+    <WeeklyRoundup />
   ) : (
-    <MissingMemberPage
-      name="Weekly Roundup"
-      file="WeeklyRoundup.jsx"
-      back={() => setShowWeeklyRoundup(false)}
-    />
+    <div style={{ padding: 40, textAlign: "center" }}>
+      <h2>Weekly Roundup is loading</h2>
+      <p>Please refresh the page once.</p>
+    </div>
   )
+
 ) : showCharts ? (
   
 

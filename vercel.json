@@ -10,35 +10,39 @@
     },
     {
       "source": "/members/login",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
+    },
+    {
+      "source": "/members/",
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/dashboard",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/course-videos",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/newsletter",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/seminar-registrations",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/purchase-history",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/market-roundup",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     },
     {
       "source": "/members/forgot-password",
-      "destination": "/index.html"
+      "destination": "/Wealthoria.html"
     }
   ]
 }

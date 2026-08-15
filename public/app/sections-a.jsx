@@ -42,9 +42,9 @@ function NavBar({ onNav }) {
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Member</span>
 </a>
-   <a
+ <a
   className="nav-login"
-  href="/students/register"
+  href="/Student%20Portal.html#/student/register"
   aria-label="Student Register"
 >
   <Icon name="user" size={17} />

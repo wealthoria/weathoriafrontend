@@ -9,11 +9,31 @@
       "destination": "/Wealthoria.html"
     },
     {
-      "source": "/members",
+      "source": "/members/login",
       "destination": "/index.html"
     },
     {
-      "source": "/members/:path*",
+      "source": "/members/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/members/course-videos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/members/newsletter",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/members/purchase-history",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/members/market-roundup",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/members/forgot-password",
       "destination": "/index.html"
     }
   ]

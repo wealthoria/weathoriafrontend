@@ -6,11 +6,9 @@ const CourseVideos = window.CourseVideos;
 const Newsletter = window.Newsletter;
 const SeminarRegistrations = window.SeminarRegistrations;
 const WeeklyRoundup = window.WeeklyRoundup;
-
-
 /* =========================================================
    TRADINGVIEW CHART
-========================================================= */
+   ========================================================= */
 
 function TradingViewChart({ theme }) {
 
@@ -22,35 +20,40 @@ function TradingViewChart({ theme }) {
 
     if (!container) return;
 
+    // Clear previous TradingView widget
     container.innerHTML = "";
 
+
+    // Create TradingView script
     const script = document.createElement("script");
 
     script.src =
       "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
 
     script.type = "text/javascript";
+
     script.async = true;
+
 
     script.innerHTML = JSON.stringify({
 
       autosize: true,
 
+      // NIFTY 50
       symbol: "NSE:NIFTY",
 
       interval: "D",
 
       timezone: "Asia/Kolkata",
 
-      theme:
-        theme === "dark"
-          ? "dark"
-          : "light",
+      // Follow Member Portal theme
+      theme: theme === "dark" ? "dark" : "light",
 
       style: "1",
 
       locale: "en",
 
+      // Keep NIFTY as the primary symbol
       allow_symbol_change: false,
 
       hide_side_toolbar: false,
@@ -74,7 +77,9 @@ function TradingViewChart({ theme }) {
 
     });
 
+
     container.appendChild(script);
+
 
     return () => {
 
@@ -103,70 +108,47 @@ function TradingViewChart({ theme }) {
 
 /* =========================================================
    MEMBER DASHBOARD
-========================================================= */
+   ========================================================= */
 
 function MemberDashboard() {
 
+
   /* =======================================================
      MEMBER
-  ======================================================= */
+     ======================================================= */
 
-  const [member, setMember] =
-    useState(null);
+  const [member, setMember] = useState(null);
+  const [showCourses, setShowCourses] = useState(false);
+  const [showNewsletter, setShowNewsletter] = useState(false);
+  const [showWeeklyRoundup, setShowWeeklyRoundup] = useState(false);
 
-
-  /* =======================================================
-     ACTIVE SECTION
-     
-     IMPORTANT:
-     Saved in localStorage so refresh will NOT reset page.
-  ======================================================= */
-
-  const [activeSection, setActiveSection] =
-    useState(() => {
-
-      return (
-        localStorage.getItem(
-          "wealthoria-active-section"
-        ) || "dashboard"
-      );
-
-    });
-
+const [showSeminarRegistrations, setShowSeminarRegistrations] = useState(false);
 
   /* =======================================================
-     OPEN SECTION
-  ======================================================= */
+     DASHBOARD STATES
+     ======================================================= */
 
-  const openSection = (section) => {
+  const [showCalculator, setShowCalculator] =
+    useState(false);
 
-    setActiveSection(section);
-
-    localStorage.setItem(
-      "wealthoria-active-section",
-      section
-    );
-
-    window.scrollTo(0, 0);
-
-  };
+  const [showCharts, setShowCharts] =
+    useState(false);
 
 
   /* =======================================================
      THEME
-  ======================================================= */
+     ======================================================= */
 
-  const [theme, setTheme] =
-    useState(
-      () =>
-        localStorage.getItem("wl-theme") ||
-        "light"
-    );
+  const [theme, setTheme] = useState(
+    () =>
+      localStorage.getItem("wl-theme") ||
+      "light"
+  );
 
 
   /* =======================================================
      APPLY THEME
-  ======================================================= */
+     ======================================================= */
 
   useEffect(() => {
 
@@ -185,7 +167,7 @@ function MemberDashboard() {
 
   /* =======================================================
      TOGGLE THEME
-  ======================================================= */
+     ======================================================= */
 
   const toggleTheme = () => {
 
@@ -199,238 +181,148 @@ function MemberDashboard() {
 
 
   /* =======================================================
-     CHECK MEMBER LOGIN
-  ======================================================= */
+     LOAD MEMBER
+     ======================================================= */
+/* =======================================================
+   CHECK MEMBER LOGIN
+   ======================================================= */
 
-  const [authChecking, setAuthChecking] =
-    useState(true);
+const [authChecking, setAuthChecking] = useState(true);
 
+useEffect(() => {
 
-  useEffect(() => {
+  if (!window.auth) {
+    console.error("Firebase Auth is not initialized.");
+    setAuthChecking(false);
 
-    if (!window.auth) {
+    if (window.membersNavigate) {
+      window.membersNavigate("/members/login");
+    }
 
-      console.error(
-        "Firebase Auth is not initialized."
-      );
+    return;
+  }
 
+  const unsubscribe = window.auth.onAuthStateChanged(async (user) => {
+
+    console.log("Firebase current user:", user);
+
+    // -----------------------------------------
+    // NOT LOGGED IN
+    // -----------------------------------------
+
+    if (!user) {
+
+      localStorage.removeItem("wealthoria-member");
+      sessionStorage.removeItem("wealthoria-member");
+
+      setMember(null);
       setAuthChecking(false);
 
       if (window.membersNavigate) {
-
-        window.membersNavigate(
-          "/members/login"
-        );
-
+        window.membersNavigate("/members/login");
+      } else {
+        window.location.href = "/members/login";
       }
 
       return;
-
     }
 
+    // -----------------------------------------
+    // LOGGED IN - GET SAVED MEMBER
+    // -----------------------------------------
 
-    const unsubscribe =
-      window.auth.onAuthStateChanged(
-        async (user) => {
+    const saved =
+      localStorage.getItem("wealthoria-member") ||
+      sessionStorage.getItem("wealthoria-member");
 
-          console.log(
-            "Firebase current user:",
-            user
-          );
+    if (!saved) {
 
-
-          /* -----------------------------------------
-             NOT LOGGED IN
-          ----------------------------------------- */
-
-          if (!user) {
-
-            localStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            sessionStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            setMember(null);
-
-            setAuthChecking(false);
-
-            if (
-              window.membersNavigate
-            ) {
-
-              window.membersNavigate(
-                "/members/login"
-              );
-
-            } else {
-
-              window.location.href =
-                "/members/login";
-
-            }
-
-            return;
-
-          }
-
-
-          /* -----------------------------------------
-             LOGGED IN
-          ----------------------------------------- */
-
-          const saved =
-            localStorage.getItem(
-              "wealthoria-member"
-            ) ||
-            sessionStorage.getItem(
-              "wealthoria-member"
-            );
-
-
-          if (!saved) {
-
-            console.warn(
-              "Firebase user exists but member session is missing."
-            );
-
-            await window.auth.signOut();
-
-            setMember(null);
-
-            setAuthChecking(false);
-
-            if (
-              window.membersNavigate
-            ) {
-
-              window.membersNavigate(
-                "/members/login"
-              );
-
-            } else {
-
-              window.location.href =
-                "/members/login";
-
-            }
-
-            return;
-
-          }
-
-
-          try {
-
-            const parsedMember =
-              JSON.parse(saved);
-
-
-            /* -----------------------------------------
-               CHECK UID
-            ----------------------------------------- */
-
-            if (
-              parsedMember.uid &&
-              parsedMember.uid !== user.uid
-            ) {
-
-              console.warn(
-                "Member session does not match Firebase user."
-              );
-
-              localStorage.removeItem(
-                "wealthoria-member"
-              );
-
-              sessionStorage.removeItem(
-                "wealthoria-member"
-              );
-
-              await window.auth.signOut();
-
-              setMember(null);
-
-              setAuthChecking(false);
-
-              if (
-                window.membersNavigate
-              ) {
-
-                window.membersNavigate(
-                  "/members/login"
-                );
-
-              } else {
-
-                window.location.href =
-                  "/members/login";
-
-              }
-
-              return;
-
-            }
-
-
-            setMember(parsedMember);
-
-            setAuthChecking(false);
-
-
-          } catch (error) {
-
-            console.error(
-              "Invalid member session:",
-              error
-            );
-
-            localStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            sessionStorage.removeItem(
-              "wealthoria-member"
-            );
-
-            await window.auth.signOut();
-
-            setMember(null);
-
-            setAuthChecking(false);
-
-            if (
-              window.membersNavigate
-            ) {
-
-              window.membersNavigate(
-                "/members/login"
-              );
-
-            } else {
-
-              window.location.href =
-                "/members/login";
-
-            }
-
-          }
-
-        }
+      console.warn(
+        "Firebase user exists but member session is missing."
       );
 
+      await window.auth.signOut();
 
-    return () =>
-      unsubscribe();
+      setMember(null);
+      setAuthChecking(false);
 
-  }, []);
+      if (window.membersNavigate) {
+        window.membersNavigate("/members/login");
+      } else {
+        window.location.href = "/members/login";
+      }
+
+      return;
+    }
+
+    try {
+
+      const parsedMember = JSON.parse(saved);
+
+      // Make sure saved session belongs to
+      // the currently authenticated Firebase user.
+
+      if (
+        parsedMember.uid &&
+        parsedMember.uid !== user.uid
+      ) {
+
+        console.warn(
+          "Member session does not match Firebase user."
+        );
+
+        localStorage.removeItem("wealthoria-member");
+        sessionStorage.removeItem("wealthoria-member");
+
+        await window.auth.signOut();
+
+        setMember(null);
+        setAuthChecking(false);
+
+        if (window.membersNavigate) {
+          window.membersNavigate("/members/login");
+        } else {
+          window.location.href = "/members/login";
+        }
+
+        return;
+      }
+
+      setMember(parsedMember);
+      setAuthChecking(false);
+
+    } catch (error) {
+
+      console.error(
+        "Invalid member session:",
+        error
+      );
+
+      localStorage.removeItem("wealthoria-member");
+      sessionStorage.removeItem("wealthoria-member");
+
+      await window.auth.signOut();
+
+      setMember(null);
+      setAuthChecking(false);
+
+      if (window.membersNavigate) {
+        window.membersNavigate("/members/login");
+      } else {
+        window.location.href = "/members/login";
+      }
+    }
+
+  });
+
+  return () => unsubscribe();
+
+}, []);
 
 
   /* =======================================================
      NAVIGATION
-  ======================================================= */
+     ======================================================= */
 
   const navigate = (path) => {
 
@@ -445,62 +337,31 @@ function MemberDashboard() {
 
   /* =======================================================
      LOGOUT
-  ======================================================= */
-
-  const logout = async () => {
-
-    try {
-
-      if (window.auth) {
-
-        await window.auth.signOut();
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Logout error:",
-        error
-      );
-
+     ======================================================= */
+const logout = async () => {
+  try {
+    if (window.auth) {
+      await window.auth.signOut();
     }
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
 
+  // Remove saved member session
+  localStorage.removeItem("wealthoria-member");
+  sessionStorage.removeItem("wealthoria-member");
 
-    localStorage.removeItem(
-      "wealthoria-member"
-    );
-
-    sessionStorage.removeItem(
-      "wealthoria-member"
-    );
-
-    localStorage.removeItem(
-      "wealthoria-active-section"
-    );
-
-
-    if (
-      window.membersNavigate
-    ) {
-
-      window.membersNavigate(
-        "/members/login"
-      );
-
-    } else {
-
-      window.location.href =
-        "/members/login";
-
-    }
-
-  };
-
+  // Go to login
+  if (window.membersNavigate) {
+    window.membersNavigate("/members/login");
+  } else {
+    window.location.href = "/members/login";
+  }
+};
 
   /* =======================================================
      MEMBER DETAILS
-  ======================================================= */
+     ======================================================= */
 
   const name =
     member?.name ||
@@ -512,60 +373,38 @@ function MemberDashboard() {
 
 
   /* =======================================================
-     LOADING
-  ======================================================= */
+     RENDER
+     ======================================================= */
 
   if (authChecking) {
-
-    return (
-
-      <div className="member-loading">
-
-        Checking login...
-
-      </div>
-
-    );
-
-  }
-
-
-  if (!member) {
-
-    return null;
-
-  }
-
-
-  /* =======================================================
-     RENDER
-  ======================================================= */
-
   return (
+    <div className="member-loading">
+      Checking login...
+    </div>
+  );
+}
 
-    <div className="member-dashboard">
+if (!member) {
+  return null;
+}
+
+return (
+  <div className="member-dashboard">
+
 
 
       {/* ===================================================
           SIDEBAR
-      =================================================== */}
+          =================================================== */}
 
       <aside className="member-sidebar">
 
-
-        {/* BRAND */}
 
         <div className="member-sidebar-brand">
 
           <img
             src="/assets/logo-mark.png"
             alt="Wealthoria"
-            onClick={() => {
-              window.location.href = "/";
-            }}
-            style={{
-              cursor: "pointer"
-            }}
           />
 
           <span>
@@ -578,25 +417,19 @@ function MemberDashboard() {
         <nav className="member-sidebar-nav">
 
 
-          {/* =================================================
-              OVERVIEW
-          ================================================= */}
+          {/* OVERVIEW */}
 
           <div className="member-nav-section">
-
             OVERVIEW
-
           </div>
 
 
           <button
-            className={`member-nav-item ${
-              activeSection === "dashboard"
-                ? "active"
-                : ""
-            }`}
+            className="member-nav-item active"
             onClick={() =>
-              openSection("dashboard")
+              navigate(
+                "/members/dashboard"
+              )
             }
           >
 
@@ -609,14 +442,10 @@ function MemberDashboard() {
           </button>
 
 
-          {/* =================================================
-              LEARNING
-          ================================================= */}
+          {/* LEARNING */}
 
           <div className="member-nav-section">
-
             LEARNING
-
           </div>
 
 
@@ -636,98 +465,81 @@ function MemberDashboard() {
             Articles & Reports
 
           </button>
+<button
+  className={`member-nav-item ${
+    showCourses ? "active" : ""
+  }`}
+  onClick={() => {
+    setShowCourses(true);
+    setShowNewsletter(false);
+    setShowWeeklyRoundup(false);
+    setShowCharts(false);
+    setShowCalculator(false);
+  }}
+>
+  <span className="member-nav-icon">
+    ▶
+  </span>
 
+  Course Videos
+</button>
+<button
+  className={`member-nav-item ${
+    showWeeklyRoundup ? "active" : ""
+  }`}
+  onClick={() => {
+    setShowWeeklyRoundup(true);
+    setShowCourses(false);
+    setShowNewsletter(false);
+    setShowCharts(false);
+    setShowCalculator(false);
+  }}
+>
+  <span className="member-nav-icon">
+    ↗
+  </span>
 
-          {/* COURSE VIDEOS */}
+  Weekly Roundup
+</button>
+<button
+  className={`member-nav-item ${
+    showNewsletter ? "active" : ""
+  }`}
+  onClick={() => {
+    setShowNewsletter(true);
+    setShowCourses(false);
+    setShowWeeklyRoundup(false);
+    setShowCharts(false);
+    setShowCalculator(false);
+  }}
+>
+  <span className="member-nav-icon">
+    ✉
+  </span>
 
-          <button
-            className={`member-nav-item ${
-              activeSection === "courses"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              openSection("courses")
-            }
-          >
+  Newsletter
+</button>
 
-            <span className="member-nav-icon">
-              ▶
-            </span>
-
-            Course Videos
-
-          </button>
-
-
-          {/* WEEKLY ROUNDUP */}
-
-          <button
-            className={`member-nav-item ${
-              activeSection === "weekly-roundup"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              openSection(
-                "weekly-roundup"
-              )
-            }
-          >
-
-            <span className="member-nav-icon">
-              ↗
-            </span>
-
-            Weekly Roundup
-
-          </button>
-
-
-          {/* NEWSLETTER */}
-
-          <button
-            className={`member-nav-item ${
-              activeSection === "newsletter"
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              openSection("newsletter")
-            }
-          >
-
-            <span className="member-nav-icon">
-              ✉
-            </span>
-
-            Newsletter
-
-          </button>
-
-
-          {/* =================================================
-              DATA & RESEARCH
-          ================================================= */}
+          {/* DATA & RESEARCH */}
 
           <div className="member-nav-section">
-
             DATA & RESEARCH
-
           </div>
 
 
-          {/* CHARTS */}
-
           <button
             className={`member-nav-item ${
-              activeSection === "charts"
+              showCharts
                 ? "active"
                 : ""
             }`}
-            onClick={() =>
-              openSection("charts")
-            }
+            onClick={() => {
+
+              setShowCharts(true);
+
+              setShowCalculator(false);
+
+            }}
           >
 
             <span className="member-nav-icon">
@@ -739,16 +551,14 @@ function MemberDashboard() {
           </button>
 
 
-          {/* CALCULATORS */}
-
           <button
             className={`member-nav-item ${
-              activeSection === "calculator"
+              showCalculator
                 ? "active"
                 : ""
             }`}
             onClick={() =>
-              openSection("calculator")
+              setShowCalculator(true)
             }
           >
 
@@ -759,16 +569,31 @@ function MemberDashboard() {
             Calculators
 
           </button>
+{/*
+          <button
+  className={`member-nav-item ${
+    showSeminarRegistrations ? "active" : ""
+  }`}
+  onClick={() => {
+    setShowSeminarRegistrations(true);
+    setShowCourses(false);
+    setShowNewsletter(false);
+    setShowCharts(false);
+    setShowCalculator(false);
+  }}
+>
+  <span className="member-nav-icon">
+    ▣
+  </span>
+
+  Seminar Registrations
+</button>*/}
 
 
-          {/* =================================================
-              ACCOUNT
-          ================================================= */}
+          {/* ACCOUNT */}
 
           <div className="member-nav-section">
-
             ACCOUNT
-
           </div>
 
 
@@ -815,8 +640,6 @@ function MemberDashboard() {
         </nav>
 
 
-        {/* SIDEBAR USER */}
-
         <div className="member-sidebar-bottom">
 
           <div className="member-sidebar-user">
@@ -852,14 +675,14 @@ function MemberDashboard() {
 
       {/* ===================================================
           MAIN
-      =================================================== */}
+          =================================================== */}
 
       <main className="member-dashboard-main">
 
 
         {/* =================================================
             HEADER
-        ================================================= */}
+            ================================================= */}
 
         <header className="member-dashboard-header">
 
@@ -871,23 +694,7 @@ function MemberDashboard() {
             </span>
 
             <h1>
-
-              {activeSection === "courses"
-                ? "Course Videos"
-                : activeSection ===
-                  "newsletter"
-                ? "Newsletters"
-                : activeSection ===
-                  "weekly-roundup"
-                ? "Weekly Roundup"
-                : activeSection ===
-                  "charts"
-                ? "Market Charts"
-                : activeSection ===
-                  "calculator"
-                ? "Calculators"
-                : "Dashboard"}
-
+              Dashboard
             </h1>
 
           </div>
@@ -896,7 +703,9 @@ function MemberDashboard() {
           <div className="member-header-actions">
 
 
-            {/* DARK MODE */}
+            {/* =================================================
+                LIGHT / DARK
+                ================================================= */}
 
             <button
               className="member-header-button"
@@ -974,54 +783,33 @@ function MemberDashboard() {
 
         {/* =================================================
             CONTENT
-        ================================================= */}
+            ================================================= */}
 
         <div className="member-dashboard-content">
 
 
           {/* =================================================
-              COURSE VIDEOS
-          ================================================= */}
+              CHART PAGE
+              ================================================= */}
 
-          {activeSection === "courses" ? (
+         {showCourses ? (
+  <CourseVideos />
+)  :  showNewsletter ? (
 
-            <CourseVideos />
+  <Newsletter />
 
-          )
+) : showWeeklyRoundup ? (
 
+  <WeeklyRoundup />
 
-          /* =================================================
-             NEWSLETTER
-          ================================================= */
-
-          : activeSection === "newsletter" ? (
-
-            <Newsletter />
-
-          )
-
-
-          /* =================================================
-             WEEKLY ROUNDUP
-          ================================================= */
-
-          : activeSection === "weekly-roundup" ? (
-
-            <WeeklyRoundup />
-
-          )
-
-
-          /* =================================================
-             CHARTS
-          ================================================= */
-
-          : activeSection === "charts" ? (
+) : showCharts ? (
+  
 
             <section className="member-chart-page">
 
 
               <div className="member-chart-header">
+
 
                 <div>
 
@@ -1045,7 +833,7 @@ function MemberDashboard() {
                 <button
                   className="member-panel-link"
                   onClick={() =>
-                    openSection("dashboard")
+                    setShowCharts(false)
                   }
                 >
 
@@ -1053,8 +841,13 @@ function MemberDashboard() {
 
                 </button>
 
+
               </div>
 
+
+              {/* =================================================
+                  NIFTY TRADINGVIEW
+                  ================================================= */}
 
               <div className="member-chart-container">
 
@@ -1067,14 +860,13 @@ function MemberDashboard() {
 
             </section>
 
-          )
+
+          ) : showCalculator ? (
 
 
-          /* =================================================
-             CALCULATOR
-          ================================================= */
-
-          : activeSection === "calculator" ? (
+            /* =================================================
+               CALCULATOR
+               ================================================= */
 
             <section className="member-calculator-page">
 
@@ -1097,21 +889,18 @@ function MemberDashboard() {
 
             </section>
 
-          )
+
+          ) : (
 
 
-          /* =================================================
-             DEFAULT DASHBOARD
-          ================================================= */
-
-          : (
+            /* =================================================
+               DEFAULT DASHBOARD
+               ================================================= */
 
             <>
 
 
-              {/* =================================================
-                  WELCOME
-              ================================================= */}
+              {/* WELCOME */}
 
               <section className="member-welcome">
 
@@ -1131,9 +920,7 @@ function MemberDashboard() {
               </section>
 
 
-              {/* =================================================
-                  STATS
-              ================================================= */}
+              {/* STATS */}
 
               <section className="member-stats">
 
@@ -1227,7 +1014,7 @@ function MemberDashboard() {
 
               {/* =================================================
                   TWO PANELS
-              ================================================= */}
+                  ================================================= */}
 
               <section className="member-dashboard-grid">
 
@@ -1235,6 +1022,7 @@ function MemberDashboard() {
                 {/* RECENT ARTICLES */}
 
                 <div className="member-panel">
+
 
                   <div className="member-panel-header">
 
@@ -1263,6 +1051,7 @@ function MemberDashboard() {
                       View all →
 
                     </button>
+
 
                   </div>
 
@@ -1335,6 +1124,7 @@ function MemberDashboard() {
 
                   </div>
 
+
                 </div>
 
 
@@ -1363,11 +1153,11 @@ function MemberDashboard() {
                   <div className="member-actions">
 
 
-                    {/* COURSE */}
-
                     <button
                       onClick={() =>
-                        openSection("courses")
+                        navigate(
+                          "/members/trading"
+                        )
                       }
                     >
 
@@ -1394,12 +1184,10 @@ function MemberDashboard() {
                     </button>
 
 
-                    {/* WEEKLY ROUNDUP */}
-
                     <button
                       onClick={() =>
-                        openSection(
-                          "weekly-roundup"
+                        navigate(
+                          "/members/weekly-roundup"
                         )
                       }
                     >
@@ -1427,11 +1215,11 @@ function MemberDashboard() {
                     </button>
 
 
-                    {/* CHARTS */}
-
                     <button
                       onClick={() =>
-                        openSection("charts")
+                        navigate(
+                          "/members/charts"
+                        )
                       }
                     >
 
@@ -1471,20 +1259,24 @@ function MemberDashboard() {
 
           )}
 
+
         </div>
 
+
       </main>
+
 
     </div>
 
   );
+  
 
 }
 
 
 /* =========================================================
    EXPORT
-========================================================= */
+   ========================================================= */
 
 window.MemberDashboard =
   MemberDashboard;

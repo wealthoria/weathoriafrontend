@@ -3,10 +3,6 @@
 
 <head>
 
-  <!-- =====================================================
-       BASIC
-       ===================================================== -->
-
   <meta charset="utf-8">
 
   <meta
@@ -14,19 +10,11 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <!-- IMPORTANT:
-       Always resolve relative URLs from website root.
-       This prevents /members/app/... errors.
-  -->
-  <base href="/">
-
-  <title>
-    Wealthoria - Learning is the first investment
-  </title>
+  <title>Wealthoria - Learning is the first investment</title>
 
   <meta
     name="description"
-    content="Wealthoria Education Pvt. Ltd. - financial literacy and investment education for first-time investors across Karnataka. Learning before investing, investing before trading. Available in Kannada and English."
+    content="Wealthoria Education Pvt. Ltd. - financial literacy and investment education for first-time investors across Karnataka."
   >
 
   <meta
@@ -34,9 +22,8 @@
     content="#e8473f"
   >
 
-
   <!-- =====================================================
-       FAVICON / PWA
+       FAVICON
        ===================================================== -->
 
   <link
@@ -44,6 +31,10 @@
     type="image/png"
     href="/assets/logo-mark.png"
   >
+
+  <!-- =====================================================
+       PWA
+       ===================================================== -->
 
   <link
     rel="manifest"
@@ -75,7 +66,6 @@
     content="yes"
   >
 
-
   <!-- =====================================================
        GOOGLE FONT
        ===================================================== -->
@@ -96,9 +86,8 @@
     rel="stylesheet"
   >
 
-
   <!-- =====================================================
-       WEALTHORIA CSS
+       WEBSITE CSS
        ===================================================== -->
 
   <link
@@ -121,7 +110,6 @@
     href="/app/calc.css"
   >
 
-
   <!-- =====================================================
        MEMBERS CSS
        ===================================================== -->
@@ -130,7 +118,6 @@
     rel="stylesheet"
     href="/members/portal.css"
   >
-
 
   <!-- =====================================================
        OPEN GRAPH
@@ -151,7 +138,6 @@
     content="website"
   >
 
-
   <!-- =====================================================
        REACT
        ===================================================== -->
@@ -168,7 +154,6 @@
     crossorigin="anonymous">
   </script>
 
-
   <!-- =====================================================
        BABEL
        ===================================================== -->
@@ -178,7 +163,6 @@
     integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
     crossorigin="anonymous">
   </script>
-
 
   <!-- =====================================================
        GSAP
@@ -191,7 +175,6 @@
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js">
   </script>
-
 
   <!-- =====================================================
        FIREBASE
@@ -209,9 +192,8 @@
     src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
   </script>
 
-
   <!-- =====================================================
-       FIREBASE CONFIGURATION
+       FIREBASE CONFIG
        ===================================================== -->
 
   <script>
@@ -264,16 +246,6 @@
       "Firebase initialized successfully"
     );
 
-    console.log(
-      "Firebase Auth:",
-      window.auth
-    );
-
-    console.log(
-      "Firestore:",
-      window.db
-    );
-
   </script>
 
 </head>
@@ -291,18 +263,9 @@
   <!-- =====================================================
        MEMBERS PORTAL
        
-       IMPORTANT ORDER:
-
-       1. login
-       2. CourseVideos
-       3. Newsletter
-       4. SeminarRegistrations
-       5. dashboard
-       6. MembersRouter
-
-       DO NOT LOAD THESE TWICE.
+       IMPORTANT:
+       These paths MUST start with /members/
        ===================================================== -->
-
 
   <!-- MEMBER LOGIN -->
 
@@ -353,7 +316,10 @@
 
 
   <!-- =====================================================
-       PUBLIC WEALTHORIA WEBSITE
+       PUBLIC WEBSITE
+       
+       IMPORTANT:
+       These paths MUST start with /app/
        ===================================================== -->
 
   <script
@@ -361,43 +327,48 @@
     src="/app/content.jsx?v=3">
   </script>
 
+
   <script
     type="text/babel"
     src="/app/ui.jsx?v=2">
   </script>
+
 
   <script
     type="text/babel"
     src="/app/sections-a.jsx?v=3">
   </script>
 
+
   <script
     type="text/babel"
     src="/app/sections-b.jsx?v=2">
   </script>
+
 
   <script
     type="text/babel"
     src="/app/calculators.jsx">
   </script>
 
+
   <script
     type="text/babel"
     src="/app/sections-c.jsx?v=2">
   </script>
+
 
   <script
     type="text/babel"
     src="/app/sections-d.jsx?v=3">
   </script>
 
+
   <script
     type="text/babel"
     src="/app/anim.jsx">
   </script>
 
-
-  <!-- MAIN PUBLIC APP -->
 
   <script
     type="text/babel"
@@ -423,7 +394,6 @@
     src="/app/cursor.js?v=2"
     defer>
   </script>
-
 
 </body>
 

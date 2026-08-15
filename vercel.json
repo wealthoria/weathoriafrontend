@@ -1,45 +1,63 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+
   "buildCommand": "npm run build",
+
   "outputDirectory": "dist",
+
   "cleanUrls": false,
+
   "rewrites": [
     {
       "source": "/",
       "destination": "/Wealthoria.html"
     },
+
     {
-      "source": "/members/login",
+      "source": "/members",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/",
       "destination": "/Wealthoria.html"
     },
+
+    {
+      "source": "/members/login",
+      "destination": "/Wealthoria.html"
+    },
+
     {
       "source": "/members/dashboard",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/course-videos",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/newsletter",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/seminar-registrations",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/purchase-history",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/market-roundup",
       "destination": "/Wealthoria.html"
     },
+
     {
       "source": "/members/forgot-password",
       "destination": "/Wealthoria.html"

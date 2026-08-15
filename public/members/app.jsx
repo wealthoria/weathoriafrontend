@@ -15,13 +15,14 @@ function MembersRouter() {
 
 
   /* =========================================================
-     LISTEN FOR BROWSER NAVIGATION
+     LISTEN FOR BROWSER BACK / FORWARD
   ========================================================= */
 
   useEffect(() => {
 
     const handleNavigation = () => {
       setPath(window.location.pathname);
+      window.scrollTo(0, 0);
     };
 
     window.addEventListener(
@@ -30,12 +31,10 @@ function MembersRouter() {
     );
 
     return () => {
-
       window.removeEventListener(
         "popstate",
         handleNavigation
       );
-
     };
 
   }, []);
@@ -47,6 +46,8 @@ function MembersRouter() {
 
   const navigate = (to) => {
 
+    if (!to) return;
+
     window.history.pushState(
       {},
       "",
@@ -56,11 +57,12 @@ function MembersRouter() {
     setPath(to);
 
     window.scrollTo(0, 0);
-
   };
 
 
-  /* Make navigation available to other components */
+  /* =========================================================
+     MAKE NAVIGATION AVAILABLE GLOBALLY
+  ========================================================= */
 
   window.membersNavigate = navigate;
 
@@ -80,9 +82,13 @@ function MembersRouter() {
     path === "/members/"
   ) {
 
-    return React.createElement(
-      window.MemberLogin
-    );
+    return window.MemberLogin
+      ? React.createElement(window.MemberLogin)
+      : (
+        <div className="members-router-loading">
+          Loading Member Login...
+        </div>
+      );
 
   }
 
@@ -95,9 +101,13 @@ function MembersRouter() {
     path === "/members/dashboard"
   ) {
 
-    return React.createElement(
-      window.MemberDashboard
-    );
+    return window.MemberDashboard
+      ? React.createElement(window.MemberDashboard)
+      : (
+        <div className="members-router-loading">
+          Loading Dashboard...
+        </div>
+      );
 
   }
 
@@ -110,9 +120,69 @@ function MembersRouter() {
     path === "/members/course-videos"
   ) {
 
-    return React.createElement(
-      window.CourseVideos
-    );
+    return window.CourseVideos
+      ? React.createElement(window.CourseVideos)
+      : (
+        <div className="members-router-loading">
+          Loading Course Videos...
+        </div>
+      );
+
+  }
+
+
+  /* =========================================================
+     WEEKLY ROUNDUP
+  ========================================================= */
+
+  if (
+    path === "/members/weekly-roundup"
+  ) {
+
+    return window.WeeklyRoundup
+      ? React.createElement(window.WeeklyRoundup)
+      : (
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            padding: 40,
+            textAlign: "center",
+            fontFamily: "Arial, sans-serif"
+          }}
+        >
+
+          <h2>
+            Weekly Roundup is not available
+          </h2>
+
+          <p>
+            WeeklyRoundup.jsx has not loaded.
+          </p>
+
+          <button
+            onClick={() =>
+              navigate("/members/dashboard")
+            }
+            style={{
+              marginTop: 20,
+              padding: "12px 22px",
+              border: "none",
+              borderRadius: 8,
+              background: "#e8473f",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: 14
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+
+        </div>
+      );
 
   }
 
@@ -125,9 +195,51 @@ function MembersRouter() {
     path === "/members/newsletter"
   ) {
 
-    return React.createElement(
-      window.Newsletter
-    );
+    return window.Newsletter
+      ? React.createElement(window.Newsletter)
+      : (
+        <div className="members-router-loading">
+          Loading Newsletter...
+        </div>
+      );
+
+  }
+
+
+  /* =========================================================
+     PURCHASE HISTORY
+  ========================================================= */
+
+  if (
+    path === "/members/purchase-history"
+  ) {
+
+    return window.PurchaseHistory
+      ? React.createElement(window.PurchaseHistory)
+      : (
+        <div className="members-router-loading">
+          Loading Purchase History...
+        </div>
+      );
+
+  }
+
+
+  /* =========================================================
+     SEMINAR REGISTRATIONS
+  ========================================================= */
+
+  if (
+    path === "/members/seminar-registrations"
+  ) {
+
+    return window.SeminarRegistrations
+      ? React.createElement(window.SeminarRegistrations)
+      : (
+        <div className="members-router-loading">
+          Loading Seminar Registrations...
+        </div>
+      );
 
   }
 
@@ -143,8 +255,13 @@ function MembersRouter() {
     return (
       <div
         style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
           padding: 40,
-          fontFamily: "Arial"
+          fontFamily: "Arial, sans-serif"
         }}
       >
 
@@ -160,6 +277,15 @@ function MembersRouter() {
           onClick={() =>
             navigate("/members/login")
           }
+          style={{
+            marginTop: 20,
+            padding: "12px 24px",
+            border: "none",
+            borderRadius: 8,
+            background: "#e8473f",
+            color: "#fff",
+            cursor: "pointer"
+          }}
         >
           Back to Login
         </button>
@@ -182,7 +308,8 @@ function MembersRouter() {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        fontFamily: "Arial"
+        padding: 40,
+        fontFamily: "Arial, sans-serif"
       }}
     >
 
@@ -191,24 +318,27 @@ function MembersRouter() {
       </h2>
 
       <p>
-        Page not found.
+        Page not found:
+        <br />
+        <strong>{path}</strong>
       </p>
 
       <button
         onClick={() =>
-          navigate("/members/login")
+          navigate("/members/dashboard")
         }
         style={{
+          marginTop: 20,
           padding: "12px 24px",
           border: "none",
           borderRadius: 8,
-          background: "#e56b3f",
+          background: "#e8473f",
           color: "#fff",
           cursor: "pointer",
           fontSize: 15
         }}
       >
-        Go to Member Login
+        Go to Dashboard
       </button>
 
     </div>

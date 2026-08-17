@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="kn"><head><meta charset="utf-8">
+<link rel="stylesheet" href="style.css">
+<title>Sequence Risk Lab — Manual</title></head><body>
+
+<div class="cover">
+  <div class="kicker">Wealthoria Calculator Manual — 03</div>
+  <h1>Sequence Risk Lab</h1>
+  <div class="rule"></div>
+  <div class="sub">Average return ಒಂದೇ ಆದರೂ —<br>returns ಬರುವ <b>ಕ್ರಮ</b> ನಿಮ್ಮ retirement ಅನ್ನು<br>ಗೆಲ್ಲಿಸಬಹುದು ಅಥವಾ ಮುಳುಗಿಸಬಹುದು.</div>
+  <div class="meta">
+    ಸಂಪೂರ್ಣ ಬಳಕೆದಾರ ಕೈಪಿಡಿ · Kanglish<br>
+    Block Bootstrap · Historical Windows · Shuffle Test · IID<br>
+    Sensex ದತ್ತಾಂಶ 1991–2025 (35 ವರ್ಷ)
+  </div>
+  <div class="badge">FOR EDUCATIONAL USE ONLY</div>
+</div>
+
+<div class="toc">
+<h2>ಪರಿವಿಡಿ / Contents</h2>
+<ol>
+<li>ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</li>
+<li>Sequence risk — ಒಂದು ಕಥೆಯ ಮೂಲಕ</li>
+<li>ನಾಲ್ಕು sampling methods — ಪ್ರತಿಯೊಂದೂ ಏನು ಪರೀಕ್ಷಿಸುತ್ತದೆ</li>
+<li>ಪ್ರತಿ Input field — ಪೂರ್ಣ ವಿವರಣೆ</li>
+<li>Portfolio return ಹೇಗೆ ಲೆಕ್ಕವಾಗುತ್ತದೆ</li>
+<li>Engine — ಪ್ರತಿ path ನಲ್ಲಿ ಏನಾಗುತ್ತದೆ</li>
+<li>ಪ್ರತಿ Output tab — ಏನು ಹೇಳುತ್ತದೆ</li>
+<li>Worked Example — ಪೂರ್ತಿ ಲೆಕ್ಕ</li>
+<li>ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</li>
+<li>ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು — Common Mistakes</li>
+<li>Quick Reference Card</li>
+</ol>
+</div>
+
+<h2>1. ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</h2>
+
+<p>Sequence Risk Lab ಒಂದು <b>ಪ್ರಯೋಗಶಾಲೆ</b>. ಇದು ನಿಮಗೆ "ಎಷ್ಟು ತೆಗೆಯಬಹುದು" ಎಂದು ಹೇಳುವುದಿಲ್ಲ (ಅದಕ್ಕೆ Safe Withdrawal Solver ಇದೆ). ಬದಲಿಗೆ ಇದು ಒಂದೇ ಪ್ರಶ್ನೆ ಕೇಳುತ್ತದೆ:</p>
+
+<div class="big">
+  <span class="v">ಕ್ರಮ ಎಷ್ಟು ಮುಖ್ಯ?</span>
+  <span class="l">ಒಂದೇ set of returns ಅನ್ನು ಬೇರೆ ಬೇರೆ ಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸಿದರೆ<br>ನನ್ನ retirement ನ ಫಲಿತಾಂಶ ಎಷ್ಟು ಬದಲಾಗುತ್ತದೆ?</span>
+</div>
+
+<p>ಮತ್ತು ಇದರ ಅತ್ಯಂತ ಮುಖ್ಯ ಗುಣ — ಇದು <b>ನಿಜವಾದ Sensex ದತ್ತಾಂಶ</b> ಬಳಸುತ್ತದೆ (1991–2025, 35 ವರ್ಷ). ಊಹಿಸಿದ normal distribution ಅಲ್ಲ. ಭಾರತೀಯ market ನ ನಿಜವಾದ crashes, ನಿಜವಾದ ಚೇತರಿಕೆಗಳು, ನಿಜವಾದ ಸತತ ಕೆಟ್ಟ ವರ್ಷಗಳು.</p>
+
+<h2>2. Sequence risk — ಒಂದು ಕಥೆಯ ಮೂಲಕ</h2>
+
+<div class="example">
+<h4>ಇಬ್ಬರು ಸಹೋದರರು, ಒಂದೇ average return</h4>
+<p class="kv">ಇಬ್ಬರೂ ₹2 ಕೋಟಿ corpus ಇಂದ retire ಆದರು. ಇಬ್ಬರೂ ತಿಂಗಳಿಗೆ ₹80,000 ತೆಗೆಯುತ್ತಾರೆ. ಇಬ್ಬರಿಗೂ 3 ವರ್ಷದ average return ಒಂದೇ.</p>
+<p class="kv"><b>ಅಣ್ಣನ ಕ್ರಮ:</b> ವರ್ಷ 1 = +30%, ವರ್ಷ 2 = 0%, ವರ್ಷ 3 = −30%<br>
+<b>ತಮ್ಮನ ಕ್ರಮ:</b> ವರ್ಷ 1 = −30%, ವರ್ಷ 2 = 0%, ವರ್ಷ 3 = +30%</p>
+<p class="kv">Average ಎರಡಕ್ಕೂ 0%. ಆದರೆ 3 ವರ್ಷದ ನಂತರ:<br>
+<b>ಅಣ್ಣ:</b> ಸುಮಾರು ₹1.42 ಕೋಟಿ · <b>ತಮ್ಮ:</b> ಸುಮಾರು ₹1.23 ಕೋಟಿ</p>
+<p>₹19 ಲಕ್ಷ ವ್ಯತ್ಯಾಸ — ಕೇವಲ ಕ್ರಮದಿಂದ. 30 ವರ್ಷದಲ್ಲಿ ಈ ವ್ಯತ್ಯಾಸ ಕೋಟಿಗಳಲ್ಲಿ ಆಗುತ್ತದೆ.</p>
+</div>
+
+<h3>2.1 ಯಾಕೆ ಹೀಗಾಗುತ್ತದೆ</h3>
+
+<p>ನೀವು ಹಣ ತೆಗೆಯುತ್ತಿರುವಾಗ, ಪ್ರತಿ withdrawal ನಿಮ್ಮ portfolio ನ ಒಂದು ಭಾಗವನ್ನು ಶಾಶ್ವತವಾಗಿ ತೆಗೆದುಹಾಕುತ್ತದೆ. Market ಬಿದ್ದಿರುವಾಗ ನೀವು ತೆಗೆದರೆ:</p>
+
+<ul>
+<li>ಅದೇ ₹80,000 ಗೆ <b>ಹೆಚ್ಚು units</b> ಮಾರಬೇಕಾಗುತ್ತದೆ (ಕಡಿಮೆ NAV).</li>
+<li>ಆ units ಶಾಶ್ವತವಾಗಿ ಹೋದವು. Market ಚೇತರಿಸಿಕೊಂಡಾಗ ಅವು ಇರುವುದಿಲ್ಲ.</li>
+<li>ಆದ್ದರಿಂದ ಚೇತರಿಕೆಯ ಲಾಭ ನಿಮಗೆ ಸಂಪೂರ್ಣ ಸಿಗುವುದಿಲ್ಲ.</li>
+</ul>
+
+<p>ಇದನ್ನೇ "<b>reverse rupee-cost averaging</b>" ಎನ್ನುತ್ತಾರೆ. SIP ನಲ್ಲಿ ಕಡಿಮೆ ಬೆಲೆ ನಿಮ್ಮ ಮಿತ್ರ. SWP ನಲ್ಲಿ ಅದೇ ಕಡಿಮೆ ಬೆಲೆ ನಿಮ್ಮ ಶತ್ರು.</p>
+
+<div class="note"><span class="lbl">ಗಣಿತದ ಸತ್ಯ</span>
+<p>ನೀವು ಹಣ ತೆಗೆಯದೇ ಇದ್ದರೆ (pure accumulation, ಯಾವುದೇ contribution ಇಲ್ಲದೆ), ಕ್ರಮ ಸಂಪೂರ್ಣ ಅಪ್ರಸ್ತುತ. (1.30 x 1.00 x 0.70) = (0.70 x 1.00 x 1.30). ಗುಣಾಕಾರ commutative. <b>Cash flow ಇದ್ದಾಗ ಮಾತ್ರ</b> ಕ್ರಮ ಮುಖ್ಯವಾಗುತ್ತದೆ.</p></div>
+
+<h2 class="newpage">3. ನಾಲ್ಕು sampling methods</h2>
+
+<p>ಈ calculator ನ ಹೃದಯ — ನಾಲ್ಕು ಬೇರೆ ಬೇರೆ ರೀತಿಯಲ್ಲಿ returns ಜೋಡಿಸುವುದು. ಪ್ರತಿಯೊಂದೂ ಬೇರೆ ಪ್ರಶ್ನೆಗೆ ಉತ್ತರ ಕೊಡುತ್ತದೆ.</p>
+
+<h3>3.1 Block bootstrap (default)</h3>
+
+<p>ಐತಿಹಾಸಿಕ returns ಇಂದ <b>5 ವರ್ಷದ ತುಂಡುಗಳನ್ನು</b> (blocks) ಯಾದೃಚ್ಛಿಕವಾಗಿ ಎತ್ತಿ ಜೋಡಿಸುತ್ತದೆ. ಉದಾಹರಣೆಗೆ 2007–2011 ರ ತುಂಡು + 1995–1999 ರ ತುಂಡು + 2016–2020 ರ ತುಂಡು...</p>
+
+<p><b>ಯಾಕೆ ಇದು ಒಳ್ಳೆಯದು:</b> ಇದು ಐತಿಹಾಸಿಕ ದತ್ತಾಂಶದ <b>ಸ್ಥಳೀಯ ರಚನೆಯನ್ನು</b> ಉಳಿಸಿಕೊಳ್ಳುತ್ತದೆ. ನಿಜ ಜೀವನದಲ್ಲಿ ಕೆಟ್ಟ ವರ್ಷಗಳು ಗುಂಪಾಗಿ ಬರುತ್ತವೆ (2008 ರ ನಂತರ 2011), ಒಳ್ಳೆಯ ವರ್ಷಗಳೂ ಗುಂಪಾಗಿ ಬರುತ್ತವೆ (2003–2007). Block bootstrap ಈ ಗುಂಪುಗಾರಿಕೆಯನ್ನು ಉಳಿಸುತ್ತದೆ, ಆದರೆ ಒಂದೇ ಐತಿಹಾಸಿಕ ಕ್ರಮಕ್ಕೆ ಸೀಮಿತವಾಗುವುದಿಲ್ಲ.</p>
+
+<p><b>ಇದನ್ನು ಬಳಸಿ:</b> ನಿಮ್ಮ ಮುಖ್ಯ ವಿಶ್ಲೇಷಣೆಗೆ. ಇದು ಅತ್ಯಂತ ವಾಸ್ತವಿಕ.</p>
+
+<h3>3.2 Historical (rolling windows)</h3>
+
+<p>ನಿಜವಾದ ಐತಿಹಾಸಿಕ ಅನುಕ್ರಮಗಳನ್ನೇ ಬಳಸುತ್ತದೆ. "1991 ರಲ್ಲಿ retire ಆಗಿದ್ದರೆ ಏನಾಗುತ್ತಿತ್ತು? 1992 ರಲ್ಲಿ? 1993 ರಲ್ಲಿ?" — ಪ್ರತಿ ಆರಂಭ ವರ್ಷಕ್ಕೆ ಒಂದು path.</p>
+
+<p><b>Wrap around ಆಯ್ಕೆ:</b> 35 ವರ್ಷದ ದತ್ತಾಂಶದಲ್ಲಿ 30 ವರ್ಷದ horizon ಗೆ ಕೇವಲ 6 windows ಸಿಗುತ್ತವೆ. Wrap ON ಮಾಡಿದರೆ ದತ್ತಾಂಶ ಮುಗಿದ ಮೇಲೆ ಆರಂಭಕ್ಕೆ ಹಿಂತಿರುಗಿ ಮುಂದುವರಿಯುತ್ತದೆ — ಹೆಚ್ಚು windows ಸಿಗುತ್ತವೆ, ಆದರೆ ಆ ಜೋಡಣೆ ಕೃತಕ.</p>
+
+<p><b>ಇದನ್ನು ಬಳಸಿ:</b> "ನಿಜವಾಗಿ ಏನಾಯಿತು" ಎಂದು ನೋಡಲು. ಆದರೆ paths ಕಡಿಮೆ ಇರುವುದರಿಂದ ಫಲಿತಾಂಶ ಅಸ್ಥಿರ.</p>
+
+<h3>3.3 Shuffle (ordering-luck test)</h3>
+
+<p>ಐತಿಹಾಸಿಕ returns ನ <b>ಅದೇ set</b> ಅನ್ನು ತೆಗೆದುಕೊಂಡು ಸಂಪೂರ್ಣ ಕಲಸುತ್ತದೆ. ಅಂದರೆ ಪ್ರತಿ path ನಲ್ಲಿ ಅದೇ 35 returns, ಆದರೆ ಬೇರೆ ಕ್ರಮದಲ್ಲಿ.</p>
+
+<div class="tip"><span class="lbl">ಇದೇ ಈ calculator ನ ಅತ್ಯಂತ ಶಕ್ತಿಶಾಲಿ ಪರೀಕ್ಷೆ</span>
+<p>Shuffle ನಲ್ಲಿ average return, SD, ಎಲ್ಲಾ ಸಂಖ್ಯಾಶಾಸ್ತ್ರೀಯ ಗುಣಗಳು <b>ನಿಖರವಾಗಿ ಒಂದೇ</b>. ಬದಲಾಗುವುದು ಕೇವಲ <b>ಕ್ರಮ</b>. ಆದ್ದರಿಂದ shuffle ನಲ್ಲಿ ಬರುವ p10 ಇಂದ p90 ವರೆಗಿನ ಅಗಲ — ಅದೇ <b>ಶುದ್ಧ sequence risk</b>. ಬೇರೆ ಯಾವುದೇ ಕಾರಣ ಇಲ್ಲ.</p></div>
+
+<p><b>ಇದನ್ನು ಬಳಸಿ:</b> Sequence risk ನ ಗಾತ್ರವನ್ನು ಅಳೆಯಲು. ಇದನ್ನು ಮೊದಲು ನೋಡಿ, ಆಮೇಲೆ block bootstrap ಗೆ ಹೋಗಿ.</p>
+
+<h3>3.4 IID (independent draws)</h3>
+
+<p>ಪ್ರತಿ ವರ್ಷದ return ಅನ್ನು ಐತಿಹಾಸಿಕ ಪಟ್ಟಿಯಿಂದ ಸ್ವತಂತ್ರವಾಗಿ (with replacement) ಎತ್ತುತ್ತದೆ. ಒಂದೇ ವರ್ಷದ return ಹಲವು ಬಾರಿ ಬರಬಹುದು.</p>
+
+<p><b>ಸಮಸ್ಯೆ:</b> ಇದು ಎಲ್ಲಾ serial correlation ಅನ್ನು ಒಡೆಯುತ್ತದೆ. ನಿಜ ಜೀವನದಲ್ಲಿ market ನಲ್ಲಿ mean reversion ಇದೆ — ದೊಡ್ಡ crash ನಂತರ ಸಾಮಾನ್ಯವಾಗಿ ದೊಡ್ಡ ಚೇತರಿಕೆ. IID ಅದನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ, ಸತತ 5 ಕೆಟ್ಟ ವರ್ಷಗಳನ್ನು ಸೃಷ್ಟಿಸಬಹುದು.</p>
+
+<p><b>ಇದನ್ನು ಬಳಸಿ:</b> ಒಂದು ಕಠಿಣ stress test ಎಂದು. ಇಲ್ಲಿ ನಿಮ್ಮ plan ಬದುಕಿದರೆ ಅದು ದೃಢ.</p>
+
+<h3>3.5 ನಾಲ್ಕನ್ನೂ ಹೋಲಿಸಿ</h3>
+
+<table>
+<thead><tr><th style="width:20%">Method</th><th style="width:20%">ಏನನ್ನು ಉಳಿಸುತ್ತದೆ</th><th style="width:20%">ಏನನ್ನು ಒಡೆಯುತ್ತದೆ</th><th>ಬಳಕೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">Block</td><td>ಸ್ಥಳೀಯ ಗುಂಪುಗಾರಿಕೆ, distribution</td><td>ದೀರ್ಘಕಾಲದ ಕ್ರಮ</td><td>ಮುಖ್ಯ ವಿಶ್ಲೇಷಣೆ</td></tr>
+<tr><td class="f">Historical</td><td>ಎಲ್ಲವನ್ನೂ — ನಿಜವಾದ ಇತಿಹಾಸ</td><td>ಏನನ್ನೂ ಇಲ್ಲ</td><td>ವಾಸ್ತವ ಪರೀಕ್ಷೆ</td></tr>
+<tr><td class="f">Shuffle</td><td>Distribution ನಿಖರವಾಗಿ</td><td>ಎಲ್ಲಾ ಕ್ರಮ</td><td>Sequence risk ಅಳತೆ</td></tr>
+<tr><td class="f">IID</td><td>Distribution (ಸರಿಸುಮಾರು)</td><td>ಕ್ರಮ ಮತ್ತು ಆವರ್ತನ</td><td>ಕಠಿಣ stress test</td></tr>
+</tbody>
+</table>
+
+<h2 class="newpage">4. ಪ್ರತಿ Input field — ಪೂರ್ಣ ವಿವರಣೆ</h2>
+
+<table>
+<thead><tr><th style="width:26%">Field</th><th style="width:15%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಪರಿಣಾಮ</th></tr></thead>
+<tbody>
+<tr><td class="f">Corpus (₹)</td><td class="num">2,00,00,000</td><td>Retirement ಆರಂಭದ ಮೊತ್ತ.</td></tr>
+<tr><td class="f">Monthly withdrawal (₹)</td><td class="num">80,000</td><td>ಮೊದಲ ವರ್ಷದ ತಿಂಗಳ ಮೊತ್ತ. <b>ಇಲ್ಲಿ ನೀವು ಇದನ್ನು ಕೊಡುತ್ತೀರಿ</b> — Safe Withdrawal Solver ನಂತೆ ಅದನ್ನು ಹುಡುಕುವುದಿಲ್ಲ. ಆ solver ನ ಉತ್ತರವನ್ನು ಇಲ್ಲಿ ಹಾಕಿ ಪರೀಕ್ಷಿಸಿ.</td></tr>
+<tr><td class="f">Inflation (%)</td><td class="num">6</td><td>ವರ್ಷಕ್ಕೆ withdrawal ಏರಿಕೆ ದರ.</td></tr>
+<tr><td class="f">Inflation-adjust</td><td class="num">ON</td><td>ON ಆದರೆ ಪ್ರತಿ ವರ್ಷ withdrawal ಏರುತ್ತದೆ — ಜೀವನಮಟ್ಟ ಸ್ಥಿರ.</td></tr>
+<tr><td class="f">Horizon (years)</td><td class="num">30</td><td>ಎಷ್ಟು ವರ್ಷ ಪರೀಕ್ಷಿಸಬೇಕು.</td></tr>
+<tr><td class="f">Equity allocation (%)</td><td class="num">60</td><td>Portfolio ನ ಎಷ್ಟು ಭಾಗ equity. ಉಳಿದದ್ದು debt. <b>ಇದೇ ನಿಮ್ಮ ಮುಖ್ಯ lever</b> — ಇದನ್ನು ಬದಲಾಯಿಸಿ ನೋಡಿ.</td></tr>
+<tr><td class="f">Debt return (%)</td><td class="num">7</td><td>Debt ಭಾಗದ ಸ್ಥಿರ ವಾರ್ಷಿಕ return. ಇಲ್ಲಿ volatility ಇಲ್ಲ — ಇದು ಸರಳೀಕರಣ, ಆದರೆ ಸಮಂಜಸ.</td></tr>
+<tr><td class="f">Dividend yield (%)</td><td class="num">1.4</td><td>Sensex ನ price return ಗೆ ಇದನ್ನು ಸೇರಿಸಲಾಗುತ್ತದೆ. <b>ಇದು ಮುಖ್ಯ</b> — ಐತಿಹಾಸಿಕ Sensex ಸಂಖ್ಯೆಗಳು price index, total return ಅಲ್ಲ.</td></tr>
+<tr><td class="f">Fee drag (%)</td><td class="num">0.5</td><td>ಇಡೀ portfolio return ಇಂದ ಪ್ರತಿ ವರ್ಷ ಕಳೆಯಲ್ಪಡುತ್ತದೆ.</td></tr>
+<tr><td class="f">Method</td><td class="num">block</td><td>ಮೇಲಿನ 4 ರಲ್ಲಿ ಒಂದು.</td></tr>
+<tr><td class="f">Block size (years)</td><td class="num">5</td><td>Block method ನಲ್ಲಿ ಮಾತ್ರ. ಚಿಕ್ಕ block (2–3) = ಹೆಚ್ಚು ಕಲಸುವಿಕೆ. ದೊಡ್ಡ block (8–10) = ಇತಿಹಾಸಕ್ಕೆ ಹತ್ತಿರ. 5 ಒಳ್ಳೆಯ ಸಮತೋಲನ.</td></tr>
+<tr><td class="f">Paths</td><td class="num">2000</td><td>ಎಷ್ಟು simulations. Historical method ನಲ್ಲಿ ಇದು ಅಪ್ರಸ್ತುತ (ಲಭ್ಯ windows ಎಷ್ಟೋ ಅಷ್ಟೇ).</td></tr>
+<tr><td class="f">Allow wrap</td><td class="num">ON</td><td>Historical method ನಲ್ಲಿ ದತ್ತಾಂಶದ ಕೊನೆ ತಲುಪಿದಾಗ ಆರಂಭಕ್ಕೆ ಸುತ್ತು.</td></tr>
+<tr><td class="f">Seed</td><td class="num">20260811</td><td>Reproducibility ಗೆ.</td></tr>
+</tbody>
+</table>
+
+<h3>4.1 Data tab — ನೀವು ದತ್ತಾಂಶವನ್ನೇ ಬದಲಾಯಿಸಬಹುದು</h3>
+
+<p>ಈ calculator ನ ವಿಶೇಷ ಗುಣ — "Data" tab ನಲ್ಲಿ Sensex returns series ಸಂಪಾದಿಸಬಹುದು. ನೀವು Nifty returns, Nifty Midcap returns, ಅಥವಾ ನಿಮ್ಮ ಸ್ವಂತ portfolio ನ ಐತಿಹಾಸಿಕ returns ಹಾಕಬಹುದು.</p>
+
+<div class="note"><span class="lbl">ಒಳಗಿನ ದತ್ತಾಂಶ</span>
+<p>Sensex ವಾರ್ಷಿಕ price returns, 1991–2025, 35 ಅವಲೋಕನಗಳು. ಇದರಲ್ಲಿ 1992 ರ Harshad Mehta ಪ್ರಕರಣ (+37%), 2008 ರ Global Financial Crisis (−52.45%), 2009 ರ ಚೇತರಿಕೆ (+81.03%), ಮತ್ತು 2020 ರ COVID ವರ್ಷ (+15.75%) ಎಲ್ಲವೂ ಇವೆ.</p></div>
+
+<h2>5. Portfolio return ಹೇಗೆ ಲೆಕ್ಕವಾಗುತ್ತದೆ</h2>
+
+<div class="formula"><span class="c">// w = equityAlloc / 100</span>
+
+portfolioReturn = w x ((equityReturn + dividendYield) / 100)
+                + (1 − w) x (debtReturn / 100)
+                − feeDrag / 100</div>
+
+<h3>5.1 ಪ್ರತಿ ಘಟಕವನ್ನು ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳುವುದು</h3>
+
+<table>
+<thead><tr><th style="width:34%">ಘಟಕ</th><th>ವಿವರಣೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">equityReturn</td><td>ಆ ವರ್ಷ sampling ಇಂದ ಎತ್ತಿದ Sensex price return. ಇದೇ randomness ನ ಮೂಲ.</td></tr>
+<tr><td class="f">+ dividendYield</td><td>Sensex price index dividends ಸೇರಿಸುವುದಿಲ್ಲ. ಆದರೆ ನೀವು fund ನಲ್ಲಿ ಹೂಡಿದರೆ dividends ಮರುಹೂಡಿಕೆ ಆಗುತ್ತವೆ. ಆದ್ದರಿಂದ ಇದನ್ನು ಸೇರಿಸಬೇಕು — ಇಲ್ಲದಿದ್ದರೆ ನೀವು ವರ್ಷಕ್ಕೆ 1.4% ಕಡಿಮೆ ಲೆಕ್ಕ ಹಾಕುತ್ತೀರಿ.</td></tr>
+<tr><td class="f">(1−w) x debtReturn</td><td>Debt ಭಾಗ. ಇದು ಸ್ಥಿರ — ಪ್ರತಿ ವರ್ಷ ಒಂದೇ. ಇದೇ portfolio ನ "ಶಾಂತಗೊಳಿಸುವ" ಭಾಗ.</td></tr>
+<tr><td class="f">− feeDrag</td><td>ಪ್ರತಿ ವರ್ಷ ಗ್ಯಾರಂಟಿಯಾಗಿ ಹೋಗುವ ಮೊತ್ತ. Market ಬಿದ್ದರೂ ಇದು ಹೋಗುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<div class="warn"><span class="lbl">ಒಂದು ಸರಳೀಕರಣ</span>
+<p>ಈ model ನಲ್ಲಿ <b>rebalancing ಸ್ವಯಂಚಾಲಿತ ಮತ್ತು ಉಚಿತ</b>. ಪ್ರತಿ ವರ್ಷ ನಿಮ್ಮ allocation ನಿಖರವಾಗಿ 60:40 ಗೆ ಹಿಂತಿರುಗುತ್ತದೆ, ಯಾವುದೇ tax ಅಥವಾ ವೆಚ್ಚ ಇಲ್ಲದೆ. ನಿಜ ಜೀವನದಲ್ಲಿ rebalancing ಗೆ tax ಬರುತ್ತದೆ. ಆದ್ದರಿಂದ ನಿಜವಾದ ಫಲಿತಾಂಶ ಇದಕ್ಕಿಂತ ಸ್ವಲ್ಪ ಕೆಟ್ಟದಾಗಿರುತ್ತದೆ.</p></div>
+
+<h2 class="newpage">6. Engine — ಪ್ರತಿ path ನಲ್ಲಿ ಏನಾಗುತ್ತದೆ</h2>
+
+<div class="formula"><span class="c">// ಪ್ರತಿ path ಗೆ:</span>
+
+v = corpus
+w = monthlyWithdrawal
+
+ಪ್ರತಿ ವರ್ಷ y = 1 ರಿಂದ horizon:
+
+  <span class="k">1.</span> ಈ ವರ್ಷದ equity return ಅನ್ನು method ಪ್ರಕಾರ ಎತ್ತು
+        block      → 5-ವರ್ಷದ ತುಂಡುಗಳನ್ನು ಜೋಡಿಸು
+        historical → ಆರಂಭ ವರ್ಷದಿಂದ ಸತತವಾಗಿ ಓದು
+        shuffle    → ಕಲಸಿದ ಪಟ್ಟಿಯಿಂದ ಕ್ರಮವಾಗಿ
+        iid        → ಪ್ರತಿ ವರ್ಷ ಸ್ವತಂತ್ರವಾಗಿ ಎತ್ತು
+
+  <span class="k">2.</span> r = w_eq x (eqRet + divYield) + (1−w_eq) x debtRet − fee
+
+  <span class="k">3.</span> 12 ತಿಂಗಳು:
+         v = v − w
+         v = v x (1 + r)^(1/12)
+         v &lt;= 0 → path FAIL, ನಿಲ್ಲಿಸು
+
+  <span class="k">4.</span> inflationAdjust ON → w = w x (1 + inflation)
+
+<span class="c">// ಕೊನೆಯಲ್ಲಿ</span>
+success = (v &gt; 0)</div>
+
+<h3>6.1 Depletion year — ಎಷ್ಟನೇ ವರ್ಷ ಖಾಲಿ?</h3>
+
+<p>Path fail ಆದರೆ calculator ಆ ವರ್ಷವನ್ನು ದಾಖಲಿಸುತ್ತದೆ. ಇದು ಅತ್ಯಂತ ಉಪಯುಕ್ತ ಮಾಹಿತಿ — "ಎಷ್ಟು ಬಾರಿ ವಿಫಲ" ಎನ್ನುವುದಕ್ಕಿಂತ "<b>ಎಷ್ಟು ಬೇಗ ವಿಫಲ</b>" ಹೆಚ್ಚು ಮುಖ್ಯ.</p>
+
+<ul>
+<li><b>28ನೇ ವರ್ಷ ಖಾಲಿ:</b> ಸ್ವಲ್ಪ ಖರ್ಚು ಕಡಿಮೆ ಮಾಡಿದರೆ ಸರಿಹೋಗುತ್ತದೆ. ನಿರ್ವಹಿಸಬಹುದಾದ ಅಪಾಯ.</li>
+<li><b>14ನೇ ವರ್ಷ ಖಾಲಿ:</b> ಇದು ದುರಂತ. 72 ವರ್ಷ ವಯಸ್ಸಿನಲ್ಲಿ ಶೂನ್ಯ. ಕೆಲಸಕ್ಕೆ ಹಿಂತಿರುಗಲಾಗದು.</li>
+</ul>
+
+<h2>7. ಪ್ರತಿ Output tab — ಏನು ಹೇಳುತ್ತದೆ</h2>
+
+<h3>7.1 Tab "Results"</h3>
+
+<table>
+<thead><tr><th style="width:34%">Output</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">Success rate</td><td>ಎಷ್ಟು % paths ನಲ್ಲಿ horizon ಮುಗಿಯುವವರೆಗೆ ಹಣ ಉಳಿಯಿತು.</td></tr>
+<tr><td class="f">Median ending value</td><td>ಮಧ್ಯದ path ನ ಅಂತಿಮ ಮೊತ್ತ.</td></tr>
+<tr><td class="f">10th percentile ending</td><td>ಕೆಟ್ಟ 10% ಸನ್ನಿವೇಶಗಳ ಗಡಿ. <b>ಇದನ್ನೇ planning ಗೆ ಬಳಸಿ.</b></td></tr>
+<tr><td class="f">Median depletion year</td><td>ವಿಫಲವಾದ paths ನಲ್ಲಿ ಸರಾಸರಿ ಎಷ್ಟನೇ ವರ್ಷ ಖಾಲಿ ಆಯಿತು.</td></tr>
+<tr><td class="f">Worst path ending</td><td>ಅತ್ಯಂತ ಕೆಟ್ಟ ಸನ್ನಿವೇಶ. ಇದು ಭಯಾನಕ ಇರುತ್ತದೆ — ಆದರೆ ಅದೇ ಉದ್ದೇಶ.</td></tr>
+</tbody>
+</table>
+
+<h3>7.2 Tab "Individual paths"</h3>
+
+<p>ಇಲ್ಲಿ ಹಲವು paths ನ ಗ್ರಾಫ್ — ಪ್ರತಿಯೊಂದೂ ಒಂದು ಸಾಧ್ಯ ಭವಿಷ್ಯ. ಇದನ್ನು ನೋಡಿ ನೀವು ಗ್ರಹಿಸಬೇಕಾದದ್ದು: <b>ಎಷ್ಟು ವಿಸ್ತಾರವಾಗಿ ಹರಡಿವೆ</b>. ಕೆಲವು paths ₹10 ಕೋಟಿಗೆ ಏರುತ್ತವೆ, ಕೆಲವು 20ನೇ ವರ್ಷಕ್ಕೆ ಶೂನ್ಯಕ್ಕೆ ಬೀಳುತ್ತವೆ. ಒಂದೇ ಆರಂಭ, ಒಂದೇ ನಿಯಮಗಳು.</p>
+
+<p>ಈ ಚಿತ್ರವೇ ಈ calculator ನ ಮುಖ್ಯ ಸಂದೇಶ. "Average" ಎಂಬುದು ಈ ಚಿತ್ರದಲ್ಲಿ ಎಲ್ಲೋ ಒಂದು ಗೆರೆ ಮಾತ್ರ — ನೀವು ಬದುಕುವುದು ಒಂದೇ ಒಂದು path ನಲ್ಲಿ, ಮತ್ತು ಅದು ಯಾವುದು ಎಂದು ನಿಮಗೆ ಮುಂಚಿತವಾಗಿ ಗೊತ್ತಿಲ್ಲ.</p>
+
+<h3>7.3 Tab "Percentile table"</h3>
+
+<p>ವರ್ಷವಾರು p10/p25/p50/p75/p90. ಇಲ್ಲಿ ಎರಡು ವಿಷಯ ಗಮನಿಸಿ:</p>
+
+<ul>
+<li><b>p10 ಎಷ್ಟು ಬೇಗ ಇಳಿಯುತ್ತದೆ?</b> ಮೊದಲ 10 ವರ್ಷದಲ್ಲೇ ಅರ್ಧಕ್ಕೆ ಬಂದರೆ ನಿಮ್ಮ withdrawal ಹೆಚ್ಚು.</li>
+<li><b>p50 ಮತ್ತು p10 ನಡುವಿನ ಅಂತರ ಕಾಲಾನಂತರ ಎಷ್ಟು ಅಗಲವಾಗುತ್ತದೆ?</b> ಅಗಲವಾದಷ್ಟು ಅನಿಶ್ಚಿತತೆ ಹೆಚ್ಚು.</li>
+</ul>
+
+<h3>7.4 Tab "Data"</h3>
+
+<p>Sensex returns series — ಸಂಪಾದಿಸಬಹುದು. ಇಲ್ಲಿ ನೀವು ಮಾಡಬಹುದಾದ ಪ್ರಯೋಗಗಳು:</p>
+
+<ul>
+<li>2008 ರ −52.45% ಅನ್ನು −60% ಗೆ ಬದಲಾಯಿಸಿ — ನಿಮ್ಮ plan ಎಷ್ಟು ಸೂಕ್ಷ್ಮ?</li>
+<li>ಎಲ್ಲಾ returns ಇಂದ 2% ಕಳೆಯಿರಿ — "ಮುಂದಿನ 30 ವರ್ಷ ಹಿಂದಿನಷ್ಟು ಒಳ್ಳೆಯದಾಗದಿದ್ದರೆ?"</li>
+<li>Nifty Midcap ದತ್ತಾಂಶ ಹಾಕಿ — ಹೆಚ್ಚು return, ಹೆಚ್ಚು volatility. ನಿವ್ವಳ ಪರಿಣಾಮ ಏನು?</li>
+</ul>
+
+<h2 class="newpage">8. Worked Example — ಪೂರ್ತಿ ಲೆಕ್ಕ</h2>
+
+<div class="example">
+<h4>ಸನ್ನಿವೇಶ: ಸುರೇಶ್, 60 ವರ್ಷ, ಈಗಷ್ಟೇ retire ಆದರು</h4>
+<p class="kv">
+<b>Corpus:</b> ₹2,00,00,000 · <b>Monthly withdrawal:</b> ₹80,000<br>
+<b>Inflation:</b> 6% (adjust ON) · <b>Horizon:</b> 30 ವರ್ಷ<br>
+<b>Equity:</b> 60% · <b>Debt return:</b> 7% · <b>Dividend yield:</b> 1.4%<br>
+<b>Fee drag:</b> 0.5% · <b>Method:</b> block, size 5 · <b>Paths:</b> 2000
+</p>
+<p class="kv">ಮೊದಲ ವರ್ಷದ withdrawal rate = 80,000 x 12 / 2,00,00,000 = <b>4.8%</b></p>
+</div>
+
+<h3>ಒಂದು ಉದಾಹರಣೆ ವರ್ಷದ ಲೆಕ್ಕ</h3>
+
+<p>ಈ path ನಲ್ಲಿ ವರ್ಷ 1 ಗೆ 2008 ರ block ಎತ್ತಲ್ಪಟ್ಟಿತು ಎಂದುಕೊಳ್ಳಿ — Sensex return = −52.45%.</p>
+
+<div class="formula">r = 0.60 x ((−52.45 + 1.4)/100) + 0.40 x (7/100) − 0.5/100
+  = 0.60 x (−0.5105) + 0.40 x 0.07 − 0.005
+  = −0.3063 + 0.028 − 0.005
+  = <span class="k">−0.2833</span>   <span class="c">// −28.33%</span>
+
+<span class="c">// 12 ತಿಂಗಳು, ಪ್ರತಿ ತಿಂಗಳು ₹80,000 ತೆಗೆದು</span>
+ಮಾಸಿಕ growth factor = (1 − 0.2833)^(1/12) = 0.97255
+
+ತಿಂಗಳು 1:  v = (2,00,00,000 − 80,000) x 0.97255 = 1,93,72,500
+ತಿಂಗಳು 2:  v = (1,93,72,500 − 80,000) x 0.97255 = 1,87,58,600
+...
+ತಿಂಗಳು 12: v ≈ <span class="k">1,42,20,000</span></div>
+
+<p>ಒಂದೇ ವರ್ಷದಲ್ಲಿ ₹2 ಕೋಟಿ ಇಂದ ₹1.42 ಕೋಟಿಗೆ. ನಷ್ಟ ₹58 ಲಕ್ಷ — ಅದರಲ್ಲಿ ₹9.6 ಲಕ್ಷ ನೀವು ತೆಗೆದದ್ದು, ಉಳಿದ ₹48 ಲಕ್ಷ market. ಮತ್ತು ಮುಂದಿನ ವರ್ಷ ನೀವು ₹84,800/month ತೆಗೆಯಬೇಕು (inflation).</p>
+
+<h3>ಈ ಒಂದೇ ಸನ್ನಿವೇಶದ ನಾಲ್ಕು ವಿಧಾನಗಳ ಹೋಲಿಕೆ</h3>
+
+<table>
+<thead><tr><th style="width:20%">Method</th><th style="width:18%">Success rate</th><th style="width:24%">Median ending</th><th>ಟಿಪ್ಪಣಿ (ಸೂಚ್ಯ)</th></tr></thead>
+<tbody>
+<tr><td class="f">Historical</td><td class="num">~88%</td><td class="num">₹3.9 ಕೋಟಿ</td><td>ಕಡಿಮೆ windows, ಅಸ್ಥಿರ. ಆದರೆ "ನಿಜವಾಗಿ ಆದದ್ದು".</td></tr>
+<tr><td class="f">Shuffle</td><td class="num">~79%</td><td class="num">₹3.2 ಕೋಟಿ</td><td>ಒಂದೇ returns, ಬೇರೆ ಕ್ರಮ — 9% success ಕಡಿಮೆ. <b>ಇದೇ sequence risk.</b></td></tr>
+<tr><td class="f">Block (5y)</td><td class="num">~76%</td><td class="num">₹3.0 ಕೋಟಿ</td><td>ಅತ್ಯಂತ ವಾಸ್ತವಿಕ. ಮುಖ್ಯ ಸಂಖ್ಯೆ ಇದನ್ನೇ ಬಳಸಿ.</td></tr>
+<tr><td class="f">IID</td><td class="num">~72%</td><td class="num">₹2.8 ಕೋಟಿ</td><td>ಅತ್ಯಂತ ಕಠಿಣ. Mean reversion ಇಲ್ಲದಿದ್ದರೆ ಹೀಗೆ.</td></tr>
+</tbody>
+</table>
+
+<div class="note"><span class="lbl">ಸಂಖ್ಯೆಗಳ ಬಗ್ಗೆ</span>
+<p>ಮೇಲಿನವು ಈ ವಿಧಾನಗಳ ನಡುವಿನ <b>ಸಂಬಂಧವನ್ನು</b> ವಿವರಿಸಲು ಇರುವ ಸೂಚ್ಯ ಸಂಖ್ಯೆಗಳು. ನಿಮ್ಮ browser ನಲ್ಲಿ ನಿಜವಾದ ಸಂಖ್ಯೆ ಬರುತ್ತದೆ. ಮುಖ್ಯ ಪಾಠ — ವಿಧಾನ ಬದಲಾಯಿಸಿದರೆ ಫಲಿತಾಂಶ ಗಣನೀಯವಾಗಿ ಬದಲಾಗುತ್ತದೆ. ಆದ್ದರಿಂದ ಒಂದೇ ವಿಧಾನದ ಒಂದೇ ಸಂಖ್ಯೆಯನ್ನು ನಂಬಬೇಡಿ.</p></div>
+
+<h3>ಸುರೇಶ್ ಅವರ ತೀರ್ಮಾನ</h3>
+
+<p>76% success ಸಾಕಾಗುವುದಿಲ್ಲ — ಅಂದರೆ 4 ರಲ್ಲಿ 1 ಸನ್ನಿವೇಶದಲ್ಲಿ ಹಣ ಮುಗಿಯುತ್ತದೆ. ಆಯ್ಕೆಗಳು:</p>
+
+<table>
+<thead><tr><th style="width:44%">ಬದಲಾವಣೆ</th><th style="width:20%">ಹೊಸ success</th><th>ಟಿಪ್ಪಣಿ</th></tr></thead>
+<tbody>
+<tr><td class="f">Withdrawal ₹80,000 → ₹65,000</td><td class="num">~91%</td><td>ಅತ್ಯಂತ ಪರಿಣಾಮಕಾರಿ. Rate 4.8% → 3.9%.</td></tr>
+<tr><td class="f">Equity 60% → 70%</td><td class="num">~79%</td><td>ಸ್ವಲ್ಪ ಸುಧಾರಣೆ, ಆದರೆ ಹೆಚ್ಚು ಏರಿಳಿತ.</td></tr>
+<tr><td class="f">Equity 60% → 40%</td><td class="num">~68%</td><td>ಕೆಟ್ಟದಾಯಿತು! ಕಡಿಮೆ equity = ಕಡಿಮೆ growth, 30 ವರ್ಷಕ್ಕೆ ಸಾಲದು.</td></tr>
+<tr><td class="f">Fee 0.5% → 0.2%</td><td class="num">~79%</td><td>ಉಚಿತ ಸುಧಾರಣೆ. Direct plans ಗೆ ಬದಲಾಯಿಸಿ.</td></tr>
+<tr><td class="f">Horizon 30 → 25</td><td class="num">~86%</td><td>ಆದರೆ ಇದು ನಿಮ್ಮ ಕೈಯಲ್ಲಿಲ್ಲ.</td></tr>
+</tbody>
+</table>
+
+<div class="tip"><span class="lbl">ಮುಖ್ಯ ಒಳನೋಟ</span>
+<p>Equity ಕಡಿಮೆ ಮಾಡುವುದು retirement ನಲ್ಲಿ "ಸುರಕ್ಷಿತ" ಎಂದು ಬಹಳ ಜನ ತಿಳಿಯುತ್ತಾರೆ. ಆದರೆ 30 ವರ್ಷದ horizon ನಲ್ಲಿ 6% inflation ಇರುವಾಗ, ಕಡಿಮೆ equity ಎಂದರೆ <b>inflation ನಿಂದ ಸಾಯುವುದು</b> — market crash ಇಂದ ಸಾಯುವ ಬದಲು. ಎರಡೂ ಸಾವೇ. ಈ calculator ಆ ಸಮತೋಲನವನ್ನು ಸಂಖ್ಯೆಗಳಲ್ಲಿ ತೋರಿಸುತ್ತದೆ.</p></div>
+
+<h2 class="newpage">9. ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</h2>
+
+<h3>9.1 ಸರಿಯಾದ ಕಾರ್ಯವಿಧಾನ — 5 ಹಂತಗಳು</h3>
+
+<ol>
+<li><b>Shuffle ಇಂದ ಆರಂಭಿಸಿ.</b> ಇದು ನಿಮಗೆ ಶುದ್ಧ sequence risk ತೋರಿಸುತ್ತದೆ. p10 ಮತ್ತು p90 ನಡುವಿನ ಅಂತರ ಎಷ್ಟು? ಅದೇ "ಅದೃಷ್ಟದ ಪಾತ್ರ".</li>
+<li><b>Block ಗೆ ಹೋಗಿ.</b> ಇದೇ ನಿಮ್ಮ ಮುಖ್ಯ ಸಂಖ್ಯೆ. Success rate ಮತ್ತು median depletion year ಬರೆದುಕೊಳ್ಳಿ.</li>
+<li><b>IID ನಲ್ಲಿ stress test ಮಾಡಿ.</b> ಇಲ್ಲಿ success 60% ಗಿಂತ ಕಡಿಮೆ ಆದರೆ ನಿಮ್ಮ plan ದುರ್ಬಲ.</li>
+<li><b>Equity allocation ಅನ್ನು 40, 50, 60, 70, 80 ಗೆ ಸರಿಸಿ.</b> ಎಲ್ಲಿ success ಗರಿಷ್ಠವೋ ಅದೇ ನಿಮ್ಮ ಸೂಕ್ತ allocation. ಇದು ಸಾಮಾನ್ಯವಾಗಿ 55–70% ನಡುವೆ ಬರುತ್ತದೆ.</li>
+<li><b>Withdrawal ಅನ್ನು ಸರಿಸಿ</b> ಯಾವ ಮಟ್ಟದಲ್ಲಿ success 90% ಆಗುತ್ತದೆ ಎಂದು ಹುಡುಕಿ. ಅದೇ ನಿಮ್ಮ ವಾಸ್ತವಿಕ ಬಜೆಟ್.</li>
+</ol>
+
+<h3>9.2 Success rate ನ ಅರ್ಥ</h3>
+
+<table>
+<thead><tr><th style="width:24%">Success rate</th><th>ಅರ್ಥ ಮತ್ತು ಕ್ರಮ</th></tr></thead>
+<tbody>
+<tr><td class="f">95% ಮೇಲೆ</td><td>ತುಂಬಾ ಸುರಕ್ಷಿತ. ನೀವು ಬಹುಶಃ ತುಂಬಾ ಕಡಿಮೆ ಖರ್ಚು ಮಾಡುತ್ತಿದ್ದೀರಿ. ಸ್ವಲ್ಪ ಜಾಸ್ತಿ ಬದುಕಿ.</td></tr>
+<tr><td class="f">85–95%</td><td>ಆರೋಗ್ಯಕರ ವಲಯ. ಇಲ್ಲಿ ಇರಲು ಗುರಿ ಇಡಿ.</td></tr>
+<tr><td class="f">70–85%</td><td>ಎಚ್ಚರಿಕೆ. ನಿಮಗೆ ಒಂದು backup plan ಬೇಕು — part-time ಆದಾಯ, ಅಥವಾ ಖರ್ಚು ಕಡಿತದ ಯೋಜನೆ.</td></tr>
+<tr><td class="f">70% ಕೆಳಗೆ</td><td>ಈ plan ಕೆಲಸ ಮಾಡುವುದಿಲ್ಲ. Withdrawal ಇಳಿಸಿ, ಅಥವಾ retirement ಮುಂದೂಡಿ. ಆಶಿಸುವುದು ತಂತ್ರವಲ್ಲ.</td></tr>
+</tbody>
+</table>
+
+<h3>9.3 Sequence risk ಇಂದ ರಕ್ಷಿಸಿಕೊಳ್ಳುವ ದಾರಿಗಳು</h3>
+
+<p>ಈ calculator ಸಮಸ್ಯೆಯನ್ನು ತೋರಿಸುತ್ತದೆ. ಪರಿಹಾರಗಳು ಇವು:</p>
+
+<ul>
+<li><b>Cash bucket:</b> 2–3 ವರ್ಷದ ಖರ್ಚನ್ನು liquid fund / FD ನಲ್ಲಿ ಇಡಿ. Market ಬಿದ್ದಾಗ ಅಲ್ಲಿಂದ ಖರ್ಚು ಮಾಡಿ, equity ಮಾರಬೇಡಿ. (ಇದನ್ನೇ <i>Valuation-Aware Harvesting</i> calculator ವಿವರವಾಗಿ ಪರೀಕ್ಷಿಸುತ್ತದೆ.)</li>
+<li><b>Flexible withdrawal:</b> ಕೆಟ್ಟ ವರ್ಷದಲ್ಲಿ 10–15% ಕಡಿಮೆ ತೆಗೆಯಿರಿ. ಇದು success rate ಅನ್ನು ನಾಟಕೀಯವಾಗಿ ಏರಿಸುತ್ತದೆ.</li>
+<li><b>Rising equity glidepath:</b> Retirement ಆರಂಭದಲ್ಲಿ ಕಡಿಮೆ equity (50%), ನಂತರ ನಿಧಾನವಾಗಿ ಏರಿಸಿ. ಇದು ಮೊದಲ ವರ್ಷಗಳ ಅಪಾಯವನ್ನು ಕಡಿಮೆ ಮಾಡುತ್ತದೆ.</li>
+<li><b>Guaranteed floor:</b> ಅಗತ್ಯ ಖರ್ಚುಗಳಿಗೆ (ಆಹಾರ, ಔಷಧ, ವಿದ್ಯುತ್) annuity ಅಥವಾ SCSS ಇಂದ ಸ್ಥಿರ ಆದಾಯ. ಉಳಿದದ್ದಕ್ಕೆ portfolio.</li>
+</ul>
+
+<h2>10. ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು — Common Mistakes</h2>
+
+<h4>ತಪ್ಪು 1 — Dividend yield ಅನ್ನು 0 ಇಡುವುದು</h4>
+<p>Sensex ಸಂಖ್ಯೆಗಳು price return. Dividend ಸೇರಿಸದಿದ್ದರೆ ನೀವು ವರ್ಷಕ್ಕೆ ~1.4% ಕಡಿಮೆ ಲೆಕ್ಕ ಹಾಕುತ್ತಿದ್ದೀರಿ. 30 ವರ್ಷದಲ್ಲಿ ಅದು ಸುಮಾರು 50% ಕಡಿಮೆ ಅಂತಿಮ ಮೊತ್ತ.</p>
+
+<h4>ತಪ್ಪು 2 — Historical method ನ ಫಲಿತಾಂಶವನ್ನೇ ಅಂತಿಮ ಎಂದು ನಂಬುವುದು</h4>
+<p>35 ವರ್ಷದ ದತ್ತಾಂಶದಲ್ಲಿ 30 ವರ್ಷದ ಕೇವಲ 6 ಸ್ವತಂತ್ರ windows. ಆ 6 ರಲ್ಲಿ 5 ಗೆದ್ದರೆ "83% success" — ಆದರೆ ಅದು 6 ಅವಲೋಕನಗಳ ಮೇಲಿನ ತೀರ್ಮಾನ. ಸಂಖ್ಯಾಶಾಸ್ತ್ರೀಯವಾಗಿ ಅರ್ಥಹೀನ.</p>
+
+<h4>ತಪ್ಪು 3 — 1991 ಇಂದ ಆರಂಭವಾಗುವ ದತ್ತಾಂಶದ ಪಕ್ಷಪಾತ</h4>
+<p>1991 ಭಾರತೀಯ ಆರ್ಥಿಕ ಉದಾರೀಕರಣದ ವರ್ಷ. ಆ ನಂತರದ 35 ವರ್ಷ ಅಸಾಧಾರಣ ಬೆಳವಣಿಗೆಯ ಕಾಲ (Sensex 1991 ರಲ್ಲಿ +85.8%!). ಮುಂದಿನ 30 ವರ್ಷ ಇಷ್ಟೇ ಒಳ್ಳೆಯದಾಗುತ್ತದೆ ಎಂಬ ಖಾತ್ರಿ ಇಲ್ಲ. Data tab ನಲ್ಲಿ ಎಲ್ಲಾ returns ಇಂದ 2% ಕಳೆದು ಪರೀಕ್ಷಿಸಿ.</p>
+
+<h4>ತಪ್ಪು 4 — Rebalancing ಉಚಿತ ಎಂದು ಭಾವಿಸುವುದು</h4>
+<p>Model ನಲ್ಲಿ ಪ್ರತಿ ವರ್ಷ allocation ತಾನಾಗಿ ಸರಿಹೋಗುತ್ತದೆ. ನಿಜದಲ್ಲಿ equity ಮಾರಿ debt ಕೊಳ್ಳಬೇಕಾದರೆ LTCG tax. ವರ್ಷಕ್ಕೊಮ್ಮೆ ಬದಲು 5% band ಆಧಾರಿತ rebalancing ಬಳಸಿ.</p>
+
+<h4>ತಪ್ಪು 5 — Block size ಅನ್ನು 1 ಇಡುವುದು</h4>
+<p>Block size 1 ಎಂದರೆ ಅದು IID ಆಗುತ್ತದೆ — block bootstrap ನ ಇಡೀ ಉದ್ದೇಶ ನಾಶ. ಕನಿಷ್ಠ 3, ಆದರ್ಶವಾಗಿ 5–7 ಬಳಸಿ.</p>
+
+<h4>ತಪ್ಪು 6 — Success rate ಒಂದನ್ನೇ ನೋಡುವುದು</h4>
+<p>85% success ಆದರೂ ವಿಫಲ paths ನಲ್ಲಿ median depletion year 15 ಆದರೆ ಅದು ಭಯಾನಕ. 80% success ಆದರೆ depletion year 28 ಆದರೆ ಅದು ಸಹನೀಯ. <b>ಎರಡನ್ನೂ ನೋಡಿ.</b></p>
+
+<h4>ತಪ್ಪು 7 — ಕುರುಡು withdrawal ಎಂದು ಮರೆಯುವುದು</h4>
+<p>ಈ model ನಲ್ಲಿ portfolio 90% ಬಿದ್ದರೂ ನೀವು ಅದೇ ₹80,000 ತೆಗೆಯುತ್ತಲೇ ಇರುತ್ತೀರಿ. ನಿಜ ಜೀವನದಲ್ಲಿ ನೀವು ಹಾಗೆ ಮಾಡುವುದಿಲ್ಲ. ಆದ್ದರಿಂದ ಈ failure rate ಒಂದು ಮೇಲ್ಮಿತಿ, ನಿಜವಾದ ಅಂದಾಜು ಅಲ್ಲ.</p>
+
+<h4>ತಪ್ಪು 8 — Tax ಅನ್ನು ಸಂಪೂರ್ಣ ಬಿಟ್ಟುಬಿಡುವುದು</h4>
+<p>₹80,000 ತೆಗೆಯುವುದು ಎಂದರೆ ₹80,000 ಮೌಲ್ಯದ units ಮಾರುವುದು — ಅದರಲ್ಲಿ gain ಭಾಗಕ್ಕೆ LTCG tax. ವಾಸ್ತವಿಕವಾಗಿರಲು ನಿಮ್ಮ withdrawal ಅನ್ನು 5–8% ಹೆಚ್ಚಿಸಿ ಹಾಕಿ.</p>
+
+<h2 class="newpage">11. Quick Reference Card</h2>
+
+<h3>ಮುಖ್ಯ formula</h3>
+<div class="formula"><span class="k">Portfolio return</span>
+  r = w x (eqReturn + divYield)/100
+    + (1−w) x debtReturn/100
+    − feeDrag/100
+  <span class="c">// w = equityAlloc/100</span>
+
+<span class="k">ಮಾಸಿಕ ಚಕ್ರ</span>
+  v = (v − w_month) x (1+r)^(1/12)
+  ವರ್ಷಾಂತ್ಯ: w_month = w_month x (1+inflation)
+
+<span class="k">Success</span>
+  v ಎಂದೂ 0 ಮುಟ್ಟದಿದ್ದರೆ</div>
+
+<h3>ನಾಲ್ಕು methods — ಒಂದೇ ಸಾಲಿನಲ್ಲಿ</h3>
+<table>
+<thead><tr><th style="width:20%">Method</th><th>ಒಂದೇ ಸಾಲು</th></tr></thead>
+<tbody>
+<tr><td class="f">Block</td><td>5-ವರ್ಷದ ಐತಿಹಾಸಿಕ ತುಂಡುಗಳನ್ನು ಜೋಡಿಸು → ಅತ್ಯಂತ ವಾಸ್ತವಿಕ</td></tr>
+<tr><td class="f">Historical</td><td>ನಿಜವಾದ ಅನುಕ್ರಮ, ಪ್ರತಿ ಆರಂಭ ವರ್ಷಕ್ಕೆ ಒಂದು → ಕಡಿಮೆ paths</td></tr>
+<tr><td class="f">Shuffle</td><td>ಅದೇ returns, ಬೇರೆ ಕ್ರಮ → ಶುದ್ಧ sequence risk</td></tr>
+<tr><td class="f">IID</td><td>ಪ್ರತಿ ವರ್ಷ ಸ್ವತಂತ್ರ → ಅತ್ಯಂತ ಕಠಿಣ</td></tr>
+</tbody>
+</table>
+
+<h3>Default values</h3>
+<table>
+<thead><tr><th>Field</th><th>Default</th><th>Field</th><th>Default</th></tr></thead>
+<tbody>
+<tr><td>Corpus</td><td class="num">₹2,00,00,000</td><td>Dividend yield</td><td class="num">1.4%</td></tr>
+<tr><td>Monthly withdrawal</td><td class="num">₹80,000</td><td>Fee drag</td><td class="num">0.5%</td></tr>
+<tr><td>Inflation</td><td class="num">6%</td><td>Method</td><td class="num">block</td></tr>
+<tr><td>Horizon</td><td class="num">30 yrs</td><td>Block size</td><td class="num">5</td></tr>
+<tr><td>Equity allocation</td><td class="num">60%</td><td>Paths</td><td class="num">2,000</td></tr>
+<tr><td>Debt return</td><td class="num">7%</td><td>Seed</td><td class="num">20260811</td></tr>
+</tbody>
+</table>
+
+<h3>ದತ್ತಾಂಶ ಬಗ್ಗೆ</h3>
+<p class="kv">Sensex ವಾರ್ಷಿಕ price returns, 1991–2025, 35 ಅವಲೋಕನಗಳು. ಗರಿಷ್ಠ +85.80% (1991), ಕನಿಷ್ಠ −52.45% (2008). Data tab ನಲ್ಲಿ ಸಂಪಾದಿಸಬಹುದು.</p>
+
+<div class="warn"><span class="lbl">ಅಂತಿಮ ಎಚ್ಚರಿಕೆ</span>
+<p>ಇದು ಶೈಕ್ಷಣಿಕ ಸಾಧನ, investment advice ಅಲ್ಲ. ಐತಿಹಾಸಿಕ ದತ್ತಾಂಶ ಭವಿಷ್ಯದ ಫಲಿತಾಂಶಗಳಿಗೆ ಖಾತ್ರಿ ಅಲ್ಲ. 35 ವರ್ಷದ ಒಂದೇ ಮಾರುಕಟ್ಟೆಯ ಇತಿಹಾಸ ಸಂಖ್ಯಾಶಾಸ್ತ್ರೀಯವಾಗಿ ಸಣ್ಣ ಮಾದರಿ. ದೊಡ್ಡ ನಿರ್ಧಾರಗಳಿಗೆ SEBI-registered investment adviser ಜೊತೆ ಚರ್ಚಿಸಿ.</p></div>
+
+<div class="footer-note">Wealthoria · Sequence Risk Lab Manual · ಶೈಕ್ಷಣಿಕ ಬಳಕೆಗೆ ಮಾತ್ರ</div>
+
+</body></html>

@@ -133,6 +133,7 @@ const [showSeminarRegistrations, setShowSeminarRegistrations] = useState(false);
   const [showCalculator, setShowCalculator] =
     useState(false);
 
+    const [selectedCalculator, setSelectedCalculator] = useState(null);
   const [showCharts, setShowCharts] =
     useState(false);
 
@@ -535,13 +536,16 @@ return (
                 ? "active"
                 : ""
             }`}
-            onClick={() => {
+            
+           onClick={() => {
+  setShowCharts(true);
+  setShowCalculator(false);
+  setSelectedCalculator(null);
 
-              setShowCharts(true);
-
-              setShowCalculator(false);
-
-            }}
+  setShowCourses(false);
+  setShowNewsletter(false);
+  setShowWeeklyRoundup(false);
+}}
           >
 
             <span className="member-nav-icon">
@@ -552,25 +556,28 @@ return (
 
           </button>
 
+<button
+  className={`member-nav-item ${
+    showCalculator ? "active" : ""
+  }`}
+  onClick={() => {
+    setShowCalculator(true);
+    setSelectedCalculator(null);
 
-          <button
-            className={`member-nav-item ${
-              showCalculator
-                ? "active"
-                : ""
-            }`}
-            onClick={() =>
-              setShowCalculator(true)
-            }
-          >
+    setShowCourses(false);
+    setShowNewsletter(false);
+    setShowWeeklyRoundup(false);
+    setShowCharts(false);
+  }}
+>
+  <span className="member-nav-icon">
+    =
+  </span>
 
-            <span className="member-nav-icon">
-              =
-            </span>
+  Calculators
+</button>
 
-            Calculators
 
-          </button>
 {/*
           <button
   className={`member-nav-item ${
@@ -876,27 +883,257 @@ return (
             /* =================================================
                CALCULATOR
                ================================================= */
+ <section className="member-calculator-page">
 
-            <section className="member-calculator-page">
+    {!selectedCalculator ? (
+
+      <>
+        <div className="member-calculator-header">
+
+          <div>
+            <span className="member-eyebrow">
+              FINANCIAL TOOLS
+            </span>
+
+            <h2>
+              Wealthoria Calculators
+            </h2>
+
+            <p>
+              Explore financial planning, taxation,
+              portfolio and investment analysis tools.
+            </p>
+          </div>
+
+          <button
+            className="member-panel-link"
+            onClick={() => setShowCalculator(false)}
+          >
+            ← Back to Dashboard
+          </button>
+
+        </div>
 
 
-              <div className="member-calculator-header">
+        <div className="calculator-grid">
 
-              </div>
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/1_Safe_Withdrawal_Solver.html"
+              )
+            }
+          >
+            <span className="calculator-icon">↗</span>
+
+            <div>
+              <h3>Safe Withdrawal Solver</h3>
+              <p>
+                Explore sustainable retirement withdrawals.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
 
 
-              <div className="member-calculator-container">
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/2_LTCG_Harvest_Optimiser.html"
+              )
+            }
+          >
+            <span className="calculator-icon">₹</span>
 
-                <iframe
-                  src="/ders-calculator.html"
-                  title="Necessary Calculators"
-                  className="member-calculator-frame"
-                />
+            <div>
+              <h3>LTCG Harvest Optimiser</h3>
+              <p>
+                Explore tax-aware capital gains harvesting.
+              </p>
+            </div>
 
-              </div>
+            <span>→</span>
+          </button>
 
 
-            </section>
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/3_Sequence_Risk_Lab.html"
+              )
+            }
+          >
+            <span className="calculator-icon">◒</span>
+
+            <div>
+              <h3>Sequence Risk Lab</h3>
+              <p>
+                Understand retirement sequence risk.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/4_Plan_Diagnostics.html"
+              )
+            }
+          >
+            <span className="calculator-icon">⌁</span>
+
+            <div>
+              <h3>Plan Diagnostics</h3>
+              <p>
+                Analyse your financial plan.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/5_Valuation_Aware_Harvesting.html"
+              )
+            }
+          >
+            <span className="calculator-icon">◈</span>
+
+            <div>
+              <h3>Valuation-Aware Harvesting</h3>
+              <p>
+                Explore valuation-aware tax harvesting.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/6_Global_Allocation_Modeller.html"
+              )
+            }
+          >
+            <span className="calculator-icon">◎</span>
+
+            <div>
+              <h3>Global Allocation Modeller</h3>
+              <p>
+                Explore portfolio allocation.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/7_Tax_Regime_Calculator.html"
+              )
+            }
+          >
+            <span className="calculator-icon">₹</span>
+
+            <div>
+              <h3>Tax Regime Calculator</h3>
+              <p>
+                Compare tax regime calculations.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+
+          <button
+            className="calculator-card"
+            onClick={() =>
+              setSelectedCalculator(
+                "/8_DERS_Calculator.html"
+              )
+            }
+          >
+            <span className="calculator-icon">⌘</span>
+
+            <div>
+              <h3>DERS Calculator</h3>
+              <p>
+                Analyse retirement sustainability.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+
+          <button
+            className="calculator-card calculator-card-featured"
+            onClick={() =>
+              setSelectedCalculator(
+                "/Fundamental_Analysis_Lab.html"
+              )
+            }
+          >
+            <span className="calculator-icon">◆</span>
+
+            <div>
+              <h3>Fundamental Analysis Lab</h3>
+              <p>
+                Advanced valuation and financial analysis tools.
+              </p>
+            </div>
+
+            <span>→</span>
+          </button>
+
+        </div>
+      </>
+
+    ) : (
+
+      <section className="calculator-viewer">
+
+        <div className="calculator-viewer-header">
+
+          <button
+            className="member-panel-link"
+            onClick={() => setSelectedCalculator(null)}
+          >
+            ← Back to Calculators
+          </button>
+
+        </div>
+
+        <iframe
+          src={selectedCalculator}
+          title="Wealthoria Financial Calculator"
+          className="member-calculator-frame"
+        />
+
+      </section>
+
+    )}
+
+  </section>
 
 
           ) : (

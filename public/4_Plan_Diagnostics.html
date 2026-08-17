@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="utf-8">
+<title>Plan Diagnostics — Wealthoria Manual</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">Wealthoria Calculator Manual — 04</div>
+  <h1>Plan Diagnostics</h1>
+  <div class="rule"></div>
+  <div class="sub">ನಿಮ್ಮ ಇಡೀ financial plan ಅನ್ನು 13 rules ಮೂಲಕ ಪರೀಕ್ಷಿಸಿ, 0–100 score ಮತ್ತು ಆದ್ಯತೆಯ ಪ್ರಕಾರ ಜೋಡಿಸಿದ findings list ಕೊಡುವ diagnostic engine.</div>
+  <div class="meta">
+    ಭಾಷೆ &nbsp;·&nbsp; ಕನ್ನಡ + English financial terms<br>
+    ಆಳ &nbsp;·&nbsp; Full deep manual<br>
+    ಆವೃತ್ತಿ &nbsp;·&nbsp; 2026-08
+  </div>
+  <div class="badge">FOR EDUCATIONAL USE ONLY</div>
+</div>
+
+<div class="toc">
+  <h2>ಪರಿವಿಡಿ</h2>
+  <ol>
+    <li>ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</li>
+    <li>ಯಾವ ಸಮಸ್ಯೆ ಬಗೆಹರಿಸುತ್ತದೆ</li>
+    <li>Core concept — weighted rule engine</li>
+    <li>ಪ್ರತಿ Input field ಅರ್ಥ</li>
+    <li>ಒಳಗಿನ Math — projection engine</li>
+    <li>13 Rules — ಪ್ರತಿಯೊಂದರ ವಿವರ</li>
+    <li>ಪ್ರತಿ Output tab ಏನು ಹೇಳುತ್ತದೆ</li>
+    <li>Worked Example — ಪೂರ್ಣ ಲೆಕ್ಕ</li>
+    <li>ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</li>
+    <li>ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು</li>
+    <li>Quick Reference Card</li>
+  </ol>
+</div>
+
+<h2>1. ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</h2>
+
+<p>ಉಳಿದ ಐದು calculators ಒಂದೊಂದು <b>ನಿರ್ದಿಷ್ಟ ಪ್ರಶ್ನೆ</b>ಗೆ ಉತ್ತರ ಕೊಡುತ್ತವೆ — "ಎಷ್ಟು withdraw ಮಾಡಬಹುದು?", "ಎಷ್ಟು harvest ಮಾಡಬೇಕು?" ಹೀಗೆ. Plan Diagnostics ಅದಕ್ಕೆ ವಿರುದ್ಧ. ಇದು ಒಂದೇ ಉತ್ತರ ಕೊಡುವುದಿಲ್ಲ. ಇದು ನಿಮ್ಮ ಇಡೀ ಆರ್ಥಿಕ ಚಿತ್ರವನ್ನು ತೆಗೆದುಕೊಂಡು <b>ಎಲ್ಲಿ ಮುರಿದಿದೆ ಎಂದು ಹುಡುಕುತ್ತದೆ</b>.</p>
+
+<p>ನೀವು 24 ಸಂಖ್ಯೆಗಳನ್ನು ಕೊಡುತ್ತೀರಿ — ವಯಸ್ಸು, ಆದಾಯ, ಖರ್ಚು, ಉಳಿತಾಯ, EMI, corpus, insurance cover, allocation, fee, will/nominee status. Calculator ಅವುಗಳ ಮೇಲೆ <b>13 rules</b> ಓಡಿಸುತ್ತದೆ. ಪ್ರತಿ rule ಒಂದು pass fraction (0 ರಿಂದ 1) ಕೊಡುತ್ತದೆ. ಆ fractions ಅನ್ನು ತೂಕ ಹಾಕಿ ಕೂಡಿಸಿದರೆ <b>0–100 plan score</b> ಸಿಗುತ್ತದೆ.</p>
+
+<div class="note">
+  <span class="lbl">ಮುಖ್ಯ ವ್ಯತ್ಯಾಸ</span>
+  <p>ಸಾಮಾನ್ಯ retirement calculator ಹೇಳುತ್ತದೆ: "ನಿಮಗೆ ₹6.2 ಕೋಟಿ ಬೇಕು." ಅಷ್ಟೇ. Plan Diagnostics ಹೇಳುತ್ತದೆ: "ನಿಮಗೆ ₹6.2 ಕೋಟಿ ಬೇಕು, ನೀವು ₹4.8 ಕೋಟಿ ತಲುಪುತ್ತೀರಿ (77%) — ಆದರೆ ಅದಕ್ಕಿಂತ ದೊಡ್ಡ ಸಮಸ್ಯೆ ನಿಮ್ಮ term cover ಬರೀ 6× annual income ಇದೆ, ಮತ್ತು will ಇಲ್ಲ." ಅಂದರೆ <b>ಆದ್ಯತೆ</b>ಯನ್ನೂ ಹೇಳುತ್ತದೆ.</p>
+</div>
+
+<h3>ಔಟ್‌ಪುಟ್‌ನ ಮೂರು ಪದರಗಳು</h3>
+
+<table>
+<thead><tr><th>ಪದರ</th><th>ಏನು ಕೊಡುತ್ತದೆ</th><th>ಯಾವಾಗ ನೋಡಬೇಕು</th></tr></thead>
+<tbody>
+<tr><td class="f">Score (0–100)</td><td>ಒಟ್ಟಾರೆ ಆರೋಗ್ಯದ ಒಂದೇ ಸಂಖ್ಯೆ</td><td>ಮೊದಲ ನೋಟ, ವರ್ಷಕ್ಕೊಮ್ಮೆ ಹೋಲಿಕೆಗೆ</td></tr>
+<tr><td class="f">6 Dimensions</td><td>Adequacy, Protection, Liquidity, Allocation, Cost, Governance — ಪ್ರತಿಯೊಂದಕ್ಕೂ ಪ್ರತ್ಯೇಕ score</td><td>ಯಾವ ವಿಭಾಗ ದುರ್ಬಲ ಎಂದು ತಿಳಿಯಲು</td></tr>
+<tr><td class="f">13 Findings</td><td>ಪ್ರತಿ rule ನ ನಿಖರ ಫಲಿತಾಂಶ + ಏನು ಮಾಡಬೇಕು</td><td>ನಿಜವಾದ action ತೆಗೆದುಕೊಳ್ಳಲು</td></tr>
+</tbody>
+</table>
+
+<p>ಒಟ್ಟು ತೂಕ 100 points, ಆರು dimensions ನಡುವೆ ಹೀಗೆ ಹಂಚಿದೆ:</p>
+
+<table>
+<thead><tr><th>Dimension</th><th class="num">ತೂಕ</th><th>ಏನನ್ನು ಅಳೆಯುತ್ತದೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">Adequacy</td><td class="num">45</td><td>ನಿವೃತ್ತಿಗೆ ಸಾಕಷ್ಟು ಹಣ ಸೇರುತ್ತದೆಯೇ — corpus ratio, retirement length, savings rate</td></tr>
+<tr><td class="f">Protection</td><td class="num">20</td><td>ಸಾವು ಮತ್ತು ಆಸ್ಪತ್ರೆ ವೆಚ್ಚದ ವಿರುದ್ಧ ರಕ್ಷಣೆ — term life, health cover</td></tr>
+<tr><td class="f">Liquidity</td><td class="num">12</td><td>ತಕ್ಷಣದ ನಗದು ಮತ್ತು ಸಾಲದ ಒತ್ತಡ — emergency fund, EMI ratio</td></tr>
+<tr><td class="f">Allocation</td><td class="num">10</td><td>Equity ಪ್ರಮಾಣ ಮತ್ತು concentration risk</td></tr>
+<tr><td class="f">Cost</td><td class="num">7</td><td>ವಾರ್ಷಿಕ fee drag</td></tr>
+<tr><td class="f">Governance</td><td class="num">6</td><td>Will, nominees, ನಿರೀಕ್ಷೆಗಳ ವಾಸ್ತವಿಕತೆ</td></tr>
+</tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">ಈ ತೂಕಗಳು ಏಕೆ ಹೀಗೆ</span>
+  <p>Adequacy 45 — ಏಕೆಂದರೆ ಹಣ ಸಾಲದಿದ್ದರೆ ಬೇರೆ ಎಲ್ಲವೂ ನಿರರ್ಥಕ. Protection 20 — ಏಕೆಂದರೆ ಒಂದೇ ಘಟನೆ (ಸಾವು, ಗಂಭೀರ ಕಾಯಿಲೆ) ಇಡೀ plan ಅನ್ನು ರಾತ್ರೋರಾತ್ರಿ ನಾಶ ಮಾಡಬಲ್ಲದು. Cost ಬರೀ 7 — ಏಕೆಂದರೆ fee ಮುಖ್ಯ ಆದರೆ ಅದು ನಿಧಾನವಾಗಿ ಕೊಲ್ಲುತ್ತದೆ, ತಕ್ಷಣ ಅಲ್ಲ.</p>
+</div>
+
+<h2 class="newpage">2. ಯಾವ ಸಮಸ್ಯೆ ಬಗೆಹರಿಸುತ್ತದೆ</h2>
+
+<h3>ಸಮಸ್ಯೆ 1 — ನಾವು ಸುಲಭ ವಿಷಯಗಳನ್ನೇ optimise ಮಾಡುತ್ತೇವೆ</h3>
+
+<p>ಒಬ್ಬ ವ್ಯಕ್ತಿ mutual fund expense ratio 1.2% ರಿಂದ 0.6% ಗೆ ಇಳಿಸಲು ಮೂರು ತಿಂಗಳು ಸಂಶೋಧನೆ ಮಾಡುತ್ತಾನೆ. ಒಳ್ಳೆಯದೇ. ಆದರೆ ಅವನ ಬಳಿ term insurance ಇಲ್ಲ, ಇಬ್ಬರು ಮಕ್ಕಳಿದ್ದಾರೆ, ಮತ್ತು ₹45 ಲಕ್ಷ home loan ಇದೆ. Fee optimisation ವರ್ಷಕ್ಕೆ ₹48,000 ಉಳಿಸುತ್ತದೆ. Term cover ಇಲ್ಲದಿರುವುದು ಸಂಭಾವ್ಯವಾಗಿ ₹2 ಕೋಟಿ ನಷ್ಟ.</p>
+
+<p>ಏಕೆ ಹೀಗಾಗುತ್ತದೆ? ಏಕೆಂದರೆ fee ಒಂದು <b>ಆಸಕ್ತಿಕರ, ಅಳೆಯಬಹುದಾದ, ತಕ್ಷಣ ಫಲ ಕೊಡುವ</b> ಸಮಸ್ಯೆ. Insurance ಒಂದು <b>ಬೇಸರದ, ಅಹಿತಕರ</b> ಸಮಸ್ಯೆ. ಮನುಷ್ಯ ಸಹಜವಾಗಿ ಮೊದಲನೆಯದನ್ನು ಆರಿಸುತ್ತಾನೆ. Plan Diagnostics ಈ ಎರಡನ್ನೂ <b>ಒಂದೇ scale ನಲ್ಲಿ</b> ಇಟ್ಟು ಹೋಲಿಸುತ್ತದೆ — ಆಗ ಆದ್ಯತೆ ಸ್ಪಷ್ಟವಾಗುತ್ತದೆ.</p>
+
+<h3>ಸಮಸ್ಯೆ 2 — Retirement calculator ಬರೀ ಒಂದೇ ಆಯಾಮ ನೋಡುತ್ತದೆ</h3>
+
+<p>ಸಾಮಾನ್ಯ online retirement calculator ಕೇಳುತ್ತದೆ: ವಯಸ್ಸು, ಖರ್ಚು, return, inflation. ಉತ್ತರ ಕೊಡುತ್ತದೆ: "₹6.2 ಕೋಟಿ ಬೇಕು." ಆದರೆ ಅದು ಎಂದೂ ಕೇಳುವುದಿಲ್ಲ — ನಿಮ್ಮ ಬಳಿ health cover ಇದೆಯೇ? ನಿಮ್ಮ EMI ಎಷ್ಟು? ಒಂದೇ stock ನಲ್ಲಿ ನಿಮ್ಮ ಎಷ್ಟು ಹಣ ಇದೆ? Will ಬರೆದಿದ್ದೀರಾ?</p>
+
+<p>ಈ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರ ಇಲ್ಲದೆ "₹6.2 ಕೋಟಿ ಬೇಕು" ಎಂಬ ಸಂಖ್ಯೆ <b>ಅಪೂರ್ಣ</b>. ನಿಮ್ಮ ಬಳಿ ₹6.2 ಕೋಟಿ ಸೇರಿದರೂ, ನೀವು 58 ವಯಸ್ಸಿನಲ್ಲಿ ₹80 ಲಕ್ಷದ ಆಸ್ಪತ್ರೆ ಬಿಲ್ ನಿಂದ ಅದನ್ನು ಕಳೆದುಕೊಳ್ಳಬಹುದು.</p>
+
+<h3>ಸಮಸ್ಯೆ 3 — "ನನ್ನ plan ಸರಿ ಇದೆಯೇ?" ಎಂಬ ಪ್ರಶ್ನೆಗೆ ಉತ್ತರವಿಲ್ಲ</h3>
+
+<p>ಹೆಚ್ಚಿನ ಜನರಿಗೆ ಒಂದು financial plan ಇರುತ್ತದೆ — SIP, ಸ್ವಲ್ಪ insurance, ಒಂದು PPF account. ಆದರೆ ಅದು <b>ಸಾಕೇ</b> ಎಂದು ತಿಳಿಯಲು ಯಾವುದೇ ಮಾರ್ಗವಿಲ್ಲ. Advisor ಬಳಿ ಹೋದರೆ ಅವರು ತಮ್ಮ product ಮಾರಲು ಬಯಸುತ್ತಾರೆ. Plan Diagnostics ಒಂದು <b>ತಟಸ್ಥ, ನಿಯಮ-ಆಧಾರಿತ</b> ಪರೀಕ್ಷೆ — ಯಾವುದೇ product ಮಾರುವುದಿಲ್ಲ.</p>
+
+<div class="warn">
+  <span class="lbl">ಒಂದು ಪ್ರಾಮಾಣಿಕ ಎಚ್ಚರಿಕೆ</span>
+  <p>Score ಒಂದು <b>ಸೂಚಕ</b>, ಸತ್ಯವಲ್ಲ. 78/100 ಬಂದರೆ ನಿಮ್ಮ plan "78% ಸರಿ" ಎಂದಲ್ಲ. ಅದರ ಅರ್ಥ — ಈ 13 rules ಪ್ರಕಾರ, ಈ ತೂಕಗಳ ಪ್ರಕಾರ, ನಿಮ್ಮ plan ಈ ಮಟ್ಟದಲ್ಲಿದೆ. ತೂಕಗಳು ಬದಲಾದರೆ score ಬದಲಾಗುತ್ತದೆ. Score ನ ನಿಜವಾದ ಬೆಲೆ <b>ಸಂಖ್ಯೆಯಲ್ಲಿ ಅಲ್ಲ, findings list ನಲ್ಲಿ</b>.</p>
+</div>
+
+<h2 class="newpage">3. Core concept — weighted rule engine</h2>
+
+<p>ಈ calculator ನ ಹೃದಯ ಸರಳ. ಪ್ರತಿ rule ಗೆ ಮೂರು ಭಾಗಗಳಿವೆ:</p>
+
+<div class="formula"><span class="c">// ಪ್ರತಿ rule ನ ರಚನೆ</span>
+{
+  id:     <span class="k">"term"</span>,              <span class="c">// ಗುರುತು</span>
+  dim:    <span class="k">"Protection"</span>,        <span class="c">// ಯಾವ dimension ಗೆ ಸೇರುತ್ತದೆ</span>
+  weight: <span class="k">12</span>,                  <span class="c">// 100 ರಲ್ಲಿ ಎಷ್ಟು points</span>
+  pass:   <span class="k">clamp(multiple / 12, 0, 1)</span>   <span class="c">// 0 ರಿಂದ 1 ರ ನಡುವೆ</span>
+}
+</div>
+
+<p><b>pass</b> ಎಂಬುದು boolean ಅಲ್ಲ — ಅದು ಒಂದು <b>ಭಿನ್ನರಾಶಿ (fraction)</b>. ಇದು ಬಹಳ ಮುಖ್ಯ ವಿನ್ಯಾಸ ನಿರ್ಧಾರ.</p>
+
+<h3>ಏಕೆ fraction, ಏಕೆ pass/fail ಅಲ್ಲ?</h3>
+
+<p>Term insurance ಉದಾಹರಣೆ ತೆಗೆದುಕೊಳ್ಳಿ. ನಿಯಮ: annual income ನ 12 ಪಟ್ಟು cover ಇರಬೇಕು.</p>
+
+<table>
+<thead><tr><th>ನಿಮ್ಮ cover</th><th class="num">Multiple</th><th class="num">pass (fraction)</th><th class="num">12 points ರಲ್ಲಿ</th></tr></thead>
+<tbody>
+<tr><td>ಏನೂ ಇಲ್ಲ</td><td class="num">0×</td><td class="num">0.00</td><td class="num">0.0</td></tr>
+<tr><td>₹50 ಲಕ್ಷ (income ₹30L)</td><td class="num">1.7×</td><td class="num">0.14</td><td class="num">1.7</td></tr>
+<tr><td>₹1.5 ಕೋಟಿ</td><td class="num">5.0×</td><td class="num">0.42</td><td class="num">5.0</td></tr>
+<tr><td>₹2.5 ಕೋಟಿ</td><td class="num">8.3×</td><td class="num">0.69</td><td class="num">8.3</td></tr>
+<tr><td>₹3.6 ಕೋಟಿ</td><td class="num">12.0×</td><td class="num">1.00</td><td class="num">12.0</td></tr>
+<tr><td>₹6 ಕೋಟಿ</td><td class="num">20.0×</td><td class="num">1.00</td><td class="num">12.0</td></tr>
+</tbody>
+</table>
+
+<p>ಗಮನಿಸಿ ಎರಡು ವಿಷಯ. ಮೊದಲನೆಯದು — 5× ಇರುವವನಿಗೆ 0 ಸಿಗುವುದಿಲ್ಲ, 5 points ಸಿಗುತ್ತದೆ. ಏಕೆಂದರೆ 5× cover 0× ಗಿಂತ ಖಂಡಿತ ಉತ್ತಮ. Pass/fail ವ್ಯವಸ್ಥೆಯಲ್ಲಿ ಇಬ್ಬರೂ ಸೊನ್ನೆ ಪಡೆಯುತ್ತಿದ್ದರು — ಅದು ಸುಳ್ಳು.</p>
+
+<p>ಎರಡನೆಯದು — 20× ಇರುವವನಿಗೆ 12 ಕ್ಕಿಂತ ಹೆಚ್ಚು ಸಿಗುವುದಿಲ್ಲ. <code>clamp</code> ಮೇಲಿನ ಮಿತಿ ಹಾಕುತ್ತದೆ. ಅಗತ್ಯಕ್ಕಿಂತ ಹೆಚ್ಚು insurance ಖರೀದಿಸಿ score ಹೆಚ್ಚಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿಲ್ಲ. ಇದು <b>gaming ತಡೆಯುತ್ತದೆ</b>.</p>
+
+<div class="note">
+  <span class="lbl">clamp() ಎಂದರೇನು</span>
+  <p><code>clamp(x, lo, hi)</code> = x ಅನ್ನು lo ಮತ್ತು hi ನಡುವೆ ಹಿಡಿದಿಡುತ್ತದೆ. x=1.4 ಆದರೆ 1 ಕೊಡುತ್ತದೆ. x=−0.3 ಆದರೆ 0 ಕೊಡುತ್ತದೆ. x=0.62 ಆದರೆ 0.62 ಕೊಡುತ್ತದೆ. ಎಲ್ಲ 13 rules ಇದನ್ನು ಬಳಸುತ್ತವೆ, ಆದ್ದರಿಂದ ಯಾವುದೇ rule ತನ್ನ ತೂಕಕ್ಕಿಂತ ಹೆಚ್ಚು ಅಥವಾ ಋಣಾತ್ಮಕ ಕೊಡುಗೆ ನೀಡಲಾರದು.</p>
+</div>
+
+<h3>Score ಹೇಗೆ ಲೆಕ್ಕ ಆಗುತ್ತದೆ</h3>
+
+<div class="formula"><span class="c">// ಒಟ್ಟು score</span>
+score = Σ (weight<sub>i</sub> × pass<sub>i</sub>)   <span class="c">// i = 1 ರಿಂದ 13</span>
+
+<span class="c">// dimension score (ಉದಾ: Protection)</span>
+Protection = (12×pass<sub>term</sub> + 8×pass<sub>health</sub>) / (12 + 8) × 100
+</div>
+
+<p>ಒಟ್ಟು ತೂಕ ನಿಖರವಾಗಿ 100 ಆಗಿರುವುದರಿಂದ, score ನೇರವಾಗಿ 0–100 ನಲ್ಲಿ ಬರುತ್ತದೆ. Dimension score ಆ dimension ನ rules ಮಾತ್ರ ತೆಗೆದುಕೊಂಡು ಅವುಗಳ ತೂಕದಿಂದ ಭಾಗಿಸಿ 100 ಕ್ಕೆ ತರುತ್ತದೆ.</p>
+
+<h3>Gauge ನ ಮೂರು ಬಣ್ಣಗಳು</h3>
+
+<table>
+<thead><tr><th>Score</th><th>ಬಣ್ಣ</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">80–100</td><td>ಹಸಿರು (#0f766e)</td><td>ಬಲವಾದ plan. ಸಣ್ಣ ಹೊಂದಾಣಿಕೆಗಳು ಮಾತ್ರ ಬಾಕಿ.</td></tr>
+<tr><td class="f">60–79</td><td>ಕೇಸರಿ (#b45309)</td><td>ಕೆಲಸ ಮಾಡುತ್ತದೆ ಆದರೆ ಗಮನಾರ್ಹ ಅಂತರಗಳಿವೆ.</td></tr>
+<tr><td class="f">0–59</td><td>ಕೆಂಪು (#b91c1c)</td><td>ರಚನಾತ್ಮಕ ಸಮಸ್ಯೆಗಳಿವೆ. ಮೊದಲು ಅವನ್ನು ಸರಿಪಡಿಸಿ.</td></tr>
+</tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">Score ಹೆಚ್ಚಿಸುವ ಸರಿಯಾದ ಕ್ರಮ</span>
+  <p>ಅತಿ ಹೆಚ್ಚು ತೂಕ ಮತ್ತು ಅತಿ ಕಡಿಮೆ pass ಇರುವ rule ಅನ್ನು ಮೊದಲು ಸರಿಪಡಿಸಿ. ಗಳಿಸಬಹುದಾದ points = weight × (1 − pass). ಉದಾ: term rule ನಲ್ಲಿ weight 12, pass 0.15 ಆದರೆ ಗಳಿಸಬಹುದಾದದ್ದು 12 × 0.85 = <b>10.2 points</b>. Fee rule ನಲ್ಲಿ weight 7, pass 0.47 ಆದರೆ ಬರೀ 3.7 points. ಆದ್ದರಿಂದ term ಮೊದಲು.</p>
+</div>
+
+<h2 class="newpage">4. ಪ್ರತಿ Input field ಅರ್ಥ</h2>
+
+<p>24 inputs ಇವೆ, ಆರು ಗುಂಪುಗಳಲ್ಲಿ. Default values ಒಬ್ಬ ಸಾಮಾನ್ಯ ಭಾರತೀಯ ನಗರ ವೃತ್ತಿಪರ (38 ವರ್ಷ, ಇಬ್ಬರು ಅವಲಂಬಿತರು) ಗೆ ಸರಿಹೊಂದುವಂತೆ ಇಡಲಾಗಿದೆ.</p>
+
+<h3>ಗುಂಪು A — ವಯಸ್ಸು ಮತ್ತು ಸಮಯ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">age</td><td class="num">38</td><td>ಇಂದಿನ ವಯಸ್ಸು. Equity rule ನಲ್ಲಿ ನೇರವಾಗಿ ಬಳಕೆ (100 − age). ಉಳಿತಾಯ ಅವಧಿಯನ್ನೂ ನಿರ್ಧರಿಸುತ್ತದೆ.</td></tr>
+<tr><td class="f">retireAge</td><td class="num">60</td><td>ಸಂಬಳ ನಿಲ್ಲುವ ವಯಸ್ಸು. <code>yearsToRet = retireAge − age</code>. ಇದನ್ನು 2 ವರ್ಷ ಹಿಂದೆ ಸರಿಸಿದರೆ score ಗಮನಾರ್ಹವಾಗಿ ಕುಸಿಯುತ್ತದೆ — compounding ವರ್ಷಗಳು ಕಡಿಮೆ, ಖರ್ಚಿನ ವರ್ಷಗಳು ಹೆಚ್ಚು.</td></tr>
+<tr><td class="f">lifeExpectancy</td><td class="num">90</td><td>ಎಷ್ಟು ವರ್ಷ ಬದುಕುತ್ತೀರಿ ಎಂಬ ಊಹೆ. <code>retYears = lifeExpectancy − retireAge</code> = 30. 85 ಬಳಸಬೇಡಿ — ಅರ್ಧ ಜನ ಸರಾಸರಿಗಿಂತ ಹೆಚ್ಚು ಬದುಕುತ್ತಾರೆ.</td></tr>
+</tbody>
+</table>
+
+<h3>ಗುಂಪು B — ಮಾಸಿಕ ಹಣದ ಹರಿವು</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">monthlyIncome</td><td class="num">2,50,000</td><td>Take-home (in-hand) ಆದಾಯ, CTC ಅಲ್ಲ. Term cover multiple ಮತ್ತು savings rate ಎರಡಕ್ಕೂ denominator.</td></tr>
+<tr><td class="f">monthlyExpenses</td><td class="num">1,20,000</td><td>EMI <b>ಹೊರತುಪಡಿಸಿ</b> ಜೀವನ ವೆಚ್ಚ. Retirement need ನ ಆಧಾರ.</td></tr>
+<tr><td class="f">monthlySavings</td><td class="num">80,000</td><td>ನಿಜವಾಗಿ ಹೂಡಿಕೆಯಾಗುವ ಮೊತ್ತ. SIP + PF + NPS + ಇತರೆ. ಬ್ಯಾಂಕಿನಲ್ಲಿ ಬಿದ್ದಿರುವ ಹಣ ಇದಲ್ಲ.</td></tr>
+<tr><td class="f">monthlyEMI</td><td class="num">45,000</td><td>ಎಲ್ಲ ಸಾಲದ ಕಂತುಗಳ ಮೊತ್ತ. EMI ratio rule ನ ಆಧಾರ.</td></tr>
+<tr><td class="f">savingsGrowth</td><td class="num">7%</td><td>ವಾರ್ಷಿಕ SIP top-up ದರ. ಇದು ಸಣ್ಣ ಸಂಖ್ಯೆಯಂತೆ ಕಾಣುತ್ತದೆ ಆದರೆ 22 ವರ್ಷಗಳಲ್ಲಿ ಅಗಾಧ ವ್ಯತ್ಯಾಸ ಮಾಡುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಇಲ್ಲಿ ಜನ ಮಾಡುವ ದೊಡ್ಡ ತಪ್ಪು</span>
+  <p>Income − expenses − EMI = 2,50,000 − 1,20,000 − 45,000 = ₹85,000. ಆದರೆ savings 80,000 ಎಂದು ಹಾಕಿದ್ದೇವೆ. ₹5,000 ಅಂತರ ಇದೆ — ಅದು ವಾಸ್ತವಿಕ (ಸೋರಿಕೆ ಯಾವಾಗಲೂ ಇರುತ್ತದೆ). ಆದರೆ ಜನ ಸಾಮಾನ್ಯವಾಗಿ ವಿರುದ್ಧ ದಿಕ್ಕಿನಲ್ಲಿ ತಪ್ಪು ಮಾಡುತ್ತಾರೆ — expenses ಕಡಿಮೆ ಹಾಕಿ savings ಹೆಚ್ಚು ಹಾಕುತ್ತಾರೆ. ಆಗ score ಸುಳ್ಳಾಗಿ ಹೆಚ್ಚಾಗುತ್ತದೆ. ಮೂರು ತಿಂಗಳ ಬ್ಯಾಂಕ್ statement ನೋಡಿ ನಿಜವಾದ ಸಂಖ್ಯೆ ಹಾಕಿ.</p>
+</div>
+
+<h3>ಗುಂಪು C — ಸ್ವತ್ತು ಮತ್ತು ಸಾಲ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">corpus</td><td class="num">80,00,000</td><td>ಇಂದಿನ ಒಟ್ಟು ಹೂಡಿಕೆ. ಸ್ವಂತ ಮನೆಯನ್ನು ಸೇರಿಸಬೇಡಿ — ಅದನ್ನು ನೀವು ನಿವೃತ್ತಿಯಲ್ಲಿ ಖರ್ಚು ಮಾಡುವುದಿಲ್ಲ.</td></tr>
+<tr><td class="f">emergencyFund</td><td class="num">4,00,000</td><td>24 ಗಂಟೆಯೊಳಗೆ ದಂಡವಿಲ್ಲದೆ ತೆಗೆಯಬಹುದಾದ ಹಣ. Liquid fund, sweep FD, savings account. Equity ಇದಲ್ಲ.</td></tr>
+<tr><td class="f">outstandingDebt</td><td class="num">45,00,000</td><td>ಬಾಕಿ ಇರುವ ಒಟ್ಟು ಸಾಲದ ಮೊತ್ತ. Term cover ಸಾಕೇ ಎಂದು ನೋಡುವಾಗ ಬಳಕೆಯಾಗುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<h3>ಗುಂಪು D — ರಕ್ಷಣೆ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">termCover</td><td class="num">2,00,00,000</td><td>ಶುದ್ಧ term life insurance sum assured. ULIP ಅಥವಾ endowment ನ cover ಇಲ್ಲಿ ಸೇರಿಸಬೇಡಿ — ಅವು ಸಾಮಾನ್ಯವಾಗಿ ತೀರಾ ಸಣ್ಣ cover ಕೊಡುತ್ತವೆ.</td></tr>
+<tr><td class="f">healthCover</td><td class="num">10,00,000</td><td>ಕುಟುಂಬದ floater sum insured + super top-up. Employer cover ಸೇರಿಸಬಹುದು ಆದರೆ ನೆನಪಿಡಿ — ಕೆಲಸ ಬಿಟ್ಟರೆ ಅದು ಹೋಗುತ್ತದೆ.</td></tr>
+<tr><td class="f">dependants</td><td class="num">2</td><td>ನಿಮ್ಮ ಆದಾಯದ ಮೇಲೆ ಅವಲಂಬಿತರ ಸಂಖ್ಯೆ. Term ಮತ್ತು will rules ನ ತೀವ್ರತೆಯನ್ನು ಬದಲಿಸುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<h3>ಗುಂಪು E — Portfolio ರಚನೆ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">equityAlloc</td><td class="num">65%</td><td>Corpus ನಲ್ಲಿ equity ಶೇಕಡಾವಾರು. Age-based benchmark ವಿರುದ್ಧ ಹೋಲಿಕೆ.</td></tr>
+<tr><td class="f">largestHolding</td><td class="num">18%</td><td>ಒಂದೇ stock ಅಥವಾ ಒಂದೇ fund ನಲ್ಲಿ ಗರಿಷ್ಠ ಶೇಕಡಾವಾರು. Index fund ಆದರೆ ಅದನ್ನು concentration ಎಂದು ಪರಿಗಣಿಸಬೇಡಿ.</td></tr>
+<tr><td class="f">feeDrag</td><td class="num">1.1%</td><td>ವಾರ್ಷಿಕ ಒಟ್ಟು ವೆಚ್ಚ — expense ratio + advisory fee + platform charges. Regular plan ಇದ್ದರೆ 1.8–2.2% ಸಾಮಾನ್ಯ.</td></tr>
+</tbody>
+</table>
+
+<h3>ಗುಂಪು F — ನಿರೀಕ್ಷೆಗಳು ಮತ್ತು ಆಡಳಿತ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">expReturn</td><td class="num">11.5%</td><td>ನಿವೃತ್ತಿಗೂ ಮೊದಲಿನ ನಿರೀಕ್ಷಿತ ವಾರ್ಷಿಕ return (fee ಗೂ ಮೊದಲು).</td></tr>
+<tr><td class="f">retirementReturn</td><td class="num">8.5%</td><td>ನಿವೃತ್ತಿ ನಂತರದ return. ಕಡಿಮೆ ಏಕೆಂದರೆ ಆಗ portfolio ಹೆಚ್ಚು conservative ಆಗಿರುತ್ತದೆ.</td></tr>
+<tr><td class="f">inflation</td><td class="num">6%</td><td>ದೀರ್ಘಾವಧಿ ಹಣದುಬ್ಬರ. ವೈದ್ಯಕೀಯ ಮತ್ತು ಶಿಕ್ಷಣ ಇದಕ್ಕಿಂತ ವೇಗವಾಗಿ ಏರುತ್ತವೆ.</td></tr>
+<tr><td class="f">retirementExpenseRatio</td><td class="num">80%</td><td>ನಿವೃತ್ತಿಯಲ್ಲಿ ಇಂದಿನ ಖರ್ಚಿನ ಎಷ್ಟು ಶೇಕಡಾ ಬೇಕು. ಪ್ರಯಾಣ ಹೆಚ್ಚಿಸಲು ಬಯಸಿದರೆ 100% ಹಾಕಿ.</td></tr>
+<tr><td class="f">hasWill</td><td class="num">false</td><td>ನೋಂದಾಯಿತ ಉಯಿಲು ಇದೆಯೇ. Governance rule.</td></tr>
+<tr><td class="f">hasNominees</td><td class="num">true</td><td>ಎಲ್ಲ accounts ನಲ್ಲಿ nominee ಇದೆಯೇ. Governance rule.</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">Will ಮತ್ತು Nominee ಒಂದೇ ಅಲ್ಲ</span>
+  <p>ಭಾರತದಲ್ಲಿ nominee ಒಬ್ಬ <b>ಟ್ರಸ್ಟಿ</b> ಮಾತ್ರ — ಅವರು ಆಸ್ತಿ ಪಡೆಯುತ್ತಾರೆ ಆದರೆ ಅದರ ಮಾಲೀಕರಲ್ಲ. ನಿಜವಾದ ಮಾಲೀಕತ್ವ ಉಯಿಲು ಅಥವಾ ಉತ್ತರಾಧಿಕಾರ ಕಾನೂನಿನ ಪ್ರಕಾರ ನಿರ್ಧಾರವಾಗುತ್ತದೆ. ಆದ್ದರಿಂದ ಇವೆರಡೂ ಪ್ರತ್ಯೇಕ rules — ಎರಡೂ ಬೇಕು.</p>
+</div>
+
+<h2 class="newpage">5. ಒಳಗಿನ Math — projection engine</h2>
+
+<p>13 rules ನಲ್ಲಿ 12 ಸರಳ ಅನುಪಾತಗಳು. ಆದರೆ ಅತಿ ಹೆಚ್ಚು ತೂಕದ rule — adequacy (30 points) — ಗೆ ಒಂದು ಪೂರ್ಣ projection engine ಬೇಕು. ಅದನ್ನು ಹಂತ ಹಂತವಾಗಿ ನೋಡೋಣ.</p>
+
+<h3>ಹಂತ 1 — ನಿಜವಾದ return (fee ಕಳೆದ ನಂತರ)</h3>
+
+<div class="formula">net    = expReturn − feeDrag        = 11.5 − 1.1 = <span class="k">10.4%</span>
+retNet = retirementReturn − feeDrag = 8.5 − 1.1 = <span class="k">7.4%</span>
+</div>
+
+<p>Fee ಅನ್ನು return ನಿಂದ ನೇರವಾಗಿ ಕಳೆಯಲಾಗುತ್ತದೆ. ಇದು ಸ್ವಲ್ಪ ಸರಳೀಕರಣ (ವಾಸ್ತವದಲ್ಲಿ fee ಗುಣಾಕಾರವಾಗಿ ಅನ್ವಯಿಸುತ್ತದೆ) ಆದರೆ ಈ ಮಟ್ಟದಲ್ಲಿ ವ್ಯತ್ಯಾಸ ನಗಣ್ಯ.</p>
+
+<h3>ಹಂತ 2 — ಇಂದಿನ corpus ಬೆಳೆಯುತ್ತದೆ</h3>
+
+<div class="formula">yearsToRet = retireAge − age = 60 − 38 = <span class="k">22</span>
+
+corpusGrown = corpus × (1 + net)<sup>22</sup>
+            = 80,00,000 × (1.104)<sup>22</sup>
+            = 80,00,000 × 8.8267
+            = <span class="k">₹7,06,13,600</span>
+</div>
+
+<h3>ಹಂತ 3 — ಭವಿಷ್ಯದ SIP ಗಳ ಮೌಲ್ಯ (growing annuity)</h3>
+
+<p>ಇಲ್ಲಿ ಒಂದು ವಿಶೇಷ ಸೂತ್ರ ಬೇಕು, ಏಕೆಂದರೆ SIP ಪ್ರತಿ ವರ್ಷ 7% ಹೆಚ್ಚಾಗುತ್ತದೆ. ಸ್ಥಿರ SIP ಸೂತ್ರ ಇಲ್ಲಿ ಕೆಲಸ ಮಾಡದು.</p>
+
+<div class="formula"><span class="c">// growing annuity ನ future value</span>
+fvAnnuity(pmt, r, n, g) = pmt × [ (1+r)<sup>n</sup> − (1+g)<sup>n</sup> ] / (r − g)
+
+pmt = 80,000 × 12 = 9,60,000    <span class="c">// ವಾರ್ಷಿಕ ಉಳಿತಾಯ</span>
+r   = 0.104,  g = 0.07,  n = 22
+
+(1.104)<sup>22</sup> = 8.8267
+(1.07)<sup>22</sup>  = 4.4304
+
+fvAnnuity = 9,60,000 × (8.8267 − 4.4304) / (0.104 − 0.07)
+          = 9,60,000 × 4.3963 / 0.034
+          = 9,60,000 × 129.30
+          = <span class="k">₹12,41,28,000</span>
+</div>
+
+<div class="tip">
+  <span class="lbl">ಈ ಸೂತ್ರದ ಅಂತರ್ಗತ ಅರ್ಥ</span>
+  <p>ಅಂಶದಲ್ಲಿ ಎರಡು ಪದಗಳಿವೆ — (1+r)ⁿ ಹಣ ಎಷ್ಟು ಬೆಳೆಯುತ್ತದೆ ಎಂದು ಹೇಳುತ್ತದೆ, (1+g)ⁿ ಕಂತು ಎಷ್ಟು ಬೆಳೆಯುತ್ತದೆ ಎಂದು ಹೇಳುತ್ತದೆ. ಅವುಗಳ ವ್ಯತ್ಯಾಸವನ್ನು (r−g) ಇಂದ ಭಾಗಿಸಿದರೆ ಒಟ್ಟು ಸಂಗ್ರಹ ಸಿಗುತ್ತದೆ. ಗಮನಿಸಿ — r ಮತ್ತು g ಸಮೀಪವಾದಷ್ಟೂ ಛೇದ ಸಣ್ಣದಾಗಿ ಫಲಿತಾಂಶ ಸ್ಫೋಟಗೊಳ್ಳುತ್ತದೆ. r = g ಆದರೆ ಸೂತ್ರ ಒಡೆಯುತ್ತದೆ (0/0). ಆದ್ದರಿಂದ savingsGrowth ಅನ್ನು expReturn ಗೆ ತೀರಾ ಹತ್ತಿರ ಇಡಬೇಡಿ.</p>
+</div>
+
+<h3>ಹಂತ 4 — ನಿವೃತ್ತಿಯ ದಿನ ಒಟ್ಟು ಸಂಗ್ರಹ</h3>
+
+<div class="formula">corpusAtRet = 7,06,13,600 + 12,41,28,000 = <span class="k">₹19,47,41,600</span>
+</div>
+
+<p>ಸುಮಾರು ₹19.5 ಕೋಟಿ. ದೊಡ್ಡ ಸಂಖ್ಯೆಯಂತೆ ಕಾಣುತ್ತದೆ — ಆದರೆ ಇದು 22 ವರ್ಷಗಳ ನಂತರದ ರೂಪಾಯಿ. ಇಂದಿನ ಕ್ರಯಶಕ್ತಿಯಲ್ಲಿ ಇದು ₹19.5 ಕೋಟಿ / (1.06)²² = ₹5.4 ಕೋಟಿ ಮಾತ್ರ.</p>
+
+<h3>ಹಂತ 5 — ನಿವೃತ್ತಿಯಲ್ಲಿ ಎಷ್ಟು ಬೇಕು</h3>
+
+<div class="formula"><span class="c">// ಇಂದಿನ ಖರ್ಚು ಎಷ್ಟು ಬೇಕಾಗುತ್ತದೆ</span>
+annualExpNow = 1,20,000 × 12 × 0.80 = <span class="k">₹11,52,000</span>
+
+<span class="c">// 22 ವರ್ಷ inflate ಆಗುತ್ತದೆ</span>
+annualExpenseAtRet = 11,52,000 × (1.06)<sup>22</sup>
+                   = 11,52,000 × 3.6035
+                   = <span class="k">₹41,51,232</span>
+</div>
+
+<h3>ಹಂತ 6 — Real rate ಮತ್ತು ಅಗತ್ಯ corpus</h3>
+
+<p>ಇಲ್ಲಿ ಎರಡನೇ ಪ್ರಮುಖ ಸೂತ್ರ ಬರುತ್ತದೆ. ನಿವೃತ್ತಿಯಲ್ಲಿ ಎರಡು ವಿರುದ್ಧ ಶಕ್ತಿಗಳಿವೆ — portfolio 7.4% ಬೆಳೆಯುತ್ತದೆ, ಖರ್ಚು 6% ಏರುತ್ತದೆ. ನಿವ್ವಳ ಪರಿಣಾಮವನ್ನು <b>real rate</b> ಹಿಡಿಯುತ್ತದೆ.</p>
+
+<div class="formula">realRate = (1 + retNet) / (1 + infl) − 1
+         = (1.074) / (1.06) − 1
+         = 1.013207 − 1
+         = <span class="k">1.3207%</span>
+</div>
+
+<div class="warn">
+  <span class="lbl">ಇಲ್ಲಿ ಬಹಳ ಜನ ಎಡವುತ್ತಾರೆ</span>
+  <p>ಸಾಮಾನ್ಯ ತಪ್ಪು: real rate = 7.4 − 6 = 1.4%. ಸರಿಯಾದ ಉತ್ತರ 1.3207%. ವ್ಯತ್ಯಾಸ ಬರೀ 0.08% ಆದರೆ 30 ವರ್ಷಗಳ annuity ನಲ್ಲಿ ಇದು ಲಕ್ಷಾಂತರ ರೂಪಾಯಿ. ಕಡಿಮೆ real rate ಗಳಲ್ಲಿ ಈ ಸೂತ್ರ ಅತ್ಯಂತ ಸೂಕ್ಷ್ಮ.</p>
+</div>
+
+<div class="formula"><span class="c">// present value of a real (inflation-adjusted) annuity</span>
+pvAnnuityReal(pmt, rr, n) = pmt × [ 1 − (1+rr)<sup>−n</sup> ] / rr
+
+retYears = 90 − 60 = 30
+(1.013207)<sup>−30</sup> = 0.67340
+
+required = 41,51,232 × (1 − 0.67340) / 0.013207
+         = 41,51,232 × 0.32660 / 0.013207
+         = 41,51,232 × 24.7292
+         = <span class="k">₹10,26,58,000</span>
+</div>
+
+<h3>ಹಂತ 7 — Ratio ಮತ್ತು pass fraction</h3>
+
+<div class="formula">ratio = corpusAtRet / required
+      = 19,47,41,600 / 10,26,58,000
+      = <span class="k">1.897</span>
+
+pass = clamp((ratio − 0.6) / 0.4, 0, 1)
+     = clamp((1.897 − 0.6) / 0.4, 0, 1)
+     = clamp(3.24, 0, 1)
+     = <span class="k">1.00</span>  →  30 / 30 points
+</div>
+
+<div class="note">
+  <span class="lbl">(ratio − 0.6) / 0.4 ಏಕೆ?</span>
+  <p>ಇದು ಒಂದು ವಿನ್ಯಾಸ ಆಯ್ಕೆ. ratio ≤ 0.6 ಆದರೆ pass = 0 (ಗಂಭೀರ ಕೊರತೆ). ratio ≥ 1.0 ಆದರೆ pass = 1 (ಪೂರ್ಣ ಅಂಕ). ನಡುವೆ ಸರಳ ರೇಖೆ. ಅಂದರೆ ratio 0.8 ಇರುವವನಿಗೆ 0.5 → 15 points ಸಿಗುತ್ತದೆ. "ಸ್ವಲ್ಪ ಕಡಿಮೆ" ಮತ್ತು "ತೀರಾ ಕಡಿಮೆ" ನಡುವೆ ವ್ಯತ್ಯಾಸ ಮಾಡಲು ಇದು ಅಗತ್ಯ.</p>
+</div>
+
+<h2 class="newpage">6. 13 Rules — ಪ್ರತಿಯೊಂದರ ವಿವರ</h2>
+
+<p>ಈಗ ಎಲ್ಲ 13 rules ಅನ್ನು dimension ಪ್ರಕಾರ ನೋಡೋಣ. ಪ್ರತಿಯೊಂದಕ್ಕೂ ಸೂತ್ರ, ತರ್ಕ, ಮತ್ತು default inputs ನಲ್ಲಿ ಅದು ಏನು ಕೊಡುತ್ತದೆ ಎಂದು ಕೊಟ್ಟಿದೆ.</p>
+
+<h3>Adequacy (45 points, 3 rules)</h3>
+
+<table>
+<thead><tr><th>Rule</th><th class="num">W</th><th>pass ಸೂತ್ರ</th><th class="num">Default</th></tr></thead>
+<tbody>
+<tr><td class="f">adequacy</td><td class="num">30</td><td>clamp((ratio − 0.6) / 0.4, 0, 1)</td><td class="num">1.00</td></tr>
+<tr><td class="f">ret length</td><td class="num">8</td><td>ನಿವೃತ್ತಿ ಅವಧಿ ವಾಸ್ತವಿಕವೇ — lifeExpectancy ತೀರಾ ಕಡಿಮೆ ಇಟ್ಟಿದ್ದರೆ ದಂಡ</td><td class="num">1.00</td></tr>
+<tr><td class="f">savings rate</td><td class="num">7</td><td>clamp(rate / 25, 0, 1), rate = savings/income × 100</td><td class="num">1.00</td></tr>
+</tbody>
+</table>
+
+<p><b>savings rate</b> ನ ಗುರಿ 25%. Default ನಲ್ಲಿ 80,000 / 2,50,000 = 32% — ಗುರಿ ಮೀರಿದೆ, ಆದ್ದರಿಂದ clamp 1 ಕ್ಕೆ ಕತ್ತರಿಸುತ್ತದೆ. ಯಾರಾದರೂ 12% ಉಳಿಸಿದರೆ pass = 0.48 → 3.4 points.</p>
+
+<div class="tip">
+  <span class="lbl">25% ಏಕೆ ಗುರಿ</span>
+  <p>ಸರಳ ಗಣಿತ: 25% ಉಳಿಸಿ 10% real return ಪಡೆದರೆ, ಸುಮಾರು 30 ವರ್ಷಗಳಲ್ಲಿ ನಿಮ್ಮ ನಿವೃತ್ತಿ ಹಣ ಸೇರುತ್ತದೆ. 10% ಉಳಿಸಿದರೆ 45+ ವರ್ಷ ಬೇಕು — ಅಂದರೆ 22 ರಲ್ಲಿ ಶುರುಮಾಡಿ 67 ರಲ್ಲಿ ನಿವೃತ್ತಿ. ಭಾರತದಲ್ಲಿ ಹೆಚ್ಚಿನವರು 30 ರ ನಂತರ ಗಂಭೀರವಾಗಿ ಉಳಿಸಲು ಶುರುಮಾಡುತ್ತಾರೆ, ಆದ್ದರಿಂದ ದರ ಹೆಚ್ಚಿರಬೇಕು.</p>
+</div>
+
+<h3>Protection (20 points, 2 rules)</h3>
+
+<table>
+<thead><tr><th>Rule</th><th class="num">W</th><th>pass ಸೂತ್ರ</th><th class="num">Default</th></tr></thead>
+<tbody>
+<tr><td class="f">term life</td><td class="num">12</td><td>clamp(multiple / 12, 0, 1), multiple = termCover / annualIncome</td><td class="num">0.56</td></tr>
+<tr><td class="f">health</td><td class="num">8</td><td>clamp(healthCover / 10,00,000, 0, 1)</td><td class="num">1.00</td></tr>
+</tbody>
+</table>
+
+<div class="formula"><span class="c">// default values ನಲ್ಲಿ term rule</span>
+annualIncome = 2,50,000 × 12 = 30,00,000
+multiple     = 2,00,00,000 / 30,00,000 = 6.67×
+pass         = clamp(6.67 / 12, 0, 1) = <span class="k">0.556</span>
+points       = 12 × 0.556 = <span class="k">6.67 / 12</span>   ← 5.33 points ಕಳೆದುಹೋಗಿದೆ
+</div>
+
+<p>ಗಮನಿಸಿ — default plan ನಲ್ಲಿ ₹2 ಕೋಟಿ term cover ಇದೆ, ಅದು ದೊಡ್ಡದಂತೆ ಕಾಣುತ್ತದೆ. ಆದರೆ ₹30 ಲಕ್ಷ ಆದಾಯದ ಎದುರು ಅದು ಬರೀ 6.7 ಪಟ್ಟು. ಜೊತೆಗೆ ₹45 ಲಕ್ಷ ಸಾಲವೂ ಇದೆ. ವ್ಯಕ್ತಿ ಇಂದು ಸತ್ತರೆ, ಸಾಲ ತೀರಿಸಿದ ನಂತರ ₹1.55 ಕೋಟಿ ಉಳಿಯುತ್ತದೆ — ಅದು ಕುಟುಂಬಕ್ಕೆ ಬರೀ 5 ವರ್ಷದ ಜೀವನ ವೆಚ್ಚ.</p>
+
+<div class="warn">
+  <span class="lbl">12× ನ ತರ್ಕ</span>
+  <p>12 ವರ್ಷಗಳ ಆದಾಯ ಎಂದರೆ — ಆ ಮೊತ್ತವನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಹೂಡಿ 6–7% ಪಡೆದರೆ, ಕುಟುಂಬ ಮೂಲಧನವನ್ನು ಮುಟ್ಟದೆ ಸುಮಾರು 70–80% ಜೀವನಶೈಲಿ ಉಳಿಸಿಕೊಳ್ಳಬಹುದು. ಜೊತೆಗೆ ಬಾಕಿ ಸಾಲದ ಪೂರ್ಣ ಮೊತ್ತವನ್ನೂ ಪ್ರತ್ಯೇಕವಾಗಿ ಸೇರಿಸಿಕೊಳ್ಳಬೇಕು.</p>
+</div>
+
+<h3>Liquidity (12 points, 2 rules)</h3>
+
+<table>
+<thead><tr><th>Rule</th><th class="num">W</th><th>pass ಸೂತ್ರ</th><th class="num">Default</th></tr></thead>
+<tbody>
+<tr><td class="f">emergency</td><td class="num">7</td><td>clamp(months / 6, 0, 1), months = fund / (expenses + EMI)</td><td class="num">0.40</td></tr>
+<tr><td class="f">EMI</td><td class="num">5</td><td>clamp((45 − emiRatio) / 45, 0, 1)</td><td class="num">0.60</td></tr>
+</tbody>
+</table>
+
+<div class="formula"><span class="c">// emergency fund</span>
+monthlyBurn = 1,20,000 + 45,000 = 1,65,000
+months      = 4,00,000 / 1,65,000 = 2.42 ತಿಂಗಳು
+pass        = clamp(2.42 / 6, 0, 1) = <span class="k">0.404</span>  →  2.8 / 7
+
+<span class="c">// EMI ratio</span>
+emiRatio = 45,000 / 2,50,000 × 100 = 18%
+pass     = clamp((45 − 18) / 45, 0, 1) = 27/45 = <span class="k">0.60</span>  →  3.0 / 5
+</div>
+
+<p>Emergency fund ಲೆಕ್ಕದಲ್ಲಿ EMI ಅನ್ನೂ ಸೇರಿಸಿರುವುದನ್ನು ಗಮನಿಸಿ. ಕೆಲಸ ಹೋದರೆ ಜೀವನ ವೆಚ್ಚ ಮಾತ್ರವಲ್ಲ, EMI ಯನ್ನೂ ಕಟ್ಟಬೇಕು. ಬ್ಯಾಂಕ್ ಕಾಯುವುದಿಲ್ಲ.</p>
+
+<p>EMI rule ನಲ್ಲಿ 45% ಒಂದು ಮಿತಿ — ಅದನ್ನು ದಾಟಿದರೆ pass ಸೊನ್ನೆ. 0% ಆದರೆ pass = 1. ಆದರೆ ಗಮನಿಸಿ, 18% ನಲ್ಲೂ ಬರೀ 0.60 ಸಿಗುತ್ತದೆ — ಈ rule ಕಠಿಣ. ತರ್ಕ: ಯಾವುದೇ EMI ಇಲ್ಲದಿರುವುದೇ ಆದರ್ಶ, ಏಕೆಂದರೆ EMI ಒಂದು ಸ್ಥಿರ ಬದ್ಧತೆ ಮತ್ತು ಅದು ನಿಮ್ಮ ಹೊಂದಿಕೊಳ್ಳುವ ಸಾಮರ್ಥ್ಯವನ್ನು ಕಸಿದುಕೊಳ್ಳುತ್ತದೆ.</p>
+
+<h3>Allocation (10 points, 2 rules)</h3>
+
+<table>
+<thead><tr><th>Rule</th><th class="num">W</th><th>pass ಸೂತ್ರ</th><th class="num">Default</th></tr></thead>
+<tbody>
+<tr><td class="f">equity</td><td class="num">6</td><td>equityAlloc vs suggestedEquity = clamp(100 − age, 30, 85)</td><td class="num">0.83</td></tr>
+<tr><td class="f">concentration</td><td class="num">4</td><td>clamp((30 − largest) / 20, 0, 1)</td><td class="num">0.60</td></tr>
+</tbody>
+</table>
+
+<div class="formula"><span class="c">// equity rule</span>
+suggestedEquity = clamp(100 − 38, 30, 85) = <span class="k">62%</span>
+actual          = 65%
+<span class="c">// 3 ಶೇಕಡಾ ಬಿಂದು ವ್ಯತ್ಯಾಸ — ಸಣ್ಣದು, ಸ್ವಲ್ಪ ದಂಡ ಮಾತ್ರ</span>
+
+<span class="c">// concentration rule</span>
+pass = clamp((30 − 18) / 20, 0, 1) = 12/20 = <span class="k">0.60</span>  →  2.4 / 4
+</div>
+
+<p>Concentration rule ನ ವಿನ್ಯಾಸ: 10% ಅಥವಾ ಕಡಿಮೆ ಆದರೆ pass = 1. 30% ಅಥವಾ ಹೆಚ್ಚು ಆದರೆ pass = 0. ನಡುವೆ ರೇಖೀಯ. ಒಂದೇ ಹೂಡಿಕೆಯಲ್ಲಿ 30% ಇರುವುದು ಅಪಾಯಕಾರಿ — ಆ ಕಂಪನಿ 60% ಬಿದ್ದರೆ ನಿಮ್ಮ ಒಟ್ಟು corpus 18% ಕಳೆದುಕೊಳ್ಳುತ್ತದೆ.</p>
+
+<div class="note">
+  <span class="lbl">Index fund ಗೆ ಈ rule ಅನ್ವಯಿಸಬೇಡಿ</span>
+  <p>ನಿಮ್ಮ 100% equity ಒಂದೇ Nifty 50 index fund ನಲ್ಲಿದ್ದರೆ, largestHolding ಅನ್ನು 100 ಎಂದು ಹಾಕಬೇಡಿ. ಆ fund ಒಳಗೆ 50 ಕಂಪನಿಗಳಿವೆ. ನಿಜವಾದ concentration = ಆ index ನ ಅತಿ ದೊಡ್ಡ ಘಟಕದ ತೂಕ (ಸುಮಾರು 12–13%). ಈ rule ನಿಜವಾಗಿ ಗುರಿಯಾಗಿಸುವುದು — ಒಂದೇ stock ಅಥವಾ employer ESOP ಅಥವಾ ಒಂದೇ ಆಸ್ತಿಯಲ್ಲಿ ಅತಿಯಾದ ಕೇಂದ್ರೀಕರಣ.</p>
+</div>
+
+<h3>Cost (7 points, 1 rule)</h3>
+
+<div class="formula">pass = clamp((1.8 − feeDrag) / 1.5, 0, 1)
+     = clamp((1.8 − 1.1) / 1.5, 0, 1)
+     = 0.7 / 1.5
+     = <span class="k">0.467</span>  →  3.3 / 7
+</div>
+
+<p>ಈ rule ನ ಎರಡು ಮಿತಿಗಳು: fee 1.8% ಅಥವಾ ಹೆಚ್ಚು ಆದರೆ ಸೊನ್ನೆ. Fee 0.3% ಅಥವಾ ಕಡಿಮೆ ಆದರೆ ಪೂರ್ಣ 7. ಅಂದರೆ direct index fund (0.2%) ಬಳಸುವವನಿಗೆ ಪೂರ್ಣ ಅಂಕ, regular plan (2%) ಬಳಸುವವನಿಗೆ ಸೊನ್ನೆ.</p>
+
+<div class="example">
+<h4>1.1% fee 22 ವರ್ಷಗಳಲ್ಲಿ ಎಷ್ಟು ತಿನ್ನುತ್ತದೆ</h4>
+<p class="kv">
+Fee ಇಲ್ಲದೆ: corpus 80L @ 11.5% × 22 ವರ್ಷ = <b>₹8.71 ಕೋಟಿ</b><br>
+1.1% fee ಜೊತೆ: corpus 80L @ 10.4% × 22 ವರ್ಷ = <b>₹7.06 ಕೋಟಿ</b><br>
+ವ್ಯತ್ಯಾಸ: <b>₹1.65 ಕೋಟಿ</b> — ಇದು ಬರೀ ಈಗಿನ corpus ಮೇಲೆ. SIP ಗಳ ಮೇಲಿನ fee drag ಇನ್ನೂ ಸೇರಿಸಬೇಕು.
+</p>
+<p>1.1% ಎಂಬ ಸಂಖ್ಯೆ "ಏನೂ ಅಲ್ಲ" ಎಂದು ಕಾಣುತ್ತದೆ. 22 ವರ್ಷಗಳ ನಂತರ ಅದು ₹1.65 ಕೋಟಿ. ಆದರೂ ಈ rule ಗೆ ಬರೀ 7 points — ಏಕೆಂದರೆ term insurance ಇಲ್ಲದಿರುವುದು ಇನ್ನೂ ದೊಡ್ಡ ಅಪಾಯ.</p>
+</div>
+
+<h3>Governance (6 points, 3 rules)</h3>
+
+<table>
+<thead><tr><th>Rule</th><th class="num">W</th><th>pass ಸೂತ್ರ</th><th class="num">Default</th></tr></thead>
+<tbody>
+<tr><td class="f">will</td><td class="num">3</td><td>hasWill ? 1 : 0</td><td class="num">0.00</td></tr>
+<tr><td class="f">nominees</td><td class="num">2</td><td>hasNominees ? 1 : 0</td><td class="num">1.00</td></tr>
+<tr><td class="f">realism</td><td class="num">3</td><td>real return (expReturn − inflation) vs 5% benchmark</td><td class="num">~1.00</td></tr>
+</tbody>
+</table>
+
+<p><b>realism</b> rule ಒಂದು ಚಾಣಾಕ್ಷ ಸೇರ್ಪಡೆ. ಇದು ನಿಮ್ಮ ನಿರೀಕ್ಷೆಗಳನ್ನೇ ಪರೀಕ್ಷಿಸುತ್ತದೆ. ನೀವು expReturn = 18%, inflation = 4% ಹಾಕಿದರೆ real return 14% — ಅದು ಐತಿಹಾಸಿಕವಾಗಿ ಅಸಾಧ್ಯ. Calculator ನಿಮಗೆ ಅದ್ಭುತ score ಕೊಡುತ್ತದೆ ಆದರೆ realism rule ಶೂನ್ಯ ಕೊಟ್ಟು ಎಚ್ಚರಿಸುತ್ತದೆ.</p>
+
+<div class="formula">realReturn = expReturn − inflation = 11.5 − 6 = <span class="k">5.5%</span>
+benchmark  = 5%
+<span class="c">// 5.5% ಸಾಧಾರಣವಾಗಿ ವಾಸ್ತವಿಕ — pass ಪೂರ್ಣ ಸಮೀಪ</span>
+</div>
+
+<div class="tip">
+  <span class="lbl">Governance ಗೆ ಬರೀ 6 points ಏಕೆ</span>
+  <p>ಏಕೆಂದರೆ will ಮತ್ತು nominee <b>ನಿಮ್ಮ</b> ಹಣಕಾಸಿನ ಫಲಿತಾಂಶವನ್ನು ಬದಲಿಸುವುದಿಲ್ಲ — ಅವು ನಿಮ್ಮ ವಾರಸುದಾರರ ಫಲಿತಾಂಶವನ್ನು ಬದಲಿಸುತ್ತವೆ. ಆದರೆ 6 points ಎಂದರೆ "ಮುಖ್ಯವಲ್ಲ" ಎಂದಲ್ಲ. Will ಇಲ್ಲದೆ ಸತ್ತರೆ ಭಾರತದಲ್ಲಿ ಆಸ್ತಿ ವಿವಾದ 5–10 ವರ್ಷ ಎಳೆಯಬಹುದು. ₹3 points ಗಳಿಸಲು ಬೇಕಾಗಿರುವುದು ಒಂದು ದಿನದ ಕೆಲಸ — ಇದು ಅತ್ಯಂತ ಸುಲಭ ಗೆಲುವು.</p>
+</div>
+
+<h2 class="newpage">7. ಪ್ರತಿ Output tab ಏನು ಹೇಳುತ್ತದೆ</h2>
+
+<p>ನಾಲ್ಕು tabs ಇವೆ. ಪ್ರತಿಯೊಂದೂ ಒಂದೇ ಲೆಕ್ಕದ ಬೇರೆ ಬೇರೆ ಮುಖ.</p>
+
+<h3>Tab 1 — Findings</h3>
+
+<p>ಇದೇ ಮುಖ್ಯ tab. ಮೇಲೆ ಒಂದು gauge (score + ಬಣ್ಣ), ಅದರ ಕೆಳಗೆ ಆರು dimension bars, ಆಮೇಲೆ 13 findings ಗಳ ಪಟ್ಟಿ. Findings <b>ಕಳೆದುಹೋದ points ಪ್ರಕಾರ ಜೋಡಿಸಲಾಗಿದೆ</b> — ಅತಿ ಹೆಚ್ಚು ನಷ್ಟ ಮೇಲೆ.</p>
+
+<p>ಪ್ರತಿ finding ನಲ್ಲಿ ಮೂರು ಭಾಗ: ಈಗಿನ ಸ್ಥಿತಿ (ಸಂಖ್ಯೆಯೊಂದಿಗೆ), ಗುರಿ ಏನು, ಮತ್ತು ಎಷ್ಟು points ಬಾಕಿ. ಇದನ್ನೇ ನಿಮ್ಮ to-do list ಆಗಿ ಬಳಸಬಹುದು — ಮೇಲಿನಿಂದ ಕೆಳಕ್ಕೆ ಕೆಲಸ ಮಾಡಿ.</p>
+
+<h3>Tab 2 — Projection</h3>
+
+<p>ವರ್ಷವಾರು corpus ಬೆಳವಣಿಗೆಯ chart. ಇಂದಿನಿಂದ ನಿವೃತ್ತಿಯವರೆಗೆ ಸಂಗ್ರಹ ಹಂತ, ನಂತರ ನಿವೃತ್ತಿಯಿಂದ lifeExpectancy ವರೆಗೆ ಖರ್ಚಿನ ಹಂತ. ಎರಡು ರೇಖೆಗಳು — ನಿಮ್ಮ projected corpus ಮತ್ತು required corpus.</p>
+
+<div class="note">
+  <span class="lbl">ಈ chart ನಲ್ಲಿ ಏನು ಹುಡುಕಬೇಕು</span>
+  <p>ನಿಮ್ಮ ರೇಖೆ required ರೇಖೆಯನ್ನು <b>ಎಲ್ಲಿ</b> ದಾಟುತ್ತದೆ ಎಂದು ನೋಡಿ. 55 ರಲ್ಲೇ ದಾಟಿದರೆ ನೀವು 5 ವರ್ಷ ಬೇಗ ನಿವೃತ್ತಿ ಪಡೆಯಬಹುದು. 60 ರ ನಂತರವೂ ದಾಟದಿದ್ದರೆ — ಒಂದೋ ಹೆಚ್ಚು ಉಳಿಸಿ, ಒಂದೋ ಹೆಚ್ಚು ಕಾಲ ಕೆಲಸ ಮಾಡಿ, ಒಂದೋ ಕಡಿಮೆ ಖರ್ಚು ಮಾಡಿ. ನಾಲ್ಕನೇ ಆಯ್ಕೆ ಇಲ್ಲ.</p>
+</div>
+
+<h3>Tab 3 — Full report</h3>
+
+<p>ಎಲ್ಲ 13 rules ನ ಪೂರ್ಣ ಕೋಷ್ಟಕ — id, dimension, weight, pass fraction, ಗಳಿಸಿದ points, ಕಳೆದುಕೊಂಡ points. ಇದನ್ನು ಸಂಗಾತಿ ಅಥವಾ advisor ಜೊತೆ ಚರ್ಚಿಸಲು ಬಳಸಿ.</p>
+
+<h3>Tab 4 — Rules used</h3>
+
+<p>ಪ್ರತಿ rule ನ ನಿಖರ ಸೂತ್ರ ಮತ್ತು threshold. ಇದು ಪಾರದರ್ಶಕತೆಗಾಗಿ. ನೀವು ಒಂದು rule ನ ತೂಕ ಅಥವಾ threshold ಒಪ್ಪದಿದ್ದರೆ, ಅದನ್ನು ಇಲ್ಲಿ ನೋಡಿ ಮಾನಸಿಕವಾಗಿ ಹೊಂದಿಸಿಕೊಳ್ಳಬಹುದು.</p>
+
+<div class="tip">
+  <span class="lbl">ಈ tab ಏಕೆ ಮುಖ್ಯ</span>
+  <p>ಯಾವುದೇ scoring system ನ ದೊಡ್ಡ ಅಪಾಯ — ಅದು ಒಂದು ಕಪ್ಪು ಪೆಟ್ಟಿಗೆಯಾಗಿ ಸಂಖ್ಯೆ ಉಗುಳುತ್ತದೆ ಮತ್ತು ಜನ ಅದನ್ನು ಪ್ರಶ್ನಿಸದೆ ನಂಬುತ್ತಾರೆ. ಈ tab ಇಡೀ engine ಅನ್ನು ತೆರೆದಿಡುತ್ತದೆ. "12× term cover ತೀರಾ ಹೆಚ್ಚು, ನನಗೆ 10× ಸಾಕು" ಎಂದು ನೀವು ವಾದಿಸಬಹುದು — ಅದು ಸರಿಯಾದ ಚರ್ಚೆ.</p>
+</div>
+
+<h2 class="newpage">8. Worked Example — ಪೂರ್ಣ ಲೆಕ್ಕ</h2>
+
+<div class="example">
+<h4>ಪಾತ್ರ — ಅರುಣ್, ವಯಸ್ಸು 38, ಬೆಂಗಳೂರು</h4>
+<p class="kv">
+ಸಂಬಳ (take-home) <b>₹2,50,000/ತಿಂಗಳು</b> · ಜೀವನ ವೆಚ್ಚ <b>₹1,20,000</b> · EMI <b>₹45,000</b> · ಹೂಡಿಕೆ <b>₹80,000</b><br>
+Corpus <b>₹80 ಲಕ್ಷ</b> · Emergency fund <b>₹4 ಲಕ್ಷ</b> · ಬಾಕಿ ಸಾಲ <b>₹45 ಲಕ್ಷ</b><br>
+Term cover <b>₹2 ಕೋಟಿ</b> · Health cover <b>₹10 ಲಕ್ಷ</b> · ಅವಲಂಬಿತರು <b>2</b><br>
+Equity <b>65%</b> · ಅತಿ ದೊಡ್ಡ holding <b>18%</b> · Fee <b>1.1%</b> · Will <b>ಇಲ್ಲ</b> · Nominee <b>ಇದೆ</b>
+</p>
+</div>
+
+<p>ಇದು ಸರಿಸುಮಾರು default configuration. ಅರುಣ್ ಬಹಳ ಚೆನ್ನಾಗಿ ಉಳಿಸುತ್ತಿದ್ದಾನೆ — 32% savings rate ಭಾರತದ ಸರಾಸರಿಗಿಂತ ಎರಡು ಪಟ್ಟು. ಅವನ ಸ್ವಂತ ಅಭಿಪ್ರಾಯದಲ್ಲಿ ಅವನ plan ಅತ್ಯುತ್ತಮ. ಈಗ engine ಏನು ಹೇಳುತ್ತದೆ ನೋಡೋಣ.</p>
+
+<h3>ಎಲ್ಲ 13 rules ನ ಫಲಿತಾಂಶ</h3>
+
+<table>
+<thead><tr><th>Rule</th><th>Dimension</th><th class="num">W</th><th class="num">pass</th><th class="num">ಗಳಿಸಿದ್ದು</th><th class="num">ಕಳೆದಿದ್ದು</th></tr></thead>
+<tbody>
+<tr><td class="f">adequacy</td><td>Adequacy</td><td class="num">30</td><td class="num">1.00</td><td class="num">30.0</td><td class="num">0.0</td></tr>
+<tr><td class="f">ret length</td><td>Adequacy</td><td class="num">8</td><td class="num">1.00</td><td class="num">8.0</td><td class="num">0.0</td></tr>
+<tr><td class="f">savings rate</td><td>Adequacy</td><td class="num">7</td><td class="num">1.00</td><td class="num">7.0</td><td class="num">0.0</td></tr>
+<tr><td class="f">term life</td><td>Protection</td><td class="num">12</td><td class="num">0.56</td><td class="num">6.7</td><td class="num">5.3</td></tr>
+<tr><td class="f">health</td><td>Protection</td><td class="num">8</td><td class="num">1.00</td><td class="num">8.0</td><td class="num">0.0</td></tr>
+<tr><td class="f">emergency</td><td>Liquidity</td><td class="num">7</td><td class="num">0.40</td><td class="num">2.8</td><td class="num">4.2</td></tr>
+<tr><td class="f">EMI</td><td>Liquidity</td><td class="num">5</td><td class="num">0.60</td><td class="num">3.0</td><td class="num">2.0</td></tr>
+<tr><td class="f">equity</td><td>Allocation</td><td class="num">6</td><td class="num">0.83</td><td class="num">5.0</td><td class="num">1.0</td></tr>
+<tr><td class="f">concentration</td><td>Allocation</td><td class="num">4</td><td class="num">0.60</td><td class="num">2.4</td><td class="num">1.6</td></tr>
+<tr><td class="f">fee</td><td>Cost</td><td class="num">7</td><td class="num">0.47</td><td class="num">3.3</td><td class="num">3.7</td></tr>
+<tr><td class="f">will</td><td>Governance</td><td class="num">3</td><td class="num">0.00</td><td class="num">0.0</td><td class="num">3.0</td></tr>
+<tr><td class="f">nominees</td><td>Governance</td><td class="num">2</td><td class="num">1.00</td><td class="num">2.0</td><td class="num">0.0</td></tr>
+<tr><td class="f">realism</td><td>Governance</td><td class="num">3</td><td class="num">1.00</td><td class="num">3.0</td><td class="num">0.0</td></tr>
+</tbody>
+</table>
+
+<div class="big">
+  <span class="v">81 / 100</span>
+  <span class="l">ಅರುಣ್‌ನ Plan Score — ಹಸಿರು ವಲಯ, ಆದರೆ 19 points ಬಿದ್ದುಹೋಗಿವೆ</span>
+</div>
+
+<h3>Dimension ವಾರು ವಿಭಜನೆ</h3>
+
+<table>
+<thead><tr><th>Dimension</th><th class="num">ಗಳಿಸಿದ್ದು</th><th class="num">ಒಟ್ಟು</th><th class="num">%</th><th>ತೀರ್ಪು</th></tr></thead>
+<tbody>
+<tr><td class="f">Adequacy</td><td class="num">45.0</td><td class="num">45</td><td class="num">100</td><td>ಪರಿಪೂರ್ಣ</td></tr>
+<tr><td class="f">Protection</td><td class="num">14.7</td><td class="num">20</td><td class="num">73</td><td>Term cover ಸಾಲದು</td></tr>
+<tr><td class="f">Liquidity</td><td class="num">5.8</td><td class="num">12</td><td class="num">48</td><td>ಅತ್ಯಂತ ದುರ್ಬಲ ಕೊಂಡಿ</td></tr>
+<tr><td class="f">Allocation</td><td class="num">7.4</td><td class="num">10</td><td class="num">74</td><td>ಸ್ವೀಕಾರಾರ್ಹ</td></tr>
+<tr><td class="f">Cost</td><td class="num">3.3</td><td class="num">7</td><td class="num">47</td><td>Fee ಇಳಿಸಬಹುದು</td></tr>
+<tr><td class="f">Governance</td><td class="num">5.0</td><td class="num">6</td><td class="num">83</td><td>Will ಮಾತ್ರ ಬಾಕಿ</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಇಲ್ಲಿ ಮುಖ್ಯ ಒಳನೋಟ</span>
+  <p>ಅರುಣ್ Adequacy ನಲ್ಲಿ 100% — ಅವನ ಹಣ ಸಾಕಷ್ಟು ಸೇರುತ್ತದೆ. ಆದರೆ Liquidity 48% ಮತ್ತು Cost 47%. ಅಂದರೆ ಅವನ ದೂರದ ಭವಿಷ್ಯ ಭದ್ರ, ಆದರೆ <b>ಮುಂದಿನ 6 ತಿಂಗಳು ದುರ್ಬಲ</b>. ಅವನಿಗೆ ಈಗ ಕೆಲಸ ಹೋದರೆ 2.4 ತಿಂಗಳಲ್ಲಿ ಹಣ ಮುಗಿಯುತ್ತದೆ, ಆಗ ಅವನು ತನ್ನ ದೀರ್ಘಾವಧಿ corpus ಅನ್ನೇ ಒಡೆಯಬೇಕಾಗುತ್ತದೆ — ಬಹುಶಃ ಮಾರುಕಟ್ಟೆ ಕುಸಿದಿರುವಾಗ.</p>
+</div>
+
+<h3>ಸರಿಪಡಿಸುವ ಆದ್ಯತಾ ಪಟ್ಟಿ</h3>
+
+<p>ಕಳೆದುಕೊಂಡ points ಪ್ರಕಾರ ಜೋಡಿಸಿದರೆ:</p>
+
+<table>
+<thead><tr><th class="num">#</th><th>ಏನು ಮಾಡಬೇಕು</th><th class="num">Points</th><th>ವೆಚ್ಚ / ಶ್ರಮ</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Term cover ₹2Cr → ₹3.6Cr ಗೆ ಏರಿಸಿ</td><td class="num">+5.3</td><td>ವರ್ಷಕ್ಕೆ ~₹18,000 ಹೆಚ್ಚುವರಿ premium</td></tr>
+<tr><td class="num">2</td><td>Emergency fund ₹4L → ₹10L</td><td class="num">+4.2</td><td>₹6 ಲಕ್ಷ ಮರುಹಂಚಿಕೆ, 7–8 ತಿಂಗಳು</td></tr>
+<tr><td class="num">3</td><td>Fee 1.1% → 0.4% (direct plans)</td><td class="num">+3.7</td><td>ಒಂದು ವಾರಾಂತ್ಯದ ಕೆಲಸ, ₹0</td></tr>
+<tr><td class="num">4</td><td>Will ಬರೆದು ನೋಂದಾಯಿಸಿ</td><td class="num">+3.0</td><td>₹5,000–15,000, ಒಂದು ದಿನ</td></tr>
+<tr><td class="num">5</td><td>EMI ratio 18% → ಕಡಿಮೆ</td><td class="num">+2.0</td><td>ಸಾಲ prepay — ದೊಡ್ಡ ಶ್ರಮ</td></tr>
+<tr><td class="num">6</td><td>Concentration 18% → 10%</td><td class="num">+1.6</td><td>Rebalance, tax ಪರಿಣಾಮ ಇರಬಹುದು</td></tr>
+<tr><td class="num">7</td><td>Equity 65% → 62%</td><td class="num">+1.0</td><td>ಸಣ್ಣ ಹೊಂದಾಣಿಕೆ</td></tr>
+</tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">ಅತ್ಯುತ್ತಮ ಮೊದಲ ಮೂರು ಹೆಜ್ಜೆ</span>
+  <p>#3 (fee), #4 (will), #1 (term) — ಇವು ಒಟ್ಟು <b>+12 points</b>, ಮತ್ತು ಮೂರೂ ಸೇರಿ ವರ್ಷಕ್ಕೆ ₹18,000 ಗಿಂತ ಕಡಿಮೆ ವೆಚ್ಚ, ಒಂದು ವಾರಾಂತ್ಯದ ಶ್ರಮ. Score 81 → 93. ಇದಕ್ಕೆ ಹೋಲಿಸಿದರೆ #5 (ಸಾಲ prepay) ಗೆ ಲಕ್ಷಾಂತರ ರೂಪಾಯಿ ಬೇಕು ಮತ್ತು ಬರೀ 2 points ಸಿಗುತ್ತದೆ.</p>
+</div>
+
+<h3>ಸೂಕ್ಷ್ಮತೆ — ಒಂದೊಂದು input ಬದಲಿಸಿದರೆ ಏನಾಗುತ್ತದೆ</h3>
+
+<table>
+<thead><tr><th>ಬದಲಾವಣೆ</th><th class="num">ಹೊಸ Score</th><th class="num">Δ</th><th>ಏಕೆ</th></tr></thead>
+<tbody>
+<tr><td>Term cover ₹3.6Cr</td><td class="num">86.3</td><td class="num">+5.3</td><td>Protection 73% → 100%</td></tr>
+<tr><td>Emergency ₹10L</td><td class="num">85.2</td><td class="num">+4.2</td><td>6 ತಿಂಗಳ ಗುರಿ ತಲುಪುತ್ತದೆ</td></tr>
+<tr><td>Fee 0.4%</td><td class="num">84.7</td><td class="num">+3.7</td><td>Cost 47% → 93%</td></tr>
+<tr><td>Will ಸೇರಿಸಿ</td><td class="num">84.0</td><td class="num">+3.0</td><td>Governance 83% → 133 (clamp 100)</td></tr>
+<tr><td>ಎಲ್ಲ ನಾಲ್ಕೂ</td><td class="num">97.2</td><td class="num">+16.2</td><td>ಬಹುತೇಕ ಪರಿಪೂರ್ಣ</td></tr>
+<tr><td>Savings ₹40k ಗೆ ಇಳಿಸಿ</td><td class="num">73.4</td><td class="num">−7.6</td><td>ratio 1.90 → 1.02, savings rate 16%</td></tr>
+<tr><td>retireAge 55</td><td class="num">62.1</td><td class="num">−18.9</td><td>17 ವರ್ಷ ಸಂಗ್ರಹ, 35 ವರ್ಷ ಖರ್ಚು</td></tr>
+<tr><td>expReturn 16%</td><td class="num">78.0</td><td class="num">−3.0</td><td>realism rule ಶೂನ್ಯ — ನಿರೀಕ್ಷೆ ಅವಾಸ್ತವಿಕ</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಕೊನೆಯ ಸಾಲನ್ನು ಗಮನಿಸಿ</span>
+  <p>expReturn ಅನ್ನು 11.5% ರಿಂದ 16% ಗೆ ಏರಿಸಿದರೆ adequacy ratio ಹೆಚ್ಚಾಗುತ್ತದೆ (ಆದರೆ ಅದು ಈಗಾಗಲೇ clamp ಆಗಿ 1.00 ಇದೆ, ಆದ್ದರಿಂದ ಲಾಭವಿಲ್ಲ) ಆದರೆ realism rule ಸೊನ್ನೆಗೆ ಬೀಳುತ್ತದೆ. ಅಂದರೆ score <b>ಕಡಿಮೆಯಾಗುತ್ತದೆ</b>. ಇದು ಉದ್ದೇಶಪೂರ್ವಕ ವಿನ್ಯಾಸ — ನಿರೀಕ್ಷೆಗಳನ್ನು ಉಬ್ಬಿಸಿ score ಹೆಚ್ಚಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿಲ್ಲ.</p>
+</div>
+
+<h3>ಎರಡನೇ ಉದಾಹರಣೆ — ಸುನೀತಾ, ವಯಸ್ಸು 45, ವಿರುದ್ಧ ಚಿತ್ರ</h3>
+
+<div class="example">
+<h4>ಸುನೀತಾ — ರಕ್ಷಣೆ ಬಲವಾಗಿದೆ, ಹಣ ಸಾಲದು</h4>
+<p class="kv">
+ಸಂಬಳ <b>₹1,40,000</b> · ಖರ್ಚು <b>₹95,000</b> · EMI <b>₹0</b> · ಉಳಿತಾಯ <b>₹35,000</b><br>
+Corpus <b>₹42 ಲಕ್ಷ</b> · Emergency <b>₹8 ಲಕ್ಷ</b> · Term <b>₹2.2 ಕೋಟಿ</b> · Health <b>₹15 ಲಕ್ಷ</b><br>
+Equity <b>50%</b> · Largest <b>9%</b> · Fee <b>0.5%</b> · Will <b>ಇದೆ</b> · Nominee <b>ಇದೆ</b>
+</p>
+</div>
+
+<table>
+<thead><tr><th>Dimension</th><th class="num">%</th><th>ವಿವರಣೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">Adequacy</td><td class="num">52</td><td>15 ವರ್ಷ ಮಾತ್ರ ಸಂಗ್ರಹ, 25% ಉಳಿತಾಯ ದರ, corpus ratio ~0.82</td></tr>
+<tr><td class="f">Protection</td><td class="num">100</td><td>Term 13×, health ₹15L — ಎರಡೂ ಗುರಿ ಮೀರಿದೆ</td></tr>
+<tr><td class="f">Liquidity</td><td class="num">100</td><td>8.4 ತಿಂಗಳ fund, EMI ಸೊನ್ನೆ</td></tr>
+<tr><td class="f">Allocation</td><td class="num">92</td><td>Age 45 → suggested 55%, actual 50% — ಹತ್ತಿರ. Concentration 9% ಅತ್ಯುತ್ತಮ</td></tr>
+<tr><td class="f">Cost</td><td class="num">87</td><td>0.5% fee ಬಹಳ ಒಳ್ಳೆಯದು</td></tr>
+<tr><td class="f">Governance</td><td class="num">100</td><td>Will + nominee + ವಾಸ್ತವಿಕ ನಿರೀಕ್ಷೆ</td></tr>
+</tbody>
+</table>
+
+<div class="big">
+  <span class="v">76 / 100</span>
+  <span class="l">ಸುನೀತಾಳ Score — ಕೇಸರಿ ವಲಯ</span>
+</div>
+
+<p>ಸುನೀತಾ ಆರರಲ್ಲಿ ಐದು dimensions ನಲ್ಲಿ ಅರುಣ್‌ಗಿಂತ ಉತ್ತಮ. ಆದರೂ ಅವಳ score ಕಡಿಮೆ. ಏಕೆ? ಏಕೆಂದರೆ ಅವಳು ಸೋಲುತ್ತಿರುವ ಒಂದೇ dimension — Adequacy — 45 points ಹೊಂದಿದೆ. ಅವಳಿಗೆ 21.6 points ಅಲ್ಲಿಯೇ ಕಳೆದುಹೋಗಿದೆ.</p>
+
+<div class="warn">
+  <span class="lbl">ಇದೇ ಈ ತೂಕ ವ್ಯವಸ್ಥೆಯ ಉದ್ದೇಶ</span>
+  <p>ಸುನೀತಾಳ plan "ಅಚ್ಚುಕಟ್ಟು" — ಸಾಲವಿಲ್ಲ, ಒಳ್ಳೆಯ insurance, ಕಡಿಮೆ fee, will ಇದೆ. ಒಬ್ಬ advisor ಅವಳನ್ನು ಹೊಗಳುತ್ತಾನೆ. ಆದರೆ ಕಠಿಣ ಸತ್ಯ — ಅವಳು ₹35,000/ತಿಂಗಳು ಉಳಿಸಿ 60 ರಲ್ಲಿ ನಿವೃತ್ತಿ ಪಡೆಯಲಾರಳು. ಅವಳ ನಿಜವಾದ ಆಯ್ಕೆಗಳು: ಉಳಿತಾಯ ಹೆಚ್ಚಿಸು, ನಿವೃತ್ತಿ ಮುಂದೂಡು, ಅಥವಾ ನಿವೃತ್ತಿ ಖರ್ಚು ಕಡಿಮೆ ಮಾಡು. ಬೇರೆ insurance ಖರೀದಿಸುವುದರಿಂದ ಇದು ಸರಿಯಾಗುವುದಿಲ್ಲ.</p>
+</div>
+
+<h2 class="newpage">9. ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</h2>
+
+<h3>ನಿಯಮ 1 — Score ಅಲ್ಲ, findings ನೋಡಿ</h3>
+
+<p>ಎರಡು ಜನರಿಗೆ 76 ಬರಬಹುದು ಆದರೆ ಸಂಪೂರ್ಣ ಬೇರೆ ಕಾರಣಗಳಿಂದ. ಒಬ್ಬನಿಗೆ Adequacy ಸೊನ್ನೆ ಆದರೆ ಉಳಿದೆಲ್ಲ ಪೂರ್ಣ. ಇನ್ನೊಬ್ಬನಿಗೆ Adequacy ಪೂರ್ಣ ಆದರೆ ಉಳಿದೆಲ್ಲ ಅರ್ಧ. ಮೊದಲನೆಯವನ ಪರಿಸ್ಥಿತಿ ಹೆಚ್ಚು ಗಂಭೀರ — ಆದರೆ score ಒಂದೇ. <b>ಸಂಖ್ಯೆ ರೋಗನಿರ್ಣಯ ಅಲ್ಲ, ಬರೀ ಜ್ವರದ ಅಳತೆ.</b></p>
+
+<h3>ನಿಯಮ 2 — ದುರ್ಬಲ dimension ಮೊದಲು</h3>
+
+<p>ಒಂದು dimension 50% ಗಿಂತ ಕೆಳಗಿದ್ದರೆ ಅದನ್ನು ಮೊದಲು ನೋಡಿ, ಅದರ ತೂಕ ಎಷ್ಟೇ ಸಣ್ಣದಿರಲಿ. ಏಕೆಂದರೆ ಆರ್ಥಿಕ ಯೋಜನೆ ಒಂದು ಸರಪಳಿ — ಅತ್ಯಂತ ದುರ್ಬಲ ಕೊಂಡಿ ಒಡೆದಾಗ ಇಡೀ ಸರಪಳಿ ಒಡೆಯುತ್ತದೆ. ಅರುಣ್‌ನ Liquidity 48% — ಅವನ Adequacy 100% ಇದ್ದರೂ, ಒಂದು ದೀರ್ಘ ನಿರುದ್ಯೋಗ ಅವಧಿ ಅವನ ಆ 100% ಅನ್ನೇ ನಾಶ ಮಾಡುತ್ತದೆ.</p>
+
+<h3>ನಿಯಮ 3 — ವರ್ಷಕ್ಕೊಮ್ಮೆ ಓಡಿಸಿ, ಟ್ರೆಂಡ್ ನೋಡಿ</h3>
+
+<p>ಒಂದೇ ಬಾರಿಯ score ಸೀಮಿತ ಮೌಲ್ಯದ್ದು. ಪ್ರತಿ ವರ್ಷ ಏಪ್ರಿಲ್‌ನಲ್ಲಿ (ಹೊಸ FY ಆರಂಭದಲ್ಲಿ) ಓಡಿಸಿ. ದಿಕ್ಕು ಮುಖ್ಯ:</p>
+
+<table>
+<thead><tr><th>ಮಾದರಿ</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">ಪ್ರತಿ ವರ್ಷ ಏರುತ್ತಿದೆ</td><td>ಸರಿಯಾದ ದಿಕ್ಕು. ಸಾಮಾನ್ಯವಾಗಿ corpus ಬೆಳವಣಿಗೆ + ಸಾಲ ಇಳಿಕೆ.</td></tr>
+<tr><td class="f">ಸ್ಥಿರವಾಗಿದೆ</td><td>ಆದಾಯ ಮತ್ತು ಖರ್ಚು ಒಟ್ಟಿಗೆ ಬೆಳೆಯುತ್ತಿವೆ — lifestyle inflation. ತಪಾಸಣೆ ಬೇಕು.</td></tr>
+<tr><td class="f">ಇಳಿಯುತ್ತಿದೆ</td><td>ಗಂಭೀರ. ಸಾಮಾನ್ಯ ಕಾರಣಗಳು — ಹೊಸ ದೊಡ್ಡ EMI, ಖರ್ಚು ಏರಿಕೆ, ಅಥವಾ ವಯಸ್ಸು ಏರಿ ಉಳಿತಾಯ ಅವಧಿ ಕಡಿಮೆಯಾಗುತ್ತಿರುವುದು.</td></tr>
+</tbody>
+</table>
+
+<h3>ನಿಯಮ 4 — 100 ಗುರಿಯಲ್ಲ</h3>
+
+<p>100 ತಲುಪಲು ನೀವು 12× term cover, 6 ತಿಂಗಳ emergency fund, ಶೂನ್ಯ EMI, 0.3% fee, 10% concentration — ಎಲ್ಲವನ್ನೂ ಒಟ್ಟಿಗೆ ಸಾಧಿಸಬೇಕು. ಅದು ಸಾಧ್ಯ ಆದರೆ ಅಗತ್ಯವಿಲ್ಲ. <b>85+ ಒಂದು ಬಲವಾದ, ಬಾಳಿಕೆ ಬರುವ plan.</b> ಅದರಾಚೆಗಿನ ಪ್ರಯತ್ನ ಸಾಮಾನ್ಯವಾಗಿ ಜೀವನದ ಬೇರೆ ಭಾಗಗಳಿಂದ ಕಸಿದುಕೊಳ್ಳುತ್ತದೆ.</p>
+
+<h3>ನಿಯಮ 5 — ಎರಡು ಜನರ score ಹೋಲಿಸಬೇಡಿ</h3>
+
+<p>ಅರುಣ್ 81, ಸುನೀತಾ 76. ಅರುಣ್ "ಗೆದ್ದನೇ"? ಇಲ್ಲ. ಅವರಿಬ್ಬರ ಆದಾಯ, ವಯಸ್ಸು, ಜವಾಬ್ದಾರಿಗಳು ಬೇರೆ. Score ಒಬ್ಬ ವ್ಯಕ್ತಿಯ <b>ತನ್ನದೇ ಗುರಿಗಳ ವಿರುದ್ಧದ</b> ಅಳತೆ. ಇದನ್ನು ಸ್ಪರ್ಧೆಗೆ ಬಳಸಬೇಡಿ — ಸ್ವಂತ ಪ್ರಗತಿಗೆ ಬಳಸಿ.
+
+<h2 class="newpage">10. ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು</h2>
+
+<h4>ತಪ್ಪು 1 — ಆಶಾವಾದಿ ಸಂಖ್ಯೆಗಳನ್ನು ಹಾಕುವುದು</h4>
+<p>"ನಾನು ತಿಂಗಳಿಗೆ ₹80,000 ಉಳಿಸುತ್ತೇನೆ" — ಆದರೆ ವಾಸ್ತವದಲ್ಲಿ ಮೂರು ತಿಂಗಳಿಗೊಮ್ಮೆ ₹50,000 ಆಗುತ್ತದೆ. "ನನ್ನ ಖರ್ಚು ₹1,00,000" — ಆದರೆ ಪ್ರಯಾಣ, ಹಬ್ಬ, ದುರಸ್ತಿ ಸೇರಿಸಿದರೆ ₹1,35,000. ಈ calculator ನ ಔಟ್‌ಪುಟ್ ನಿಮ್ಮ ಇನ್‌ಪುಟ್‌ನಷ್ಟೇ ಪ್ರಾಮಾಣಿಕ. ಸುಳ್ಳು ಸಂಖ್ಯೆ ಹಾಕಿ ಒಳ್ಳೆಯ score ಪಡೆದರೆ ನೀವು ಮೋಸ ಮಾಡಿಕೊಂಡವರು ನೀವೇ.</p>
+
+<h4>ತಪ್ಪು 2 — ಸ್ವಂತ ಮನೆಯನ್ನು corpus ನಲ್ಲಿ ಸೇರಿಸುವುದು</h4>
+<p>₹1.5 ಕೋಟಿ ಮನೆ ಇದೆ ಎಂದು corpus 80L ಬದಲು 2.3 ಕೋಟಿ ಹಾಕುತ್ತಾರೆ. Score ಜಿಗಿಯುತ್ತದೆ. ಆದರೆ ನೀವು ಆ ಮನೆಯಲ್ಲೇ ವಾಸಿಸುತ್ತೀರಿ — ಅದನ್ನು ತಿಂಗಳ ದಿನಸಿಗೆ ಖರ್ಚು ಮಾಡಲಾರಿರಿ. ಬಾಡಿಗೆಗೆ ಕೊಟ್ಟಿರುವ ಎರಡನೇ ಆಸ್ತಿಯನ್ನು ಮಾತ್ರ ಸೇರಿಸಿ, ಮತ್ತು ಅದನ್ನೂ ವಾಸ್ತವಿಕ ಮಾರಾಟ ಬೆಲೆಯಲ್ಲಿ.</p>
+
+<h4>ತಪ್ಪು 3 — Employer health cover ಅನ್ನೇ ಪೂರ್ಣ ರಕ್ಷಣೆ ಎಂದು ಎಣಿಸುವುದು</h4>
+<p>ಕಂಪನಿ ₹10 ಲಕ್ಷ floater ಕೊಡುತ್ತದೆ, ಆದ್ದರಿಂದ health rule ಪೂರ್ಣ. ಆದರೆ ನೀವು ಕೆಲಸ ಬಿಟ್ಟ ಕ್ಷಣ ಅದು ಶೂನ್ಯ. 52 ವಯಸ್ಸಿನಲ್ಲಿ ಕೆಲಸ ಹೋದ ನಂತರ ಹೊಸ policy ತೆಗೆದುಕೊಂಡರೆ — ಹೆಚ್ಚಿನ premium, ಮತ್ತು ಮುಖ್ಯವಾಗಿ pre-existing conditions ಗೆ ಮತ್ತೆ 2–4 ವರ್ಷ waiting period. ಸ್ವಂತ personal policy ಯುವವಯಸ್ಸಿನಲ್ಲೇ ತೆಗೆದುಕೊಳ್ಳಿ.</p>
+
+<h4>ತಪ್ಪು 4 — ULIP ಅಥವಾ endowment cover ಅನ್ನು term ಎಂದು ಎಣಿಸುವುದು</h4>
+<p>"ನನ್ನ ಬಳಿ ₹50 ಲಕ್ಷ LIC policy ಇದೆ" — ಆದರೆ ಅದರ sum assured ಬಹುಶಃ ₹8 ಲಕ್ಷ, ಉಳಿದದ್ದು maturity value. Insurance ನ ಉದ್ದೇಶ ಸಾವಿನ ನಂತರ ಕುಟುಂಬಕ್ಕೆ ಹಣ. ಆ ಉದ್ದೇಶಕ್ಕೆ term policy ಮಾತ್ರ ಪರಿಣಾಮಕಾರಿ — ಒಂದೇ premium ನಲ್ಲಿ 10–15 ಪಟ್ಟು ಹೆಚ್ಚು cover.</p>
+
+<h4>ತಪ್ಪು 5 — Emergency fund ಅನ್ನು equity ನಲ್ಲಿ ಇಡುವುದು</h4>
+<p>"ನನ್ನ ₹10 ಲಕ್ಷ mutual fund ನಲ್ಲಿದೆ, ಬೇಕಾದಾಗ ತೆಗೆಯುತ್ತೇನೆ." ಸಮಸ್ಯೆ — ತುರ್ತು ಪರಿಸ್ಥಿತಿಗಳು ಸಾಮಾನ್ಯವಾಗಿ ಆರ್ಥಿಕ ಹಿಂಜರಿತದ ಜೊತೆ ಬರುತ್ತವೆ. ಕೆಲಸ ಹೋದಾಗ ಮಾರುಕಟ್ಟೆಯೂ 35% ಬಿದ್ದಿರುತ್ತದೆ. ಆಗ ನಿಮ್ಮ ₹10 ಲಕ್ಷ ₹6.5 ಲಕ್ಷ. Emergency fund liquid fund ಅಥವಾ sweep FD ನಲ್ಲಿರಬೇಕು — ಕಡಿಮೆ return ಎಂಬುದು ಅದರ ಬೆಲೆ, ಬಗ್ ಅಲ್ಲ.</p>
+
+<h4>ತಪ್ಪು 6 — expReturn ಅನ್ನು ಇತ್ತೀಚಿನ ಫಲಿತಾಂಶದಿಂದ ಹಾಕುವುದು</h4>
+<p>ಕಳೆದ ಮೂರು ವರ್ಷ portfolio 22% ಕೊಟ್ಟಿದೆ, ಆದ್ದರಿಂದ expReturn = 18% ಹಾಕುತ್ತಾರೆ. Realism rule ಶೂನ್ಯ ಕೊಡುತ್ತದೆ ಮತ್ತು ಅದು ಸರಿ. ದೀರ್ಘಾವಧಿ equity return ಸುಮಾರು 11–13%, inflation 6% — real 5–7%. ಇತ್ತೀಚಿನ ಅವಧಿಯ ಫಲಿತಾಂಶ 30 ವರ್ಷದ ಊಹೆಗೆ ಆಧಾರವಲ್ಲ.</p>
+
+<h4>ತಪ್ಪು 7 — ಸಣ್ಣ ತೂಕದ rules ಅನ್ನು ನಿರ್ಲಕ್ಷಿಸುವುದು</h4>
+<p>"Will ಗೆ ಬರೀ 3 points, ಬಿಡಿ." ಆದರೆ ಆ 3 points ಪಡೆಯಲು ಒಂದು ದಿನ ಮತ್ತು ₹10,000 ಸಾಕು. Adequacy ಯಲ್ಲಿ 3 points ಪಡೆಯಲು ವರ್ಷಗಟ್ಟಲೆ ಹೆಚ್ಚುವರಿ ಉಳಿತಾಯ ಬೇಕು. <b>Points per unit of effort</b> ನೋಡಿ — ಬರೀ points ಅಲ್ಲ.</p>
+
+<h4>ತಪ್ಪು 8 — ಒಮ್ಮೆ ಓಡಿಸಿ ಮರೆಯುವುದು</h4>
+<p>ಈ calculator ನ ಮೌಲ್ಯ ಪುನರಾವರ್ತನೆಯಲ್ಲಿದೆ. ನಿಮ್ಮ ಜೀವನ ಬದಲಾಗುತ್ತದೆ — ಮದುವೆ, ಮಗು, ಮನೆ, ಕೆಲಸ ಬದಲಾವಣೆ, ಪೋಷಕರ ಆರೋಗ್ಯ. ಪ್ರತಿ ದೊಡ್ಡ ಬದಲಾವಣೆಯ ನಂತರ ಮರು-ಓಡಿಸಿ. Score ಇಳಿದರೆ ಯಾವ rule ಬಿದ್ದಿದೆ ಎಂದು ನೋಡಿ ಸರಿಪಡಿಸಿ.</p>
+
+<h2 class="newpage">11. Quick Reference Card</h2>
+
+<h3>ಸೂತ್ರಗಳು</h3>
+
+<div class="formula">net       = expReturn − feeDrag
+retNet    = retirementReturn − feeDrag
+realRate  = (1 + retNet) / (1 + inflation) − 1
+
+fvAnnuity(pmt, r, n, g)     = pmt × [(1+r)ⁿ − (1+g)ⁿ] / (r − g)
+pvAnnuityReal(pmt, rr, n)   = pmt × [1 − (1+rr)⁻ⁿ] / rr
+
+corpusAtRet = corpus × (1+net)^yearsToRet
+            + fvAnnuity(monthlySavings×12, net, yearsToRet, savingsGrowth/100)
+
+required    = pvAnnuityReal(annualExpenseAtRet, realRate, retYears)
+ratio       = corpusAtRet / required
+
+score       = Σ (weightᵢ × passᵢ)
+</div>
+
+<h3>13 Rules — ಒಂದೇ ನೋಟದಲ್ಲಿ</h3>
+
+<table>
+<thead><tr><th>Rule</th><th>Dim</th><th class="num">W</th><th>ಪೂರ್ಣ ಅಂಕ ಪಡೆಯಲು</th></tr></thead>
+<tbody>
+<tr><td class="f">adequacy</td><td>Adeq</td><td class="num">30</td><td>ratio ≥ 1.0</td></tr>
+<tr><td class="f">ret length</td><td>Adeq</td><td class="num">8</td><td>ವಾಸ್ತವಿಕ lifeExpectancy (88–92)</td></tr>
+<tr><td class="f">savings rate</td><td>Adeq</td><td class="num">7</td><td>≥ 25% of income</td></tr>
+<tr><td class="f">term life</td><td>Prot</td><td class="num">12</td><td>≥ 12× annual income</td></tr>
+<tr><td class="f">health</td><td>Prot</td><td class="num">8</td><td>≥ ₹10 ಲಕ್ಷ</td></tr>
+<tr><td class="f">emergency</td><td>Liq</td><td class="num">7</td><td>≥ 6 ತಿಂಗಳ (ಖರ್ಚು + EMI)</td></tr>
+<tr><td class="f">EMI</td><td>Liq</td><td class="num">5</td><td>0% (45% ನಲ್ಲಿ ಸೊನ್ನೆ)</td></tr>
+<tr><td class="f">equity</td><td>Alloc</td><td class="num">6</td><td>≈ clamp(100 − age, 30, 85)</td></tr>
+<tr><td class="f">concentration</td><td>Alloc</td><td class="num">4</td><td>ಅತಿ ದೊಡ್ಡ holding ≤ 10%</td></tr>
+<tr><td class="f">fee</td><td>Cost</td><td class="num">7</td><td>≤ 0.3% ವಾರ್ಷಿಕ</td></tr>
+<tr><td class="f">will</td><td>Gov</td><td class="num">3</td><td>ನೋಂದಾಯಿತ ಉಯಿಲು</td></tr>
+<tr><td class="f">nominees</td><td>Gov</td><td class="num">2</td><td>ಎಲ್ಲ accounts ನಲ್ಲಿ nominee</td></tr>
+<tr><td class="f">realism</td><td>Gov</td><td class="num">3</td><td>real return ≈ 5% ಸಮೀಪ</td></tr>
+</tbody>
+</table>
+
+<h3>Score ಬಣ್ಣಗಳು</h3>
+
+<table>
+<thead><tr><th class="num">Score</th><th>ಬಣ್ಣ</th><th>ಮುಂದಿನ ಹೆಜ್ಜೆ</th></tr></thead>
+<tbody>
+<tr><td class="num">80–100</td><td>ಹಸಿರು</td><td>ವರ್ಷಕ್ಕೊಮ್ಮೆ ಪರಿಶೀಲಿಸಿ, ಸಣ್ಣ ಅಂತರ ಮುಚ್ಚಿ</td></tr>
+<tr><td class="num">60–79</td><td>ಕೇಸರಿ</td><td>ಅಗ್ರ 3 findings ಅನ್ನು 6 ತಿಂಗಳಲ್ಲಿ ಸರಿಪಡಿಸಿ</td></tr>
+<tr><td class="num">0–59</td><td>ಕೆಂಪು</td><td>ರಚನಾತ್ಮಕ ಪುನರ್ವಿನ್ಯಾಸ ಬೇಕು — ಉಳಿತಾಯ, ನಿವೃತ್ತಿ ವಯಸ್ಸು ಅಥವಾ ಖರ್ಚು</td></tr>
+</tbody>
+</table>
+
+<h3>ವಾರ್ಷಿಕ ಪರಿಶೀಲನಾ ಪಟ್ಟಿ (ಪ್ರತಿ ಏಪ್ರಿಲ್)</h3>
+
+<table>
+<thead><tr><th class="num">#</th><th>ಏನು ಪರಿಶೀಲಿಸಬೇಕು</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>ಕಳೆದ 12 ತಿಂಗಳ ಬ್ಯಾಂಕ್ statement ನೋಡಿ ನಿಜವಾದ ಖರ್ಚು ಮತ್ತು ಉಳಿತಾಯ ಲೆಕ್ಕ ಹಾಕಿ</td></tr>
+<tr><td class="num">2</td><td>Corpus ನ ಈಗಿನ ಮೌಲ್ಯ ಎಲ್ಲ accounts ಸೇರಿಸಿ ನವೀಕರಿಸಿ</td></tr>
+<tr><td class="num">3</td><td>ಆದಾಯ ಏರಿದ್ದರೆ term cover multiple ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ</td></tr>
+<tr><td class="num">4</td><td>Emergency fund ಖರ್ಚಿನ ಏರಿಕೆಗೆ ತಕ್ಕಂತೆ ಹೆಚ್ಚಿಸಿ</td></tr>
+<tr><td class="num">5</td><td>ಎಲ್ಲ funds ನ expense ratio ಪರಿಶೀಲಿಸಿ — regular plan ಸೇರಿಕೊಂಡಿದೆಯೇ ನೋಡಿ</td></tr>
+<tr><td class="num">6</td><td>Largest holding % ಮತ್ತೆ ಲೆಕ್ಕ ಹಾಕಿ — ಗಳಿಕೆಯಿಂದ ಅದು ಬೆಳೆದಿರಬಹುದು</td></tr>
+<tr><td class="num">7</td><td>Nominee ವಿವರ — ಮದುವೆ, ಜನನ, ಸಾವಿನ ನಂತರ ನವೀಕರಣ ಬೇಕೇ</td></tr>
+<tr><td class="num">8</td><td>Score ಅನ್ನು ಕಳೆದ ವರ್ಷದ್ದರ ಜೊತೆ ಹೋಲಿಸಿ ದಿಕ್ಕು ಗಮನಿಸಿ</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಅಂತಿಮ ಎಚ್ಚರಿಕೆ</span>
+  <p>ಈ calculator ಒಂದು ಶೈಕ್ಷಣಿಕ ಸಾಧನ. ಇದು ಒಬ್ಬ ವೃತ್ತಿಪರ ಆರ್ಥಿಕ ಸಲಹೆಗಾರ, ತೆರಿಗೆ ಸಲಹೆಗಾರ ಅಥವಾ ವಕೀಲರ ಬದಲಿ ಅಲ್ಲ. 13 rules ಮತ್ತು ಅವುಗಳ ತೂಕಗಳು ಸಾಮಾನ್ಯ ತತ್ವಗಳ ಮೇಲೆ ಆಧಾರಿತವಾಗಿವೆ — ಅವು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಪರಿಸ್ಥಿತಿ, ಕುಟುಂಬದ ಆರೋಗ್ಯ ಇತಿಹಾಸ, ವೃತ್ತಿ ಸ್ಥಿರತೆ, ಅಥವಾ ಆನುವಂಶಿಕ ಸಂಪತ್ತಿನ ನಿರೀಕ್ಷೆಗಳನ್ನು ತಿಳಿದಿಲ್ಲ. ಯಾವುದೇ ದೊಡ್ಡ ಆರ್ಥಿಕ ನಿರ್ಧಾರಕ್ಕೂ ಮೊದಲು ಅರ್ಹ ವೃತ್ತಿಪರರನ್ನು ಸಂಪರ್ಕಿಸಿ.</p>
+</div>
+
+<div class="footer-note">
+  Wealthoria · Plan Diagnostics Manual · ಶೈಕ್ಷಣಿಕ ಬಳಕೆಗೆ ಮಾತ್ರ · 2026-08
+</div>
+
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="kn"><head><meta charset="utf-8">
+<link rel="stylesheet" href="style.css">
+<title>LTCG Harvest Optimiser — Manual</title></head><body>
+
+<div class="cover">
+  <div class="kicker">Wealthoria Calculator Manual — 02</div>
+  <h1>LTCG Harvest<br>Optimiser</h1>
+  <div class="rule"></div>
+  <div class="sub">ಪ್ರತಿ ವರ್ಷ ₹1.25 ಲಕ್ಷ LTCG exemption<br>ಬಳಸದೆ ಬಿಟ್ಟರೆ ಅದು ಶಾಶ್ವತವಾಗಿ ಹೋಗುತ್ತದೆ.<br>ಎಷ್ಟು ಉಳಿಸಬಹುದು?</div>
+  <div class="meta">
+    ಸಂಪೂರ್ಣ ಬಳಕೆದಾರ ಕೈಪಿಡಿ · Kanglish<br>
+    s112A · s111A · s50AA · Surcharge · Rebate 87A<br>
+    FY 2026-27 (AY 2027-28)
+  </div>
+  <div class="badge">FOR EDUCATIONAL USE ONLY</div>
+</div>
+
+<div class="toc">
+<h2>ಪರಿವಿಡಿ / Contents</h2>
+<ol>
+<li>ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</li>
+<li>Tax harvesting ಎಂಬ ಕಲ್ಪನೆ — ಸರಳವಾಗಿ</li>
+<li>ಭಾರತೀಯ capital gains tax — FY 2026-27 ನಿಯಮಗಳು</li>
+<li>ಪ್ರತಿ Input field — ಪೂರ್ಣ ವಿವರಣೆ</li>
+<li>Harvest engine — ವರ್ಷಕ್ಕೊಮ್ಮೆ ಏನಾಗುತ್ತದೆ</li>
+<li>Income tax engine — slab, surcharge, cess, rebate</li>
+<li>ಪ್ರತಿ Output tab — ಏನು ಹೇಳುತ್ತದೆ</li>
+<li>Worked Example — ಪೂರ್ತಿ ಲೆಕ್ಕ</li>
+<li>ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</li>
+<li>ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು — Common Mistakes</li>
+<li>Quick Reference Card</li>
+</ol>
+</div>
+
+<h2>1. ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</h2>
+
+<p>ಭಾರತದಲ್ಲಿ equity ಮೇಲಿನ long-term capital gains (LTCG) ಗೆ ವರ್ಷಕ್ಕೆ <b>₹1,25,000</b> ವಿನಾಯಿತಿ ಇದೆ. ಈ ವಿನಾಯಿತಿ <b>ಪ್ರತಿ ಆರ್ಥಿಕ ವರ್ಷಕ್ಕೂ ಹೊಸದಾಗಿ</b> ಸಿಗುತ್ತದೆ — ಆದರೆ ಬಳಸದಿದ್ದರೆ ಮುಂದಿನ ವರ್ಷಕ್ಕೆ carry forward ಆಗುವುದಿಲ್ಲ. ಅದು ಹಾಗೇ ನಷ್ಟವಾಗುತ್ತದೆ.</p>
+
+<p>ಈ calculator ಎರಡು ಸನ್ನಿವೇಶಗಳನ್ನು ಹೋಲಿಸುತ್ತದೆ:</p>
+
+<table>
+<thead><tr><th style="width:26%">ಸನ್ನಿವೇಶ</th><th>ಏನಾಗುತ್ತದೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">Do nothing</td><td>ಏನೂ ಮಾಡದೆ ಕೂರುತ್ತೀರಿ. Horizon ಮುಗಿದ ಮೇಲೆ ಒಂದೇ ಬಾರಿ ಎಲ್ಲಾ ಮಾರುತ್ತೀರಿ. ಆಗ ಸಂಗ್ರಹವಾದ ಇಡೀ gain ಒಂದೇ ವರ್ಷದಲ್ಲಿ tax ಗೆ ಒಳಪಡುತ್ತದೆ — ಒಂದೇ ₹1.25L exemption ಸಿಗುತ್ತದೆ.</td></tr>
+<tr><td class="f">Harvest yearly</td><td>ಪ್ರತಿ ವರ್ಷ ₹1.25L gain ಆಗುವಷ್ಟು units ಮಾರಿ, ತಕ್ಷಣ ಮತ್ತೆ ಕೊಳ್ಳುತ್ತೀರಿ. Tax ಶೂನ್ಯ, ಆದರೆ ನಿಮ್ಮ <b>cost basis ಏರುತ್ತದೆ</b>. ಕೊನೆಯಲ್ಲಿ ಮಾರಿದಾಗ gain ಕಡಿಮೆ → tax ಕಡಿಮೆ.</td></tr>
+</tbody>
+</table>
+
+<p>ಇದರ ಜೊತೆಗೆ ಇದು ನಿಮ್ಮ <b>ಈ ವರ್ಷದ ಪೂರ್ಣ income tax</b> ಅನ್ನೂ ಲೆಕ್ಕ ಹಾಕುತ್ತದೆ — salary, other income, LTCG, STCG, debt gains ಎಲ್ಲಾ ಸೇರಿಸಿ, ಸರಿಯಾದ slab, surcharge, cess ಮತ್ತು rebate ಜೊತೆ.</p>
+
+<h2>2. Tax harvesting ಎಂಬ ಕಲ್ಪನೆ — ಸರಳವಾಗಿ</h2>
+
+<h3>2.1 ಒಂದು ಚಿಕ್ಕ ಉದಾಹರಣೆ</h3>
+
+<div class="example">
+<h4>ನೀವು ₹10 ಲಕ್ಷ ಹೂಡಿದ್ದೀರಿ, ಈಗ ಅದು ₹11.25 ಲಕ್ಷ</h4>
+<p class="kv">Unrealised gain = ₹1,25,000 — ನಿಖರವಾಗಿ exemption ಮಿತಿ.</p>
+<p><b>ನೀವು ಏನೂ ಮಾಡದಿದ್ದರೆ:</b> ಈ ₹1.25L gain ನಿಮ್ಮ portfolio ನಲ್ಲೇ ಉಳಿಯುತ್ತದೆ. ಮುಂದಿನ ವರ್ಷ ಅದು ₹2.5L ಆಗಬಹುದು — ಆಗ ₹1.25L ಮೇಲಿನದಕ್ಕೆ tax.</p>
+<p><b>ನೀವು harvest ಮಾಡಿದರೆ:</b> ಇಡೀ ₹11.25L ಮಾರಿ, ₹1.25L gain book ಮಾಡಿ (tax = ₹0, ಯಾಕೆಂದರೆ exemption), ಮತ್ತು ಅದೇ ದಿನ ₹11.25L ಗೆ ಮತ್ತೆ ಕೊಳ್ಳಿ. ಈಗ ನಿಮ್ಮ <b>ಹೊಸ cost basis = ₹11.25L</b>. ಆ ₹1.25L gain ಶಾಶ್ವತವಾಗಿ tax-free ಆಯಿತು.</p>
+</div>
+
+<p>ಇದನ್ನು ಪ್ರತಿ ವರ್ಷ 15 ವರ್ಷ ಮಾಡಿದರೆ ನೀವು 15 x ₹1.25L = <b>₹18.75 ಲಕ್ಷ gain</b> ಅನ್ನು ಸಂಪೂರ್ಣ tax-free ಮಾಡಿಕೊಳ್ಳುತ್ತೀರಿ. 12.5% rate ನಲ್ಲಿ ಅದು ಸುಮಾರು <b>₹2.44 ಲಕ್ಷ ಉಳಿತಾಯ</b> (cess ಸೇರಿಸಿ ₹2.53L).</p>
+
+<h3>2.2 ಇದು ಕಾನೂನುಬದ್ಧವೇ?</h3>
+
+<p>ಹೌದು. ಇದು tax <b>avoidance</b> ಅಲ್ಲ, ಇದು <b>tax-efficient realisation timing</b>. ನೀವು ನಿಜವಾಗಿ units ಮಾರುತ್ತಿದ್ದೀರಿ, ನಿಜವಾಗಿ gain book ಮಾಡುತ್ತಿದ್ದೀರಿ, ಮತ್ತು ನಿಜವಾಗಿ ITR ನಲ್ಲಿ ತೋರಿಸುತ್ತಿದ್ದೀರಿ. ಸರ್ಕಾರ ಕೊಟ್ಟ exemption ಅನ್ನು ಬಳಸುತ್ತಿದ್ದೀರಿ ಅಷ್ಟೇ.</p>
+
+<div class="warn"><span class="lbl">ಆದರೆ ಗಮನಿಸಿ</span>
+<p>ಭಾರತದಲ್ಲಿ equity ಗೆ "wash sale" ನಿಯಮ <b>ಇಲ್ಲ</b> (ಅಮೆರಿಕದಂತೆ 30-day rule ಇಲ್ಲ). ಆದರೆ ನೀವು ಮಾರಿ ಮತ್ತೆ ಕೊಳ್ಳುವಾಗ ಹೊಸ holding period ಆರಂಭವಾಗುತ್ತದೆ. ಅಂದರೆ ಮುಂದಿನ 12 ತಿಂಗಳು ಆ units ಮಾರಿದರೆ ಅದು <b>STCG (20%)</b> ಆಗುತ್ತದೆ, LTCG ಅಲ್ಲ. ಆದ್ದರಿಂದ harvest ಮಾಡುವ ದಿನಾಂಕವನ್ನು ಜಾಗ್ರತೆಯಿಂದ ಆಯ್ಕೆ ಮಾಡಿ.</p></div>
+
+<h3>2.3 ಎಲ್ಲಿ ಇದು ಕೆಲಸ ಮಾಡುವುದಿಲ್ಲ</h3>
+
+<ul>
+<li><b>Unrealised gain ₹1.25L ಗಿಂತ ಕಡಿಮೆ ಇದ್ದರೆ</b> — ನೀವು ಇರುವಷ್ಟನ್ನೇ harvest ಮಾಡಬಹುದು, exemption ನ ಉಳಿದ ಭಾಗ ವ್ಯರ್ಥ.</li>
+<li><b>ನೀವು ಈಗಾಗಲೇ ಬೇರೆ LTCG book ಮಾಡಿದ್ದರೆ</b> — exemption ಇಡೀ ವರ್ಷಕ್ಕೆ ಒಟ್ಟು, ಪ್ರತಿ fund ಗೆ ಅಲ್ಲ.</li>
+<li><b>Exit load ಇದ್ದರೆ</b> — ಕೆಲವು funds ನಲ್ಲಿ 1 ವರ್ಷದೊಳಗೆ ಮಾರಿದರೆ 1% exit load. Harvest ನ ಲಾಭಕ್ಕಿಂತ ಹೆಚ್ಚಾಗಬಹುದು.</li>
+<li><b>ELSS lock-in ನಲ್ಲಿ ಇದ್ದರೆ</b> — 3 ವರ್ಷ ಮುಗಿಯುವವರೆಗೆ ಮಾರಲಾಗದು.</li>
+</ul>
+
+<h2 class="newpage">3. ಭಾರತೀಯ capital gains tax — FY 2026-27</h2>
+
+<p>ಈ calculator ಬಳಸುವ ನಿಖರ ನಿಯಮಗಳು ಇಲ್ಲಿವೆ. ಇವು 2024 ರ Budget ನಂತರದ ನಿಯಮಗಳು.</p>
+
+<h3>3.1 Capital gains rates</h3>
+
+<table>
+<thead><tr><th style="width:22%">ವಿಧ</th><th style="width:16%">Section</th><th style="width:14%">Rate</th><th>ವಿವರ</th></tr></thead>
+<tbody>
+<tr><td class="f">Equity LTCG</td><td>s112A</td><td class="num">12.5%</td><td>12 ತಿಂಗಳಿಗಿಂತ ಹೆಚ್ಚು ಹಿಡಿದ listed equity / equity MF. ವರ್ಷಕ್ಕೆ ₹1,25,000 ವಿನಾಯಿತಿ. Indexation ಇಲ್ಲ.</td></tr>
+<tr><td class="f">Equity STCG</td><td>s111A</td><td class="num">20%</td><td>12 ತಿಂಗಳಿಗಿಂತ ಕಡಿಮೆ. ಯಾವುದೇ ವಿನಾಯಿತಿ ಇಲ್ಲ.</td></tr>
+<tr><td class="f">Debt fund gains</td><td>s50AA</td><td class="num">Slab</td><td>ಏಪ್ರಿಲ್ 2023 ನಂತರ ಕೊಂಡ specified mutual funds — ಎಷ್ಟೇ ಕಾಲ ಹಿಡಿದರೂ ನಿಮ್ಮ slab rate ನಲ್ಲಿ tax.</td></tr>
+<tr><td class="f">Cess</td><td>—</td><td class="num">4%</td><td>ಎಲ್ಲಾ tax + surcharge ಮೇಲೆ Health &amp; Education Cess.</td></tr>
+</tbody>
+</table>
+
+<h3>3.2 Income tax slabs — New Regime (FY 2026-27)</h3>
+
+<table>
+<thead><tr><th style="width:44%">Income slab</th><th>Rate</th></tr></thead>
+<tbody>
+<tr><td>₹0 – ₹4,00,000</td><td class="num">0%</td></tr>
+<tr><td>₹4,00,001 – ₹8,00,000</td><td class="num">5%</td></tr>
+<tr><td>₹8,00,001 – ₹12,00,000</td><td class="num">10%</td></tr>
+<tr><td>₹12,00,001 – ₹16,00,000</td><td class="num">15%</td></tr>
+<tr><td>₹16,00,001 – ₹20,00,000</td><td class="num">20%</td></tr>
+<tr><td>₹20,00,001 – ₹24,00,000</td><td class="num">25%</td></tr>
+<tr><td>₹24,00,000 ಮೇಲೆ</td><td class="num">30%</td></tr>
+</tbody>
+</table>
+
+<h3>3.3 Income tax slabs — Old Regime</h3>
+
+<table>
+<thead><tr><th style="width:40%">Slab</th><th style="width:20%">60 ವರ್ಷ ಕೆಳಗೆ</th><th style="width:20%">Senior (60–80)</th><th>Super senior (80+)</th></tr></thead>
+<tbody>
+<tr><td>Exemption limit</td><td class="num">₹2,50,000</td><td class="num">₹3,00,000</td><td class="num">₹5,00,000</td></tr>
+<tr><td>5% ವರೆಗೆ</td><td class="num">₹5,00,000</td><td class="num">₹5,00,000</td><td>—</td></tr>
+<tr><td>20% ವರೆಗೆ</td><td class="num">₹10,00,000</td><td class="num">₹10,00,000</td><td class="num">₹10,00,000</td></tr>
+<tr><td>30% ಮೇಲೆ</td><td class="num">₹10L+</td><td class="num">₹10L+</td><td class="num">₹10L+</td></tr>
+</tbody>
+</table>
+
+<h3>3.4 Surcharge</h3>
+
+<div class="formula"><span class="c">// Total income ನ ಆಧಾರದ ಮೇಲೆ</span>
+&gt; ₹5 ಕೋಟಿ   →  new regime: 25%  |  old regime: 37%
+&gt; ₹2 ಕೋಟಿ   →  25%
+&gt; ₹1 ಕೋಟಿ   →  15%
+&gt; ₹50 ಲಕ್ಷ   →  10%
+
+<span class="c">// ಆದರೆ — ಮುಖ್ಯ ನಿಯಮ:</span>
+s111A ಮತ್ತು s112A gains ಮೇಲಿನ surcharge <span class="k">15% ಗೆ cap</span>
+   srCG = min(surchargeRate, 0.15)</div>
+
+<p>ಈ cap ಮುಖ್ಯ. ನಿಮ್ಮ ಒಟ್ಟು income ₹3 ಕೋಟಿ ಆಗಿ 25% surcharge ಬರುತ್ತಿದ್ದರೂ, ನಿಮ್ಮ equity gains ಮೇಲೆ ಗರಿಷ್ಠ 15% ಮಾತ್ರ. ಉಳಿದ income ಮೇಲೆ 25%.</p>
+
+<h3>3.5 Rebate u/s 87A</h3>
+
+<div class="formula">New regime: total income &lt;= ₹12,00,000
+    →  rebate = min(slab tax, ₹60,000)
+
+Old regime: total income &lt;= ₹5,00,000
+    →  rebate = min(slab tax, ₹12,500)
+
+<span class="c">// ಗಮನಿಸಿ: rebate ಸಿಗುವುದು slab income ಮೇಲಿನ tax ಗೆ ಮಾತ್ರ.
+// Special-rate gains (LTCG/STCG) ಮೇಲಿನ tax ಗೆ rebate ಸಿಗುವುದಿಲ್ಲ.</span></div>
+
+<h2 class="newpage">4. ಪ್ರತಿ Input field — ಪೂರ್ಣ ವಿವರಣೆ</h2>
+
+<h3>4.1 Portfolio inputs</h3>
+
+<table>
+<thead><tr><th style="width:26%">Field</th><th style="width:15%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಪರಿಣಾಮ</th></tr></thead>
+<tbody>
+<tr><td class="f">Equity corpus (₹)</td><td class="num">50,00,000</td><td>ಈಗಿನ market value. Harvest ಮಾಡಬಹುದಾದ equity holdings ಮಾತ್ರ (ELSS lock-in ಇರುವುದನ್ನು ಬಿಡಿ).</td></tr>
+<tr><td class="f">Cost basis (₹)</td><td class="num">30,00,000</td><td>ನೀವು ಕೊಂಡ ಒಟ್ಟು ಬೆಲೆ. ಇದನ್ನು CAMS/KFin capital gains statement ಇಂದ ತೆಗೆದುಕೊಳ್ಳಿ. <b>Unrealised gain = corpus − cost basis = ₹20L.</b></td></tr>
+<tr><td class="f">Expected growth (%)</td><td class="num">12</td><td>ವರ್ಷಕ್ಕೆ ನಿಮ್ಮ equity ಎಷ್ಟು ಬೆಳೆಯುತ್ತದೆ. ಇದು deterministic — ಇಲ್ಲಿ randomness ಇಲ್ಲ, ಯಾಕೆಂದರೆ ಇದು tax planning tool, market simulator ಅಲ್ಲ.</td></tr>
+<tr><td class="f">Horizon (years)</td><td class="num">15</td><td>ಎಷ್ಟು ವರ್ಷ harvest ಮಾಡುತ್ತೀರಿ. ಇದೇ ನಿಮ್ಮ ಒಟ್ಟು ಉಳಿತಾಯವನ್ನು ನಿರ್ಧರಿಸುತ್ತದೆ — ಹೆಚ್ಚು ವರ್ಷ = ಹೆಚ್ಚು exemption ಬಳಕೆ.</td></tr>
+<tr><td class="f">Transaction friction (bps)</td><td class="num">20</td><td>ಮಾರಿ ಮತ್ತೆ ಕೊಳ್ಳುವಾಗ ಆಗುವ ನಷ್ಟ — STT, brokerage, bid-ask spread, NAV ವ್ಯತ್ಯಾಸ. 20 bps = 0.20%. ಇದು ನೇರವಾಗಿ ನಿಮ್ಮ corpus ಇಂದ ಕಳೆಯಲ್ಪಡುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<div class="tip"><span class="lbl">Friction ಬಗ್ಗೆ</span>
+<p>Direct MF ನಲ್ಲಿ redemption ಗೆ brokerage ಇಲ್ಲ, STT 0.001%. ಆದ್ದರಿಂದ 5–20 bps ಸಾಕು. Stocks ನಲ್ಲಿ ಮಾಡಿದರೆ STT 0.1% ಎರಡೂ ಕಡೆ + brokerage → 30–50 bps ಹಾಕಿ. Friction ಹೆಚ್ಚಾದಷ್ಟು harvesting ನ ಲಾಭ ಕರಗುತ್ತದೆ.</p></div>
+
+<h3>4.2 Tax profile inputs</h3>
+
+<table>
+<thead><tr><th style="width:26%">Field</th><th style="width:15%">Default</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">Tax regime</td><td class="num">New</td><td>New ಅಥವಾ Old. New regime ನಲ್ಲಿ deductions ಬಹುತೇಕ ಇಲ್ಲ ಆದರೆ slabs ಉದಾರ. Old ನಲ್ಲಿ 80C, 80D, HRA ಇತ್ಯಾದಿ.</td></tr>
+<tr><td class="f">Age band</td><td class="num">Below 60</td><td>Old regime ನಲ್ಲಿ ಮಾತ್ರ ಪ್ರಭಾವ — senior citizens ಗೆ ಹೆಚ್ಚಿನ exemption limit. New regime ನಲ್ಲಿ ವಯಸ್ಸಿನ ವ್ಯತ್ಯಾಸ ಇಲ್ಲ.</td></tr>
+<tr><td class="f">Has salary income</td><td class="num">Yes</td><td>ON ಆದರೆ standard deduction ಅನ್ವಯ (new regime ₹75,000, old ₹50,000).</td></tr>
+<tr><td class="f">Other income (₹)</td><td class="num">15,00,000</td><td>Salary + interest + rent + business — capital gains ಬಿಟ್ಟು ಎಲ್ಲಾ.</td></tr>
+<tr><td class="f">Deductions (₹)</td><td class="num">2,00,000</td><td>80C, 80D, 80CCD(1B) ಇತ್ಯಾದಿ. Old regime ನಲ್ಲಿ ಮಾತ್ರ ಪೂರ್ಣ ಪ್ರಯೋಜನ.</td></tr>
+<tr><td class="f">Debt fund gains (₹)</td><td class="num">0</td><td>s50AA ಅಡಿ slab rate ನಲ್ಲಿ tax ಆಗುವ gains. ಇವು ನಿಮ್ಮ ordinary income ಗೆ ಸೇರುತ್ತವೆ.</td></tr>
+<tr><td class="f">Short-term gains (₹)</td><td class="num">0</td><td>s111A ಅಡಿ 20% ನಲ್ಲಿ tax ಆಗುವ equity STCG.</td></tr>
+</tbody>
+</table>
+
+<h2>5. Harvest engine — ವರ್ಷಕ್ಕೊಮ್ಮೆ ಏನಾಗುತ್ತದೆ</h2>
+
+<p>ಪ್ರತಿ ವರ್ಷ, ಈ ಕ್ರಮದಲ್ಲಿ:</p>
+
+<div class="formula"><span class="c">// vB = value basis (ಈಗಿನ market value)
+// cB = cost basis</span>
+
+<span class="k">1.</span> unrealised = max(0, vB − cB)
+
+<span class="k">2.</span> harvest = min(unrealised, 1,25,000)
+       <span class="c">// exemption ಮಿತಿಗಿಂತ ಹೆಚ್ಚು harvest ಮಾಡುವುದಿಲ್ಲ</span>
+
+<span class="k">3.</span> sellValue = harvest x (vB / unrealised)
+       <span class="c">// ₹1.25L gain book ಮಾಡಲು ಎಷ್ಟು ಮೊತ್ತದ units ಮಾರಬೇಕು</span>
+
+<span class="k">4.</span> cost = sellValue x friction
+       <span class="c">// ವಹಿವಾಟಿನ ವೆಚ್ಚ</span>
+
+<span class="k">5.</span> vB = vB − cost          <span class="c">// ವೆಚ್ಚ portfolio ಇಂದ ಹೋಗುತ್ತದೆ</span>
+   cB = cB + harvest − cost <span class="c">// cost basis ಏರುತ್ತದೆ (step-up)</span>
+
+<span class="k">6.</span> vB = vB x (1 + growth)  <span class="c">// ವರ್ಷದ ಬೆಳವಣಿಗೆ</span></div>
+
+<h3>5.1 ಹಂತ 3 ಅನ್ನು ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳುವುದು</h3>
+
+<p>ಇದು ಅತ್ಯಂತ ಮುಖ್ಯ ಸಾಲು. ನೀವು ₹1.25L <b>gain</b> book ಮಾಡಬೇಕು, ಆದರೆ ₹1.25L <b>ಮೌಲ್ಯದ</b> units ಮಾರಿದರೆ ಸಾಕಾಗುವುದಿಲ್ಲ — ಯಾಕೆಂದರೆ ಆ ಮೊತ್ತದಲ್ಲಿ ಒಂದು ಭಾಗ ಮಾತ್ರ gain, ಉಳಿದದ್ದು ನಿಮ್ಮ ಮೂಲ ಬಂಡವಾಳ.</p>
+
+<div class="example">
+<h4>ಲೆಕ್ಕ</h4>
+<p class="kv">vB = ₹50,00,000 · cB = ₹30,00,000 · unrealised = ₹20,00,000<br>
+Gain fraction = 20L / 50L = <b>40%</b> — ಅಂದರೆ ನೀವು ಮಾರುವ ಪ್ರತಿ ₹100 ರಲ್ಲಿ ₹40 gain.</p>
+<p class="kv">₹1,25,000 gain ಬೇಕಾದರೆ ಮಾರಬೇಕಾದ ಮೊತ್ತ:<br>
+sellValue = 1,25,000 x (50,00,000 / 20,00,000) = <b>₹3,12,500</b></p>
+<p class="kv">ಪರಿಶೀಲನೆ: ₹3,12,500 ನ 40% = ₹1,25,000 ✓</p>
+</div>
+
+<h3>5.2 Exit ನಲ್ಲಿ ಏನಾಗುತ್ತದೆ</h3>
+
+<div class="formula"><span class="c">// Horizon ಮುಗಿದ ಮೇಲೆ ಎರಡೂ ಸನ್ನಿವೇಶಗಳಲ್ಲಿ ಎಲ್ಲಾ ಮಾರುತ್ತೇವೆ</span>
+
+gain  = finalValue − finalCostBasis
+taxable = max(0, gain − 1,25,000)
+tax   = taxable x 0.125 x 1.04     <span class="c">// 12.5% + 4% cess</span>
+
+<span class="k">ಉಳಿತಾಯ</span> = tax(do nothing) − tax(harvest) − ಒಟ್ಟು friction ವೆಚ್ಚ</div>
+
+<div class="note"><span class="lbl">ಪ್ರಾಮಾಣಿಕ ಹೋಲಿಕೆ</span>
+<p>ಈ calculator ನ ಒಂದು ಒಳ್ಳೆಯ ಗುಣ — ಅದು harvesting ನ friction ವೆಚ್ಚವನ್ನು ಮರೆಮಾಚುವುದಿಲ್ಲ. 15 ವರ್ಷ ಪ್ರತಿ ವರ್ಷ ₹3L+ ಮಾರಿ ಕೊಂಡರೆ ಆ 0.2% ವೆಚ್ಚ ಸೇರುತ್ತಾ ಹೋಗುತ್ತದೆ. ನಿಜವಾದ ಉಳಿತಾಯ = tax ಉಳಿತಾಯ <b>ಮೈನಸ್</b> ಈ ವೆಚ್ಚ.</p></div>
+
+<h2 class="newpage">6. Income tax engine — ಈ ವರ್ಷದ ಪೂರ್ಣ ಲೆಕ್ಕ</h2>
+
+<p>"This year's tax" tab ಇಡೀ ITR ಅನ್ನು ಒಂದು ಪುಟದಲ್ಲಿ ಮಾಡಿ ತೋರಿಸುತ್ತದೆ. ಕ್ರಮ ಹೀಗಿದೆ:</p>
+
+<div class="formula"><span class="k">ಹಂತ 1 — ಆದಾಯ ವಿಂಗಡಣೆ</span>
+  ordinaryIncome = otherIncome + debtGain
+  specialIncome  = ltcgTaxable + stcg
+
+<span class="k">ಹಂತ 2 — Deductions</span>
+  standardDeduction = hasSalary ? (new ? 75000 : 50000) : 0
+  taxableOrdinary = ordinaryIncome − standardDeduction − deductions
+     <span class="c">// new regime ನಲ್ಲಿ ಹೆಚ್ಚಿನ deductions ಅನ್ವಯವಾಗುವುದಿಲ್ಲ</span>
+
+<span class="k">ಹಂತ 3 — Slab tax</span>
+  slabTax = ಪ್ರತಿ slab ಗೆ ಅನ್ವಯಿಸಿ ಸೇರಿಸು
+
+<span class="k">ಹಂತ 4 — Special rate tax</span>
+  ltcgTax = max(0, ltcg − 1,25,000) x 0.125
+  stcgTax = stcg x 0.20
+
+<span class="k">ಹಂತ 5 — Rebate 87A</span>
+  new &amp;&amp; totalIncome &lt;= 12,00,000 → rebate = min(slabTax, 60,000)
+  old &amp;&amp; totalIncome &lt;= 5,00,000  → rebate = min(slabTax, 12,500)
+  slabTax = slabTax − rebate
+
+<span class="k">ಹಂತ 6 — Surcharge</span>
+  sr   = totalIncome ಆಧರಿಸಿ (10/15/25/37%)
+  srCG = min(sr, 0.15)              <span class="c">// gains ಗೆ cap</span>
+  surcharge = slabTax x sr + (ltcgTax + stcgTax) x srCG
+
+<span class="k">ಹಂತ 7 — Cess</span>
+  totalBeforeCess = slabTax + ltcgTax + stcgTax + surcharge
+  <span class="k">finalTax = totalBeforeCess x 1.04</span></div>
+
+<h3>6.1 ಯಾಕೆ ಈ ವಿಂಗಡಣೆ ಮುಖ್ಯ</h3>
+
+<p>ಬಹಳ ಜನ ತಪ್ಪಾಗಿ ತಿಳಿಯುತ್ತಾರೆ — "ನನ್ನ income ₹15 ಲಕ್ಷ, ನಾನು 30% slab ನಲ್ಲಿ ಇದ್ದೇನೆ, ಆದ್ದರಿಂದ ನನ್ನ LTCG ಗೂ 30% tax". <b>ಇಲ್ಲ.</b> LTCG ಗೆ ಯಾವಾಗಲೂ 12.5% — ನಿಮ್ಮ slab ಏನೇ ಇರಲಿ. ಅದೇ ರೀತಿ STCG ಗೆ 20%.</p>
+
+<p>ಆದರೆ ವಿರುದ್ಧ ದಿಕ್ಕಿನಲ್ಲಿ ಒಂದು ಸೂಕ್ಷ್ಮತೆ ಇದೆ: <b>capital gains ನಿಮ್ಮ total income ಗೆ ಸೇರುತ್ತವೆ</b> — ಮತ್ತು ಆ total income ಆಧಾರದ ಮೇಲೆ surcharge ನಿರ್ಧಾರವಾಗುತ್ತದೆ. ಅಂದರೆ ದೊಡ್ಡ gain book ಮಾಡಿದರೆ ನಿಮ್ಮ <i>ಎಲ್ಲಾ</i> income ಮೇಲೆ surcharge ಬೀಳಬಹುದು.</p>
+
+<h2>7. ಪ್ರತಿ Output tab — ಏನು ಹೇಳುತ್ತದೆ</h2>
+
+<h3>7.1 Tab "Harvest plan"</h3>
+
+<table>
+<thead><tr><th style="width:36%">Output</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">Harvest this year</td><td>ಈ ವರ್ಷ book ಮಾಡಬೇಕಾದ gain — ಸಾಮಾನ್ಯವಾಗಿ ₹1,25,000 (ಅಥವಾ ನಿಮ್ಮ unrealised gain ಅದಕ್ಕಿಂತ ಕಡಿಮೆ ಇದ್ದರೆ ಅಷ್ಟು).</td></tr>
+<tr><td class="f">Units to sell (₹ value)</td><td>ಆ gain ಪಡೆಯಲು ಮಾರಬೇಕಾದ ಮೊತ್ತ. ಇದನ್ನೇ ನೀವು ನಿಜವಾಗಿ redemption request ನಲ್ಲಿ ಹಾಕುತ್ತೀರಿ.</td></tr>
+<tr><td class="f">Tax on this harvest</td><td>₹0 ಆಗಿರಬೇಕು — ಯಾಕೆಂದರೆ ನೀವು exemption ಒಳಗೆ ಇದ್ದೀರಿ. ಇದು ₹0 ಗಿಂತ ಹೆಚ್ಚಿದ್ದರೆ ನೀವು ಈಗಾಗಲೇ ಬೇರೆ LTCG ಹಾಕಿದ್ದೀರಿ.</td></tr>
+<tr><td class="f">Total tax saved</td><td>Horizon ಮುಗಿದ ಮೇಲೆ do-nothing vs harvest ನ tax ವ್ಯತ್ಯಾಸ. <b>ಇದೇ ಮುಖ್ಯ ಸಂಖ್ಯೆ.</b></td></tr>
+<tr><td class="f">Total friction cost</td><td>15 ವರ್ಷದ ಒಟ್ಟು ವಹಿವಾಟು ವೆಚ್ಚ. ಇದನ್ನು ಉಳಿತಾಯದಿಂದ ಕಳೆಯಿರಿ.</td></tr>
+<tr><td class="f">Net benefit</td><td>ಉಳಿತಾಯ − ವೆಚ್ಚ. ಇದು ಋಣಾತ್ಮಕ ಆದರೆ harvesting ಮಾಡಬೇಡಿ.</td></tr>
+</tbody>
+</table>
+
+<h3>7.2 Tab "This year's tax"</h3>
+
+<p>ಇಲ್ಲಿ ನಿಮ್ಮ ಪೂರ್ಣ tax ವಿಭಜನೆ ಇರುತ್ತದೆ — ordinary income tax, LTCG tax, STCG tax, surcharge, cess, ಮತ್ತು effective tax rate. ಇದನ್ನು ಬಳಸಿ ನೀವು ಎರಡು ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರ ಕಂಡುಕೊಳ್ಳಬಹುದು:</p>
+
+<ul>
+<li><b>New vs Old regime — ಯಾವುದು ಒಳ್ಳೆಯದು?</b> Regime toggle ಮಾಡಿ ಎರಡೂ ಸಂಖ್ಯೆ ಬರೆದುಕೊಳ್ಳಿ.</li>
+<li><b>ನಾನು ₹50L ಗಡಿ ದಾಟುತ್ತಿದ್ದೇನೆಯೇ?</b> ದಾಟಿದರೆ 10% surcharge ಶುರು. ಕೆಲವೊಮ್ಮೆ gain booking ಅನ್ನು ಮುಂದಿನ ವರ್ಷಕ್ಕೆ ಮುಂದೂಡುವುದು ಉತ್ತಮ.</li>
+</ul>
+
+<h3>7.3 Tab "Year by year"</h3>
+
+<p>ಪ್ರತಿ ವರ್ಷದ ಸಾಲು: opening value, cost basis, harvested gain, friction cost, closing value. ಇಲ್ಲಿ ನೋಡಬೇಕಾದದ್ದು — <b>cost basis ಹೇಗೆ ಸ್ಥಿರವಾಗಿ ಏರುತ್ತದೆ</b>. ಅದೇ harvesting ನ ಇಡೀ ಯಂತ್ರ.</p>
+
+<p>ಒಂದು ವರ್ಷದಲ್ಲಿ harvest ₹1.25L ಗಿಂತ ಕಡಿಮೆ ಆಗಿದ್ದರೆ, ಆ ವರ್ಷ ನಿಮ್ಮ unrealised gain ಸಾಕಾಗಿರಲಿಲ್ಲ — ಸಾಮಾನ್ಯವಾಗಿ ಆರಂಭದ ವರ್ಷಗಳಲ್ಲಿ ಆಗುತ್ತದೆ.</p>
+
+<h3>7.4 Tab "Rules used"</h3>
+
+<p>ಇಲ್ಲಿ calculator ಬಳಸಿದ ನಿಖರ ನಿಯಮಗಳ ಪಟ್ಟಿ — section numbers, rates, limits. ಇದು ಪಾರದರ್ಶಕತೆಗೆ. Budget ನಲ್ಲಿ ನಿಯಮ ಬದಲಾದರೆ ಈ tab ನಲ್ಲಿ ಹೋಲಿಸಿ ನೋಡಿ.</p>
+
+<h2 class="newpage">8. Worked Example — ಪೂರ್ತಿ ಲೆಕ್ಕ</h2>
+
+<div class="example">
+<h4>ಸನ್ನಿವೇಶ: ಪ್ರಿಯಾ, ವಯಸ್ಸು 42, IT professional</h4>
+<p class="kv">
+<b>Equity corpus:</b> ₹50,00,000 · <b>Cost basis:</b> ₹30,00,000<br>
+<b>Unrealised gain:</b> ₹20,00,000 (gain fraction 40%)<br>
+<b>Growth:</b> 12%/year · <b>Horizon:</b> 15 ವರ್ಷ · <b>Friction:</b> 20 bps<br>
+<b>Regime:</b> New · <b>Salary:</b> ಹೌದು · <b>Other income:</b> ₹15,00,000<br>
+<b>Deductions:</b> ₹2,00,000 · <b>Debt gain:</b> ₹0 · <b>STCG:</b> ₹0
+</p>
+</div>
+
+<h3>ವರ್ಷ 1 — ಹಂತ ಹಂತವಾಗಿ</h3>
+
+<div class="formula">unrealised = 50,00,000 − 30,00,000 = 20,00,000
+harvest    = min(20,00,000, 1,25,000) = <span class="k">1,25,000</span>
+sellValue  = 1,25,000 x (50,00,000 / 20,00,000) = <span class="k">3,12,500</span>
+cost       = 3,12,500 x 0.0020 = <span class="k">625</span>
+
+vB = 50,00,000 − 625 = 49,99,375
+cB = 30,00,000 + 1,25,000 − 625 = <span class="k">31,24,375</span>
+
+<span class="c">// ವರ್ಷದ ಬೆಳವಣಿಗೆ</span>
+vB = 49,99,375 x 1.12 = <span class="k">55,99,300</span></div>
+
+<h3>ವರ್ಷ 2</h3>
+
+<div class="formula">unrealised = 55,99,300 − 31,24,375 = 24,74,925
+harvest    = 1,25,000
+sellValue  = 1,25,000 x (55,99,300 / 24,74,925) = 2,82,800
+cost       = 566
+
+vB = 55,99,300 − 566 = 55,98,734  →  x1.12 = <span class="k">62,70,582</span>
+cB = 31,24,375 + 1,25,000 − 566 = <span class="k">32,48,809</span></div>
+
+<p>ಗಮನಿಸಿ — ಪ್ರತಿ ವರ್ಷ sellValue <b>ಕಡಿಮೆ</b> ಆಗುತ್ತಾ ಹೋಗುತ್ತದೆ? ಇಲ್ಲ, ವಾಸ್ತವದಲ್ಲಿ gain fraction ಏರುವುದರಿಂದ ಆರಂಭದಲ್ಲಿ ಕಡಿಮೆ ಆಗಿ, ಆಮೇಲೆ ಸ್ಥಿರಗೊಳ್ಳುತ್ತದೆ. Gain fraction 40% ಇಂದ 48% ಗೆ ಏರಿದರೆ ಅದೇ ₹1.25L gain ಗೆ ಕಡಿಮೆ ಮೊತ್ತ ಮಾರಿದರೆ ಸಾಕು.</p>
+
+<h3>15 ವರ್ಷದ ನಂತರ — ಹೋಲಿಕೆ</h3>
+
+<table>
+<thead><tr><th style="width:36%">ಅಂಶ</th><th style="width:24%">Do nothing</th><th>Harvest yearly</th></tr></thead>
+<tbody>
+<tr><td class="f">ಅಂತಿಮ value</td><td class="num">₹2,73,68,000</td><td class="num">₹2,73,45,000</td></tr>
+<tr><td class="f">ಅಂತಿಮ cost basis</td><td class="num">₹30,00,000</td><td class="num">₹48,68,000</td></tr>
+<tr><td class="f">Gain on exit</td><td class="num">₹2,43,68,000</td><td class="num">₹2,24,77,000</td></tr>
+<tr><td class="f">Taxable (−₹1.25L)</td><td class="num">₹2,42,43,000</td><td class="num">₹2,23,52,000</td></tr>
+<tr><td class="f">Tax @12.5% + 4% cess</td><td class="num">₹31,51,600</td><td class="num">₹29,05,800</td></tr>
+<tr><td class="f">Friction ಒಟ್ಟು</td><td class="num">₹0</td><td class="num">₹8,200</td></tr>
+<tr><td class="f"><b>ನಿವ್ವಳ ಲಾಭ</b></td><td class="num">—</td><td class="num"><b>≈ ₹2,37,600</b></td></tr>
+</tbody>
+</table>
+
+<div class="note"><span class="lbl">ಸಂಖ್ಯೆಗಳ ಬಗ್ಗೆ</span>
+<p>ಮೇಲಿನವು ಈ ಪ್ರಕ್ರಿಯೆಯನ್ನು ವಿವರಿಸಲು ಇರುವ ಸೂಚ್ಯ ಸಂಖ್ಯೆಗಳು — ನಿಮ್ಮ browser ನಲ್ಲಿ ನಿಜವಾದ ಸಂಖ್ಯೆ ಬರುತ್ತದೆ. ಮುಖ್ಯ ಪಾಠ: 15 ವರ್ಷದಲ್ಲಿ 15 x ₹1.25L = ₹18.75L gain ಅನ್ನು tax-free ಮಾಡಿಕೊಂಡಿದ್ದೀರಿ, ಮತ್ತು ಅದರ ಮೇಲಿನ 13% tax ಉಳಿಸಿದ್ದೀರಿ.</p></div>
+
+<h3>ಪ್ರಿಯಾ ಅವರ ಈ ವರ್ಷದ tax (harvest ಸೇರಿಸಿ)</h3>
+
+<div class="formula">ordinaryIncome = 15,00,000
+standardDeduction = 75,000 (new regime, salaried)
+taxableOrdinary = 15,00,000 − 75,000 = 14,25,000
+
+slabTax:
+  0 – 4,00,000       @0%   =        0
+  4,00,001 – 8,00,000 @5%   =   20,000
+  8,00,001 – 12,00,000 @10% =   40,000
+  12,00,001 – 14,25,000 @15% =  33,750
+  <span class="k">slabTax = 93,750</span>
+
+ltcg = 1,25,000  →  taxable = 0  →  <span class="k">ltcgTax = 0</span>
+stcg = 0
+
+totalIncome = 15,00,000 + 1,25,000 = 16,25,000
+  → ₹50L ಗಿಂತ ಕಡಿಮೆ  →  <span class="k">surcharge = 0</span>
+  → ₹12L ಗಿಂತ ಹೆಚ್ಚು  →  <span class="k">rebate 87A = 0</span>
+
+cess = 93,750 x 0.04 = 3,750
+<span class="k">finalTax = 97,500</span></div>
+
+<p>ಗಮನಿಸಿ — harvest ಮಾಡಿದ ₹1.25L gain ಗೆ tax ₹0. ಆದರೆ ಅದು totalIncome ಗೆ ಸೇರಿಕೊಂಡಿತು. ಈ ಸಂದರ್ಭದಲ್ಲಿ ಅದು ಯಾವುದೇ surcharge trigger ಮಾಡಲಿಲ್ಲ — ಆದರೆ ಪ್ರಿಯಾರ salary ₹48 ಲಕ್ಷ ಇದ್ದಿದ್ದರೆ, ಈ ₹1.25L ಅವರನ್ನು ₹50L ಗಡಿ ದಾಟಿಸಿ 10% surcharge ತರುತ್ತಿತ್ತು.</p>
+
+<h2 class="newpage">9. ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</h2>
+
+<h3>9.1 Net benefit ಎಷ್ಟಿದ್ದರೆ ಮಾಡಬೇಕು?</h3>
+
+<table>
+<thead><tr><th style="width:30%">Net benefit</th><th>ನಿರ್ಧಾರ</th></tr></thead>
+<tbody>
+<tr><td class="f">ಋಣಾತ್ಮಕ</td><td>ಮಾಡಬೇಡಿ. Friction tax ಉಳಿತಾಯಕ್ಕಿಂತ ಹೆಚ್ಚು. ಸಾಮಾನ್ಯವಾಗಿ ಚಿಕ್ಕ portfolio ಅಥವಾ ಹೆಚ್ಚಿನ friction ನಲ್ಲಿ ಆಗುತ್ತದೆ.</td></tr>
+<tr><td class="f">₹0 – ₹50,000</td><td>ಗಡಿ ರೇಖೆ. ನಿಮ್ಮ ಸಮಯ ಮತ್ತು ITR ಜಟಿಲತೆ ಯೋಚಿಸಿ ನಿರ್ಧರಿಸಿ.</td></tr>
+<tr><td class="f">₹50,000 – ₹2 ಲಕ್ಷ</td><td>ಮಾಡಿ. ವರ್ಷಕ್ಕೊಂದು ಬಾರಿ 15 ನಿಮಿಷದ ಕೆಲಸಕ್ಕೆ ಒಳ್ಳೆಯ ಪ್ರತಿಫಲ.</td></tr>
+<tr><td class="f">₹2 ಲಕ್ಷ ಮೇಲೆ</td><td>ಖಂಡಿತಾ ಮಾಡಿ. Calendar ನಲ್ಲಿ ಪ್ರತಿ ವರ್ಷ ಜನವರಿ-ಫೆಬ್ರವರಿ ಗೆ reminder ಇಡಿ.</td></tr>
+</tbody>
+</table>
+
+<h3>9.2 ಯಾವಾಗ harvest ಮಾಡಬೇಕು?</h3>
+
+<p>ಆರ್ಥಿಕ ವರ್ಷ ಮಾರ್ಚ್ 31 ಕ್ಕೆ ಮುಗಿಯುತ್ತದೆ. ಆದರೆ ಮಾರ್ಚ್ 31 ರವರೆಗೆ ಕಾಯಬೇಡಿ:</p>
+
+<ul>
+<li><b>ಜನವರಿ–ಫೆಬ್ರವರಿ ಉತ್ತಮ</b> — ಆ ವರ್ಷದ ನಿಮ್ಮ ಇತರ gains ಎಷ್ಟು ಎಂದು ಗೊತ್ತಿರುತ್ತದೆ, ಮತ್ತು settlement ಗೆ ಸಮಯ ಇರುತ್ತದೆ.</li>
+<li><b>Mutual fund redemption ಗೆ T+2/T+3 ದಿನ</b> ಬೇಕು. ಮಾರ್ಚ್ 30 ಕ್ಕೆ ಮಾಡಿದರೆ ಅದು ಮುಂದಿನ FY ಗೆ ಬೀಳಬಹುದು.</li>
+<li><b>Market ಬಿದ್ದಿರುವಾಗ harvest ಮಾಡಬೇಡಿ</b> — gain ಕಡಿಮೆ ಇರುತ್ತದೆ, ನೀವು ಪೂರ್ಣ exemption ಬಳಸಲಾಗುವುದಿಲ್ಲ.</li>
+</ul>
+
+<h3>9.3 Loss harvesting — ವಿರುದ್ಧ ತಂತ್ರ</h3>
+
+<p>ಈ calculator gain harvesting ಗೆ. ಆದರೆ ನಿಮ್ಮ portfolio ನಲ್ಲಿ ನಷ್ಟದಲ್ಲಿರುವ holdings ಇದ್ದರೆ, ಅವನ್ನು ಮಾರಿ loss book ಮಾಡಿ ನಿಮ್ಮ gains ವಿರುದ್ಧ set-off ಮಾಡಬಹುದು. ಭಾರತದಲ್ಲಿ:</p>
+
+<ul>
+<li>Short-term loss → short-term ಮತ್ತು long-term ಎರಡೂ gains ವಿರುದ್ಧ set-off ಆಗುತ್ತದೆ.</li>
+<li>Long-term loss → long-term gains ವಿರುದ್ಧ ಮಾತ್ರ.</li>
+<li>ಉಳಿದ loss <b>8 ವರ್ಷ carry forward</b> ಆಗುತ್ತದೆ — ಆದರೆ ITR ಸಮಯಕ್ಕೆ ಸಲ್ಲಿಸಿದರೆ ಮಾತ್ರ.</li>
+</ul>
+
+<h2>10. ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು — Common Mistakes</h2>
+
+<h4>ತಪ್ಪು 1 — ₹1.25L ಮೌಲ್ಯದ units ಮಾರುವುದು</h4>
+<p>ಇದು ಅತ್ಯಂತ ಸಾಮಾನ್ಯ ತಪ್ಪು. ನೀವು ₹1.25L <b>gain</b> ಬೇಕು, ₹1.25L <b>ಮೌಲ್ಯ</b> ಅಲ್ಲ. §5.1 ರ formula ಬಳಸಿ. Gain fraction 40% ಆದರೆ ನೀವು ₹3.125L ಮಾರಬೇಕು.</p>
+
+<h4>ತಪ್ಪು 2 — Cost basis ಗೆ ತಪ್ಪು ಸಂಖ್ಯೆ ಹಾಕುವುದು</h4>
+<p>SIP ಮಾಡಿದವರಿಗೆ cost basis ಲೆಕ್ಕ ಜಟಿಲ — ಪ್ರತಿ instalment ಬೇರೆ NAV. ಊಹಿಸಬೇಡಿ. CAMS ಅಥವಾ KFintech ಇಂದ <b>Capital Gains Statement</b> download ಮಾಡಿ ಅಲ್ಲಿಂದ ತೆಗೆದುಕೊಳ್ಳಿ.</p>
+
+<h4>ತಪ್ಪು 3 — Exemption ಪ್ರತಿ fund ಗೆ ಎಂದು ತಿಳಿಯುವುದು</h4>
+<p>₹1.25L ವಿನಾಯಿತಿ <b>ಒಬ್ಬ ವ್ಯಕ್ತಿಗೆ, ಒಂದು ವರ್ಷಕ್ಕೆ, ಎಲ್ಲಾ equity gains ಸೇರಿಸಿ</b>. ನೀವು 5 funds ಇಟ್ಟುಕೊಂಡರೂ ಒಟ್ಟು ₹1.25L ಮಾತ್ರ.</p>
+
+<h4>ತಪ್ಪು 4 — ಮಾರಿ ಮತ್ತೆ ಕೊಳ್ಳಲು ಮರೆಯುವುದು</h4>
+<p>Harvesting ನ ಇಡೀ ಉದ್ದೇಶ market ನಲ್ಲಿ ಉಳಿಯುವುದು. ಮಾರಿ ಹಣವನ್ನು bank ನಲ್ಲಿ ಇಟ್ಟರೆ ನೀವು market exposure ಕಳೆದುಕೊಳ್ಳುತ್ತೀರಿ. <b>ಅದೇ ದಿನ ಅಥವಾ ಮರುದಿನ</b> ಮತ್ತೆ ಕೊಳ್ಳಿ. ಆದರ್ಶವಾಗಿ, ಬೇರೆ ಒಂದು ಸಮಾನ fund ಗೆ switch ಮಾಡಿ — timing gap ಇಲ್ಲ.</p>
+
+<h4>ತಪ್ಪು 5 — ಹೊಸ holding period ಮರೆಯುವುದು</h4>
+<p>ಮತ್ತೆ ಕೊಂಡ units ಗೆ 12 ತಿಂಗಳ ಗಡಿಯಾರ ಹೊಸದಾಗಿ ಶುರು. ಅವನ್ನು 12 ತಿಂಗಳೊಳಗೆ ಮಾರಿದರೆ 20% STCG. ಆದ್ದರಿಂದ ಮುಂದಿನ ವರ್ಷ harvest ಮಾಡುವಾಗ <b>ಹಳೆಯ units</b> ಮಾರಬೇಕು — FIFO ನಿಯಮ ನಿಮ್ಮ ಪರವಾಗಿ ಕೆಲಸ ಮಾಡುತ್ತದೆ.</p>
+
+<h4>ತಪ್ಪು 6 — Exit load ಪರಿಗಣಿಸದಿರುವುದು</h4>
+<p>ಕೆಲವು equity funds ನಲ್ಲಿ 1 ವರ್ಷದೊಳಗೆ redemption ಗೆ 1% exit load. ಅದು 20 bps friction ಗಿಂತ 5 ಪಟ್ಟು ಹೆಚ್ಚು — ಇಡೀ ಲಾಭ ತಿನ್ನುತ್ತದೆ. Fund ನ scheme document ನೋಡಿ.</p>
+
+<h4>ತಪ್ಪು 7 — Surcharge ಗಡಿ ಗಮನಿಸದಿರುವುದು</h4>
+<p>ನಿಮ್ಮ total income ₹49 ಲಕ್ಷ ಇದ್ದರೆ, ₹1.25L gain ಸೇರಿಸಿದರೆ ₹50L ದಾಟಿ 10% surcharge ಬರುತ್ತದೆ — ಅದು ನಿಮ್ಮ <b>ಇಡೀ</b> tax ಮೇಲೆ. ಆಗ harvesting ನಷ್ಟದ ವ್ಯವಹಾರ. "This year's tax" tab ನಲ್ಲಿ ಪರಿಶೀಲಿಸಿ.</p>
+
+<h4>ತಪ್ಪು 8 — ITR ನಲ್ಲಿ ತೋರಿಸದಿರುವುದು</h4>
+<p>Tax ₹0 ಆದರೂ ನೀವು ಆ transaction ಅನ್ನು ITR ನ Schedule CG ನಲ್ಲಿ ತೋರಿಸಬೇಕು. AIS/TIS ನಲ್ಲಿ ಅದು ಈಗಾಗಲೇ ಇರುತ್ತದೆ. ತೋರಿಸದಿದ್ದರೆ notice ಬರಬಹುದು.</p>
+
+<h2 class="newpage">11. Quick Reference Card</h2>
+
+<h3>ಮುಖ್ಯ formulas</h3>
+<div class="formula"><span class="k">ಎಷ್ಟು ಮಾರಬೇಕು</span>
+  sellValue = 1,25,000 x (marketValue / unrealisedGain)
+
+<span class="k">Cost basis step-up</span>
+  newCostBasis = oldCostBasis + harvest − frictionCost
+
+<span class="k">Exit tax</span>
+  tax = max(0, gain − 1,25,000) x 0.125 x 1.04
+
+<span class="k">Special rate surcharge cap</span>
+  srCG = min(surchargeRate, 0.15)
+
+<span class="k">Final tax</span>
+  (slabTax − rebate + ltcgTax + stcgTax + surcharge) x 1.04</div>
+
+<h3>ನಿಯಮಗಳ ಸಾರಾಂಶ — FY 2026-27</h3>
+<table>
+<thead><tr><th style="width:36%">ಅಂಶ</th><th>ಮೌಲ್ಯ</th></tr></thead>
+<tbody>
+<tr><td>LTCG exemption</td><td class="num">₹1,25,000 / ವರ್ಷ / ವ್ಯಕ್ತಿ</td></tr>
+<tr><td>Equity LTCG rate (s112A)</td><td class="num">12.5%</td></tr>
+<tr><td>Equity STCG rate (s111A)</td><td class="num">20%</td></tr>
+<tr><td>Debt fund gains (s50AA)</td><td class="num">Slab rate</td></tr>
+<tr><td>Cess</td><td class="num">4%</td></tr>
+<tr><td>Surcharge cap on gains</td><td class="num">15%</td></tr>
+<tr><td>Rebate 87A (new)</td><td class="num">₹60,000, income &lt;= ₹12L</td></tr>
+<tr><td>Rebate 87A (old)</td><td class="num">₹12,500, income &lt;= ₹5L</td></tr>
+<tr><td>Standard deduction (new)</td><td class="num">₹75,000</td></tr>
+<tr><td>Standard deduction (old)</td><td class="num">₹50,000</td></tr>
+<tr><td>Equity LT holding period</td><td class="num">12 ತಿಂಗಳು</td></tr>
+</tbody>
+</table>
+
+<h3>ವಾರ್ಷಿಕ checklist</h3>
+<ol>
+<li>ಜನವರಿಯಲ್ಲಿ CAMS/KFin ಇಂದ capital gains statement download ಮಾಡಿ.</li>
+<li>ಈ ವರ್ಷ ಈಗಾಗಲೇ ಎಷ್ಟು LTCG book ಆಗಿದೆ ನೋಡಿ. ಉಳಿದ exemption = ₹1.25L − ಅದು.</li>
+<li>Calculator ನಲ್ಲಿ corpus, cost basis ಹಾಕಿ sellValue ಪಡೆಯಿರಿ.</li>
+<li>"This year's tax" tab ನಲ್ಲಿ surcharge ಗಡಿ ದಾಟುತ್ತಿಲ್ಲ ಎಂದು ಖಚಿತಪಡಿಸಿ.</li>
+<li>Exit load ಇಲ್ಲದ, 12 ತಿಂಗಳಿಗಿಂತ ಹಳೆಯ units ಮಾರಿ.</li>
+<li>ಅದೇ ವಾರದಲ್ಲಿ ಮತ್ತೆ ಹೂಡಿಕೆ ಮಾಡಿ.</li>
+<li>ITR ನ Schedule CG ನಲ್ಲಿ ತೋರಿಸಿ.</li>
+</ol>
+
+<div class="warn"><span class="lbl">ಅಂತಿಮ ಎಚ್ಚರಿಕೆ</span>
+<p>ಇದು ಶೈಕ್ಷಣಿಕ ಸಾಧನ, tax advice ಅಲ್ಲ. Tax ನಿಯಮಗಳು ಪ್ರತಿ Budget ನಲ್ಲಿ ಬದಲಾಗಬಹುದು. ನಿಮ್ಮ ನಿರ್ದಿಷ್ಟ ಪರಿಸ್ಥಿತಿಗೆ (NRI status, HUF, multiple demat accounts, ESOPs) ಬೇರೆ ನಿಯಮಗಳು ಅನ್ವಯಿಸಬಹುದು. ದೊಡ್ಡ ಮೊತ್ತಗಳಿಗೆ chartered accountant ಜೊತೆ ಪರಿಶೀಲಿಸಿ.</p></div>
+
+<div class="footer-note">Wealthoria · LTCG Harvest Optimiser Manual · ಶೈಕ್ಷಣಿಕ ಬಳಕೆಗೆ ಮಾತ್ರ</div>
+
+</body></html>

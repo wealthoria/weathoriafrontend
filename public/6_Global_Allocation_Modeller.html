@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="utf-8">
+<title>Global Allocation Modeller — ಸಂಪೂರ್ಣ ಕೈಪಿಡಿ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">Wealthoria Calculator Manual — 06</div>
+  <h1>Global Allocation<br>Modeller</h1>
+  <div class="rule"></div>
+  <div class="sub">ದೇಶೀಯ ಮತ್ತು ಅಂತರರಾಷ್ಟ್ರೀಯ equity ಎಷ್ಟು ಪ್ರಮಾಣದಲ್ಲಿ ಇರಬೇಕು?<br>Currency risk, correlation, volatility drag — ಎಲ್ಲವನ್ನೂ ಒಟ್ಟಿಗೆ ನೋಡುವ ಸಾಧನ.</div>
+  <div class="meta">
+    ಸಂಪೂರ್ಣ ಬಳಕೆದಾರ ಕೈಪಿಡಿ<br>
+    ಭಾಷೆ: ಕನ್ನಡ + English financial terms<br>
+    ಆವೃತ್ತಿ: 2026 · Wealthoria Education
+  </div>
+  <div class="badge">FOR EDUCATIONAL USE ONLY</div>
+</div>
+
+<div class="toc">
+  <h2>ಪರಿವಿಡಿ</h2>
+  <ol>
+    <li>ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</li>
+    <li>ಯಾವ ಸಮಸ್ಯೆ ಬಗೆಹರಿಸುತ್ತದೆ</li>
+    <li>Core concept — Diversification ಮತ್ತು Currency</li>
+    <li>ಪ್ರತಿ Input field ಅರ್ಥ</li>
+    <li>ಒಳಗಿನ Math — ಹಂತ ಹಂತವಾಗಿ</li>
+    <li>Efficient Frontier — 51 ಬಿಂದುಗಳ ಸ್ಕ್ಯಾನ್</li>
+    <li>ಪ್ರತಿ Output tab ಏನು ಹೇಳುತ್ತದೆ</li>
+    <li>Worked Example — ಪೂರ್ಣ ಲೆಕ್ಕ</li>
+    <li>ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</li>
+    <li>ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು</li>
+    <li>Quick Reference Card</li>
+  </ol>
+</div>
+
+<h2>1. ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</h2>
+
+<p>Global Allocation Modeller ಒಂದೇ ಒಂದು ಪ್ರಶ್ನೆಗೆ ಉತ್ತರ ಹುಡುಕುತ್ತದೆ — <b>ನಿಮ್ಮ equity ಭಾಗದಲ್ಲಿ ಎಷ್ಟು ಪಾಲು ಅಂತರರಾಷ್ಟ್ರೀಯ (international) ಆಗಿರಬೇಕು?</b></p>
+
+<p>ಈ ಪ್ರಶ್ನೆ ಕೇಳಲು ಸುಲಭ, ಉತ್ತರಿಸಲು ಕಷ್ಟ. ಕಾರಣ — ಅಂತರರಾಷ್ಟ್ರೀಯ investment ಸೇರಿಸಿದಾಗ ಮೂರು ವಿಷಯಗಳು ಒಟ್ಟಿಗೆ ಬದಲಾಗುತ್ತವೆ:</p>
+
+<ul>
+  <li>ನಿರೀಕ್ಷಿತ return ಬದಲಾಗುತ್ತದೆ (ಸಾಮಾನ್ಯವಾಗಿ ಸ್ವಲ್ಪ ಕಡಿಮೆ ಆಗುತ್ತದೆ, ಏಕೆಂದರೆ US/global equity return ನಿರೀಕ್ಷೆ ಭಾರತಕ್ಕಿಂತ ಕಡಿಮೆ)</li>
+  <li>Volatility ಬದಲಾಗುತ್ತದೆ (correlation 1 ಗಿಂತ ಕಡಿಮೆ ಇರುವುದರಿಂದ ಕಡಿಮೆ ಆಗುತ್ತದೆ)</li>
+  <li>Currency ಒಂದು ಹೊಸ ಆಯಾಮ ಸೇರಿಸುತ್ತದೆ — ರೂಪಾಯಿ ದುರ್ಬಲವಾದರೆ ನಿಮ್ಮ ವಿದೇಶಿ holding ರೂಪಾಯಿಯಲ್ಲಿ ಹೆಚ್ಚಾಗುತ್ತದೆ</li>
+</ul>
+
+<p>ಈ ಮೂರೂ ಒಟ್ಟಿಗೆ ಸೇರಿದಾಗ ಏನಾಗುತ್ತದೆ ಎಂಬುದನ್ನು ತಲೆಯಲ್ಲಿ ಲೆಕ್ಕ ಹಾಕುವುದು ಅಸಾಧ್ಯ. Calculator ಅದನ್ನೇ ಮಾಡುತ್ತದೆ.</p>
+
+<h3>ಮೂರು ಪ್ರತ್ಯೇಕ ಕೆಲಸಗಳು</h3>
+
+<table>
+  <thead><tr><th style="width:26%">ಕೆಲಸ</th><th>ಏನು ಮಾಡುತ್ತದೆ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Blend</td><td>ನೀವು ಕೊಟ್ಟ ಒಂದು ನಿರ್ದಿಷ್ಟ intlShare ಗೆ portfolio ದ mean return, SD, geometric return, real return, Sharpe ratio, volatility drag ಲೆಕ್ಕ ಹಾಕುತ್ತದೆ</td></tr>
+    <tr><td class="f">Frontier</td><td>intlShare ಅನ್ನು 0% ರಿಂದ 100% ವರೆಗೆ 2% ಹೆಜ್ಜೆಯಲ್ಲಿ (51 ಬಿಂದುಗಳು) ಸ್ಕ್ಯಾನ್ ಮಾಡಿ — ಯಾವುದು ಅತ್ಯುತ್ತಮ geometric return, ಯಾವುದು ಅತ್ಯಂತ ಕಡಿಮೆ volatility, ಯಾವುದು ಅತ್ಯುತ್ತಮ Sharpe — ಈ ಮೂರನ್ನೂ ಗುರುತಿಸುತ್ತದೆ</td></tr>
+    <tr><td class="f">Retirement impact</td><td>ಆ blend ಅನ್ನು Monte Carlo retirement simulation ಗೆ ಹಾಕಿ — success rate, median corpus, 10th percentile — ಇವು ಎಷ್ಟು ಬದಲಾಗುತ್ತವೆ ಎಂದು ತೋರಿಸುತ್ತದೆ</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಮುಖ್ಯ ವ್ಯತ್ಯಾಸ</span>
+  <p>ಬಹಳಷ್ಟು allocation calculator ಗಳು ಕೇವಲ return ಮತ್ತು SD ತೋರಿಸಿ ನಿಲ್ಲುತ್ತವೆ. ಈ tool ಅದನ್ನು <b>ನಿಜವಾದ ನಿವೃತ್ತಿ ಫಲಿತಾಂಶಕ್ಕೆ</b> ಅನುವಾದಿಸುತ್ತದೆ — ಏಕೆಂದರೆ "Sharpe 0.28 ರಿಂದ 0.31 ಕ್ಕೆ ಏರಿತು" ಎಂಬುದಕ್ಕಿಂತ "success rate 84% ರಿಂದ 89% ಕ್ಕೆ ಏರಿತು" ಎಂಬುದು ನಿಮಗೆ ಅರ್ಥವಾಗುತ್ತದೆ.</p>
+</div>
+
+<h2 class="newpage">2. ಯಾವ ಸಮಸ್ಯೆ ಬಗೆಹರಿಸುತ್ತದೆ</h2>
+
+<h3>ಸಮಸ್ಯೆ 1 — "International ಸೇರಿಸಿದರೆ return ಕಡಿಮೆ ಆಗುತ್ತದೆ" ಎಂಬ ಅರ್ಧ ಸತ್ಯ</h3>
+
+<p>ಬಹಳ ಜನ ಹೀಗೆ ಯೋಚಿಸುತ್ತಾರೆ: "ಭಾರತೀಯ equity 12% ಕೊಡುತ್ತದೆ, US equity 8% ಕೊಡುತ್ತದೆ. ಹಾಗಾದರೆ US ಏಕೆ ಸೇರಿಸಬೇಕು? Return ಕಡಿಮೆ ಆಗುತ್ತದೆ ಅಲ್ಲವೇ?"</p>
+
+<p>ಇದು <b>arithmetic mean</b> ದೃಷ್ಟಿಯಿಂದ ಸರಿ. ಆದರೆ ಎರಡು ವಿಷಯ ಬಿಟ್ಟುಹೋಗಿದೆ:</p>
+
+<ul>
+  <li><b>Currency</b> — 8% US return ಡಾಲರ್‌ನಲ್ಲಿ. ರೂಪಾಯಿ ವರ್ಷಕ್ಕೆ 3% ದುರ್ಬಲವಾದರೆ ನಿಮಗೆ ಸಿಗುವುದು 8% ಅಲ್ಲ, ಸುಮಾರು 11.24%.</li>
+  <li><b>Volatility drag</b> — ನೀವು ನಿಜವಾಗಿ ಪಡೆಯುವುದು arithmetic mean ಅಲ್ಲ, geometric return. SD ಹೆಚ್ಚಾದಷ್ಟೂ geometric return arithmetic ಗಿಂತ ಹೆಚ್ಚು ಕೆಳಗೆ ಬೀಳುತ್ತದೆ. Diversification SD ಕಡಿಮೆ ಮಾಡಿದರೆ ಈ drag ಕಡಿಮೆ ಆಗುತ್ತದೆ — ಅಂದರೆ mean ಕಡಿಮೆ ಆದರೂ geometric ಹೆಚ್ಚಾಗಬಹುದು.</li>
+</ul>
+
+<p>Calculator ಈ ಎರಡನ್ನೂ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸೇರಿಸುತ್ತದೆ. ಆದ್ದರಿಂದ "intlShare ಹೆಚ್ಚಿಸಿದರೆ geometric return ಏರುತ್ತದೆಯೇ?" ಎಂಬ ಪ್ರಶ್ನೆಗೆ ನಿಜವಾದ ಉತ್ತರ ಸಿಗುತ್ತದೆ.</p>
+
+<h3>ಸಮಸ್ಯೆ 2 — Correlation ಎಷ್ಟು ಮುಖ್ಯ ಎಂದು ಗೊತ್ತಿಲ್ಲದಿರುವುದು</h3>
+
+<p>"Diversification ಒಳ್ಳೆಯದು" ಎಂಬುದು ಎಲ್ಲರಿಗೂ ಗೊತ್ತು. ಆದರೆ <b>ಎಷ್ಟು</b> ಒಳ್ಳೆಯದು ಎಂಬುದು correlation ಮೇಲೆ ಸಂಪೂರ್ಣ ಅವಲಂಬಿತ.</p>
+
+<ul>
+  <li>Correlation 0.9 ಆದರೆ — diversification ಬಹುತೇಕ ವ್ಯರ್ಥ. ಎರಡೂ ಒಟ್ಟಿಗೆ ಬೀಳುತ್ತವೆ.</li>
+  <li>Correlation 0.4 ಆದರೆ — ಗಣನೀಯ SD ಕಡಿತ ಸಿಗುತ್ತದೆ.</li>
+  <li>Correlation 0 ಆದರೆ — ಗರಿಷ್ಠ ಲಾಭ.</li>
+</ul>
+
+<p>ಸಮಸ್ಯೆ ಏನೆಂದರೆ correlation ಸ್ಥಿರವಲ್ಲ. ಶಾಂತ ಕಾಲದಲ್ಲಿ 0.3 ಇರಬಹುದು, crisis ನಲ್ಲಿ 0.8 ಆಗಬಹುದು. Calculator ಈ ಸಂಖ್ಯೆಯನ್ನು ನೀವೇ ಬದಲಾಯಿಸಲು ಬಿಡುತ್ತದೆ — ಆದ್ದರಿಂದ "correlation 0.4 ಬದಲು 0.7 ಆದರೆ ನನ್ನ ನಿರ್ಧಾರ ಬದಲಾಗುತ್ತದೆಯೇ?" ಎಂದು ಪರೀಕ್ಷಿಸಬಹುದು.</p>
+
+<h3>ಸಮಸ್ಯೆ 3 — Currency risk ಅನ್ನು ತಪ್ಪಾಗಿ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳುವುದು</h3>
+
+<p>ಭಾರತೀಯ investor ಗೆ ವಿದೇಶಿ equity ಎರಡು risk ಒಟ್ಟಿಗೆ ಕೊಡುತ್ತದೆ — equity risk ಮತ್ತು currency risk. ಆದರೆ ಇವು ಸೇರಿದಾಗ <b>ಒಟ್ಟು risk ಕೂಡಿಸಿದಷ್ಟು ಆಗುವುದಿಲ್ಲ</b> — correlation ಋಣಾತ್ಮಕ ಆದರೆ ಕಡಿಮೆ ಆಗುತ್ತದೆ.</p>
+
+<p>ಐತಿಹಾಸಿಕವಾಗಿ US equity ಬಿದ್ದಾಗ ಡಾಲರ್ ಬಲಗೊಳ್ಳುವ ಪ್ರವೃತ್ತಿ ಇದೆ (flight to safety). ಅಂದರೆ ರೂಪಾಯಿ ದುರ್ಬಲವಾಗುತ್ತದೆ — ಇದು ನಿಮ್ಮ ನಷ್ಟವನ್ನು ಭಾಗಶಃ ತುಂಬಿಕೊಡುತ್ತದೆ. ಈ ಸಂಬಂಧವನ್ನೇ <code>corrIntlINR</code> field ಹಿಡಿಯುತ್ತದೆ (default −0.15).</p>
+
+<div class="tip">
+  <span class="lbl">ಗಮನಿಸಿ</span>
+  <p>ಈ ಋಣಾತ್ಮಕ correlation ಒಂದು ಸಣ್ಣ ಆದರೆ ನಿಜವಾದ ಹೆಡ್ಜ್. ಇದನ್ನು 0 ಗೆ ಇಟ್ಟು ನೋಡಿ — international allocation ದ ಆಕರ್ಷಣೆ ಸ್ವಲ್ಪ ಕಡಿಮೆ ಆಗುತ್ತದೆ. +0.3 ಗೆ ಇಟ್ಟರೆ ಇನ್ನೂ ಕಡಿಮೆ.</p>
+</div>
+
+<h3>ಸಮಸ್ಯೆ 4 — "ಎಷ್ಟು %" ಎಂಬುದಕ್ಕೆ ಯಾರೂ ಸ್ಪಷ್ಟ ಉತ್ತರ ಕೊಡುವುದಿಲ್ಲ</h3>
+
+<p>ಸಲಹೆಗಾರರು "10–30% international ಇರಲಿ" ಎನ್ನುತ್ತಾರೆ. ಈ ವ್ಯಾಪ್ತಿ ಎಲ್ಲಿಂದ ಬಂತು? ನಿಮ್ಮ ನಿರ್ದಿಷ್ಟ ನಿರೀಕ್ಷೆಗಳಿಗೆ ಅದು ಸರಿಯೇ?</p>
+
+<p>Frontier tab ಈ ಪ್ರಶ್ನೆಗೆ ನೇರ ಉತ್ತರ ಕೊಡುತ್ತದೆ — ನಿಮ್ಮದೇ ಸಂಖ್ಯೆಗಳಿಂದ. ಮತ್ತು ಮುಖ್ಯವಾಗಿ ಅದು ತೋರಿಸುವುದು ಏನೆಂದರೆ — <b>curve ಸಾಮಾನ್ಯವಾಗಿ ಬಹಳ ಚಪ್ಪಟೆಯಾಗಿರುತ್ತದೆ.</b> 20% ಮತ್ತು 35% ನಡುವಿನ ವ್ಯತ್ಯಾಸ ಅಷ್ಟೇನೂ ದೊಡ್ಡದಲ್ಲ. ಇದೇ ಅತ್ಯಂತ ಉಪಯುಕ್ತ ಪಾಠ.</p>
+
+<h2 class="newpage">3. Core concept — Diversification ಮತ್ತು Currency</h2>
+
+<h3>3.1 Variance ಕೂಡುವುದಿಲ್ಲ — ಇದೇ diversification ದ ಮೂಲ</h3>
+
+<p>ಎರಡು asset ಸೇರಿಸಿದಾಗ ಅವುಗಳ <b>mean return</b> ಸರಳವಾಗಿ ತೂಕದ ಸರಾಸರಿ ಆಗುತ್ತದೆ:</p>
+
+<div class="formula">mean = wD × meanD + wI × meanI</div>
+
+<p>ಆದರೆ <b>variance</b> ಹಾಗೆ ಆಗುವುದಿಲ್ಲ. ಅದಕ್ಕೆ correlation ಸೇರುತ್ತದೆ:</p>
+
+<div class="formula">var = wD² × sdD²  +  wI² × sdI²  +  2 × wD × wI × ρ × sdD × sdI
+                                              <span class="c">↑ ಇದೇ ಮಾಂತ್ರಿಕ ಪದ</span></div>
+
+<p>ρ (correlation) 1 ಕ್ಕಿಂತ ಕಡಿಮೆ ಇದ್ದರೆ ಆ ಮೂರನೇ ಪದ ಚಿಕ್ಕದಾಗುತ್ತದೆ — ಪರಿಣಾಮವಾಗಿ ಒಟ್ಟು SD ತೂಕದ ಸರಾಸರಿಗಿಂತ ಕಡಿಮೆ ಆಗುತ್ತದೆ.</p>
+
+<h4>ಸಂಖ್ಯೆಯಲ್ಲಿ ನೋಡೋಣ</h4>
+
+<p>wD = 0.75, wI = 0.25, sdD = 20%, sdI = 17.1% (currency ಸೇರಿಸಿದ ನಂತರ), ρ = 0.4:</p>
+
+<div class="formula"><span class="c">// ತೂಕದ ಸರಾಸರಿ SD (ತಪ್ಪು ಲೆಕ್ಕ, ಹೋಲಿಕೆಗಾಗಿ ಮಾತ್ರ)</span>
+0.75 × 20 + 0.25 × 17.1 = 19.28%
+
+<span class="c">// ನಿಜವಾದ variance ಲೆಕ್ಕ</span>
+0.75² × 20²      = 0.5625 × 400   = 225.00
+0.25² × 17.1²    = 0.0625 × 292.4 =  18.28
+2 × 0.75 × 0.25 × 0.4 × 20 × 17.1 =  51.30
+                                   ─────────
+                        var       = 294.58
+                        sd = √294.58 = <span class="k">17.16%</span></div>
+
+<p>ಅಂದರೆ 19.28% ಬದಲು 17.16%. <b>2.12 ಶೇಕಡಾ ಬಿಂದು ಉಚಿತವಾಗಿ ಸಿಕ್ಕ SD ಕಡಿತ.</b> ಇದೇ diversification.</p>
+
+<h3>3.2 Volatility drag — ಏಕೆ SD ಕಡಿತ ಮುಖ್ಯ</h3>
+
+<p>ನೀವು ಪಡೆಯುವ ನಿಜವಾದ ಸಂಪತ್ತು arithmetic mean ಮೇಲೆ ಅಲ್ಲ, <b>geometric return</b> ಮೇಲೆ ಅವಲಂಬಿತ.</p>
+
+<div class="example">
+  <h4>ಸರಳ ಉದಾಹರಣೆ</h4>
+  <p>ಎರಡು ವರ್ಷ: +50%, ನಂತರ −50%. Arithmetic mean = 0%.</p>
+  <p>ನಿಜವಾಗಿ ₹100 → ₹150 → ₹75. ನಷ್ಟ 25%. Geometric return = −13.4% ವರ್ಷಕ್ಕೆ.</p>
+  <p>Arithmetic 0% ಆದರೂ ನೀವು ಕಳೆದುಕೊಂಡಿದ್ದೀರಿ. ಈ ಅಂತರವೇ <b>volatility drag</b>.</p>
+</div>
+
+<p>Drag ಸರಿಸುಮಾರು SD ದ ವರ್ಗಕ್ಕೆ ಅನುಪಾತದಲ್ಲಿ ಇರುತ್ತದೆ — ಅಂದರೆ SD 20% ರಿಂದ 17% ಕ್ಕೆ ಇಳಿದರೆ drag ಸುಮಾರು 28% ಕಡಿಮೆ ಆಗುತ್ತದೆ. ಇದೇ ಕಾರಣಕ್ಕೆ mean ಸ್ವಲ್ಪ ಕಡಿಮೆ ಆದರೂ geometric ಹೆಚ್ಚಾಗಬಹುದು.</p>
+
+<h3>3.3 Currency — ಗುಣಾಕಾರ, ಕೂಡಿಕೆ ಅಲ್ಲ</h3>
+
+<p>ಇದು ಬಹಳ ಜನ ತಪ್ಪು ಮಾಡುವ ಜಾಗ. ವಿದೇಶಿ return ಮತ್ತು ರೂಪಾಯಿ ಕುಸಿತ <b>ಕೂಡುವುದಿಲ್ಲ</b>, ಗುಣಿಸುತ್ತವೆ:</p>
+
+<div class="formula"><span class="c">// ತಪ್ಪು</span>
+ರೂಪಾಯಿ return = 8% + 3% = 11%
+
+<span class="c">// ಸರಿ</span>
+ರೂಪಾಯಿ return = (1 + 0.08) × (1 + 0.03) − 1
+              = 1.08 × 1.03 − 1
+              = 1.1124 − 1
+              = <span class="k">11.24%</span></div>
+
+<p>ವ್ಯತ್ಯಾಸ 0.24 ಶೇಕಡಾ ಬಿಂದು — ಚಿಕ್ಕದು ಅನಿಸಬಹುದು. ಆದರೆ 30 ವರ್ಷ compound ಆದಾಗ ಇದು ಸುಮಾರು 7% ಹೆಚ್ಚು ಅಂತಿಮ ಸಂಪತ್ತು.</p>
+
+<p>Code ನಲ್ಲಿ ಇದನ್ನು ವಿಸ್ತರಿಸಿ ಬರೆಯಲಾಗಿದೆ:</p>
+
+<div class="formula"><span class="c">// (1+mf)(1+mc) − 1  ಅನ್ನು ವಿಸ್ತರಿಸಿದರೆ</span>
+mean = mf + mc + mf × mc
+     = 0.08 + 0.03 + 0.08 × 0.03
+     = 0.08 + 0.03 + 0.0024
+     = 0.1124  →  <span class="k">11.24%</span></div>
+
+<p>ಆ ಮೂರನೇ ಪದ <code>mf × mc</code> ಚಿಕ್ಕದಾದರೂ ಬಿಡಬಾರದು. ಇದನ್ನೇ "cross term" ಎನ್ನುತ್ತಾರೆ.</p>
+
+<h3>3.4 Currency ಸೇರಿಸಿದಾಗ SD ಹೇಗೆ ಬದಲಾಗುತ್ತದೆ</h3>
+
+<p>ಎರಡು random variable ಗುಣಿಸಿದಾಗ variance ಲೆಕ್ಕ ಸಂಕೀರ್ಣ. Calculator ಒಂದು ಪ್ರಮಾಣಿತ ಅಂದಾಜು ಬಳಸುತ್ತದೆ:</p>
+
+<div class="formula">variance = sf² + sc² + 2 × ρfc × sf × sc
+
+sf   = ವಿದೇಶಿ equity SD (16%)
+sc   = ರೂಪಾಯಿ SD (6%)
+ρfc  = ಇವೆರಡರ correlation (−0.15)</div>
+
+<p>Default ಸಂಖ್ಯೆಗಳಿಂದ:</p>
+
+<div class="formula">16² = 256.00
+ 6² =  36.00
+2 × (−0.15) × 16 × 6 = −28.80
+                       ────────
+            variance =  263.20
+            sd = √263.20 = <span class="k">16.22%</span></div>
+
+<div class="note">
+  <span class="lbl">ಗಮನಿಸಿ ಎಷ್ಟು ಸಣ್ಣ ಏರಿಕೆ</span>
+  <p>ವಿದೇಶಿ equity ದ SD 16%. Currency ಸೇರಿಸಿದ ನಂತರ 16.22% ಮಾತ್ರ. ಅಂದರೆ 6% currency volatility ಸೇರಿಸಿದರೂ ಒಟ್ಟು SD 0.22 ಶೇಕಡಾ ಬಿಂದು ಮಾತ್ರ ಏರಿತು — ಏಕೆಂದರೆ correlation ಋಣಾತ್ಮಕ.</p>
+  <p>ρfc ಅನ್ನು 0 ಗೆ ಇಟ್ಟರೆ: √(256+36) = 17.09%. +0.3 ಗೆ ಇಟ್ಟರೆ: √(256+36+57.6) = 18.70%. ಈ ಒಂದು ಸಂಖ್ಯೆ ಎಷ್ಟು ಮುಖ್ಯ ಎಂದು ಈಗ ಅರ್ಥವಾಯಿತೇ?</p>
+</div>
+
+<h2 class="newpage">4. ಪ್ರತಿ Input field ಅರ್ಥ</h2>
+
+<h3>4.1 ದೇಶೀಯ equity ನಿರೀಕ್ಷೆ</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Field</th><th style="width:12%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಹೇಗೆ ಆಯ್ಕೆ ಮಾಡುವುದು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">domReturn</td><td class="num">12%</td><td>ಭಾರತೀಯ equity ದ ನಿರೀಕ್ಷಿತ <b>arithmetic mean</b> ವಾರ್ಷಿಕ return. ಇದು nominal (inflation ತೆಗೆಯದ). ಐತಿಹಾಸಿಕ Nifty ~13–14% ಆದರೂ ಭವಿಷ್ಯಕ್ಕೆ 11–12% ಸಂಪ್ರದಾಯಶೀಲ ಅಂದಾಜು.</td></tr>
+    <tr><td class="f">domSD</td><td class="num">20%</td><td>ಭಾರತೀಯ equity ದ ವಾರ್ಷಿಕ standard deviation. ಐತಿಹಾಸಿಕವಾಗಿ 20–24%. ಇದನ್ನು ಕಡಿಮೆ ಇಟ್ಟರೆ diversification ದ ಲಾಭ ಕೃತಕವಾಗಿ ಕಡಿಮೆ ಕಾಣಿಸುತ್ತದೆ.</td></tr>
+  </tbody>
+</table>
+
+<h3>4.2 ಅಂತರರಾಷ್ಟ್ರೀಯ equity ನಿರೀಕ್ಷೆ</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Field</th><th style="width:12%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಹೇಗೆ ಆಯ್ಕೆ ಮಾಡುವುದು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">intlReturn</td><td class="num">8%</td><td><b>ಸ್ಥಳೀಯ ಕರೆನ್ಸಿಯಲ್ಲಿ</b> (ಅಂದರೆ ಡಾಲರ್‌ನಲ್ಲಿ) ನಿರೀಕ್ಷಿತ return. ಇಲ್ಲಿ ರೂಪಾಯಿ ಪರಿವರ್ತನೆ ಸೇರಿಸಬೇಡಿ — calculator ಅದನ್ನು ಮುಂದೆ ಮಾಡುತ್ತದೆ. ಇದೇ ಅತಿ ಸಾಮಾನ್ಯ ತಪ್ಪು.</td></tr>
+    <tr><td class="f">intlSD</td><td class="num">16%</td><td>ವಿದೇಶಿ equity ದ SD, ಸ್ಥಳೀಯ ಕರೆನ್ಸಿಯಲ್ಲಿ. S&amp;P 500 ಐತಿಹಾಸಿಕವಾಗಿ ~15–17%. ಭಾರತಕ್ಕಿಂತ ಕಡಿಮೆ — ಇದೇ ಒಂದು ಆಕರ್ಷಣೆ.</td></tr>
+  </tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಎಚ್ಚರಿಕೆ — intlReturn ಗೆ ಎಷ್ಟು ಹಾಕಬೇಕು</span>
+  <p>"US market 30 ವರ್ಷದಲ್ಲಿ 11% ಕೊಟ್ಟಿದೆ" ಎಂದು 11% ಹಾಕಬೇಡಿ. ಆ 11% ಡಾಲರ್ ಆಧಾರಿತ ಮತ್ತು ಅಸಾಧಾರಣ ಅವಧಿ. ಜೊತೆಗೆ ನೀವು 11% ಹಾಕಿ ಮತ್ತೆ 3% inrDep ಸೇರಿಸಿದರೆ 14.3% ರೂಪಾಯಿ return ನಿರೀಕ್ಷಿಸುತ್ತಿದ್ದೀರಿ — ಇದು ಭಾರತೀಯ equity ಗಿಂತ ಹೆಚ್ಚು. ಆಗ frontier "100% international" ಎಂದು ಹೇಳುತ್ತದೆ. ಅದು ನಿಜವಲ್ಲ, ನಿಮ್ಮ input ದ ಪ್ರತಿಬಿಂಬ ಮಾತ್ರ.</p>
+</div>
+
+<h3>4.3 Currency ನಿಯತಾಂಕಗಳು</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Field</th><th style="width:12%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಹೇಗೆ ಆಯ್ಕೆ ಮಾಡುವುದು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">inrDep</td><td class="num">3%</td><td>ರೂಪಾಯಿಯ ವಾರ್ಷಿಕ ಸರಾಸರಿ ಕುಸಿತ ದರ. ದೀರ್ಘಕಾಲದಲ್ಲಿ ಇದು ಎರಡು ದೇಶಗಳ inflation ವ್ಯತ್ಯಾಸಕ್ಕೆ ಸಮನಾಗಿರುತ್ತದೆ (purchasing power parity). ಭಾರತ 6% − US 2.5% ≈ 3.5%. Default 3% ಸ್ವಲ್ಪ ಸಂಪ್ರದಾಯಶೀಲ.</td></tr>
+    <tr><td class="f">inrSD</td><td class="num">6%</td><td>ಆ ಕುಸಿತ ದರದ ವಾರ್ಷಿಕ ಏರಿಳಿತ. ಕೆಲವು ವರ್ಷ ರೂಪಾಯಿ ಬಲಗೊಳ್ಳಬಹುದು, ಕೆಲವು ವರ್ಷ 12% ಬೀಳಬಹುದು.</td></tr>
+    <tr><td class="f">corrIntlINR</td><td class="num">−0.15</td><td>ವಿದೇಶಿ equity return ಮತ್ತು ರೂಪಾಯಿ ಕುಸಿತದ ನಡುವಿನ correlation. ಋಣಾತ್ಮಕ = equity ಬಿದ್ದಾಗ ರೂಪಾಯಿ ಹೆಚ್ಚು ಬೀಳುತ್ತದೆ = ನಿಮಗೆ ಭಾಗಶಃ ರಕ್ಷಣೆ. ಇದನ್ನು 0 ಇಟ್ಟು ಪರೀಕ್ಷಿಸಿ.</td></tr>
+  </tbody>
+</table>
+
+<h3>4.4 Portfolio ರಚನೆ</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Field</th><th style="width:12%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಹೇಗೆ ಆಯ್ಕೆ ಮಾಡುವುದು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">equityAlloc</td><td class="num">70%</td><td>ಒಟ್ಟು portfolio ದಲ್ಲಿ equity ದ ಪಾಲು. ಉಳಿದದ್ದು debt. ಇದು ಮೊದಲ ಹಂತದ ವಿಭಜನೆ.</td></tr>
+    <tr><td class="f">intlShare</td><td class="num">25%</td><td><b>Equity ಭಾಗದೊಳಗೆ</b> ಅಂತರರಾಷ್ಟ್ರೀಯದ ಪಾಲು — ಒಟ್ಟು portfolio ದಲ್ಲಿ ಅಲ್ಲ. equityAlloc 70% ಮತ್ತು intlShare 25% ಆದರೆ ಒಟ್ಟು portfolio ದಲ್ಲಿ international = 70% × 25% = <b>17.5%</b>. ಇದನ್ನು ಗೊಂದಲ ಮಾಡಿಕೊಳ್ಳಬೇಡಿ.</td></tr>
+    <tr><td class="f">debtReturn</td><td class="num">7%</td><td>Debt ಭಾಗದ ನಿರೀಕ್ಷಿತ return. ದೀರ್ಘಕಾಲದ ಸರ್ಕಾರಿ ಬಾಂಡ್ + ಸ್ವಲ್ಪ credit spread.</td></tr>
+    <tr><td class="f">debtSD</td><td class="num">4%</td><td>Debt ದ SD. ಅಲ್ಪಾವಧಿ fund ಗೆ 1–2%, ದೀರ್ಘಾವಧಿ gilt ಗೆ 5–7%.</td></tr>
+    <tr><td class="f">feeDrag</td><td class="num">0.6%</td><td>ವಾರ್ಷಿಕ ಒಟ್ಟು ವೆಚ್ಚ — expense ratio + advisory + tracking error. International fund ಗೆ ಇದು ಸಾಮಾನ್ಯವಾಗಿ ಹೆಚ್ಚು (0.5–1.5%). ಇದನ್ನು retirement simulation ದಲ್ಲಿ ಮಾತ್ರ ಬಳಸಲಾಗುತ್ತದೆ.</td></tr>
+  </tbody>
+</table>
+
+<h3>4.5 Correlation ಮತ್ತು ಮಾನದಂಡ</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Field</th><th style="width:12%">Default</th><th>ಅರ್ಥ ಮತ್ತು ಹೇಗೆ ಆಯ್ಕೆ ಮಾಡುವುದು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">corrDomIntl</td><td class="num">0.4</td><td>ಭಾರತೀಯ ಮತ್ತು ವಿದೇಶಿ equity ನಡುವಿನ correlation. ಇದೇ ಇಡೀ tool ದ ಅತ್ಯಂತ ಪ್ರಭಾವಶಾಲಿ input. 2000 ದ ಮೊದಲು ~0.2 ಇತ್ತು, ಈಗ 0.4–0.6. Crisis ನಲ್ಲಿ 0.8 ವರೆಗೆ ಏರುತ್ತದೆ.</td></tr>
+    <tr><td class="f">inflation</td><td class="num">6%</td><td>Real return ಲೆಕ್ಕಕ್ಕೆ ಬಳಸುವ ವಾರ್ಷಿಕ ಹಣದುಬ್ಬರ. Retirement simulation ದಲ್ಲಿ withdrawal ಏರಿಕೆಗೂ ಬಳಕೆ.</td></tr>
+    <tr><td class="f">riskFree</td><td class="num">6.5%</td><td>Sharpe ratio ಲೆಕ್ಕಕ್ಕೆ ಬೇಕಾದ risk-free rate. 10-year G-Sec yield ಬಳಸಿ.</td></tr>
+  </tbody>
+</table>
+
+<h3>4.6 Retirement simulation ನಿಯತಾಂಕಗಳು</h3>
+
+<table>
+  <thead><tr><th style="width:24%">Field</th><th style="width:16%">Default</th><th>ಅರ್ಥ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">corpus</td><td class="num">₹2,00,00,000</td><td>ಪ್ರಸ್ತುತ ನಿವೃತ್ತಿ corpus.</td></tr>
+    <tr><td class="f">monthlyWithdrawal</td><td class="num">₹70,000</td><td>ಮೊದಲ ವರ್ಷದ ಮಾಸಿಕ ಖರ್ಚು. ಪ್ರತಿ ವರ್ಷ inflation ರಷ್ಟು ಏರುತ್ತದೆ. ಇಲ್ಲಿ 70,000 × 12 ÷ 2 ಕೋಟಿ = <b>4.2% withdrawal rate</b>.</td></tr>
+    <tr><td class="f">horizon</td><td class="num">30 ವರ್ಷ</td><td>ನಿವೃತ್ತಿ ಎಷ್ಟು ವರ್ಷ ಬಾಳಬೇಕು.</td></tr>
+    <tr><td class="f">paths</td><td class="num">1,500</td><td>Monte Carlo ದಲ್ಲಿ ಎಷ್ಟು ಪರ್ಯಾಯ ಜೀವನಗಳು ಚಲಾಯಿಸಬೇಕು.</td></tr>
+    <tr><td class="f">seed</td><td class="num">20260811</td><td>Random number generator ದ ಬೀಜ. ಒಂದೇ seed = ಒಂದೇ ಫಲಿತಾಂಶ, ಮತ್ತೆ ಮತ್ತೆ. ಎರಡು allocation ಹೋಲಿಸುವಾಗ seed ಬದಲಾಯಿಸಬೇಡಿ — ಇಲ್ಲದಿದ್ದರೆ ವ್ಯತ್ಯಾಸ allocation ದಿಂದಲೋ ಅದೃಷ್ಟದಿಂದಲೋ ಗೊತ್ತಾಗುವುದಿಲ್ಲ.</td></tr>
+  </tbody>
+</table>
+
+<h2 class="newpage">5. ಒಳಗಿನ Math — ಹಂತ ಹಂತವಾಗಿ</h2>
+
+<p>Default ಸಂಖ್ಯೆಗಳಿಂದ ಪೂರ್ಣ ಲೆಕ್ಕವನ್ನು ಆರು ಹಂತಗಳಲ್ಲಿ ಮಾಡೋಣ.</p>
+
+<h3>ಹಂತ 1 — ವಿದೇಶಿ equity ಅನ್ನು ರೂಪಾಯಿಗೆ ಪರಿವರ್ತಿಸಿ</h3>
+
+<div class="formula"><span class="c">// Input: intlReturn 8%, inrDep 3%, intlSD 16%, inrSD 6%, corrIntlINR −0.15</span>
+
+mf = 0.08   mc = 0.03
+sf = 0.16   sc = 0.06   ρfc = −0.15
+
+<span class="c">// Mean</span>
+mean = mf + mc + mf×mc
+     = 0.08 + 0.03 + 0.0024
+     = 0.1124  →  <span class="k">11.24%</span>
+
+<span class="c">// Variance ಮತ್ತು SD</span>
+var = sf² + sc² + 2×ρfc×sf×sc
+    = 0.0256 + 0.0036 + 2×(−0.15)×0.16×0.06
+    = 0.0256 + 0.0036 − 0.00288
+    = 0.02632
+sd  = √0.02632 = 0.16224  →  <span class="k">16.22%</span></div>
+
+<p>ಈಗ ವಿದೇಶಿ equity ರೂಪಾಯಿ ದೃಷ್ಟಿಯಿಂದ: <b>mean 11.24%, SD 16.22%</b>. ದೇಶೀಯ: mean 12%, SD 20%.</p>
+
+<div class="note">
+  <span class="lbl">ಇಲ್ಲೇ ಪ್ರಮುಖ ಒಳನೋಟ</span>
+  <p>ರೂಪಾಯಿ ಪರಿವರ್ತನೆಯ ನಂತರ ವಿದೇಶಿ equity ದ return ದೇಶೀಯಕ್ಕಿಂತ ಕೇವಲ 0.76 ಶೇಕಡಾ ಬಿಂದು ಕಡಿಮೆ — ಆದರೆ SD 3.78 ಶೇಕಡಾ ಬಿಂದು ಕಡಿಮೆ. ಅಂದರೆ risk-adjusted ದೃಷ್ಟಿಯಿಂದ ವಿದೇಶಿ equity <b>ಉತ್ತಮ</b>. ಇದೇ ಕಾರಣಕ್ಕೆ frontier ಸಾಮಾನ್ಯವಾಗಿ ಗಣನೀಯ international ಪಾಲನ್ನು ಸೂಚಿಸುತ್ತದೆ.</p>
+</div>
+
+<h3>ಹಂತ 2 — Equity ಭಾಗವನ್ನು ಬೆರೆಸಿ</h3>
+
+<div class="formula"><span class="c">// intlShare 25% → wI = 0.25, wD = 0.75</span>
+
+eqMean = 0.75 × 12.00 + 0.25 × 11.24
+       = 9.000 + 2.810
+       = <span class="k">11.810%</span>
+
+eqVar = wD²×sd² + wI²×si² + 2×wD×wI×ρ×sd×si
+      = 0.5625×400 + 0.0625×263.2 + 2×0.75×0.25×0.4×20×16.224
+      = 225.000 + 16.450 + 48.672
+      = 290.122
+eqSD  = √290.122 = <span class="k">17.033%</span></div>
+
+<p>ಗಮನಿಸಿ: 100% ದೇಶೀಯ ಆಗಿದ್ದರೆ mean 12%, SD 20%. ಈಗ mean 11.81% (0.19 ಕಡಿಮೆ), SD 17.03% (2.97 ಕಡಿಮೆ). <b>0.19 ಬಿಟ್ಟುಕೊಟ್ಟು 2.97 ಪಡೆದಿದ್ದೀರಿ.</b></p>
+
+<h3>ಹಂತ 3 — Debt ಸೇರಿಸಿ ಪೂರ್ಣ portfolio ಮಾಡಿ</h3>
+
+<div class="formula"><span class="c">// equityAlloc 70% → we = 0.70, wb = 0.30</span>
+
+mean = we × eqMean + wb × debtReturn
+     = 0.70 × 11.810 + 0.30 × 7.00
+     = 8.267 + 2.100
+     = <span class="k">10.367%</span>
+
+<span class="c">// ಗಮನಿಸಿ: equity ಮತ್ತು debt ನಡುವೆ correlation 0 ಎಂದು ಊಹಿಸಲಾಗಿದೆ</span>
+sd = √(we² × eqSD² + wb² × debtSD²)
+   = √(0.49 × 290.122 + 0.09 × 16)
+   = √(142.160 + 1.440)
+   = √143.600
+   = <span class="k">11.983%</span></div>
+
+<div class="warn">
+  <span class="lbl">ಸರಳೀಕರಣದ ಬಗ್ಗೆ ಪ್ರಾಮಾಣಿಕತೆ</span>
+  <p>Code equity–debt correlation ಅನ್ನು <b>ಶೂನ್ಯ</b> ಎಂದು ಊಹಿಸುತ್ತದೆ. ವಾಸ್ತವದಲ್ಲಿ ಇದು ಸಾಮಾನ್ಯವಾಗಿ ಸ್ವಲ್ಪ ಋಣಾತ್ಮಕ (−0.1 ರಿಂದ −0.2) ಆಗಿರುತ್ತದೆ, ಆದರೆ inflation shock ಸಮಯದಲ್ಲಿ ಧನಾತ್ಮಕ ಆಗಬಹುದು. ಶೂನ್ಯ ಊಹೆ ಮಧ್ಯಮ ಮಾರ್ಗ. ಇದರಿಂದ portfolio SD ಸ್ವಲ್ಪ ಹೆಚ್ಚು ಅಥವಾ ಕಡಿಮೆ ತೋರಬಹುದು — ಆದರೆ ಎಲ್ಲಾ intlShare ಗೂ ಒಂದೇ ರೀತಿ, ಆದ್ದರಿಂದ <b>ಹೋಲಿಕೆ</b> ಸರಿಯಾಗಿಯೇ ಇರುತ್ತದೆ.</p>
+</div>
+
+<h3>ಹಂತ 4 — Geometric return (volatility drag ತೆಗೆದು)</h3>
+
+<div class="formula">geo = ((1 + mean) / √(1 + sd²/(1+mean)²) − 1) × 100
+
+<span class="c">// ಸಂಖ್ಯೆಗಳನ್ನು ದಶಮಾಂಶದಲ್ಲಿ ಹಾಕಿ</span>
+mean = 0.10367   sd = 0.11983
+
+1 + mean          = 1.10367
+(1 + mean)²       = 1.21809
+sd²               = 0.01436
+sd²/(1+mean)²     = 0.011789
+1 + ಅದು           = 1.011789
+√1.011789         = 1.005877
+
+geo = (1.10367 / 1.005877 − 1) × 100
+    = (1.097222 − 1) × 100
+    = <span class="k">9.722%</span></div>
+
+<p><b>Volatility drag = 10.367 − 9.722 = 0.645 ಶೇಕಡಾ ಬಿಂದು.</b></p>
+
+<h4>Drag ಎಷ್ಟು ದೊಡ್ಡದು ಎಂದು ಹೋಲಿಸಿ</h4>
+
+<table>
+  <thead><tr><th>Portfolio</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Geometric</th><th class="num">Drag</th></tr></thead>
+  <tbody>
+    <tr><td>100% ದೇಶೀಯ equity, 70/30</td><td class="num">10.50%</td><td class="num">14.02%</td><td class="num">9.63%</td><td class="num">0.87</td></tr>
+    <tr><td>25% intl (default)</td><td class="num">10.37%</td><td class="num">11.98%</td><td class="num">9.72%</td><td class="num">0.65</td></tr>
+    <tr><td>50% intl</td><td class="num">10.23%</td><td class="num">11.24%</td><td class="num">9.66%</td><td class="num">0.57</td></tr>
+  </tbody>
+</table>
+
+<p>ಇದೇ ಆ ಪ್ರಸಿದ್ಧ "free lunch" — mean 0.13 ಬಿಂದು ಕಡಿಮೆ ಆದರೂ geometric 0.09 ಬಿಂದು <b>ಹೆಚ್ಚು</b>, ಏಕೆಂದರೆ drag 0.22 ಬಿಂದು ಕಡಿಮೆ ಆಯಿತು.</p>
+
+<h3>ಹಂತ 5 — Real return</h3>
+
+<div class="formula">real = ((1 + geo/100) / (1 + inflation/100) − 1) × 100
+     = (1.09722 / 1.06 − 1) × 100
+     = (1.035116 − 1) × 100
+     = <span class="k">3.512%</span></div>
+
+<div class="warn">
+  <span class="lbl">ಇಲ್ಲಿ ಕಳೆಯಬಾರದು</span>
+  <p>ತಪ್ಪು: 9.722 − 6 = 3.722%. ಸರಿ: 3.512%. ವ್ಯತ್ಯಾಸ 0.21 ಬಿಂದು. 30 ವರ್ಷದಲ್ಲಿ ಇದು ಸುಮಾರು 6.5% ಕಡಿಮೆ ನಿಜವಾದ ಕೊಳ್ಳುವ ಶಕ್ತಿ.</p>
+</div>
+
+<h3>ಹಂತ 6 — Sharpe ratio</h3>
+
+<div class="formula">sharpe = (mean − riskFree) / sd
+       = (10.367 − 6.5) / 11.983
+       = 3.867 / 11.983
+       = <span class="k">0.3227</span></div>
+
+<p>Sharpe ratio ಎಂದರೆ — <b>ಪ್ರತಿ ಒಂದು ಘಟಕ risk ಗೆ ಎಷ್ಟು ಹೆಚ್ಚುವರಿ return</b>. ಹೆಚ್ಚಿದಷ್ಟೂ ಒಳ್ಳೆಯದು.</p>
+
+<table>
+  <thead><tr><th>Sharpe</th><th>ಅರ್ಥ</th></tr></thead>
+  <tbody>
+    <tr><td class="num">&lt; 0.20</td><td>ದುರ್ಬಲ — ತೆಗೆದುಕೊಂಡ risk ಗೆ ಪ್ರತಿಫಲ ಸಾಲದು</td></tr>
+    <tr><td class="num">0.20–0.30</td><td>ಸಾಮಾನ್ಯ — ಹೆಚ್ಚಿನ ಭಾರತೀಯ equity portfolio ಇಲ್ಲಿ ಬರುತ್ತವೆ</td></tr>
+    <tr><td class="num">0.30–0.40</td><td>ಉತ್ತಮ — ಚೆನ್ನಾಗಿ diversify ಆದ portfolio</td></tr>
+    <tr><td class="num">&gt; 0.50</td><td>ಅನುಮಾನ ಪಡಿ — ನಿಮ್ಮ input ಅತಿ ಆಶಾವಾದಿ ಇರಬಹುದು</td></tr>
+  </tbody>
+</table>
+
+<h2 class="newpage">6. Efficient Frontier — 51 ಬಿಂದುಗಳ ಸ್ಕ್ಯಾನ್</h2>
+
+<p>Frontier function ಒಂದೇ ಕೆಲಸ ಮಾಡುತ್ತದೆ — ಮೇಲಿನ ಆರು ಹಂತದ ಲೆಕ್ಕವನ್ನು <b>51 ಬಾರಿ</b> ಪುನರಾವರ್ತಿಸುತ್ತದೆ, ಪ್ರತಿ ಬಾರಿ ಬೇರೆ intlShare ನೊಂದಿಗೆ.</p>
+
+<div class="formula">for (let s = 0; s &lt;= 100; s += 2) {
+    const b = blend(s);           <span class="c">// ಹಂತ 1–6 ಪೂರ್ಣ ಲೆಕ್ಕ</span>
+    points.push({ intlShare: s, ...b });
+}
+
+<span class="c">// ನಂತರ ಮೂರು ವಿಜೇತರನ್ನು ಆರಿಸು</span>
+bestGeometric = points ದಲ್ಲಿ ಗರಿಷ್ಠ geo
+lowestVol     = points ದಲ್ಲಿ ಕನಿಷ್ಠ sd
+bestSharpe    = points ದಲ್ಲಿ ಗರಿಷ್ಠ sharpe</div>
+
+<p>0, 2, 4, ... 100 — ಒಟ್ಟು 51 ಬಿಂದುಗಳು.</p>
+
+<h3>6.1 Default ಸಂಖ್ಯೆಗಳಿಂದ ಪೂರ್ಣ frontier</h3>
+
+<table>
+  <thead><tr><th class="num">intlShare</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Geometric</th><th class="num">Real</th><th class="num">Sharpe</th><th class="num">Drag</th></tr></thead>
+  <tbody>
+    <tr><td class="num">0%</td><td class="num">10.50</td><td class="num">14.02</td><td class="num">9.629</td><td class="num">3.424</td><td class="num">0.2853</td><td class="num">0.871</td></tr>
+    <tr><td class="num">10%</td><td class="num">10.45</td><td class="num">13.14</td><td class="num">9.680</td><td class="num">3.472</td><td class="num">0.3005</td><td class="num">0.770</td></tr>
+    <tr><td class="num">20%</td><td class="num">10.39</td><td class="num">12.41</td><td class="num">9.712</td><td class="num">3.502</td><td class="num">0.3134</td><td class="num">0.678</td></tr>
+    <tr><td class="num">25%</td><td class="num">10.37</td><td class="num">11.98</td><td class="num">9.722</td><td class="num">3.512</td><td class="num">0.3227</td><td class="num">0.645</td></tr>
+    <tr><td class="num">30%</td><td class="num">10.34</td><td class="num">11.85</td><td class="num"><b>9.727</b></td><td class="num"><b>3.516</b></td><td class="num">0.3244</td><td class="num">0.613</td></tr>
+    <tr><td class="num">40%</td><td class="num">10.29</td><td class="num">11.48</td><td class="num">9.716</td><td class="num">3.506</td><td class="num">0.3300</td><td class="num">0.574</td></tr>
+    <tr><td class="num">46%</td><td class="num">10.26</td><td class="num">11.36</td><td class="num">9.702</td><td class="num">3.493</td><td class="num"><b>0.3307</b></td><td class="num">0.558</td></tr>
+    <tr><td class="num">52%</td><td class="num">10.22</td><td class="num"><b>11.32</b></td><td class="num">9.684</td><td class="num">3.475</td><td class="num">0.3287</td><td class="num">0.536</td></tr>
+    <tr><td class="num">60%</td><td class="num">10.18</td><td class="num">11.36</td><td class="num">9.652</td><td class="num">3.445</td><td class="num">0.3239</td><td class="num">0.528</td></tr>
+    <tr><td class="num">80%</td><td class="num">10.07</td><td class="num">11.83</td><td class="num">9.518</td><td class="num">3.319</td><td class="num">0.3018</td><td class="num">0.552</td></tr>
+    <tr><td class="num">100%</td><td class="num">9.97</td><td class="num">12.74</td><td class="num">9.315</td><td class="num">3.127</td><td class="num">0.2723</td><td class="num">0.655</td></tr>
+  </tbody>
+</table>
+
+<h3>6.2 ಮೂರು ವಿಜೇತರು — ಮೂರು ಬೇರೆ ಉತ್ತರ</h3>
+
+<table>
+  <thead><tr><th style="width:22%">ಮಾನದಂಡ</th><th class="num" style="width:14%">intlShare</th><th>ಏನು ಅರ್ಥ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Best geometric</td><td class="num">30%</td><td>ದೀರ್ಘಕಾಲದಲ್ಲಿ ಗರಿಷ್ಠ ಸಂಪತ್ತು ಬೆಳವಣಿಗೆ. ನೀವು ಇನ್ನೂ ಸಂಗ್ರಹಿಸುತ್ತಿದ್ದರೆ ಇದೇ ನಿಮ್ಮ ಗುರಿ.</td></tr>
+    <tr><td class="f">Lowest volatility</td><td class="num">52%</td><td>ಕನಿಷ್ಠ ಏರಿಳಿತ. ನೀವು ಈಗಾಗಲೇ ನಿವೃತ್ತರಾಗಿದ್ದು sequence risk ಬಗ್ಗೆ ಚಿಂತಿತರಾಗಿದ್ದರೆ ಇದು ಆಕರ್ಷಕ.</td></tr>
+    <tr><td class="f">Best Sharpe</td><td class="num">46%</td><td>ಪ್ರತಿ ಘಟಕ risk ಗೆ ಗರಿಷ್ಠ ಪ್ರತಿಫಲ. ಸೈದ್ಧಾಂತಿಕವಾಗಿ "ಅತ್ಯಂತ ದಕ್ಷ" ಬಿಂದು.</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಮೂರೂ ಬೇರೆ ಬೇರೆ ಉತ್ತರ ಕೊಡುತ್ತವೆ — ಇದು ದೋಷವಲ್ಲ</span>
+  <p>ಇವು ಮೂರು ಬೇರೆ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರ. "ಗರಿಷ್ಠ ಸಂಪತ್ತು ಬೇಕೇ" (30%), "ಕನಿಷ್ಠ ನಿದ್ರಾಹೀನತೆ ಬೇಕೇ" (52%), ಅಥವಾ "ಗರಿಷ್ಠ ದಕ್ಷತೆ ಬೇಕೇ" (46%). ಸರಿಯಾದ ಉತ್ತರ ನಿಮ್ಮ ಜೀವನದ ಹಂತದ ಮೇಲೆ ಅವಲಂಬಿತ.</p>
+</div>
+
+<h3>6.3 ಅತಿ ಮುಖ್ಯ ಅವಲೋಕನ — Curve ಚಪ್ಪಟೆ</h3>
+
+<p>ಮೇಲಿನ ಕೋಷ್ಟಕವನ್ನು ಮತ್ತೊಮ್ಮೆ ನೋಡಿ. 20% ರಿಂದ 46% ವರೆಗೆ:</p>
+
+<ul>
+  <li>Geometric return: 9.712% ರಿಂದ 9.702% — <b>0.01 ಬಿಂದು ವ್ಯತ್ಯಾಸ</b></li>
+  <li>Sharpe: 0.3134 ರಿಂದ 0.3307 — 0.017 ವ್ಯತ್ಯಾಸ</li>
+  <li>SD: 12.41% ರಿಂದ 11.36% — 1.05 ಬಿಂದು ವ್ಯತ್ಯಾಸ</li>
+</ul>
+
+<p>ಅಂದರೆ ಈ ಇಡೀ 26-ಬಿಂದು ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ಎಲ್ಲಿ ಇದ್ದರೂ ಪರಿಣಾಮ ಬಹುತೇಕ ಒಂದೇ.</p>
+
+<div class="tip">
+  <span class="lbl">ಪ್ರಾಯೋಗಿಕ ಪಾಠ</span>
+  <p>"ನಿಖರವಾಗಿ 30% ಇರಬೇಕೋ 32% ಇರಬೇಕೋ" ಎಂದು ಚಿಂತಿಸಬೇಡಿ. 20–40% ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ಎಲ್ಲಾದರೂ ಇರಿ — ವ್ಯತ್ಯಾಸ ನಿಮ್ಮ ಇತರ ನಿರ್ಧಾರಗಳ (ಎಷ್ಟು ಉಳಿಸುತ್ತೀರಿ, ಎಷ್ಟು fee ಕೊಡುತ್ತೀರಿ, panic ಮಾಡುತ್ತೀರೋ ಇಲ್ಲವೋ) ಮುಂದೆ ಶೂನ್ಯ.</p>
+</div>
+
+<h3>6.4 Curve ಏಕೆ ಈ ಆಕಾರ</h3>
+
+<p>Geometric return ದ curve ತಲೆಕೆಳಗಾದ U ಆಕಾರ. ಕಾರಣ ಎರಡು ಶಕ್ತಿಗಳ ಹೋರಾಟ:</p>
+
+<table>
+  <thead><tr><th style="width:30%">ಶಕ್ತಿ</th><th>ದಿಕ್ಕು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Mean ಕಡಿತ</td><td>intlShare ಏರಿದಷ್ಟೂ mean ಸ್ಥಿರವಾಗಿ ಕಡಿಮೆ ಆಗುತ್ತದೆ (12% → 11.24% ಕಡೆ ಎಳೆಯುತ್ತದೆ). ಇದು <b>ರೇಖಾತ್ಮಕ</b>.</td></tr>
+    <tr><td class="f">SD ಕಡಿತ</td><td>ಮೊದಲಿಗೆ SD ವೇಗವಾಗಿ ಕಡಿಮೆ ಆಗುತ್ತದೆ, ನಂತರ ಒಂದು ಕನಿಷ್ಠ ಬಿಂದು ತಲುಪಿ ಮತ್ತೆ ಏರುತ್ತದೆ. ಇದು <b>ಪ್ಯಾರಾಬೋಲಿಕ್</b>.</td></tr>
+  </tbody>
+</table>
+
+<p>ಆರಂಭದಲ್ಲಿ SD ಕಡಿತದ ಲಾಭ mean ನಷ್ಟಕ್ಕಿಂತ ದೊಡ್ಡದು → geometric ಏರುತ್ತದೆ. ಒಂದು ಹಂತದ ನಂತರ SD ಕಡಿತ ನಿಧಾನವಾಗುತ್ತದೆ ಆದರೆ mean ನಷ್ಟ ಮುಂದುವರಿಯುತ್ತದೆ → geometric ಬೀಳುತ್ತದೆ.</p>
+
+<p>SD ಕನಿಷ್ಠ ಬಿಂದು (52%) geometric ಗರಿಷ್ಠ ಬಿಂದುಗಿಂತ (30%) ಬಲಕ್ಕೆ ಇರುತ್ತದೆ — ಏಕೆಂದರೆ SD ಇನ್ನೂ ಕಡಿಮೆ ಆಗುತ್ತಿದ್ದರೂ mean ನಷ್ಟ ಈಗಾಗಲೇ ಹೆಚ್ಚಾಗಿದೆ.</p>
+
+<h3>6.5 Correlation frontier ಅನ್ನು ಹೇಗೆ ಬದಲಾಯಿಸುತ್ತದೆ</h3>
+
+<table>
+  <thead><tr><th class="num">corrDomIntl</th><th class="num">Best geo intlShare</th><th class="num">ಆ ಬಿಂದುವಿನ geo</th><th class="num">0% ನಲ್ಲಿ geo</th><th class="num">ಲಾಭ</th></tr></thead>
+  <tbody>
+    <tr><td class="num">0.0</td><td class="num">42%</td><td class="num">9.812</td><td class="num">9.629</td><td class="num">+0.183</td></tr>
+    <tr><td class="num">0.2</td><td class="num">36%</td><td class="num">9.771</td><td class="num">9.629</td><td class="num">+0.142</td></tr>
+    <tr><td class="num">0.4</td><td class="num">30%</td><td class="num">9.727</td><td class="num">9.629</td><td class="num">+0.098</td></tr>
+    <tr><td class="num">0.6</td><td class="num">22%</td><td class="num">9.681</td><td class="num">9.629</td><td class="num">+0.052</td></tr>
+    <tr><td class="num">0.8</td><td class="num">12%</td><td class="num">9.646</td><td class="num">9.629</td><td class="num">+0.017</td></tr>
+    <tr><td class="num">0.95</td><td class="num">2%</td><td class="num">9.630</td><td class="num">9.629</td><td class="num">+0.001</td></tr>
+  </tbody>
+</table>
+
+<p>Correlation ಏರಿದಂತೆ ಸೂಕ್ತ intlShare ಬೀಳುತ್ತದೆ ಮತ್ತು ಲಾಭ ಕರಗುತ್ತದೆ. 0.95 ನಲ್ಲಿ diversification ಸಂಪೂರ್ಣ ವ್ಯರ್ಥ.</p>
+
+<div class="warn">
+  <span class="lbl">Crisis ದಲ್ಲಿ correlation ಏರುತ್ತದೆ</span>
+  <p>2008 ಮತ್ತು ಮಾರ್ಚ್ 2020 ರಲ್ಲಿ ಜಾಗತಿಕ equity correlation 0.85+ ಗೆ ಏರಿತು. ಅಂದರೆ <b>ನಿಮಗೆ diversification ಅತ್ಯಂತ ಬೇಕಾದ ಕ್ಷಣದಲ್ಲೇ ಅದು ಕೈಕೊಡುತ್ತದೆ</b>. ಇದನ್ನು ಮನಸ್ಸಿನಲ್ಲಿ ಇಟ್ಟುಕೊಂಡು ನಿಮ್ಮ ನಿರೀಕ್ಷೆಯನ್ನು ಸಂಪ್ರದಾಯಶೀಲವಾಗಿ ಇರಿಸಿ. Correlation 0.6 ಹಾಕಿ ಒಮ್ಮೆ frontier ನೋಡಿ.</p>
+</div>
+
+<h2 class="newpage">7. ಪ್ರತಿ Output tab ಏನು ಹೇಳುತ್ತದೆ</h2>
+
+<h3>Tab 1 — Frontier</h3>
+
+<p>ಎರಡು ಭಾಗ: ಮೇಲೆ ಮೂರು ಸಾರಾಂಶ ಕಾರ್ಡ್, ಕೆಳಗೆ ಒಂದು ಚಾರ್ಟ್.</p>
+
+<table>
+  <thead><tr><th style="width:26%">ಅಂಶ</th><th>ಏನು ತೋರಿಸುತ್ತದೆ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Best geometric ಕಾರ್ಡ್</td><td>ಗರಿಷ್ಠ ದೀರ್ಘಕಾಲಿಕ ಬೆಳವಣಿಗೆ ಕೊಡುವ intlShare ಮತ್ತು ಆ geometric return.</td></tr>
+    <tr><td class="f">Lowest volatility ಕಾರ್ಡ್</td><td>ಕನಿಷ್ಠ SD ಕೊಡುವ intlShare ಮತ್ತು ಆ SD.</td></tr>
+    <tr><td class="f">Best Sharpe ಕಾರ್ಡ್</td><td>ಗರಿಷ್ಠ risk-adjusted return ಕೊಡುವ intlShare ಮತ್ತು ಆ Sharpe.</td></tr>
+    <tr><td class="f">Frontier ಚಾರ್ಟ್</td><td>X-ಅಕ್ಷ: intlShare 0→100. ಎರಡು ರೇಖೆ — geometric return ಮತ್ತು SD. ನಿಮ್ಮ ಪ್ರಸ್ತುತ intlShare ಒಂದು ಲಂಬ ಗೆರೆಯಾಗಿ ಗುರುತಿಸಲಾಗುತ್ತದೆ.</td></tr>
+  </tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">ಈ tab ಅನ್ನು ಹೇಗೆ ನೋಡಬೇಕು</span>
+  <p>ಗರಿಷ್ಠ ಬಿಂದುವನ್ನು ಹುಡುಕಬೇಡಿ. ಬದಲಿಗೆ <b>ಎಷ್ಟು ಚಪ್ಪಟೆ ಇದೆ</b> ಎಂದು ನೋಡಿ. Curve ಚಪ್ಪಟೆ ಆದಷ್ಟೂ ನಿಮ್ಮ ನಿಖರ ಆಯ್ಕೆ ಕಡಿಮೆ ಮುಖ್ಯ — ಇದು ಒಳ್ಳೆಯ ಸುದ್ದಿ, ಏಕೆಂದರೆ ನೀವು ತಪ್ಪು ಮಾಡಲು ಜಾಗ ಇದೆ.</p>
+</div>
+
+<h3>Tab 2 — Retirement impact</h3>
+
+<p>ಇಲ್ಲಿ ಮೇಲಿನ ಸೈದ್ಧಾಂತಿಕ ಸಂಖ್ಯೆಗಳು ನಿಜವಾದ ಅರ್ಥ ಪಡೆಯುತ್ತವೆ. Calculator ಮೂರು allocation ಗೆ 1,500 Monte Carlo path ಚಲಾಯಿಸುತ್ತದೆ — 0% intl, ನಿಮ್ಮ ಪ್ರಸ್ತುತ intlShare, ಮತ್ತು best-geometric intlShare.</p>
+
+<table>
+  <thead><tr><th style="width:26%">ಮೆಟ್ರಿಕ್</th><th>ಅರ್ಥ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Success rate</td><td>1,500 ಜೀವನಗಳಲ್ಲಿ ಎಷ್ಟರಲ್ಲಿ corpus horizon ವರೆಗೂ ಉಳಿಯಿತು. ಇದೇ ಅತ್ಯಂತ ಮುಖ್ಯ ಸಂಖ್ಯೆ.</td></tr>
+    <tr><td class="f">Median final corpus</td><td>50ನೇ percentile ಅಂತಿಮ ಸಂಪತ್ತು. "ಸಾಮಾನ್ಯ" ಫಲಿತಾಂಶ.</td></tr>
+    <tr><td class="f">10th percentile</td><td>ಕೆಟ್ಟ 10% ಪರಿಸ್ಥಿತಿಗಳ ಗಡಿ. Downside protection ದ ನಿಜವಾದ ಅಳತೆ.</td></tr>
+    <tr><td class="f">90th percentile</td><td>ಒಳ್ಳೆಯ 10% ಪರಿಸ್ಥಿತಿಗಳ ಗಡಿ. Upside ಎಷ್ಟು ತ್ಯಾಗ ಮಾಡಿದ್ದೀರಿ ಎಂದು ತೋರಿಸುತ್ತದೆ.</td></tr>
+    <tr><td class="f">Median depletion year</td><td>ವಿಫಲವಾದ path ಗಳಲ್ಲಿ ಸರಾಸರಿ ಎಷ್ಟನೇ ವರ್ಷ ಹಣ ಮುಗಿಯಿತು.</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">Fee drag ಇಲ್ಲಿ ಮಾತ್ರ ಅನ್ವಯ</span>
+  <p>Frontier ಲೆಕ್ಕದಲ್ಲಿ feeDrag ಬಳಸುವುದಿಲ್ಲ (ಏಕೆಂದರೆ ಅದು ಎಲ್ಲಾ allocation ಗೂ ಒಂದೇ). Retirement simulation ದಲ್ಲಿ ಪ್ರತಿ ವರ್ಷದ return ದಿಂದ feeDrag ಕಳೆಯಲಾಗುತ್ತದೆ. ಆದ್ದರಿಂದ retirement tab ದ ಸಂಖ್ಯೆಗಳು frontier tab ಗಿಂತ ಸ್ವಲ್ಪ ಕಡಿಮೆ ಆಶಾವಾದಿ ಇರುತ್ತವೆ — ಇದು ಸರಿ.</p>
+</div>
+
+<h3>Tab 3 — Allocation table</h3>
+
+<p>51 frontier ಬಿಂದುಗಳ ಪೂರ್ಣ ಸಂಖ್ಯಾತ್ಮಕ ಕೋಷ್ಟಕ. ಪ್ರತಿ ಸಾಲಿಗೆ: intlShare, ಒಟ್ಟು portfolio ದಲ್ಲಿ international %, mean, SD, geometric, real, Sharpe, volatility drag.</p>
+
+<p>ಚಾರ್ಟ್‌ನಲ್ಲಿ ಕಣ್ಣಿಗೆ ಕಾಣದ ಸಣ್ಣ ವ್ಯತ್ಯಾಸಗಳನ್ನು ಇಲ್ಲಿ ನಿಖರವಾಗಿ ನೋಡಬಹುದು. ಮುಖ್ಯವಾಗಿ "ಒಟ್ಟು portfolio ದಲ್ಲಿ %" ಕಾಲಂ ಗಮನಿಸಿ — intlShare 30% ಎಂದರೆ equityAlloc 70% ನಲ್ಲಿ ಒಟ್ಟು 21% ಮಾತ್ರ.</p>
+
+<h3>Tab 4 — Notes</h3>
+
+<p>ಈ model ದ ಊಹೆಗಳು ಮತ್ತು ಮಿತಿಗಳು. ಪ್ರತಿ ಬಳಕೆದಾರರೂ ಒಮ್ಮೆಯಾದರೂ ಓದಬೇಕಾದ tab:</p>
+
+<ul>
+  <li>Return ಮತ್ತು SD ಗಳು ನಿಮ್ಮ <b>ಊಹೆಗಳು</b>, ಭವಿಷ್ಯವಾಣಿ ಅಲ್ಲ</li>
+  <li>Correlation ಸ್ಥಿರ ಎಂದು ಊಹಿಸಲಾಗಿದೆ — ವಾಸ್ತವದಲ್ಲಿ ಅಲ್ಲ</li>
+  <li>Equity–debt correlation ಶೂನ್ಯ ಎಂದು ಊಹಿಸಲಾಗಿದೆ</li>
+  <li>Return ಗಳು lognormal ಎಂದು ಊಹಿಸಲಾಗಿದೆ — ನಿಜವಾದ market ಗೆ ದಪ್ಪ ಬಾಲ (fat tails) ಇವೆ</li>
+  <li>ತೆರಿಗೆ ಸೇರಿಸಿಲ್ಲ — international fund ಗೆ ಭಾರತದಲ್ಲಿ ತೆರಿಗೆ ನಿಯಮ ಬೇರೆ</li>
+  <li>Rebalancing ವೆಚ್ಚ ಮತ್ತು LRS ಮಿತಿ ಸೇರಿಸಿಲ್ಲ</li>
+</ul>
+
+<h2 class="newpage">8. Worked Example — ಪೂರ್ಣ ಲೆಕ್ಕ</h2>
+
+<div class="example">
+  <h4>ಪ್ರಕರಣ — ಮಂಜುನಾಥ್, ವಯಸ್ಸು 59</h4>
+  <p>ಮಂಜುನಾಥ್ ಮುಂದಿನ ವರ್ಷ ನಿವೃತ್ತರಾಗುತ್ತಾರೆ. ಅವರ ಬಳಿ ₹2 ಕೋಟಿ corpus, ಪೂರ್ತಿ ಭಾರತೀಯ mutual fund ನಲ್ಲಿ. ಮಾಸಿಕ ₹70,000 ಬೇಕು.</p>
+  <p>ಮಗ ಹೇಳುತ್ತಾನೆ — "ಅಪ್ಪ, ಸ್ವಲ್ಪ US ನಲ್ಲಿ ಹಾಕಿ." ಮಂಜುನಾಥ್ ಹೇಳುತ್ತಾರೆ — "US ನಲ್ಲಿ return ಕಡಿಮೆ, ಏಕೆ ಹಾಕಬೇಕು?"</p>
+  <p>ಈ ಜಗಳವನ್ನು calculator ಬಗೆಹರಿಸಲಿ.</p>
+</div>
+
+<h3>8.1 Input ಗಳು</h3>
+
+<table>
+  <thead><tr><th style="width:34%">Field</th><th class="num" style="width:22%">ಮೌಲ್ಯ</th><th>ಕಾರಣ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">corpus</td><td class="num">₹2,00,00,000</td><td>ಪ್ರಸ್ತುತ</td></tr>
+    <tr><td class="f">monthlyWithdrawal</td><td class="num">₹70,000</td><td>4.2% initial rate</td></tr>
+    <tr><td class="f">horizon</td><td class="num">30</td><td>ವಯಸ್ಸು 90 ವರೆಗೆ</td></tr>
+    <tr><td class="f">equityAlloc</td><td class="num">70%</td><td>ಪ್ರಸ್ತುತ</td></tr>
+    <tr><td class="f">intlShare</td><td class="num">0%</td><td>ಈಗ ಶೂನ್ಯ</td></tr>
+    <tr><td class="f">domReturn / domSD</td><td class="num">12 / 20</td><td>Default</td></tr>
+    <tr><td class="f">intlReturn / intlSD</td><td class="num">8 / 16</td><td>Default</td></tr>
+    <tr><td class="f">inrDep / inrSD</td><td class="num">3 / 6</td><td>Default</td></tr>
+    <tr><td class="f">corrDomIntl</td><td class="num">0.4</td><td>Default</td></tr>
+    <tr><td class="f">feeDrag</td><td class="num">0.6%</td><td>Direct plan</td></tr>
+    <tr><td class="f">paths / seed</td><td class="num">1500 / 20260811</td><td>Default</td></tr>
+  </tbody>
+</table>
+
+<h3>8.2 ಪ್ರಸ್ತುತ ಸ್ಥಿತಿ — intlShare 0%</h3>
+
+<div class="formula"><span class="c">// Equity ಭಾಗ ಪೂರ್ತಿ ದೇಶೀಯ</span>
+eqMean = 12.000%    eqSD = 20.000%
+
+<span class="c">// Debt ಸೇರಿಸಿ</span>
+mean = 0.70×12.000 + 0.30×7.00 = 8.400 + 2.100 = <span class="k">10.500%</span>
+sd   = √(0.49×400 + 0.09×16) = √(196 + 1.44) = √197.44 = <span class="k">14.051%</span>
+
+<span class="c">// Geometric</span>
+1+mean = 1.105 ;  (1+mean)² = 1.221025 ;  sd² = 0.019743
+0.019743 / 1.221025 = 0.016169
+√1.016169 = 1.008052
+geo = (1.105 / 1.008052 − 1) × 100 = <span class="k">9.617%</span>
+
+<span class="c">// Real ಮತ್ತು Sharpe</span>
+real   = (1.09617 / 1.06 − 1) × 100 = <span class="k">3.412%</span>
+sharpe = (10.500 − 6.5) / 14.051 = <span class="k">0.2847</span>
+drag   = 10.500 − 9.617 = <span class="k">0.883</span></div>
+
+<h3>8.3 Frontier ಏನು ಹೇಳಿತು</h3>
+
+<table>
+  <thead><tr><th>ಮಾನದಂಡ</th><th class="num">intlShare</th><th class="num">ಮೌಲ್ಯ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Best geometric</td><td class="num">30%</td><td class="num">9.727%</td></tr>
+    <tr><td class="f">Lowest volatility</td><td class="num">52%</td><td class="num">11.32%</td></tr>
+    <tr><td class="f">Best Sharpe</td><td class="num">46%</td><td class="num">0.3307</td></tr>
+  </tbody>
+</table>
+
+<p>ಮಂಜುನಾಥ್ 30% ಆಯ್ಕೆ ಮಾಡಿಕೊಂಡರು.</p>
+
+<h3>8.4 30% ನಲ್ಲಿ ಪೂರ್ಣ ಲೆಕ್ಕ</h3>
+
+<div class="formula"><span class="c">// ಹಂತ 1 — ವಿದೇಶಿ equity ರೂಪಾಯಿಯಲ್ಲಿ (ಮೊದಲೇ ಲೆಕ್ಕ ಹಾಕಿದ್ದು)</span>
+intlMean_INR = 11.240%   intlSD_INR = 16.224%
+
+<span class="c">// ಹಂತ 2 — Equity ಬೆರಕೆ (wD = 0.70, wI = 0.30)</span>
+eqMean = 0.70×12.000 + 0.30×11.240
+       = 8.4000 + 3.3720 = <span class="k">11.772%</span>
+
+eqVar  = 0.49×400.000 + 0.09×263.220 + 2×0.70×0.30×0.4×20×16.224
+       = 196.000 + 23.690 + 54.513
+       = 274.203
+eqSD   = √274.203 = <span class="k">16.559%</span>
+
+<span class="c">// ಹಂತ 3 — Debt ಸೇರಿಸಿ</span>
+mean = 0.70×11.772 + 0.30×7.00 = 8.2404 + 2.1000 = <span class="k">10.340%</span>
+sd   = √(0.49×274.203 + 0.09×16) = √(134.359 + 1.440) = √135.799 = <span class="k">11.653%</span>
+
+<span class="c">// ಹಂತ 4 — Geometric</span>
+1+mean = 1.1034 ;  (1+mean)² = 1.217492 ;  sd² = 0.013579
+0.013579 / 1.217492 = 0.011153
+√1.011153 = 1.005561
+geo = (1.1034 / 1.005561 − 1) × 100 = <span class="k">9.729%</span>
+
+<span class="c">// ಹಂತ 5–6</span>
+real   = (1.09729 / 1.06 − 1) × 100 = <span class="k">3.518%</span>
+sharpe = (10.340 − 6.5) / 11.653 = <span class="k">0.3295</span>
+drag   = 10.340 − 9.729 = <span class="k">0.611</span></div>
+
+<h3>8.5 ಎರಡರ ಹೋಲಿಕೆ</h3>
+
+<table>
+  <thead><tr><th>ಮೆಟ್ರಿಕ್</th><th class="num">0% intl</th><th class="num">30% intl</th><th class="num">ವ್ಯತ್ಯಾಸ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Mean return</td><td class="num">10.500%</td><td class="num">10.340%</td><td class="num">−0.160</td></tr>
+    <tr><td class="f">Standard deviation</td><td class="num">14.051%</td><td class="num">11.653%</td><td class="num">−2.398</td></tr>
+    <tr><td class="f">Volatility drag</td><td class="num">0.883</td><td class="num">0.611</td><td class="num">−0.272</td></tr>
+    <tr><td class="f">Geometric return</td><td class="num">9.617%</td><td class="num">9.729%</td><td class="num"><b>+0.112</b></td></tr>
+    <tr><td class="f">Real return</td><td class="num">3.412%</td><td class="num">3.518%</td><td class="num">+0.106</td></tr>
+    <tr><td class="f">Sharpe ratio</td><td class="num">0.2847</td><td class="num">0.3295</td><td class="num">+0.0448</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಮಗನ ವಾದ ಸರಿ ಎಂದು ಸಾಬೀತಾಯಿತು — ಆದರೆ ಕಾರಣ ಬೇರೆ</span>
+  <p>ಮಂಜುನಾಥ್ ಸರಿಯಾಗಿಯೇ ಹೇಳಿದ್ದರು — mean return ನಿಜವಾಗಿಯೂ ಕಡಿಮೆ ಆಯಿತು (10.500 → 10.340). ಆದರೆ ಅವರು ನೋಡದ ವಿಷಯ: SD 2.4 ಬಿಂದು ಬಿತ್ತು, ಇದರಿಂದ drag 0.272 ಬಿಂದು ಕಡಿಮೆ ಆಯಿತು. Mean ನಷ್ಟ 0.160, drag ಲಾಭ 0.272 — <b>ನಿವ್ವಳ ಲಾಭ 0.112 ಬಿಂದು.</b></p>
+  <p>ಅಂದರೆ ನೀವು ಕಡಿಮೆ return ದ asset ಸೇರಿಸಿ ಹೆಚ್ಚು ಸಂಪತ್ತು ಪಡೆದಿದ್ದೀರಿ. ಇದೇ diversification ದ ಗಣಿತದ ಮಾಂತ್ರಿಕತೆ.</p>
+</div>
+
+<h3>8.6 0.112 ಬಿಂದು — 30 ವರ್ಷದಲ್ಲಿ ಎಷ್ಟು?</h3>
+
+<div class="formula"><span class="c">// Withdrawal ಇಲ್ಲದೆ ಸರಳ compound (ವಿವರಣೆಗಾಗಿ ಮಾತ್ರ)</span>
+0% intl : ₹2,00,00,000 × (1.09617)^30 = ₹31,86,42,000
+30% intl: ₹2,00,00,000 × (1.09729)^30 = ₹32,86,25,000
+                                        ─────────────
+                          ವ್ಯತ್ಯಾಸ    = <span class="k">₹99,83,000</span></div>
+
+<p><b>ಸುಮಾರು ₹1 ಕೋಟಿ</b> — ಕೇವಲ 0.112 ಶೇಕಡಾ ಬಿಂದುವಿನಿಂದ. Compound ದ ಶಕ್ತಿ ಇದು.</p>
+
+<h3>8.7 Retirement simulation — ನಿಜವಾದ ಪರಿಣಾಮ</h3>
+
+<p>ಆದರೆ ಮಂಜುನಾಥ್ ಹಣ ತೆಗೆಯುತ್ತಾರೆ. ಆದ್ದರಿಂದ ಮೇಲಿನ ಸರಳ compound ಲೆಕ್ಕ ಸಾಲದು — 1,500 path Monte Carlo ಬೇಕು.</p>
+
+<table>
+  <thead><tr><th>ಮೆಟ್ರಿಕ್</th><th class="num">0% intl</th><th class="num">30% intl</th><th class="num">ಬದಲಾವಣೆ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Success rate</td><td class="num">81.7%</td><td class="num">87.3%</td><td class="num">+5.6 ಬಿಂದು</td></tr>
+    <tr><td class="f">Median final corpus</td><td class="num">₹3.42 ಕೋಟಿ</td><td class="num">₹3.61 ಕೋಟಿ</td><td class="num">+₹19 ಲಕ್ಷ</td></tr>
+    <tr><td class="f">10th percentile</td><td class="num">₹0</td><td class="num">₹21 ಲಕ್ಷ</td><td class="num">—</td></tr>
+    <tr><td class="f">25th percentile</td><td class="num">₹64 ಲಕ್ಷ</td><td class="num">₹1.09 ಕೋಟಿ</td><td class="num">+₹45 ಲಕ್ಷ</td></tr>
+    <tr><td class="f">90th percentile</td><td class="num">₹11.2 ಕೋಟಿ</td><td class="num">₹9.8 ಕೋಟಿ</td><td class="num">−₹1.4 ಕೋಟಿ</td></tr>
+    <tr><td class="f">Median depletion year</td><td class="num">24ನೇ</td><td class="num">27ನೇ</td><td class="num">+3 ವರ್ಷ</td></tr>
+  </tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">ಈ ಕೋಷ್ಟಕದ ನಿಜವಾದ ಕಥೆ</span>
+  <p>Success rate 5.6 ಬಿಂದು ಏರಿತು. ಆದರೆ ಇನ್ನೂ ಮುಖ್ಯವಾದದ್ದು 10th ಮತ್ತು 25th percentile. ಕೆಟ್ಟ ಪರಿಸ್ಥಿತಿಗಳಲ್ಲಿ 0% intl ಸಂಪೂರ್ಣ ಬರಿದಾಗುತ್ತದೆ; 30% intl ಇನ್ನೂ ₹21 ಲಕ್ಷ ಉಳಿಸುತ್ತದೆ.</p>
+  <p>ಬೆಲೆ? 90th percentile ₹1.4 ಕೋಟಿ ಕಡಿಮೆ. ಅಂದರೆ ನೀವು <b>ಅತ್ಯುತ್ತಮ ಸನ್ನಿವೇಶದ ಸಂಪತ್ತನ್ನು ಬಿಟ್ಟುಕೊಟ್ಟು ಕೆಟ್ಟ ಸನ್ನಿವೇಶದ ಸುರಕ್ಷತೆ ಖರೀದಿಸಿದ್ದೀರಿ.</b> 59 ವರ್ಷದ ನಿವೃತ್ತರಿಗೆ ಇದು ಅತ್ಯುತ್ತಮ ವ್ಯಾಪಾರ.</p>
+</div>
+
+<h3>8.8 ಮಂಜುನಾಥ್ ಇನ್ನೂ ಹೆಚ್ಚು ಹೋಗಬೇಕೇ?</h3>
+
+<p>52% (lowest volatility) ಗೆ ಹೋದರೆ ಏನಾಗುತ್ತದೆ?</p>
+
+<table>
+  <thead><tr><th>ಮೆಟ್ರಿಕ್</th><th class="num">30% intl</th><th class="num">52% intl</th><th class="num">ಬದಲಾವಣೆ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Geometric return</td><td class="num">9.729%</td><td class="num">9.684%</td><td class="num">−0.045</td></tr>
+    <tr><td class="f">SD</td><td class="num">11.653%</td><td class="num">11.320%</td><td class="num">−0.333</td></tr>
+    <tr><td class="f">Success rate</td><td class="num">87.3%</td><td class="num">87.6%</td><td class="num">+0.3 ಬಿಂದು</td></tr>
+    <tr><td class="f">Median final corpus</td><td class="num">₹3.61 ಕೋಟಿ</td><td class="num">₹3.54 ಕೋಟಿ</td><td class="num">−₹7 ಲಕ್ಷ</td></tr>
+    <tr><td class="f">10th percentile</td><td class="num">₹21 ಲಕ್ಷ</td><td class="num">₹24 ಲಕ್ಷ</td><td class="num">+₹3 ಲಕ್ಷ</td></tr>
+  </tbody>
+</table>
+
+<p>ಬಹುತೇಕ ವ್ಯತ್ಯಾಸವೇ ಇಲ್ಲ. ಆದರೆ ಪ್ರಾಯೋಗಿಕ ವೆಚ್ಚಗಳು ಇವೆ — international fund ದ expense ratio ಹೆಚ್ಚು, rebalancing ಕಷ್ಟ, ತೆರಿಗೆ ನಿಯಮ ಸಂಕೀರ್ಣ, LRS ಮಿತಿ ಇದೆ. ಆದ್ದರಿಂದ 30% ನಲ್ಲೇ ನಿಲ್ಲುವುದು ಸರಿ.</p>
+
+<div class="note">
+  <span class="lbl">ಇದೇ curve ಚಪ್ಪಟೆ ಇರುವುದರ ಪ್ರಾಯೋಗಿಕ ಅರ್ಥ</span>
+  <p>30% ರಿಂದ 52% ಗೆ ಹೋದರೂ success rate 0.3 ಬಿಂದು ಮಾತ್ರ ಏರಿತು. ಆದರೆ 0% ರಿಂದ 30% ಗೆ ಹೋದಾಗ 5.6 ಬಿಂದು ಏರಿತು. <b>ಮೊದಲ 20–30% ನಲ್ಲೇ ಬಹುತೇಕ ಎಲ್ಲಾ ಲಾಭ ಇದೆ.</b> ಅದರ ನಂತರ ಪ್ರತಿಫಲ ಕುಸಿಯುತ್ತದೆ.</p>
+</div>
+
+<h3>8.9 Correlation ಪರೀಕ್ಷೆ — ಮಂಜುನಾಥ್ ಸಂಶಯಿಸಿದ್ದು</h3>
+
+<p>"Crisis ದಲ್ಲಿ ಎಲ್ಲವೂ ಒಟ್ಟಿಗೆ ಬೀಳುತ್ತದೆ ಅಲ್ಲವೇ?" ಎಂದು ಮಂಜುನಾಥ್ ಕೇಳಿದರು. corrDomIntl ಅನ್ನು 0.7 ಗೆ ಇಟ್ಟು ಮತ್ತೆ ಚಲಾಯಿಸಿದರು:</p>
+
+<table>
+  <thead><tr><th class="num">corrDomIntl</th><th class="num">Best geo intlShare</th><th class="num">30% ನಲ್ಲಿ geo</th><th class="num">0% ನಲ್ಲಿ geo</th><th class="num">ಲಾಭ</th><th class="num">Success rate</th></tr></thead>
+  <tbody>
+    <tr><td class="num">0.2</td><td class="num">36%</td><td class="num">9.766</td><td class="num">9.617</td><td class="num">+0.149</td><td class="num">88.9%</td></tr>
+    <tr><td class="num">0.4</td><td class="num">30%</td><td class="num">9.729</td><td class="num">9.617</td><td class="num">+0.112</td><td class="num">87.3%</td></tr>
+    <tr><td class="num">0.6</td><td class="num">22%</td><td class="num">9.681</td><td class="num">9.617</td><td class="num">+0.064</td><td class="num">85.4%</td></tr>
+    <tr><td class="num">0.7</td><td class="num">17%</td><td class="num">9.654</td><td class="num">9.617</td><td class="num">+0.037</td><td class="num">84.2%</td></tr>
+    <tr><td class="num">0.85</td><td class="num">8%</td><td class="num">9.607</td><td class="num">9.617</td><td class="num">−0.010</td><td class="num">82.4%</td></tr>
+  </tbody>
+</table>
+
+<p>ಸಂದೇಶ ಸ್ಪಷ್ಟ: correlation 0.85 ದಾಟಿದರೆ 30% intlShare ವಾಸ್ತವವಾಗಿ <b>ಹಾನಿಕಾರಕ</b>. ಆದರೆ ಅಲ್ಲಿಯವರೆಗೂ ಸಹಾಯಕಾರಿ. ದೀರ್ಘಕಾಲದ ಸರಾಸರಿ correlation 0.4–0.5 ಇರುವುದರಿಂದ 25–30% ಸಮಂಜಸ.</p>
+
+<h3>8.10 ಮಂಜುನಾಥ್ ಅಂತಿಮವಾಗಿ ಏನು ಮಾಡಿದರು</h3>
+
+<ul>
+  <li>Equity ಭಾಗದ 30% ಅನ್ನು ಜಾಗತಿಕ index fund ಗೆ ಸ್ಥಳಾಂತರಿಸಿದರು — ಒಟ್ಟು portfolio ದ 21%</li>
+  <li>ಒಂದೇ ಬಾರಿಗೆ ಅಲ್ಲ — 18 ತಿಂಗಳಲ್ಲಿ ಹಂತಹಂತವಾಗಿ, ತೆರಿಗೆ ಹರಡಲು</li>
+  <li>ವರ್ಷಕ್ಕೊಮ್ಮೆ ಏಪ್ರಿಲ್‌ನಲ್ಲಿ rebalance ಮಾಡಲು ನಿರ್ಧರಿಸಿದರು</li>
+  <li>Success rate 81.7% → 87.3% ಆದರೂ ಇನ್ನೂ 100% ಅಲ್ಲ ಎಂದು ಒಪ್ಪಿಕೊಂಡು, withdrawal ಅನ್ನು ₹70,000 ರಿಂದ ₹66,000 ಕ್ಕೆ ಇಳಿಸಿದರು — ಇದು success rate ಅನ್ನು 91.8% ಗೆ ಏರಿಸಿತು</li>
+</ul>
+
+<div class="note">
+  <span class="lbl">ಕೊನೆಯ ಹೆಜ್ಜೆಯೇ ಅತ್ಯಂತ ಪ್ರಭಾವಶಾಲಿ</span>
+  <p>Allocation ಬದಲಾವಣೆ 5.6 ಬಿಂದು ಕೊಟ್ಟಿತು. Withdrawal ಅನ್ನು 5.7% ಕಡಿಮೆ ಮಾಡಿದ್ದು 4.5 ಬಿಂದು ಕೊಟ್ಟಿತು. <b>ನಿಮ್ಮ ಖರ್ಚು ನಿಮ್ಮ allocation ಗಿಂತ ಹೆಚ್ಚು ನಿಮ್ಮ ನಿಯಂತ್ರಣದಲ್ಲಿದೆ ಮತ್ತು ಹೆಚ್ಚು ಪ್ರಭಾವಶಾಲಿ.</b></p>
+</div>
+
+<h2 class="newpage">9. ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</h2>
+
+<h3>ನಿಯಮ 1 — ಗರಿಷ್ಠ ಬಿಂದುವನ್ನಲ್ಲ, curve ದ ಆಕಾರವನ್ನು ನೋಡಿ</h3>
+
+<p>Calculator "30%" ಎಂದು ಹೇಳಿದರೆ ಅದು 30.0% ಎಂದಲ್ಲ. ಅದು "ಸುಮಾರು 20–40% ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ಎಲ್ಲಾದರೂ" ಎಂದು ಅರ್ಥ. Allocation table ನೋಡಿ — ಆ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ geometric return ದ ವ್ಯತ್ಯಾಸ 0.02 ಬಿಂದುಗಿಂತ ಕಡಿಮೆ ಇರುತ್ತದೆ.</p>
+
+<p>ನಿಮ್ಮ input ಗಳ ಅನಿಶ್ಚಿತತೆ (domReturn 12% ಎಂದು ಹೇಳಿದ್ದೀರಿ — ಅದು 10% ಆಗಿರಬಹುದು, 14% ಆಗಿರಬಹುದು) ಈ 0.02 ಬಿಂದುಗಿಂತ <b>ನೂರು ಪಟ್ಟು ದೊಡ್ಡದು</b>.</p>
+
+<h3>ನಿಯಮ 2 — Geometric ನೋಡಿ, mean ಅಲ್ಲ</h3>
+
+<p>ನಿಮ್ಮ ನಿಜವಾದ ಸಂಪತ್ತು geometric return ಮೇಲೆ ಬೆಳೆಯುತ್ತದೆ. Mean return ಒಂದು ಸಂಖ್ಯಾಶಾಸ್ತ್ರೀಯ ಪರಿಕಲ್ಪನೆ ಮಾತ್ರ. ಎರಡು allocation ಹೋಲಿಸುವಾಗ mean ಕಡಿಮೆ ಇದ್ದರೂ geometric ಹೆಚ್ಚಿದ್ದರೆ ಎರಡನೆಯದೇ ಉತ್ತಮ.</p>
+
+<h3>ನಿಯಮ 3 — 10th percentile ಅನ್ನು median ಗಿಂತ ಗಂಭೀರವಾಗಿ ತೆಗೆದುಕೊಳ್ಳಿ</h3>
+
+<p>ನಿವೃತ್ತಿಯಲ್ಲಿ median ಫಲಿತಾಂಶ ಬರುತ್ತದೆಯೋ ಇಲ್ಲವೋ ಗೊತ್ತಿಲ್ಲ. ಆದರೆ ಕೆಟ್ಟ ಪರಿಸ್ಥಿತಿ ಬಂದರೆ ಏನಾಗುತ್ತದೆ ಎಂಬುದೇ ನಿಮ್ಮ ನಿಜವಾದ ಅಪಾಯ. 10th percentile ಅದನ್ನೇ ಹೇಳುತ್ತದೆ.</p>
+
+<p>ಸಾಮಾನ್ಯವಾಗಿ diversification median ಅನ್ನು ಸ್ವಲ್ಪ ಮಾತ್ರ ಸುಧಾರಿಸುತ್ತದೆ ಆದರೆ 10th percentile ಅನ್ನು ಗಣನೀಯವಾಗಿ ಸುಧಾರಿಸುತ್ತದೆ. ಅಲ್ಲೇ ಅದರ ನಿಜವಾದ ಮೌಲ್ಯ.</p>
+
+<h3>ನಿಯಮ 4 — Correlation ಅನ್ನು ಯಾವಾಗಲೂ ಎರಡು ಮೌಲ್ಯದಲ್ಲಿ ಪರೀಕ್ಷಿಸಿ</h3>
+
+<p>ಒಮ್ಮೆ 0.4 ರಲ್ಲಿ, ಮತ್ತೊಮ್ಮೆ 0.7 ರಲ್ಲಿ. ಎರಡರಲ್ಲೂ ನಿಮ್ಮ ನಿರ್ಧಾರ ಒಂದೇ ಆಗಿ ಉಳಿದರೆ ಅದು ಗಟ್ಟಿ ನಿರ್ಧಾರ. ಬದಲಾದರೆ ನೀವು ಒಂದು ಅನಿಶ್ಚಿತ ಸಂಖ್ಯೆಯ ಮೇಲೆ ಬಹಳ ಭರವಸೆ ಇಟ್ಟಿದ್ದೀರಿ.</p>
+
+<h3>ನಿಯಮ 5 — intlShare ಮತ್ತು ಒಟ್ಟು % ಗೊಂದಲ ಮಾಡಬೇಡಿ</h3>
+
+<p>ಇದು ಅತ್ಯಂತ ಸಾಮಾನ್ಯ ತಪ್ಪು. intlShare = equity ಒಳಗಿನ ಪಾಲು. ಒಟ್ಟು portfolio ದಲ್ಲಿ international % = equityAlloc × intlShare ÷ 100.</p>
+
+<table>
+  <thead><tr><th class="num">equityAlloc</th><th class="num">intlShare</th><th class="num">ಒಟ್ಟು portfolio ದಲ್ಲಿ intl</th></tr></thead>
+  <tbody>
+    <tr><td class="num">70%</td><td class="num">25%</td><td class="num">17.5%</td></tr>
+    <tr><td class="num">70%</td><td class="num">30%</td><td class="num">21.0%</td></tr>
+    <tr><td class="num">60%</td><td class="num">30%</td><td class="num">18.0%</td></tr>
+    <tr><td class="num">80%</td><td class="num">40%</td><td class="num">32.0%</td></tr>
+    <tr><td class="num">50%</td><td class="num">50%</td><td class="num">25.0%</td></tr>
+  </tbody>
+</table>
+
+<h2 class="newpage">10. ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು</h2>
+
+<h4>ತಪ್ಪು 1 — intlReturn ನಲ್ಲಿ ರೂಪಾಯಿ ಪರಿವರ್ತನೆ ಸೇರಿಸುವುದು</h4>
+<p>"US 8% ಕೊಡುತ್ತದೆ, ರೂಪಾಯಿ 3% ಬೀಳುತ್ತದೆ, ಆದ್ದರಿಂದ 11% ಹಾಕುತ್ತೇನೆ" — ಬೇಡ. Calculator inrDep ಅನ್ನು ಪ್ರತ್ಯೇಕವಾಗಿ ಸೇರಿಸುತ್ತದೆ. ನೀವು 11% ಹಾಕಿದರೆ ಅಂತಿಮವಾಗಿ 14.3% ಆಗುತ್ತದೆ — ಎರಡು ಬಾರಿ ಎಣಿಕೆ. ಆಗ frontier "100% international" ಎಂದು ತಪ್ಪು ಸಲಹೆ ಕೊಡುತ್ತದೆ.</p>
+
+<h4>ತಪ್ಪು 2 — ಐತಿಹಾಸಿಕ US return ಅನ್ನು ಭವಿಷ್ಯದ ನಿರೀಕ್ಷೆಯಾಗಿ ಬಳಸುವುದು</h4>
+<p>1980–2024 ರ US equity return ಅಸಾಧಾರಣ — valuation ಏರಿಕೆ, ಬಡ್ಡಿದರ ಕುಸಿತ, ಜಾಗತಿಕೀಕರಣ ಎಲ್ಲವೂ ಒಟ್ಟಿಗೆ ಸಹಾಯ ಮಾಡಿದವು. ಈಗ CAPE 30+ ಇರುವಾಗ ಅದೇ ಪುನರಾವರ್ತನೆ ನಿರೀಕ್ಷಿಸುವುದು ಅಪಾಯಕಾರಿ. 7–9% ಸಮಂಜಸ.</p>
+
+<h4>ತಪ್ಪು 3 — Correlation ಅನ್ನು ಸ್ಥಿರ ಎಂದು ನಂಬುವುದು</h4>
+<p>Model correlation ಸ್ಥಿರ ಎಂದು ಊಹಿಸುತ್ತದೆ. ವಾಸ್ತವದಲ್ಲಿ ಅದು crisis ದಲ್ಲಿ 0.85+ ಗೆ ಏರುತ್ತದೆ. ಆದ್ದರಿಂದ model ತೋರಿಸುವ downside protection ವಾಸ್ತವಕ್ಕಿಂತ ಸ್ವಲ್ಪ ಆಶಾವಾದಿ. ಸಂಪ್ರದಾಯಶೀಲ ಸಂಖ್ಯೆ ಬಳಸಿ.</p>
+
+<h4>ತಪ್ಪು 4 — Best Sharpe ಬಿಂದುವನ್ನು ಕುರುಡಾಗಿ ಅನುಸರಿಸುವುದು</h4>
+<p>Sharpe ratio arithmetic mean ಬಳಸುತ್ತದೆ, geometric ಅಲ್ಲ. ದೀರ್ಘಕಾಲದ ಸಂಪತ್ತು ಗರಿಷ್ಠಗೊಳಿಸಲು best-geometric ಬಿಂದು ಸರಿ. Best-Sharpe ಬಿಂದು ಸಾಮಾನ್ಯವಾಗಿ ಬಲಕ್ಕೆ ಇರುತ್ತದೆ (ಹೆಚ್ಚು intl) — ಅದು ಒಂದು ಬೇರೆ ಪ್ರಶ್ನೆಗೆ ಉತ್ತರ.</p>
+
+<h4>ತಪ್ಪು 5 — ತೆರಿಗೆ ಮತ್ತು fee ಮರೆಯುವುದು</h4>
+<p>ಭಾರತದಲ್ಲಿ international fund ದ ತೆರಿಗೆ ನಿಯಮ ದೇಶೀಯ equity fund ಗಿಂತ ಬೇರೆ ಮತ್ತು ಸಾಮಾನ್ಯವಾಗಿ ಪ್ರತಿಕೂಲ. Expense ratio ಕೂಡ ಹೆಚ್ಚು (0.5–1.5% vs 0.2%). Model ಇವನ್ನು ಸೇರಿಸಿಲ್ಲ. ವಾಸ್ತವ ಲಾಭ model ತೋರಿಸುವುದಕ್ಕಿಂತ ಕಡಿಮೆ ಇರುತ್ತದೆ.</p>
+
+<h4>ತಪ್ಪು 6 — ಪ್ರತಿ ಬಾರಿ seed ಬದಲಾಯಿಸಿ ಹೋಲಿಸುವುದು</h4>
+<p>ಎರಡು allocation ಹೋಲಿಸುವಾಗ seed ಒಂದೇ ಇರಬೇಕು. ಇಲ್ಲದಿದ್ದರೆ ವ್ಯತ್ಯಾಸ allocation ದಿಂದಲೋ Monte Carlo ದ ಶಬ್ದದಿಂದಲೋ ಗೊತ್ತಾಗುವುದಿಲ್ಲ. 1,500 path ನಲ್ಲಿ success rate ದ ಶಬ್ದ ಸುಮಾರು ±1 ಬಿಂದು.</p>
+
+<h4>ತಪ್ಪು 7 — ಒಂದೇ ಬಾರಿಗೆ ಇಡೀ ಬದಲಾವಣೆ ಮಾಡುವುದು</h4>
+<p>"30% ಸರಿ" ಎಂದು ನಾಳೆಯೇ 30% ಮಾರಿ ಖರೀದಿಸಬೇಡಿ. LTCG ತೆರಿಗೆ, exit load, ಮತ್ತು ಒಂದೇ ದಿನದ ಬೆಲೆಯ ಅದೃಷ್ಟ ಎಲ್ಲವೂ ವಿರುದ್ಧವಾಗಬಹುದು. 12–24 ತಿಂಗಳಲ್ಲಿ ಹರಡಿ.</p>
+
+<h4>ತಪ್ಪು 8 — Allocation ಅನ್ನು ಉಳಿತಾಯ ದರಕ್ಕಿಂತ ಮುಖ್ಯ ಎಂದು ಭಾವಿಸುವುದು</h4>
+<p>ಈ ಇಡೀ tool ದ ಗರಿಷ್ಠ ಲಾಭ ಸುಮಾರು 0.1 ಶೇಕಡಾ ಬಿಂದು geometric return ಮತ್ತು 5 ಬಿಂದು success rate. ನಿಮ್ಮ ಉಳಿತಾಯ 10% ಹೆಚ್ಚಿಸಿದರೆ ಅಥವಾ ನಿವೃತ್ತಿಯನ್ನು 2 ವರ್ಷ ಮುಂದೂಡಿದರೆ ಅದಕ್ಕಿಂತ ದೊಡ್ಡ ಪರಿಣಾಮ ಸಿಗುತ್ತದೆ. Allocation ಒಂದು ಸಣ್ಣ ಸುಧಾರಣೆ, ಮೂಲ ಪರಿಹಾರವಲ್ಲ.</p>
+
+<h2 class="newpage">11. Quick Reference Card</h2>
+
+<h3>ಎಲ್ಲಾ ಸೂತ್ರಗಳು ಒಂದೇ ಕಡೆ</h3>
+
+<div class="formula"><span class="c">— 1. ವಿದೇಶಿ equity ಅನ್ನು ರೂಪಾಯಿಗೆ —</span>
+mean = mf + mc + mf × mc
+var  = sf² + sc² + 2 × ρfc × sf × sc
+
+<span class="c">— 2. Equity ಬೆರಕೆ —</span>
+eqMean = wD × meanD + wI × meanI_INR
+eqVar  = wD²×sdD² + wI²×sdI² + 2×wD×wI×ρ×sdD×sdI
+
+<span class="c">— 3. ಪೂರ್ಣ portfolio —</span>
+mean = we × eqMean + wb × debtReturn
+sd   = √(we² × eqSD² + wb² × debtSD²)
+
+<span class="c">— 4. Geometric —</span>
+geo = ((1+mean) / √(1 + sd²/(1+mean)²) − 1) × 100
+
+<span class="c">— 5. Real —</span>
+real = ((1 + geo/100) / (1 + inflation/100) − 1) × 100
+
+<span class="c">— 6. Sharpe ಮತ್ತು drag —</span>
+sharpe  = (mean − riskFree) / sd
+volDrag = mean − geo
+
+<span class="c">— 7. Frontier —</span>
+for s = 0 to 100 step 2 → blend(s)
+bestGeometric / lowestVol / bestSharpe</div>
+
+<h3>Default ಮೌಲ್ಯಗಳು</h3>
+
+<table>
+  <thead><tr><th style="width:32%">Field</th><th class="num" style="width:22%">Default</th><th>ವಿಭಾಗ</th></tr></thead>
+  <tbody>
+    <tr><td class="f">domReturn</td><td class="num">12%</td><td>ದೇಶೀಯ equity</td></tr>
+    <tr><td class="f">domSD</td><td class="num">20%</td><td>ದೇಶೀಯ equity</td></tr>
+    <tr><td class="f">intlReturn</td><td class="num">8%</td><td>ವಿದೇಶಿ equity (ಸ್ಥಳೀಯ ಕರೆನ್ಸಿ)</td></tr>
+    <tr><td class="f">intlSD</td><td class="num">16%</td><td>ವಿದೇಶಿ equity</td></tr>
+    <tr><td class="f">inrDep</td><td class="num">3%</td><td>Currency</td></tr>
+    <tr><td class="f">inrSD</td><td class="num">6%</td><td>Currency</td></tr>
+    <tr><td class="f">corrDomIntl</td><td class="num">0.4</td><td>Correlation</td></tr>
+    <tr><td class="f">corrIntlINR</td><td class="num">−0.15</td><td>Correlation</td></tr>
+    <tr><td class="f">equityAlloc</td><td class="num">70%</td><td>Portfolio ರಚನೆ</td></tr>
+    <tr><td class="f">intlShare</td><td class="num">25%</td><td>Portfolio ರಚನೆ</td></tr>
+    <tr><td class="f">debtReturn</td><td class="num">7%</td><td>Debt</td></tr>
+    <tr><td class="f">debtSD</td><td class="num">4%</td><td>Debt</td></tr>
+    <tr><td class="f">inflation</td><td class="num">6%</td><td>ಮಾನದಂಡ</td></tr>
+    <tr><td class="f">riskFree</td><td class="num">6.5%</td><td>ಮಾನದಂಡ</td></tr>
+    <tr><td class="f">feeDrag</td><td class="num">0.6%</td><td>ವೆಚ್ಚ</td></tr>
+    <tr><td class="f">corpus</td><td class="num">₹2,00,00,000</td><td>Retirement</td></tr>
+    <tr><td class="f">monthlyWithdrawal</td><td class="num">₹70,000</td><td>Retirement</td></tr>
+    <tr><td class="f">horizon</td><td class="num">30 ವರ್ಷ</td><td>Retirement</td></tr>
+    <tr><td class="f">paths</td><td class="num">1,500</td><td>Simulation</td></tr>
+    <tr><td class="f">seed</td><td class="num">20260811</td><td>Simulation</td></tr>
+  </tbody>
+</table>
+
+<h3>Default ಸಂಖ್ಯೆಗಳ ಫಲಿತಾಂಶ (intlShare 25%)</h3>
+
+<div class="big">
+  <span class="v">9.72%</span>
+  <span class="l">Geometric return · SD 11.98% · Real 3.51% · Sharpe 0.323</span>
+</div>
+
+<h3>ಐದು ಅಗತ್ಯ ಪರೀಕ್ಷೆಗಳು</h3>
+
+<table>
+  <thead><tr><th style="width:34%">ಪರೀಕ್ಷೆ</th><th>ಏನು ಬದಲಾಯಿಸಬೇಕು</th><th style="width:26%">ಏನು ನೋಡಬೇಕು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">Correlation stress</td><td>corrDomIntl 0.4 → 0.7</td><td>ನಿಮ್ಮ ನಿರ್ಧಾರ ಬದಲಾಗುತ್ತದೆಯೇ</td></tr>
+    <tr><td class="f">Currency hedge ರದ್ದು</td><td>corrIntlINR −0.15 → 0</td><td>ಲಾಭ ಎಷ್ಟು ಕಡಿಮೆ ಆಗುತ್ತದೆ</td></tr>
+    <tr><td class="f">ಸಂಪ್ರದಾಯಶೀಲ return</td><td>domReturn 12 → 10, intlReturn 8 → 7</td><td>Success rate ಎಷ್ಟು ಬೀಳುತ್ತದೆ</td></tr>
+    <tr><td class="f">ಹೆಚ್ಚಿನ fee</td><td>feeDrag 0.6 → 1.2</td><td>Allocation ಲಾಭ ಉಳಿಯುತ್ತದೆಯೇ</td></tr>
+    <tr><td class="f">Withdrawal ಹೋಲಿಕೆ</td><td>monthlyWithdrawal 5% ಕಡಿಮೆ</td><td>Allocation ಬದಲಾವಣೆಗಿಂತ ಇದು ದೊಡ್ಡದೇ</td></tr>
+  </tbody>
+</table>
+
+<h3>ನಿರ್ಧಾರ ಸಾರಾಂಶ</h3>
+
+<table>
+  <thead><tr><th style="width:34%">ನಿಮ್ಮ ಪರಿಸ್ಥಿತಿ</th><th>ಯಾವ ಮಾನದಂಡ ನೋಡಬೇಕು</th></tr></thead>
+  <tbody>
+    <tr><td class="f">ಸಂಗ್ರಹಣ ಹಂತ, 15+ ವರ್ಷ ಬಾಕಿ</td><td>Best geometric — ಗರಿಷ್ಠ ದೀರ್ಘಕಾಲಿಕ ಬೆಳವಣಿಗೆ</td></tr>
+    <tr><td class="f">ನಿವೃತ್ತಿಗೆ 5 ವರ್ಷ ಒಳಗೆ</td><td>Best Sharpe ಅಥವಾ ಅದರ ಎಡಗಡೆ — sequence risk ಕಡಿಮೆ ಮಾಡಲು</td></tr>
+    <tr><td class="f">ಈಗಾಗಲೇ ನಿವೃತ್ತ, ಹಣ ತೆಗೆಯುತ್ತಿದ್ದೀರಿ</td><td>Retirement impact tab ದ 10th percentile</td></tr>
+    <tr><td class="f">Correlation ಬಗ್ಗೆ ಅನಿಶ್ಚಿತ</td><td>0.4 ಮತ್ತು 0.7 ಎರಡರಲ್ಲೂ ಕೆಲಸ ಮಾಡುವ intlShare ಆರಿಸಿ (ಸಾಮಾನ್ಯವಾಗಿ 20–25%)</td></tr>
+  </tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಅಂತಿಮ ಎಚ್ಚರಿಕೆ</span>
+  <p>ಈ calculator ಒಂದು ಶೈಕ್ಷಣಿಕ ಸಾಧನ. ಇದು ನೀವು ಕೊಟ್ಟ ಊಹೆಗಳ ಪರಿಣಾಮವನ್ನು ಗಣಿತದ ಮೂಲಕ ತೋರಿಸುತ್ತದೆ, ಅಷ್ಟೇ. ಇದು ಭವಿಷ್ಯದ return ಅನ್ನು ತಿಳಿದಿಲ್ಲ, correlation ಎಷ್ಟು ಏರುತ್ತದೆ ಎಂದು ತಿಳಿದಿಲ್ಲ, ಮತ್ತು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಪರಿಸ್ಥಿತಿ, ತೆರಿಗೆ ಸ್ಥಿತಿ ಅಥವಾ LRS ಮಿತಿಗಳನ್ನು ತಿಳಿದಿಲ್ಲ.</p>
+  <p>ಇದು ಹೂಡಿಕೆ ಸಲಹೆ ಅಲ್ಲ. ದೊಡ್ಡ allocation ಬದಲಾವಣೆ ಮಾಡುವ ಮೊದಲು SEBI-ನೋಂದಾಯಿತ investment adviser ಜೊತೆ ಮಾತನಾಡಿ.</p>
+</div>
+
+<div class="footer-note">
+  Wealthoria Calculator Manual 06 — Global Allocation Modeller<br>
+  ಶೈಕ್ಷಣಿಕ ಬಳಕೆಗೆ ಮಾತ್ರ · ಹೂಡಿಕೆ ಸಲಹೆ ಅಲ್ಲ
+</div>
+
+</body>
+</html>

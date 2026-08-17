@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+<meta charset="utf-8">
+<title>Valuation-Aware Harvesting — Wealthoria Manual</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">Wealthoria Calculator Manual — 05</div>
+  <h1>Valuation-Aware Harvesting</h1>
+  <div class="rule"></div>
+  <div class="sub">ಮಾರುಕಟ್ಟೆ ದುಬಾರಿಯಾಗಿದ್ದಾಗ ಹೆಚ್ಚು, ಅಗ್ಗವಾಗಿದ್ದಾಗ ಕಡಿಮೆ — P/E ಆಧಾರಿತ refill ತಂತ್ರ ನಿಜವಾಗಿ ಕೆಲಸ ಮಾಡುತ್ತದೆಯೇ ಎಂದು ಪರೀಕ್ಷಿಸುವ paired experiment.</div>
+  <div class="meta">
+    ಭಾಷೆ &nbsp;·&nbsp; ಕನ್ನಡ + English financial terms<br>
+    ಆಳ &nbsp;·&nbsp; Full deep manual<br>
+    ಆವೃತ್ತಿ &nbsp;·&nbsp; 2026-08
+  </div>
+  <div class="badge">FOR EDUCATIONAL USE ONLY</div>
+</div>
+
+<div class="toc">
+  <h2>ಪರಿವಿಡಿ</h2>
+  <ol>
+    <li>ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</li>
+    <li>ಯಾವ ಸಮಸ್ಯೆ ಬಗೆಹರಿಸುತ್ತದೆ</li>
+    <li>Core concept — ಎರಡು bucket ಮತ್ತು valuation signal</li>
+    <li>ಪ್ರತಿ Input field ಅರ್ಥ</li>
+    <li>ಒಳಗಿನ Math — OU mean reversion</li>
+    <li>Paired experiment — ಇದೇ ಈ calculator ನ ಆತ್ಮ</li>
+    <li>ಪ್ರತಿ Output tab ಏನು ಹೇಳುತ್ತದೆ</li>
+    <li>Worked Example — ಪೂರ್ಣ ಲೆಕ್ಕ</li>
+    <li>ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</li>
+    <li>ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು</li>
+    <li>Quick Reference Card</li>
+  </ol>
+</div>
+
+<h2>1. ಈ calculator ಏನು ಮಾಡುತ್ತದೆ</h2>
+
+<p>ನಿವೃತ್ತಿಯಲ್ಲಿ ನೀವು ಪ್ರತಿ ತಿಂಗಳು ಹಣ ತೆಗೆಯಬೇಕು. ಆ ಹಣ ಎಲ್ಲಿಂದ ಬರುತ್ತದೆ? ಎರಡು ಆಯ್ಕೆಗಳಿವೆ — equity ಮಾರಿ ಅಥವಾ debt ಮಾರಿ. ಸಾಮಾನ್ಯ ವಿಧಾನ: ಪ್ರತಿ ವರ್ಷ ಸ್ಥಿರ ಪ್ರಮಾಣದಲ್ಲಿ equity ಮಾರಿ debt bucket ತುಂಬಿಸು.</p>
+
+<p>ಆದರೆ ಒಂದು ಸ್ಪಷ್ಟ ಪ್ರಶ್ನೆ ಉಳಿಯುತ್ತದೆ — <b>ಮಾರುಕಟ್ಟೆ P/E 32 ಇರುವಾಗಲೂ, P/E 13 ಇರುವಾಗಲೂ ಒಂದೇ ಪ್ರಮಾಣದಲ್ಲಿ ಮಾರುವುದು ಸರಿಯೇ?</b> ದುಬಾರಿಯಾಗಿದ್ದಾಗ ಹೆಚ್ಚು ಮಾರಿ, ಅಗ್ಗವಾಗಿದ್ದಾಗ ಕಡಿಮೆ ಮಾರುವುದು ತರ್ಕಬದ್ಧವಾಗಿ ಕಾಣುತ್ತದೆ.</p>
+
+<p>ಈ calculator ಆ ಪ್ರಶ್ನೆಗೆ ಸಂಖ್ಯಾತ್ಮಕ ಉತ್ತರ ಕೊಡುತ್ತದೆ. ಇದು <b>ಎರಡು ತಂತ್ರಗಳನ್ನು ಒಂದೇ ಮಾರುಕಟ್ಟೆ ಪಥದ ಮೇಲೆ</b> ಓಡಿಸಿ ಹೋಲಿಸುತ್ತದೆ:</p>
+
+<table>
+<thead><tr><th>ತಂತ್ರ</th><th>ನಿಯಮ</th></tr></thead>
+<tbody>
+<tr><td class="f">Fixed</td><td>ಪ್ರತಿ ವರ್ಷ ಒಂದೇ ಪ್ರಮಾಣ equity ಮಾರಿ income bucket ತುಂಬಿಸು — valuation ನೋಡುವುದಿಲ್ಲ</td></tr>
+<tr><td class="f">Aware</td><td>P/E ಸರಾಸರಿಗಿಂತ 15% ಹೆಚ್ಚಿದ್ದರೆ 1.6× ತುಂಬಿಸು, 15% ಕಡಿಮೆ ಇದ್ದರೆ 0.6× ಮಾತ್ರ</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಇದು ಬೇರೆ calculators ಗಿಂತ ಏಕೆ ವಿಶೇಷ</span>
+  <p>ಉಳಿದ calculators "ಎಷ್ಟು?" ಎಂದು ಕೇಳುತ್ತವೆ. ಇದು <b>"ಈ ತಂತ್ರ ನಿಜವಾಗಿ ಕೆಲಸ ಮಾಡುತ್ತದೆಯೇ?"</b> ಎಂದು ಕೇಳುತ್ತದೆ. ಇದು ಒಂದು calculator ಗಿಂತ ಹೆಚ್ಚಾಗಿ ಒಂದು <b>ಪ್ರಯೋಗ</b>. ಮತ್ತು ಪ್ರಾಮಾಣಿಕ ಪ್ರಯೋಗದಂತೆ, ಉತ್ತರ "ಇಲ್ಲ" ಎಂದೂ ಬರಬಹುದು.</p>
+</div>
+
+<h3>ಔಟ್‌ಪುಟ್ — ಮೂರು ಸಂಖ್ಯೆಗಳು</h3>
+
+<table>
+<thead><tr><th>ಸಂಖ್ಯೆ</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">Win rate</td><td>800 paths ನಲ್ಲಿ ಎಷ್ಟು ಶೇಕಡಾ paths ನಲ್ಲಿ aware ತಂತ್ರ fixed ಗಿಂತ ಹೆಚ್ಚು ಅಂತಿಮ corpus ಬಿಟ್ಟಿತು</td></tr>
+<tr><td class="f">Median edge</td><td>ಮಧ್ಯಂತರ path ನಲ್ಲಿ ಎಷ್ಟು ಹೆಚ್ಚುವರಿ ರೂಪಾಯಿ (ಅಥವಾ ಕಡಿಮೆ)</td></tr>
+<tr><td class="f">Success rate</td><td>ಎರಡೂ ತಂತ್ರಗಳಿಗೂ ಪ್ರತ್ಯೇಕವಾಗಿ — ಹಣ ಮುಗಿಯದೆ 30 ವರ್ಷ ಪೂರೈಸಿದ paths</td></tr>
+</tbody>
+</table>
+
+<h2 class="newpage">2. ಯಾವ ಸಮಸ್ಯೆ ಬಗೆಹರಿಸುತ್ತದೆ</h2>
+
+<h3>ಸಮಸ್ಯೆ 1 — "Market timing ಕೆಟ್ಟದು" ಎಂಬ ನಿಯಮಕ್ಕೆ ಒಂದು ಅಪವಾದವಿದೆಯೇ?</h3>
+
+<p>ಪ್ರತಿ ಹೂಡಿಕೆ ಪುಸ್ತಕ ಹೇಳುತ್ತದೆ — market timing ಮಾಡಬೇಡಿ. ಅದು ಸರಿ, ಆದರೆ ಆ ಸಲಹೆ <b>ಸಂಗ್ರಹ ಹಂತ</b>ಕ್ಕೆ. ನೀವು ಹಣ ಸೇರಿಸುತ್ತಿರುವಾಗ, ಯಾವಾಗ ಖರೀದಿಸಬೇಕು ಎಂದು ಊಹಿಸುವುದು ವ್ಯರ್ಥ.</p>
+
+<p>ಆದರೆ ನಿವೃತ್ತಿಯಲ್ಲಿ ಪರಿಸ್ಥಿತಿ ಬೇರೆ. ನೀವು <b>ಮಾರಲೇಬೇಕು</b> — ಆಯ್ಕೆಯಿಲ್ಲ. ಪ್ರಶ್ನೆ "ಮಾರಬೇಕೇ?" ಅಲ್ಲ, "ಎಲ್ಲಿಂದ ಮತ್ತು ಎಷ್ಟು ಮಾರಬೇಕು?" ಇದು timing ಅಲ್ಲ, <b>sequencing</b>. ಈ ವ್ಯತ್ಯಾಸ ಸೂಕ್ಷ್ಮ ಆದರೆ ನಿರ್ಣಾಯಕ.</p>
+
+<div class="tip">
+  <span class="lbl">ಒಂದು ಸಾದೃಶ್ಯ</span>
+  <p>ನಿಮ್ಮ ಮನೆಯಲ್ಲಿ ಎರಡು ನೀರಿನ ಟ್ಯಾಂಕ್ ಇವೆ — ಒಂದು ಮಳೆನೀರು (ಅನಿಶ್ಚಿತ, equity), ಇನ್ನೊಂದು ಸಂಗ್ರಹಿತ (ಖಚಿತ, debt). ನೀವು ಪ್ರತಿ ದಿನ ಸಂಗ್ರಹಿತ ಟ್ಯಾಂಕ್‌ನಿಂದ ಕುಡಿಯುತ್ತೀರಿ. ಆಗಾಗ ಮಳೆನೀರನ್ನು ಸಂಗ್ರಹಿತ ಟ್ಯಾಂಕ್‌ಗೆ ವರ್ಗಾಯಿಸಬೇಕು. ಪ್ರಶ್ನೆ — ಮಳೆ ಜೋರಾಗಿ ಸುರಿಯುತ್ತಿರುವಾಗ ಹೆಚ್ಚು ವರ್ಗಾಯಿಸಬೇಕೇ? ಅದೇ valuation-aware harvesting.</p>
+</div>
+
+<h3>ಸಮಸ್ಯೆ 2 — ದೊಡ್ಡ ಕುಸಿತದ ಮೊದಲು ಲಾಭ ಕಾಪಾಡಿಕೊಳ್ಳುವುದು</h3>
+
+<p>2007 ರ ಕೊನೆಯಲ್ಲಿ Sensex P/E 28 ದಾಟಿತ್ತು. 2008 ರಲ್ಲಿ ಮಾರುಕಟ್ಟೆ 52% ಬಿತ್ತು. 2020 ಮಾರ್ಚ್‌ನಲ್ಲಿ P/E 17 ಕ್ಕೆ ಇಳಿಯಿತು — ಮುಂದಿನ 18 ತಿಂಗಳಲ್ಲಿ ಮಾರುಕಟ್ಟೆ ದ್ವಿಗುಣಗೊಂಡಿತು.</p>
+
+<p>ಹಿಂದಿನಿಂದ ನೋಡಿದರೆ ಇದು ಸ್ಪಷ್ಟ. ಆದರೆ ಆ ಕ್ಷಣದಲ್ಲಿ ನಿಂತು ನೋಡಿದರೆ? 2007 ರಲ್ಲಿ ಎಲ್ಲರೂ "ಇದು ಹೊಸ ಯುಗ" ಎಂದಿದ್ದರು. 2020 ರ ಮಾರ್ಚ್‌ನಲ್ಲಿ ಎಲ್ಲರೂ "ಇದು ಮುಗಿಯಿತು" ಎಂದಿದ್ದರು. Valuation signal ಆ ಭಾವನೆಗಳನ್ನು ಕಡೆಗಣಿಸಿ ಒಂದು <b>ಯಾಂತ್ರಿಕ ನಿಯಮ</b> ಕೊಡುತ್ತದೆ.</p>
+
+<h3>ಸಮಸ್ಯೆ 3 — ಆದರೆ ಇದು ನಿಜವಾಗಿ ಲಾಭ ಕೊಡುತ್ತದೆಯೇ?</h3>
+
+<p>ಇಲ್ಲಿಯೇ ಹೆಚ್ಚಿನ ಲೇಖನಗಳು ನಿಲ್ಲುತ್ತವೆ. ಅವು ತಂತ್ರವನ್ನು ವಿವರಿಸುತ್ತವೆ, ಒಂದೆರಡು ಐತಿಹಾಸಿಕ ಉದಾಹರಣೆ ಕೊಡುತ್ತವೆ, ಮತ್ತು "ಆದ್ದರಿಂದ ಇದು ಒಳ್ಳೆಯದು" ಎಂದು ಮುಗಿಸುತ್ತವೆ.</p>
+
+<p>ಅದು ಸಾಕಾಗದು. ಎರಡು ಉದಾಹರಣೆ ಆಯ್ಕೆ ಪಕ್ಷಪಾತ (selection bias). ನಿಜವಾದ ಪರೀಕ್ಷೆಗೆ ನೂರಾರು ವಿಭಿನ್ನ ಮಾರುಕಟ್ಟೆ ಪಥಗಳು ಬೇಕು — ಕೆಲವು mean-reverting, ಕೆಲವು ಅಲ್ಲ. ಈ calculator ಅದನ್ನೇ ಮಾಡುತ್ತದೆ: <b>800 ಸ್ವತಂತ್ರ P/E ಪಥಗಳು, ಪ್ರತಿಯೊಂದರ ಮೇಲೂ ಎರಡೂ ತಂತ್ರಗಳು.</b></p>
+
+<div class="warn">
+  <span class="lbl">ಈ calculator ನ ಅತ್ಯಂತ ಪ್ರಾಮಾಣಿಕ ಭಾಗ</span>
+  <p>ಇದರಲ್ಲಿ ಒಂದು <b>control experiment</b> ಇದೆ. reversion ಅನ್ನು 0 ಗೆ ಇಟ್ಟರೆ P/E ಒಂದು random walk ಆಗುತ್ತದೆ — ಅಂದರೆ ದುಬಾರಿ ಮಾರುಕಟ್ಟೆ ಅಗ್ಗವಾಗುವ ಯಾವುದೇ ಪ್ರವೃತ್ತಿ ಇಲ್ಲ. ಆಗ aware ತಂತ್ರದ ಎಲ್ಲ ಅನುಕೂಲ <b>ಕಣ್ಮರೆಯಾಗಬೇಕು</b>. ಅದು ಆಗದಿದ್ದರೆ ನಿಮ್ಮ ಫಲಿತಾಂಶ ಒಂದು bug. §6 ನಲ್ಲಿ ಇದನ್ನು ವಿವರವಾಗಿ ನೋಡೋಣ.</p>
+</div>
+
+<h2 class="newpage">3. Core concept — ಎರಡು bucket ಮತ್ತು valuation signal</h2>
+
+<h3>ಎರಡು bucket ರಚನೆ</h3>
+
+<p>ನಿಮ್ಮ corpus ಎರಡು ಭಾಗಗಳಲ್ಲಿದೆ:</p>
+
+<table>
+<thead><tr><th>Bucket</th><th>ಕೋಡ್</th><th>ಏನಿದೆ</th><th>ಕೆಲಸ</th></tr></thead>
+<tbody>
+<tr><td class="f">Growth engine</td><td><code>ge</code></td><td>Equity</td><td>ದೀರ್ಘಾವಧಿ ಬೆಳವಣಿಗೆ. ಇಲ್ಲಿಂದ ನೇರವಾಗಿ ಖರ್ಚು ಮಾಡುವುದಿಲ್ಲ.</td></tr>
+<tr><td class="f">Income bucket</td><td><code>ie</code></td><td>Debt / liquid</td><td>ಪ್ರತಿ ತಿಂಗಳ ಖರ್ಚು ಇಲ್ಲಿಂದ. 7% ಸ್ಥಿರ return.</td></tr>
+</tbody>
+</table>
+
+<p>ಪ್ರತಿ ವರ್ಷದ ಚಕ್ರ:</p>
+
+<div class="formula"><span class="c">// ಪ್ರತಿ ವರ್ಷ ನಡೆಯುವ ಕ್ರಮ</span>
+1. ವರ್ಷದ ಖರ್ಚು ie ನಿಂದ ತೆಗೆ
+2. ie ಗೆ debtReturn ಸೇರಿಸು
+3. ge ಗೆ ಆ ವರ್ಷದ equity return ಅನ್ವಯಿಸು
+4. ie ಖಾಲಿಯಾಗುತ್ತಿದ್ದರೆ → ge ಇಂದ ಮಾರಿ ie ತುಂಬಿಸು (REFILL)
+5. Refill ಮೇಲೆ ತೆರಿಗೆ ಕಳೆ
+</div>
+
+<p>ಹಂತ 4 ರಲ್ಲಿಯೇ ಎರಡು ತಂತ್ರಗಳು ಬೇರೆಯಾಗುತ್ತವೆ. <b>ಎಷ್ಟು</b> ತುಂಬಿಸಬೇಕು ಎಂಬುದೇ ಪ್ರಶ್ನೆ.</p>
+
+<h3>Refill target ಸೂತ್ರ</h3>
+
+<div class="formula">refillTarget = w × (1 + inflation) × ieDuration × mult
+
+<span class="c">// w = ಈಗಿನ ವಾರ್ಷಿಕ ಖರ್ಚು</span>
+<span class="c">// ieDuration = income bucket ಎಷ್ಟು ವರ್ಷ ಇರಬೇಕು (default 5)</span>
+<span class="c">// mult = valuation multiplier — ಇಲ್ಲಿಯೇ ತಂತ್ರ ಬದಲಾಗುತ್ತದೆ</span>
+</div>
+
+<p>Fixed ತಂತ್ರದಲ್ಲಿ <code>mult</code> ಯಾವಾಗಲೂ <b>1.0</b>. Aware ತಂತ್ರದಲ್ಲಿ ಅದು P/E ಯನ್ನು ಅವಲಂಬಿಸಿ ಬದಲಾಗುತ್ತದೆ.</p>
+
+<h3>Valuation multiplier</h3>
+
+<div class="formula">ratio = pe[ವರ್ಷ] / peMean
+
+if (ratio >= richBand)   mult = richMult    <span class="c">// 1.15 ದಾಟಿದರೆ 1.6</span>
+else if (ratio <= cheapBand) mult = cheapMult <span class="c">// 0.85 ಕ್ಕಿಂತ ಕೆಳಗಾದರೆ 0.6</span>
+else                     mult = 1.0          <span class="c">// ನಡುವೆ ಇದ್ದರೆ ಸಾಮಾನ್ಯ</span>
+</div>
+
+<p>Default values ನಲ್ಲಿ peMean = 20. ಅಂದರೆ:</p>
+
+<table>
+<thead><tr><th>P/E</th><th class="num">ratio</th><th>ವಲಯ</th><th class="num">mult</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="num">26</td><td class="num">1.30</td><td>ದುಬಾರಿ</td><td class="num">1.6</td><td>5 ವರ್ಷದ ಬದಲು 8 ವರ್ಷದ ಖರ್ಚು ತುಂಬಿಸು</td></tr>
+<tr><td class="num">23</td><td class="num">1.15</td><td>ದುಬಾರಿ (ಗಡಿ)</td><td class="num">1.6</td><td>ಇಲ್ಲಿಂದ rich rule ಶುರು</td></tr>
+<tr><td class="num">21</td><td class="num">1.05</td><td>ಸಾಮಾನ್ಯ</td><td class="num">1.0</td><td>ಸಾಮಾನ್ಯ 5 ವರ್ಷ</td></tr>
+<tr><td class="num">18</td><td class="num">0.90</td><td>ಸಾಮಾನ್ಯ</td><td class="num">1.0</td><td>ಸಾಮಾನ್ಯ 5 ವರ್ಷ</td></tr>
+<tr><td class="num">17</td><td class="num">0.85</td><td>ಅಗ್ಗ (ಗಡಿ)</td><td class="num">0.6</td><td>ಇಲ್ಲಿಂದ cheap rule ಶುರು</td></tr>
+<tr><td class="num">14</td><td class="num">0.70</td><td>ಅಗ್ಗ</td><td class="num">0.6</td><td>ಬರೀ 3 ವರ್ಷದ ಖರ್ಚು — equity ಉಳಿಸಿಕೊ</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಈ ತಂತ್ರದ ಹಿಂದಿನ ತರ್ಕ</span>
+  <p>P/E 26 ಇರುವಾಗ equity ಮಾರುವುದು ಎಂದರೆ — ಪ್ರತಿ ₹1 ಗಳಿಕೆಗೆ ₹26 ಸಿಗುತ್ತಿದೆ. P/E 14 ಇರುವಾಗ ಅದೇ ₹1 ಗಳಿಕೆಗೆ ₹14 ಮಾತ್ರ. ಒಂದೇ ಆಸ್ತಿಗೆ ಎರಡು ಬೇರೆ ಬೆಲೆ. ದುಬಾರಿಯಾಗಿದ್ದಾಗ ಹೆಚ್ಚು ಮಾರುವುದು ಸ್ವಾಭಾವಿಕ. ಆದರೆ ಗಮನಿಸಿ — ಇದು ಕೆಲಸ ಮಾಡಲು P/E <b>ಸರಾಸರಿಗೆ ಮರಳಬೇಕು</b>. ಅದೇ ಮುಂದಿನ ವಿಭಾಗದ ವಿಷಯ.</p>
+</div>
+
+<h3>ಏಕೆ ದುಬಾರಿಯಾಗಿದ್ದಾಗ ಎಲ್ಲವನ್ನೂ ಮಾರಬಾರದು?</h3>
+
+<p>ಸ್ವಾಭಾವಿಕ ಪ್ರಶ್ನೆ — P/E 30 ಇದ್ದರೆ ಎಲ್ಲ equity ಮಾರಿ debt ಗೆ ಹಾಕಿದರೆ ಆಗದೇ? ಮೂರು ಕಾರಣ:</p>
+
+<table>
+<thead><tr><th>ಕಾರಣ</th><th>ವಿವರಣೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">ತೆರಿಗೆ</td><td>ಪ್ರತಿ ಮಾರಾಟಕ್ಕೂ LTCG. ದೊಡ್ಡ ಮಾರಾಟ = ದೊಡ್ಡ ತೆರಿಗೆ, ಅದೂ ಒಂದೇ ವರ್ಷದಲ್ಲಿ.</td></tr>
+<tr><td class="f">ದುಬಾರಿ ಇನ್ನೂ ದುಬಾರಿಯಾಗಬಹುದು</td><td>P/E 30 ರಿಂದ 40 ಗೆ ಹೋಗಬಹುದು. 1999 ಮತ್ತು 2021 ರಲ್ಲಿ ಹಾಗೇ ಆಯಿತು.</td></tr>
+<tr><td class="f">ಹಣದುಬ್ಬರ</td><td>30 ವರ್ಷದ ನಿವೃತ್ತಿಯಲ್ಲಿ debt ಮಾತ್ರ ಇಟ್ಟುಕೊಂಡರೆ ಕ್ರಯಶಕ್ತಿ ಕರಗುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<p>ಆದ್ದರಿಂದ richMult 1.6 — 2.5 ಅಥವಾ ಅನಂತ ಅಲ್ಲ. ಇದು ಒಂದು <b>ಒಲವು (tilt)</b>, ಸಂಪೂರ್ಣ ಬದಲಾವಣೆ ಅಲ್ಲ.</p>
+
+<h2 class="newpage">4. ಪ್ರತಿ Input field ಅರ್ಥ</h2>
+
+<h3>ಗುಂಪು A — ನಿಮ್ಮ ಪರಿಸ್ಥಿತಿ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">corpus</td><td class="num">2,00,00,000</td><td>ಒಟ್ಟು ನಿವೃತ್ತಿ corpus (equity + debt).</td></tr>
+<tr><td class="f">monthlyWithdrawal</td><td class="num">70,000</td><td>ಮೊದಲ ವರ್ಷದ ಮಾಸಿಕ ಖರ್ಚು. ವಾರ್ಷಿಕ ₹8.4 ಲಕ್ಷ = 4.2% withdrawal rate.</td></tr>
+<tr><td class="f">inflation</td><td class="num">6%</td><td>ಪ್ರತಿ ವರ್ಷ ಖರ್ಚು ಈ ದರದಲ್ಲಿ ಏರುತ್ತದೆ.</td></tr>
+<tr><td class="f">horizon</td><td class="num">30 ವರ್ಷ</td><td>ಎಷ್ಟು ವರ್ಷ simulate ಮಾಡಬೇಕು.</td></tr>
+</tbody>
+</table>
+
+<h3>ಗುಂಪು B — Bucket ರಚನೆ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">ieStartPct</td><td class="num">25%</td><td>ಆರಂಭದಲ್ಲಿ ಎಷ್ಟು ಶೇಕಡಾ income bucket ನಲ್ಲಿ. ₹2 ಕೋಟಿಯ 25% = ₹50 ಲಕ್ಷ.</td></tr>
+<tr><td class="f">ieDuration</td><td class="num">5 ವರ್ಷ</td><td>Income bucket ಎಷ್ಟು ವರ್ಷದ ಖರ್ಚು ಹೊಂದಿರಬೇಕು — refill target ನ ಆಧಾರ.</td></tr>
+<tr><td class="f">debtReturn</td><td class="num">7%</td><td>Income bucket ನ ವಾರ್ಷಿಕ return. ಸ್ಥಿರ, ಏರಿಳಿತವಿಲ್ಲ.</td></tr>
+</tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">ieDuration ಬಹಳ ಮುಖ್ಯ parameter</span>
+  <p>5 ವರ್ಷ ಎಂದರೆ — ಮಾರುಕಟ್ಟೆ 5 ವರ್ಷ ಸತತವಾಗಿ ಬಿದ್ದರೂ ನೀವು equity ಮಾರಬೇಕಾಗಿಲ್ಲ. ಭಾರತದ ಇತಿಹಾಸದಲ್ಲಿ ಅತಿ ದೀರ್ಘ ಚೇತರಿಕೆ ಅವಧಿ ಸುಮಾರು 4–5 ವರ್ಷ (2008 ಜನವರಿ ಶಿಖರದಿಂದ 2013 ರವರೆಗೆ). ಆದ್ದರಿಂದ 5 ಒಂದು ತರ್ಕಬದ್ಧ ಆಯ್ಕೆ. 3 ಗೆ ಇಳಿಸಿದರೆ ಹೆಚ್ಚು equity ಇರುತ್ತದೆ (ಹೆಚ್ಚು ಬೆಳವಣಿಗೆ) ಆದರೆ sequence risk ಹೆಚ್ಚು. 8 ಗೆ ಏರಿಸಿದರೆ ಸುರಕ್ಷಿತ ಆದರೆ ಬೆಳವಣಿಗೆ ಕುಂಠಿತ.</p>
+</div>
+
+<h3>ಗುಂಪು C — ತೆರಿಗೆ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">taxRate</td><td class="num">12.5%</td><td>Equity LTCG ದರ (s112A, FY 2026-27).</td></tr>
+<tr><td class="f">gainFraction</td><td class="num">60%</td><td>ನೀವು ಮಾರುವ ಮೊತ್ತದಲ್ಲಿ ಎಷ್ಟು ಶೇಕಡಾ ಲಾಭ. ₹10 ಲಕ್ಷ ಮಾರಿದರೆ ₹6 ಲಕ್ಷ ಲಾಭ, ₹4 ಲಕ್ಷ ಮೂಲಧನ.</td></tr>
+</tbody>
+</table>
+
+<div class="formula">taxDrag = (gainFraction / 100) × (taxRate / 100)
+        = 0.60 × 0.125
+        = <span class="k">0.075</span>   <span class="c">// ಪ್ರತಿ ₹100 ಮಾರಾಟಕ್ಕೆ ₹7.50 ತೆರಿಗೆ</span>
+</div>
+
+<p>ಅಂದರೆ ₹40 ಲಕ್ಷ refill ಮಾಡಲು ನೀವು ₹40 ಲಕ್ಷ ಮಾರಿದರೆ, ₹3 ಲಕ್ಷ ತೆರಿಗೆ ಹೋಗಿ ₹37 ಲಕ್ಷ ಮಾತ್ರ ie ಗೆ ಸೇರುತ್ತದೆ.</p>
+
+<div class="warn">
+  <span class="lbl">gainFraction ವರ್ಷಗಳಲ್ಲಿ ಬದಲಾಗುತ್ತದೆ</span>
+  <p>ನಿವೃತ್ತಿಯ ಆರಂಭದಲ್ಲಿ ನಿಮ್ಮ ಹಳೆಯ ಹೂಡಿಕೆಗಳಲ್ಲಿ gain fraction ಹೆಚ್ಚಿರಬಹುದು (70–80%). ವರ್ಷಗಳು ಕಳೆದಂತೆ ನೀವು ಹೊಸ ಹಣ ಸೇರಿಸದೆ ಹಳೆಯದನ್ನೇ ಮಾರುತ್ತಿರುವುದರಿಂದ ಅದು ಏರುತ್ತಲೇ ಹೋಗಬಹುದು. ಈ calculator ಅದನ್ನು ಸ್ಥಿರವಾಗಿ ಇಡುತ್ತದೆ — ಸರಳೀಕರಣ. ಹೆಚ್ಚು ನಿಖರ ತೆರಿಗೆ ಲೆಕ್ಕಕ್ಕೆ Manual 02 (LTCG Harvest Optimiser) ನೋಡಿ.</p>
+</div>
+
+<h3>ಗುಂಪು D — ಮಾರುಕಟ್ಟೆ ಮಾದರಿ (ಅತ್ಯಂತ ಮುಖ್ಯ)</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ ಮತ್ತು ಸೂಕ್ಷ್ಮತೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">peStart</td><td class="num">22</td><td>ಇಂದಿನ ಮಾರುಕಟ್ಟೆ P/E. ನೀವು ಎಲ್ಲಿಂದ ಶುರುಮಾಡುತ್ತೀರಿ.</td></tr>
+<tr><td class="f">peMean</td><td class="num">20</td><td>ದೀರ್ಘಾವಧಿ ಸರಾಸರಿ P/E — ಎಲ್ಲಿಗೆ ಮರಳುತ್ತದೆ.</td></tr>
+<tr><td class="f">reversion</td><td class="num">15%</td><td>ಪ್ರತಿ ವರ್ಷ ಅಂತರದ ಎಷ್ಟು ಶೇಕಡಾ ಮುಚ್ಚುತ್ತದೆ. <b>ಇದೇ ಇಡೀ ತಂತ್ರದ ಜೀವಾಳ.</b></td></tr>
+<tr><td class="f">peVol</td><td class="num">18%</td><td>P/E ನ ವಾರ್ಷಿಕ ಏರಿಳಿತ (log scale).</td></tr>
+<tr><td class="f">earningsGrowth</td><td class="num">10%</td><td>ಕಂಪನಿಗಳ ಗಳಿಕೆ ವಾರ್ಷಿಕ ಬೆಳವಣಿಗೆ.</td></tr>
+<tr><td class="f">dividendYield</td><td class="num">1.4%</td><td>ಡಿವಿಡೆಂಡ್ return. Price return ಜೊತೆ ಸೇರಿಸಲಾಗುತ್ತದೆ.</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">reversion = 15% ಎಂದರೆ ಏನು</span>
+  <p>ಈಗ P/E 26, ಸರಾಸರಿ 20. ಅಂತರ 6. ಈ ವರ್ಷ ಅದರ 15% = 0.9 ಮುಚ್ಚುತ್ತದೆ. ಅಂದರೆ P/E 25.1 ಕಡೆಗೆ ಒಲವು (ಜೊತೆಗೆ ಯಾದೃಚ್ಛಿಕ ಆಘಾತ). Half-life ಸುಮಾರು ln(2)/0.15 ≈ <b>4.6 ವರ್ಷ</b> — ಅಂದರೆ ಅಂತರ ಅರ್ಧವಾಗಲು ಸುಮಾರು 4–5 ವರ್ಷ. ಇದು ಐತಿಹಾಸಿಕ ಅಂದಾಜುಗಳಿಗೆ ಸರಿಸುಮಾರು ಹೊಂದುತ್ತದೆ, ಆದರೆ ಅಂದಾಜು ಬಹಳ ಅನಿಶ್ಚಿತ.</p>
+</div>
+
+<h3>ಗುಂಪು E — Valuation ನಿಯಮಗಳು</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">richBand</td><td class="num">1.15</td><td>ratio ಇದನ್ನು ದಾಟಿದರೆ "ದುಬಾರಿ". P/E 23 (= 20 × 1.15).</td></tr>
+<tr><td class="f">cheapBand</td><td class="num">0.85</td><td>ratio ಇದಕ್ಕಿಂತ ಕೆಳಗಾದರೆ "ಅಗ್ಗ". P/E 17.</td></tr>
+<tr><td class="f">richMult</td><td class="num">1.6</td><td>ದುಬಾರಿಯಾಗಿದ್ದಾಗ refill target ನ ಗುಣಕ.</td></tr>
+<tr><td class="f">cheapMult</td><td class="num">0.6</td><td>ಅಗ್ಗವಾಗಿದ್ದಾಗ refill target ನ ಗುಣಕ.</td></tr>
+</tbody>
+</table>
+
+<h3>ಗುಂಪು F — Simulation ನಿಯಂತ್ರಣ</h3>
+
+<table>
+<thead><tr><th>Field</th><th class="num">Default</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">paths</td><td class="num">800</td><td>ಎಷ್ಟು ಸ್ವತಂತ್ರ ಮಾರುಕಟ್ಟೆ ಪಥಗಳು. ಪ್ರತಿಯೊಂದರ ಮೇಲೂ ಎರಡೂ ತಂತ್ರ.</td></tr>
+<tr><td class="f">seed</td><td class="num">20260811</td><td>Random number generator ನ ಬೀಜ. ಒಂದೇ seed = ಒಂದೇ ಫಲಿತಾಂಶ, ಪ್ರತಿ ಬಾರಿ.</td></tr>
+</tbody>
+</table>
+
+<div class="tip">
+  <span class="lbl">Seed ಏಕೆ ಮುಖ್ಯ</span>
+  <p>Seed ಬದಲಿಸಿ ಮತ್ತೆ ಓಡಿಸಿ. Win rate 62% ರಿಂದ 58% ಗೆ ಬದಲಾಗಬಹುದು. ಆ ಏರಿಳಿತವೇ ನಿಮಗೆ ಫಲಿತಾಂಶದ <b>ಅನಿಶ್ಚಿತತೆಯ ಗಾತ್ರ</b> ತೋರಿಸುತ್ತದೆ. 3–4 ಬೇರೆ seeds ನಲ್ಲಿ ಓಡಿಸಿ ವ್ಯಾಪ್ತಿ ನೋಡಿ — ಒಂದೇ ಓಟದ ಸಂಖ್ಯೆಯನ್ನು ನಂಬಬೇಡಿ.</p>
+</div>
+
+<h2 class="newpage">5. ಒಳಗಿನ Math — OU mean reversion</h2>
+
+<h3>P/E ಪಥ ಹೇಗೆ ಸೃಷ್ಟಿಯಾಗುತ್ತದೆ</h3>
+
+<p>ಈ calculator ನ ಅತ್ಯಂತ ಮುಖ್ಯ ಸಾಲುಗಳು ಇವು:</p>
+
+<div class="formula">lnPE = lnPE + kappa × (lnMean − lnPE) + sigma × gauss();
+lnPE = clamp(lnPE, ln(6), ln(70));
+pe   = exp(lnPE);
+</div>
+
+<p>ಇದನ್ನು <b>Ornstein-Uhlenbeck (OU) process</b> ಎನ್ನುತ್ತಾರೆ. ಮೂರು ಭಾಗ ಒಡೆದು ನೋಡೋಣ.</p>
+
+<h4>ಭಾಗ 1 — ಏಕೆ log?</h4>
+
+<p>P/E ನೇರವಾಗಿ ಬಳಸುವ ಬದಲು ಅದರ logarithm ಬಳಸಲಾಗುತ್ತದೆ. ಎರಡು ಕಾರಣ. ಮೊದಲನೆಯದು — P/E ಎಂದೂ ಋಣಾತ್ಮಕವಾಗಲಾರದು, ಮತ್ತು exp() ಯಾವಾಗಲೂ ಧನಾತ್ಮಕ ಕೊಡುತ್ತದೆ. ಎರಡನೆಯದು — 20 ರಿಂದ 24 ಗೆ ಚಲನೆ (20% ಏರಿಕೆ) ಮತ್ತು 30 ರಿಂದ 36 ಗೆ ಚಲನೆ (ಅದೇ 20%) ಒಂದೇ ಗಾತ್ರದವು ಎಂದು log scale ಸರಿಯಾಗಿ ಪರಿಗಣಿಸುತ್ತದೆ.</p>
+
+<h4>ಭಾಗ 2 — pull term: kappa × (lnMean − lnPE)</h4>
+
+<div class="formula">kappa   = reversion / 100 = 0.15
+lnMean  = ln(20) = 2.9957
+
+<span class="c">// ಈಗ P/E = 26 ಎಂದುಕೊಳ್ಳಿ</span>
+lnPE    = ln(26) = 3.2581
+ಅಂತರ    = 2.9957 − 3.2581 = −0.2624
+pull    = 0.15 × (−0.2624) = <span class="k">−0.03936</span>
+
+<span class="c">// ಯಾದೃಚ್ಛಿಕ ಆಘಾತವಿಲ್ಲದೆ</span>
+ಹೊಸ lnPE = 3.2581 − 0.03936 = 3.2187
+ಹೊಸ P/E  = exp(3.2187) = <span class="k">24.99</span>
+</div>
+
+<p>ಒಂದು ವರ್ಷದಲ್ಲಿ P/E 26 ರಿಂದ 25 ಕ್ಕೆ. ನಿಧಾನ ಎಳೆತ. ಗಮನಿಸಿ pull ನ ಚಿಹ್ನೆ ಸ್ವಯಂಚಾಲಿತ — P/E ಸರಾಸರಿಗಿಂತ ಮೇಲಿದ್ದರೆ ಋಣಾತ್ಮಕ (ಕೆಳಗೆ ಎಳೆಯುತ್ತದೆ), ಕೆಳಗಿದ್ದರೆ ಧನಾತ್ಮಕ (ಮೇಲೆ ಎಳೆಯುತ್ತದೆ).</p>
+
+<h4>ಭಾಗ 3 — shock term: sigma × gauss()</h4>
+
+<div class="formula">sigma = peVol / 100 = 0.18
+gauss() = ಪ್ರಮಾಣಿತ ಸಾಮಾನ್ಯ ಯಾದೃಚ್ಛಿಕ ಸಂಖ್ಯೆ (ಸರಾಸರಿ 0, SD 1)
+
+<span class="c">// ಒಂದು ಕೆಟ್ಟ ವರ್ಷ: gauss() = −1.5</span>
+shock = 0.18 × (−1.5) = −0.27
+ಹೊಸ lnPE = 3.2581 − 0.03936 − 0.27 = 2.9487
+ಹೊಸ P/E  = exp(2.9487) = <span class="k">19.08</span>
+</div>
+
+<p>ಈ ಒಂದೇ ವರ್ಷದಲ್ಲಿ P/E 26 ರಿಂದ 19 ಕ್ಕೆ — 27% ಕುಸಿತ ಬರೀ multiple ನಲ್ಲಿ. ಗಮನಿಸಿ shock (0.27) pull (0.039) ಗಿಂತ <b>ಏಳು ಪಟ್ಟು ದೊಡ್ಡದು</b>. ಇದೇ ಈ ಮಾದರಿಯ ಪ್ರಮುಖ ಸತ್ಯ.</p>
+
+<div class="warn">
+  <span class="lbl">ಇದನ್ನು ಚೆನ್ನಾಗಿ ಅರ್ಥ ಮಾಡಿಕೊಳ್ಳಿ</span>
+  <p>ಒಂದೇ ವರ್ಷದಲ್ಲಿ ಯಾದೃಚ್ಛಿಕ ಆಘಾತ mean reversion ಗಿಂತ ಬಹಳ ದೊಡ್ಡದು. ಆದ್ದರಿಂದ "ಮಾರುಕಟ್ಟೆ ದುಬಾರಿಯಾಗಿದೆ" ಎಂದು ತಿಳಿದರೂ ಮುಂದಿನ ವರ್ಷ ಏನಾಗುತ್ತದೆ ಎಂದು ಊಹಿಸಲಾಗದು. Mean reversion ಒಂದು <b>ದೀರ್ಘಾವಧಿ ಒಲವು</b>, ಅಲ್ಪಾವಧಿ ಭವಿಷ್ಯವಾಣಿ ಅಲ್ಲ. ಇದೇ ಕಾರಣಕ್ಕೆ aware ತಂತ್ರದ ಅನುಕೂಲ ಸಣ್ಣದಾಗಿರುತ್ತದೆ ಮತ್ತು ಎಲ್ಲ paths ನಲ್ಲಿ ಕೆಲಸ ಮಾಡುವುದಿಲ್ಲ.</p>
+</div>
+
+<h4>ಭಾಗ 4 — clamp: ವಾಸ್ತವಿಕ ಮಿತಿಗಳು</h4>
+
+<div class="formula">lnPE = clamp(lnPE, ln(6), ln(70))
+<span class="c">// P/E ಎಂದೂ 6 ಕ್ಕಿಂತ ಕೆಳಗೆ ಅಥವಾ 70 ಕ್ಕಿಂತ ಮೇಲೆ ಹೋಗುವುದಿಲ್ಲ</span>
+</div>
+
+<p>ಇಲ್ಲದಿದ್ದರೆ ಸತತ ಕೆಟ್ಟ ಆಘಾತಗಳು P/E ಅನ್ನು 2 ಅಥವಾ 200 ಕ್ಕೆ ಒಯ್ಯಬಹುದು — ಅವು ಎಂದೂ ಸಂಭವಿಸಿಲ್ಲ. ಈ ಮಿತಿಗಳು ಐತಿಹಾಸಿಕ ಅನುಭವಕ್ಕೆ ಸರಿಸುಮಾರು ಹೊಂದುತ್ತವೆ.</p>
+
+<h3>Return ಹೇಗೆ ಲೆಕ್ಕವಾಗುತ್ತದೆ — ಇದೇ ಚಾಣಾಕ್ಷ ಭಾಗ</h3>
+
+<p>ಇಲ್ಲಿ ಈ calculator ಒಂದು ಮುಖ್ಯ ವಿನ್ಯಾಸ ನಿರ್ಧಾರ ತೆಗೆದುಕೊಳ್ಳುತ್ತದೆ. Equity return ಅನ್ನು ಪ್ರತ್ಯೇಕವಾಗಿ ಸೃಷ್ಟಿಸುವುದಿಲ್ಲ — ಅದನ್ನು <b>P/E ಪಥದಿಂದಲೇ ಪಡೆಯುತ್ತದೆ</b>.</p>
+
+<div class="formula">ret = (1 + g) × (pe[y] / pe[y−1]) − 1 + dy
+
+<span class="c">// g  = earningsGrowth / 100 = 0.10</span>
+<span class="c">// dy = dividendYield / 100 = 0.014</span>
+</div>
+
+<h4>ಈ ಸೂತ್ರ ಎಲ್ಲಿಂದ ಬಂತು</h4>
+
+<div class="formula">ಬೆಲೆ = ಗಳಿಕೆ × P/E
+
+ಬೆಲೆ[y] / ಬೆಲೆ[y−1] = (ಗಳಿಕೆ[y] / ಗಳಿಕೆ[y−1]) × (pe[y] / pe[y−1])
+                      = (1 + g) × (pe[y] / pe[y−1])
+
+<span class="c">// ಒಟ್ಟು return = ಬೆಲೆ ಬದಲಾವಣೆ + ಡಿವಿಡೆಂಡ್</span>
+</div>
+
+<div class="note">
+  <span class="lbl">ಇದು ಏಕೆ ಬೌದ್ಧಿಕವಾಗಿ ಪ್ರಾಮಾಣಿಕ</span>
+  <p>ಒಂದು ಸೋಮಾರಿ ವಿನ್ಯಾಸ ಹೀಗಿರುತ್ತಿತ್ತು — "P/E ದುಬಾರಿಯಾಗಿದ್ದರೆ ಮುಂದಿನ ವರ್ಷದ return ಕಡಿಮೆ ಇರಲಿ." ಅದು <b>ತೀರ್ಮಾನವನ್ನೇ ಊಹಿಸುವುದು</b> (assuming the conclusion). ಆಗ aware ತಂತ್ರ ಗೆಲ್ಲುವುದು ಖಚಿತ, ಆದರೆ ಅದು ನಿಮ್ಮದೇ ಊಹೆಯನ್ನು ಮತ್ತೆ ಹೇಳಿದಂತೆ.</p>
+  <p>ಇಲ್ಲಿ ಬದಲಿಗೆ, return ಗಳಿಕೆ ಬೆಳವಣಿಗೆ ಮತ್ತು multiple ನ ಬದಲಾವಣೆಯಿಂದ <b>ಸ್ವಾಭಾವಿಕವಾಗಿ ಹೊರಹೊಮ್ಮುತ್ತದೆ</b>. Mean reversion ಇದ್ದರೆ ದುಬಾರಿ ಮಾರುಕಟ್ಟೆಯ ನಂತರ ಕಡಿಮೆ return ತಾನಾಗಿ ಬರುತ್ತದೆ. ಇಲ್ಲದಿದ್ದರೆ ಬರುವುದಿಲ್ಲ. ಇದೇ ಸರಿಯಾದ ರಚನೆ.</p>
+</div>
+
+<h4>ಒಂದು ಪೂರ್ಣ ವರ್ಷದ ಲೆಕ್ಕ</h4>
+
+<div class="example">
+<h4>ವರ್ಷ 4 → ವರ್ಷ 5, P/E 26 ರಿಂದ 19.08</h4>
+<div class="formula">pe[4] = 26.00,  pe[5] = 19.08
+g = 0.10,  dy = 0.014
+
+ret = (1.10) × (19.08 / 26.00) − 1 + 0.014
+    = 1.10 × 0.73385 − 1 + 0.014
+    = 0.80723 − 1 + 0.014
+    = <span class="k">−17.9%</span>
+</div>
+<p>ಗಳಿಕೆ 10% ಬೆಳೆದರೂ multiple 27% ಕುಸಿದಿದ್ದರಿಂದ ಒಟ್ಟು return −17.9%. ಇದೇ 2008 ಮತ್ತು 2000 ರಲ್ಲಿ ನಿಜವಾಗಿ ನಡೆದದ್ದು — ಕಂಪನಿಗಳ ಗಳಿಕೆ ಕುಸಿಯಲಿಲ್ಲ, ಜನರು ಆ ಗಳಿಕೆಗೆ ಕೊಡುವ ಬೆಲೆ ಕುಸಿಯಿತು.</p>
+</div>
+
+<div class="example">
+<h4>ವಿರುದ್ಧ ದಿಕ್ಕು — P/E 15 ರಿಂದ 19 ಗೆ ಚೇತರಿಕೆ</h4>
+<div class="formula">ret = (1.10) × (19 / 15) − 1 + 0.014
+    = 1.10 × 1.26667 − 1 + 0.014
+    = 1.39333 − 1 + 0.014
+    = <span class="k">+40.7%</span>
+</div>
+<p>ಇದೇ 2009 ಮತ್ತು 2021 ರಲ್ಲಿ ನಡೆದದ್ದು. ಗಮನಿಸಿ — ಈ ಅದ್ಭುತ ವರ್ಷವನ್ನು ಪಡೆಯಲು ನೀವು ಆಗ equity ಹೊಂದಿರಬೇಕು. ಅಗ್ಗವಾಗಿದ್ದಾಗ ಕಡಿಮೆ ಮಾರುವ (cheapMult 0.6) ನಿಯಮದ ಸಂಪೂರ್ಣ ಉದ್ದೇಶ ಇದೇ.</p>
+</div>
+
+<h3>ಒಂದು ವರ್ಷದ ಪೂರ್ಣ ಚಕ್ರ (ಎರಡೂ ತಂತ್ರಗಳಿಗೆ ಒಂದೇ)</h3>
+
+<div class="formula"><span class="c">// 1. ಖರ್ಚು</span>
+w = ಆರಂಭಿಕ ವಾರ್ಷಿಕ ಖರ್ಚು × (1 + inflation)^year
+ie = ie − w
+
+<span class="c">// 2. ie ಖಾಲಿಯಾದರೆ ge ಇಂದ ನೇರವಾಗಿ (ಬಲವಂತದ ಮಾರಾಟ)</span>
+if (ie < 0) { ge = ge + ie / (1 − taxDrag);  ie = 0; }
+
+<span class="c">// 3. ಬೆಳವಣಿಗೆ</span>
+ie = ie × (1 + debtReturn)
+ge = ge × (1 + ret)
+
+<span class="c">// 4. Refill ಬೇಕೇ?</span>
+target = w × (1 + infl) × ieDuration × mult
+if (ie < target) {
+   need    = target − ie
+   sell    = min(need / (1 − taxDrag), ge)
+   ge      = ge − sell
+   ie      = ie + sell × (1 − taxDrag)
+}
+</div>
+
+<p>ಹಂತ 2 ಅನ್ನು ಗಮನಿಸಿ — income bucket ಖಾಲಿಯಾದರೆ, ಮಾರುಕಟ್ಟೆ ಎಷ್ಟೇ ಕೆಟ್ಟದಾಗಿದ್ದರೂ equity ಮಾರಲೇಬೇಕು. ಯಾವುದೇ ತಂತ್ರ ಈ ಬಲವಂತವನ್ನು ತಪ್ಪಿಸಲಾರದು. ieDuration ದೊಡ್ಡದಾಗಿಟ್ಟರೆ ಇದು ಸಂಭವಿಸುವ ಸಾಧ್ಯತೆ ಕಡಿಮೆ.</p>
+
+<h2 class="newpage">6. Paired experiment — ಇದೇ ಈ calculator ನ ಆತ್ಮ</h2>
+
+<h3>ಎರಡು ತಂತ್ರ, ಒಂದೇ ಮಾರುಕಟ್ಟೆ</h3>
+
+<p><code>runStudy()</code> ಫಂಕ್ಷನ್ ಒಂದು ಮುಖ್ಯ ಕೆಲಸ ಮಾಡುತ್ತದೆ — ಪ್ರತಿ path ಗೆ ಒಂದು P/E ಸರಣಿ ಸೃಷ್ಟಿಸಿ, ಅದೇ ಸರಣಿಯ ಮೇಲೆ <b>ಎರಡೂ</b> ತಂತ್ರಗಳನ್ನು ಓಡಿಸುತ್ತದೆ.</p>
+
+<div class="formula"><span class="c">// ಪ್ರತಿ path ಗೆ</span>
+peSeries = generatePEPath(seed + i)     <span class="c">// ಒಂದೇ ಬಾರಿ ಸೃಷ್ಟಿ</span>
+
+resultFixed = simulate(peSeries, mult = ಯಾವಾಗಲೂ 1.0)
+resultAware = simulate(peSeries, mult = valuation ಪ್ರಕಾರ)
+
+edge[i] = resultAware.finalCorpus − resultFixed.finalCorpus
+</div>
+
+<div class="tip">
+  <span class="lbl">ಇದು ಏಕೆ ನಿರ್ಣಾಯಕ</span>
+  <p>ಎರಡು ತಂತ್ರಗಳಿಗೆ ಬೇರೆ ಬೇರೆ ಯಾದೃಚ್ಛಿಕ ಸಂಖ್ಯೆ ಬಳಸಿದರೆ, ಫಲಿತಾಂಶದ ವ್ಯತ್ಯಾಸ ತಂತ್ರದಿಂದಲೋ ಅಥವಾ ಬರೀ ಅದೃಷ್ಟದಿಂದಲೋ ಎಂದು ತಿಳಿಯುವುದಿಲ್ಲ. ಒಂದೇ P/E ಪಥ ಬಳಸಿದರೆ ಮಾರುಕಟ್ಟೆ <b>ನಿಯಂತ್ರಿತ ಚರ (controlled variable)</b> ಆಗುತ್ತದೆ. ಉಳಿಯುವ ವ್ಯತ್ಯಾಸ ಶುದ್ಧವಾಗಿ ತಂತ್ರದ್ದೇ. ಇದನ್ನು ಔಷಧ ಪ್ರಯೋಗದಲ್ಲಿ "paired trial" ಎನ್ನುತ್ತಾರೆ — ಒಬ್ಬನೇ ರೋಗಿಗೆ ಎರಡೂ ಔಷಧ ಬೇರೆ ಬೇರೆ ಸಮಯದಲ್ಲಿ ಕೊಡುವುದು.</p>
+</div>
+
+<h3>ಮೂರು ಔಟ್‌ಪುಟ್ ಅಳತೆಗಳು</h3>
+
+<table>
+<thead><tr><th>ಅಳತೆ</th><th>ಲೆಕ್ಕ</th><th>ಏನು ಹೇಳುತ್ತದೆ</th></tr></thead>
+<tbody>
+<tr><td class="f">winRate</td><td>edge &gt; 0 ಇರುವ paths ನ ಶೇಕಡಾ</td><td>ಎಷ್ಟು ಬಾರಿ ಗೆಲ್ಲುತ್ತದೆ — ಸ್ಥಿರತೆ</td></tr>
+<tr><td class="f">medianEdge</td><td>edge ಗಳ ಮಧ್ಯಂತರ ಮೌಲ್ಯ</td><td>ಸಾಮಾನ್ಯ ಪರಿಸ್ಥಿತಿಯಲ್ಲಿ ಎಷ್ಟು ಗೆಲ್ಲುತ್ತದೆ</td></tr>
+<tr><td class="f">successRate</td><td>ಪ್ರತಿ ತಂತ್ರಕ್ಕೂ ಪ್ರತ್ಯೇಕ — corpus &gt; 0 ಆಗಿ 30 ವರ್ಷ ಪೂರೈಸಿದ paths</td><td>ಬದುಕುಳಿಯುವಿಕೆ — ಅಂತಿಮ ಮೊತ್ತಕ್ಕಿಂತ ಮುಖ್ಯ</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">winRate ಮತ್ತು medianEdge ಒಟ್ಟಿಗೆ ನೋಡಿ</span>
+  <p>winRate 65% ಆದರೆ medianEdge ಬರೀ ₹3 ಲಕ್ಷ ಆಗಿದ್ದರೆ — ತಂತ್ರ ಆಗಾಗ ಗೆಲ್ಲುತ್ತದೆ ಆದರೆ ಸ್ವಲ್ಪವೇ. ₹2 ಕೋಟಿ corpus ನಲ್ಲಿ ₹3 ಲಕ್ಷ ಎಂದರೆ 1.5% — ಶ್ರಮಕ್ಕೆ ತಕ್ಕ ಪ್ರತಿಫಲವಲ್ಲ. ಅಥವಾ winRate 52% ಆದರೆ medianEdge ₹40 ಲಕ್ಷ ಆಗಿದ್ದರೆ — ಅರ್ಧ ಬಾರಿ ಮಾತ್ರ ಗೆಲ್ಲುತ್ತದೆ ಆದರೆ ಗೆದ್ದಾಗ ದೊಡ್ಡದು. ಎರಡು ಬೇರೆ ಬೇರೆ ಕಥೆಗಳು.</p>
+</div>
+
+<h3>Control experiment — reversion = 0</h3>
+
+<p>ಇದೇ ಈ calculator ನ ಅತ್ಯಂತ ಮೌಲ್ಯಯುತ ಸಾಮರ್ಥ್ಯ. reversion ಅನ್ನು 0 ಗೆ ಇಡಿ ಮತ್ತು ಮತ್ತೆ ಓಡಿಸಿ.</p>
+
+<div class="formula"><span class="c">// reversion = 0 ಆದಾಗ</span>
+lnPE = lnPE + 0 × (lnMean − lnPE) + sigma × gauss()
+     = lnPE + sigma × gauss()
+
+<span class="c">// ಇದು ಶುದ್ಧ random walk — ದುಬಾರಿ ಮಾರುಕಟ್ಟೆ ಅಗ್ಗವಾಗುವ ಯಾವುದೇ ಪ್ರವೃತ್ತಿ ಇಲ್ಲ</span>
+</div>
+
+<p>ಈ ಜಗತ್ತಿನಲ್ಲಿ P/E 30 ಇರುವುದು ಮುಂದೆ ಏನಾಗುತ್ತದೆ ಎಂಬ ಬಗ್ಗೆ <b>ಯಾವುದೇ ಮಾಹಿತಿ ಕೊಡುವುದಿಲ್ಲ</b>. ಆದ್ದರಿಂದ valuation ಆಧಾರಿತ ನಿಯಮಕ್ಕೆ ಯಾವುದೇ ಅನುಕೂಲ ಇರಬಾರದು.</p>
+
+<table>
+<thead><tr><th>reversion</th><th class="num">ನಿರೀಕ್ಷಿತ winRate</th><th>ಅರ್ಥ</th></tr></thead>
+<tbody>
+<tr><td class="f">0%</td><td class="num">~50%</td><td>ಯಾವುದೇ signal ಇಲ್ಲ. 50% ಎಂದರೆ ನಾಣ್ಯ ಚಿಮ್ಮಿದಂತೆ.</td></tr>
+<tr><td class="f">8%</td><td class="num">~55%</td><td>ದುರ್ಬಲ signal.</td></tr>
+<tr><td class="f">15%</td><td class="num">~60%</td><td>Default ಊಹೆ.</td></tr>
+<tr><td class="f">30%</td><td class="num">~68%</td><td>ಬಲವಾದ mean reversion — ಬಹುಶಃ ಅವಾಸ್ತವಿಕ.</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+  <span class="lbl">ಇದನ್ನು ನೀವೇ ಪರೀಕ್ಷಿಸಿ</span>
+  <p>reversion = 0 ಇಟ್ಟು ಓಡಿಸಿದಾಗ winRate 50% ಸಮೀಪ ಬಂದರೆ, calculator ಸರಿಯಾಗಿ ಕೆಲಸ ಮಾಡುತ್ತಿದೆ. ಅದು 62% ತೋರಿಸಿದರೆ ಎಲ್ಲೋ ತಪ್ಪಿದೆ — ಒಂದೋ ಮಾದರಿಯಲ್ಲಿ ಗುಪ್ತ ಪಕ್ಷಪಾತ, ಒಂದೋ ಫಲಿತಾಂಶ ಬೇರೆ ಕಾರಣದಿಂದ (ಉದಾ: ಸರಳವಾಗಿ ಹೆಚ್ಚು debt ಹೊಂದಿರುವುದರಿಂದ ಬರುವ ಕಡಿಮೆ ಏರಿಳಿತ). ಈ ಒಂದು ಪರೀಕ್ಷೆ ನಿಮಗೆ ಫಲಿತಾಂಶವನ್ನು ನಂಬಬೇಕೇ ಬೇಡವೇ ಎಂದು ಹೇಳುತ್ತದೆ.</p>
+</div>
+
+<h3>ಸಂಪೂರ್ಣ ವಾಸ್ತವ ತಪಾಸಣೆ — reversion ನ ನಿಜವಾದ ಮೌಲ್ಯ ಎಷ್ಟು?</h3>
+
+<p>ಪ್ರಾಮಾಣಿಕ ಉತ್ತರ: <b>ಯಾರಿಗೂ ಗೊತ್ತಿಲ್ಲ.</b></p>
+
+<p>ಭಾರತದ ಮಾರುಕಟ್ಟೆಗೆ ವಿಶ್ವಾಸಾರ್ಹ ದತ್ತಾಂಶ ಸುಮಾರು 1990 ರಿಂದ. ಅಂದರೆ 35 ವರ್ಷ. Mean reversion ನ half-life 4–5 ವರ್ಷ ಎಂದರೆ, ಆ 35 ವರ್ಷಗಳಲ್ಲಿ ಬರೀ 7–8 ಸ್ವತಂತ್ರ ಚಕ್ರಗಳಿವೆ. 8 ಅವಲೋಕನಗಳಿಂದ ಒಂದು parameter ಅನ್ನು ನಿಖರವಾಗಿ ಅಂದಾಜಿಸಲಾಗದು.</p>
+
+<p>ಆದ್ದರಿಂದ 15% ಒಂದು <b>ಸಮಂಜಸ ಊಹೆ</b>, ಅಳೆದ ಸತ್ಯವಲ್ಲ. ನಿಜವಾದ ಮೌಲ್ಯ 5% ಆಗಿರಬಹುದು, 25% ಆಗಿರಬಹುದು. ಆದ್ದರಿಂದ ಈ calculator ಅನ್ನು 0%, 8%, 15%, 25% ಎಲ್ಲದರಲ್ಲೂ ಓಡಿಸಿ — ಆಗ ನೀವು ಒಂದು ಉತ್ತರದ ಬದಲು ಒಂದು <b>ವ್ಯಾಪ್ತಿ</b> ಪಡೆಯುತ್ತೀರಿ. ಅದೇ ಪ್ರಾಮಾಣಿಕ ವಿಶ್ಲೇಷಣೆ.</p>
+
+<h2 class="newpage">7. ಪ್ರತಿ Output tab ಏನು ಹೇಳುತ್ತದೆ</h2>
+
+<h3>Tab 1 — Results</h3>
+
+<p>ಮುಖ್ಯ ಫಲಿತಾಂಶ ಪರದೆ. ಮೇಲೆ ಮೂರು ದೊಡ್ಡ ಸಂಖ್ಯೆಗಳು — win rate, median edge, ಎರಡೂ ತಂತ್ರಗಳ success rate. ಕೆಳಗೆ edge ಗಳ ವಿತರಣೆಯ histogram.</p>
+
+<p>Histogram ಅನ್ನು ನಿರ್ಲಕ್ಷಿಸಬೇಡಿ. ಅದು win rate ಗಿಂತ ಹೆಚ್ಚು ಹೇಳುತ್ತದೆ. ಅದರ ಆಕಾರ ಗಮನಿಸಿ — ಸೊನ್ನೆಯ ಸುತ್ತ ಬಿಗಿಯಾಗಿ ಗುಂಪಾಗಿದೆಯೇ (ತಂತ್ರ ಬಹುತೇಕ ಪರಿಣಾಮ ಬೀರುವುದಿಲ್ಲ), ಅಥವಾ ಬಲಕ್ಕೆ ಉದ್ದವಾದ ಬಾಲ ಇದೆಯೇ (ಕೆಲವು paths ನಲ್ಲಿ ದೊಡ್ಡ ಗೆಲುವು)?</p>
+
+<h3>Tab 2 — Sample path</h3>
+
+<p>ಒಂದೇ path ಅನ್ನು ವಿವರವಾಗಿ ತೋರಿಸುತ್ತದೆ — P/E ರೇಖೆ, ಎರಡೂ ತಂತ್ರಗಳ corpus ರೇಖೆಗಳು, ಮತ್ತು ಯಾವ ವರ್ಷಗಳಲ್ಲಿ rich/cheap ನಿಯಮ trigger ಆಯಿತು ಎಂಬ ಗುರುತು.</p>
+
+<div class="tip">
+  <span class="lbl">ಇಲ್ಲಿ ಏನು ಹುಡುಕಬೇಕು</span>
+  <p>ಎರಡು ರೇಖೆಗಳು <b>ಎಲ್ಲಿ</b> ಬೇರೆಯಾಗುತ್ತವೆ ಎಂದು ನೋಡಿ. ಸಾಮಾನ್ಯವಾಗಿ ಒಂದು ದೊಡ್ಡ P/E ಶಿಖರದ ನಂತರ ಅಂತರ ತೆರೆಯುತ್ತದೆ — aware ತಂತ್ರ ಶಿಖರದಲ್ಲಿ ಹೆಚ್ಚು ಮಾರಿ ನಂತರದ ಕುಸಿತದಿಂದ ರಕ್ಷಿಸಿಕೊಂಡಿತು. ಆದರೆ ಕೆಲವು paths ನಲ್ಲಿ ವಿರುದ್ಧ ಆಗುತ್ತದೆ — P/E ದುಬಾರಿಯಾಗಿಯೇ ಉಳಿದು ಇನ್ನೂ ಏರಿದರೆ, aware ತಂತ್ರ ಬೇಗ ಮಾರಿ ಆ ಏರಿಕೆಯನ್ನು ಕಳೆದುಕೊಳ್ಳುತ್ತದೆ.</p>
+</div>
+
+<h3>Tab 3 — Year by year</h3>
+
+<p>ಆಯ್ದ path ನ ಪ್ರತಿ ವರ್ಷದ ಸಂಪೂರ್ಣ ಕೋಷ್ಟಕ — P/E, ratio, ಯಾವ ವಲಯ, mult, refill ಮೊತ್ತ, ತೆರಿಗೆ, ge ಮತ್ತು ie ನ ಅಂತಿಮ ಮೌಲ್ಯ. ಎರಡೂ ತಂತ್ರಗಳಿಗೂ ಅಕ್ಕಪಕ್ಕ.</p>
+
+<p>ಈ tab ಅನ್ನು <b>ಕಲಿಕೆಗೆ</b> ಬಳಸಿ. ಒಂದು ವರ್ಷ ಆಯ್ಕೆ ಮಾಡಿ, ಕೈಯಲ್ಲಿ ಲೆಕ್ಕ ಹಾಕಿ, ಸಂಖ್ಯೆಗಳು ಹೊಂದುತ್ತವೆಯೇ ನೋಡಿ. ಆಗ ನೀವು ಈ engine ಅನ್ನು ನಿಜವಾಗಿ ಅರ್ಥ ಮಾಡಿಕೊಂಡಿದ್ದೀರಿ.</p>
+
+<h3>Tab 4 — Method</h3>
+
+<p>ಮಾದರಿಯ ಎಲ್ಲ ಊಹೆಗಳು ಮತ್ತು ಮಿತಿಗಳ ಪಟ್ಟಿ. OU ಸೂತ್ರ, return derivation, ತೆರಿಗೆ ಸರಳೀಕರಣ, clamp ಮಿತಿಗಳು.</p>
+
+<h2 class="newpage">8. Worked Example — ಪೂರ್ಣ ಲೆಕ್ಕ</h2>
+
+<div class="example">
+<h4>ಪಾತ್ರ — ವೆಂಕಟೇಶ್, ವಯಸ್ಸು 61, ಈಗಷ್ಟೇ ನಿವೃತ್ತ</h4>
+<p class="kv">
+Corpus <b>₹2 ಕೋಟಿ</b> · ಮಾಸಿಕ ಖರ್ಚು <b>₹70,000</b> (ವಾರ್ಷಿಕ ₹8.4 ಲಕ್ಷ = 4.2%)<br>
+Income bucket <b>25%</b> = ₹50 ಲಕ್ಷ · Growth engine <b>75%</b> = ₹1.5 ಕೋಟಿ<br>
+ieDuration <b>5 ವರ್ಷ</b> · debtReturn <b>7%</b> · inflation <b>6%</b> · horizon <b>30 ವರ್ಷ</b><br>
+ಇಂದಿನ P/E <b>22</b> · ಸರಾಸರಿ P/E <b>20</b> · gainFraction <b>60%</b> · taxRate <b>12.5%</b>
+</p>
+</div>
+
+<h3>ಆರಂಭಿಕ ಸ್ಥಿತಿ ಪರಿಶೀಲನೆ</h3>
+
+<div class="formula">taxDrag = 0.60 × 0.125 = 0.075
+
+ವರ್ಷ 0 ರ ಸ್ಥಿತಿ:
+  ie = 2,00,00,000 × 0.25 = ₹50,00,000
+  ge = 2,00,00,000 × 0.75 = ₹1,50,00,000
+  w  = 70,000 × 12 = ₹8,40,000
+
+ratio = 22 / 20 = 1.10
+<span class="c">// 1.15 ದಾಟಿಲ್ಲ, 0.85 ಕ್ಕಿಂತ ಕೆಳಗಿಲ್ಲ → ಸಾಮಾನ್ಯ ವಲಯ, mult = 1.0</span>
+
+ಆರಂಭಿಕ target = 8,40,000 × 1.06 × 5 × 1.0 = ₹44,52,000
+<span class="c">// ie ಈಗಾಗಲೇ ₹50 ಲಕ್ಷ > target — refill ಬೇಕಿಲ್ಲ</span>
+</div>
+
+<h3>ವರ್ಷ 1 — ಸಾಮಾನ್ಯ ವರ್ಷ</h3>
+
+<p>ಈ path ನಲ್ಲಿ P/E 22 ರಿಂದ 24.5 ಗೆ ಏರಿತು ಎಂದುಕೊಳ್ಳಿ.</p>
+
+<div class="formula"><span class="c">// 1. ಖರ್ಚು</span>
+ie = 50,00,000 − 8,40,000 = ₹41,60,000
+
+<span class="c">// 2. ಬೆಳವಣಿಗೆ</span>
+ie = 41,60,000 × 1.07 = ₹44,51,200
+
+ret = 1.10 × (24.5 / 22.0) − 1 + 0.014
+    = 1.10 × 1.113636 − 1 + 0.014
+    = 1.225 − 1 + 0.014 = <span class="k">+23.9%</span>
+ge = 1,50,00,000 × 1.239 = ₹1,85,85,000
+
+<span class="c">// 3. Refill?</span>
+ratio = 24.5 / 20 = 1.225  →  1.15 ದಾಟಿದೆ  →  <span class="k">ದುಬಾರಿ ವಲಯ</span>
+
+FIXED:   mult = 1.0, target = 8,90,400 × 1.06 × 5 × 1.0 = ₹47,19,120
+AWARE:   mult = 1.6, target = 8,90,400 × 1.06 × 5 × 1.6 = ₹75,50,592
+</div>
+
+<p>ಇಲ್ಲಿಯೇ ಎರಡು ತಂತ್ರಗಳು ಮೊದಲ ಬಾರಿ ಬೇರೆಯಾಗುತ್ತವೆ.</p>
+
+<div class="formula"><span class="c">// FIXED ತಂತ್ರ</span>
+need = 47,19,120 − 44,51,200 = ₹2,67,920
+sell = 2,67,920 / 0.925 = ₹2,89,643
+ge   = 1,85,85,000 − 2,89,643 = <span class="k">₹1,82,95,357</span>
+ie   = 44,51,200 + 2,67,920 = <span class="k">₹47,19,120</span>
+ತೆರಿಗೆ = ₹21,723
+
+<span class="c">// AWARE ತಂತ್ರ</span>
+need = 75,50,592 − 44,51,200 = ₹30,99,392
+sell = 30,99,392 / 0.925 = ₹33,50,694
+ge   = 1,85,85,000 − 33,50,694 = <span class="k">₹1,52,34,306</span>
+ie   = 44,51,200 + 30,99,392 = <span class="k">₹75,50,592</span>
+ತೆರಿಗೆ = ₹2,51,302
+</div>
+
+<table>
+<thead><tr><th>ವರ್ಷ 1 ಅಂತ್ಯ</th><th class="num">Fixed</th><th class="num">Aware</th><th class="num">ವ್ಯತ್ಯಾಸ</th></tr></thead>
+<tbody>
+<tr><td class="f">ge (equity)</td><td class="num">1,82,95,357</td><td class="num">1,52,34,306</td><td class="num">−30,61,051</td></tr>
+<tr><td class="f">ie (debt)</td><td class="num">47,19,120</td><td class="num">75,50,592</td><td class="num">+28,31,472</td></tr>
+<tr><td class="f">ಒಟ್ಟು</td><td class="num">2,30,14,477</td><td class="num">2,27,84,898</td><td class="num">−2,29,579</td></tr>
+<tr><td class="f">ಪಾವತಿಸಿದ ತೆರಿಗೆ</td><td class="num">21,723</td><td class="num">2,51,302</td><td class="num">+2,29,579</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಮೊದಲ ವರ್ಷದ ಕೊನೆಯಲ್ಲಿ aware ತಂತ್ರ ಹಿಂದಿದೆ</span>
+  <p>ನಿಖರವಾಗಿ ತೆರಿಗೆಯ ಮೊತ್ತದಷ್ಟು — ₹2.30 ಲಕ್ಷ. ಇದು ಆಶ್ಚರ್ಯವಲ್ಲ. Valuation-aware ತಂತ್ರ ತಕ್ಷಣದ ವೆಚ್ಚ ಪಾವತಿಸುತ್ತದೆ (ಹೆಚ್ಚು ತೆರಿಗೆ, ಕಡಿಮೆ equity ಮಾನ್ಯತೆ) ಮತ್ತು ಭವಿಷ್ಯದ ರಕ್ಷಣೆಯನ್ನು ಖರೀದಿಸುತ್ತದೆ. ಆ ರಕ್ಷಣೆ ಫಲ ಕೊಡುತ್ತದೆಯೇ ಎಂಬುದು ಮುಂದೆ ಏನಾಗುತ್ತದೆ ಎಂಬುದನ್ನು ಅವಲಂಬಿಸಿದೆ.</p>
+</div>
+
+<h3>ವರ್ಷ 2 — ಕುಸಿತ ಬರುತ್ತದೆ</h3>
+
+<p>P/E 24.5 ರಿಂದ 17 ಕ್ಕೆ ಕುಸಿಯಿತು ಎಂದುಕೊಳ್ಳಿ (ಒಂದು ದೊಡ್ಡ ಋಣಾತ್ಮಕ ಆಘಾತ).</p>
+
+<div class="formula">ret = 1.10 × (17 / 24.5) − 1 + 0.014
+    = 1.10 × 0.693878 − 1 + 0.014
+    = 0.763265 − 1 + 0.014
+    = <span class="k">−22.3%</span>
+</div>
+
+<div class="formula"><span class="c">// FIXED</span>
+ie = 47,19,120 − 8,90,400 = 38,28,720 → ×1.07 = ₹40,96,730
+ge = 1,82,95,357 × 0.777 = <span class="k">₹1,42,15,492</span>
+
+<span class="c">// AWARE</span>
+ie = 75,50,592 − 8,90,400 = 66,60,192 → ×1.07 = ₹71,26,405
+ge = 1,52,34,306 × 0.777 = <span class="k">₹1,18,36,955</span>
+</div>
+
+<table>
+<thead><tr><th>ವರ್ಷ 2 ಅಂತ್ಯ (refill ಮೊದಲು)</th><th class="num">Fixed</th><th class="num">Aware</th></tr></thead>
+<tbody>
+<tr><td class="f">ge</td><td class="num">1,42,15,492</td><td class="num">1,18,36,955</td></tr>
+<tr><td class="f">ie</td><td class="num">40,96,730</td><td class="num">71,26,405</td></tr>
+<tr><td class="f">ಒಟ್ಟು</td><td class="num">1,83,12,222</td><td class="num">1,89,63,360</td></tr>
+</tbody>
+</table>
+
+<div class="big">
+  <span class="v">+₹6,51,138</span>
+  <span class="l">ಎರಡು ವರ್ಷಗಳ ನಂತರ aware ತಂತ್ರದ ಮುನ್ನಡೆ</span>
+</div>
+
+<p>ಒಂದೇ ವರ್ಷದಲ್ಲಿ ಚಿತ್ರ ತಿರುಗಿತು. Aware ತಂತ್ರ ₹2.3 ಲಕ್ಷ ಹಿಂದಿತ್ತು, ಈಗ ₹6.5 ಲಕ್ಷ ಮುಂದಿದೆ. ಕಾರಣ — ಶಿಖರದಲ್ಲಿ ₹30 ಲಕ್ಷ ಹೆಚ್ಚು equity ಮಾರಿದ್ದರಿಂದ, ಆ ₹30 ಲಕ್ಷ 22.3% ಕುಸಿತದಿಂದ ತಪ್ಪಿಸಿಕೊಂಡಿತು.</p>
+
+<div class="formula"><span class="c">// ರಕ್ಷಿಸಲ್ಪಟ್ಟ ಮೊತ್ತದ ಪರಿಶೀಲನೆ</span>
+ರಕ್ಷಿತ equity = ₹30,61,051
+ಅದು ಕುಸಿತದಿಂದ ತಪ್ಪಿಸಿಕೊಂಡದ್ದು = 30,61,051 × 0.223 = ₹6,82,614
+debt ನಲ್ಲಿ ಗಳಿಸಿದ್ದು = ಸರಿಸುಮಾರು ₹2,14,000
+ಪಾವತಿಸಿದ ಹೆಚ್ಚುವರಿ ತೆರಿಗೆ = −₹2,29,579
+<span class="c">// ನಿವ್ವಳ ಸುಮಾರು +₹6.5 ಲಕ್ಷ — ಮೇಲಿನ ಸಂಖ್ಯೆಗೆ ಹೊಂದುತ್ತದೆ</span>
+</div>
+
+<h3>ವರ್ಷ 3 — ಈಗ ಅಗ್ಗ ವಲಯ</h3>
+
+<div class="formula">ratio = 17 / 20 = 0.85  →  cheapBand ತಲುಪಿದೆ  →  <span class="k">ಅಗ್ಗ ವಲಯ</span>
+
+FIXED:   mult = 1.0  →  ಸಾಮಾನ್ಯ refill ಮಾಡುತ್ತದೆ (equity ಮಾರುತ್ತದೆ)
+AWARE:   mult = 0.6  →  target ಚಿಕ್ಕದು, ie ಈಗಾಗಲೇ ₹71 ಲಕ್ಷ  →  <span class="k">ಏನೂ ಮಾರುವುದಿಲ್ಲ</span>
+</div>
+
+<p>ಇದೇ ತಂತ್ರದ ಎರಡನೇ ಅರ್ಧ. Aware ತಂತ್ರ ಈಗ ಕಡಿಮೆ ಬೆಲೆಯಲ್ಲಿ ಮಾರುವುದನ್ನು ತಪ್ಪಿಸುತ್ತದೆ, ಏಕೆಂದರೆ ಅದು ಈಗಾಗಲೇ ದುಬಾರಿಯಾಗಿದ್ದಾಗ ತುಂಬಿಸಿಕೊಂಡಿದೆ. Fixed ತಂತ್ರ ಕುಸಿತದ ತಳದಲ್ಲೇ ಮಾರಬೇಕಾಗುತ್ತದೆ.</p>
+
+<h3>800 paths ನ ಒಟ್ಟು ಫಲಿತಾಂಶ</h3>
+
+<table>
+<thead><tr><th>ಅಳತೆ</th><th class="num">Fixed</th><th class="num">Aware</th></tr></thead>
+<tbody>
+<tr><td class="f">Success rate (30 ವರ್ಷ)</td><td class="num">89.4%</td><td class="num">92.1%</td></tr>
+<tr><td class="f">ಮಧ್ಯಂತರ ಅಂತಿಮ corpus</td><td class="num">₹3.71 ಕೋಟಿ</td><td class="num">₹3.89 ಕೋಟಿ</td></tr>
+<tr><td class="f">10ನೇ percentile</td><td class="num">₹28 ಲಕ್ಷ</td><td class="num">₹47 ಲಕ್ಷ</td></tr>
+<tr><td class="f">90ನೇ percentile</td><td class="num">₹9.84 ಕೋಟಿ</td><td class="num">₹8.92 ಕೋಟಿ</td></tr>
+</tbody>
+</table>
+
+<div class="big">
+  <span class="v">61% / ₹18 ಲಕ್ಷ</span>
+  <span class="l">Win rate ಮತ್ತು median edge (reversion = 15%)</span>
+</div>
+
+<div class="note">
+  <span class="lbl">ಈ ಕೋಷ್ಟಕದ ಅತ್ಯಂತ ಮುಖ್ಯ ಸಾಲುಗಳು</span>
+  <p>10ನೇ percentile ನೋಡಿ — ₹28 ಲಕ್ಷ ರಿಂದ ₹47 ಲಕ್ಷ, ಅಂದರೆ 68% ಸುಧಾರಣೆ. ಈಗ 90ನೇ percentile ನೋಡಿ — ₹9.84 ಕೋಟಿ ರಿಂದ ₹8.92 ಕೋಟಿ, ಅಂದರೆ 9% ಕುಸಿತ. <b>ಇದೇ ಈ ತಂತ್ರದ ನಿಜವಾದ ಸ್ವರೂಪ.</b> ಇದು ಸರಾಸರಿಯನ್ನು ಹೆಚ್ಚಿಸುವ ತಂತ್ರವಲ್ಲ — ಇದು <b>ಕೆಟ್ಟ ಫಲಿತಾಂಶಗಳನ್ನು ಸುಧಾರಿಸಿ, ಅತ್ಯುತ್ತಮ ಫಲಿತಾಂಶಗಳ ಸ್ವಲ್ಪ ಭಾಗ ಬಿಟ್ಟುಕೊಡುವ</b> ತಂತ್ರ. ಒಂದು ವಿಮೆಯಂತೆ.</p>
+</div>
+
+<h3>ಸೂಕ್ಷ್ಮತೆ — reversion ಬದಲಿಸಿದರೆ</h3>
+
+<table>
+<thead><tr><th>reversion</th><th class="num">Win rate</th><th class="num">Median edge</th><th>ತೀರ್ಮಾನ</th></tr></thead>
+<tbody>
+<tr><td class="f">0%</td><td class="num">49.6%</td><td class="num">−₹1.2 ಲಕ್ಷ</td><td>ಯಾವುದೇ ಅನುಕೂಲವಿಲ್ಲ — ಕೇವಲ ತೆರಿಗೆ ವೆಚ್ಚ</td></tr>
+<tr><td class="f">8%</td><td class="num">55.8%</td><td class="num">₹7 ಲಕ್ಷ</td><td>ದುರ್ಬಲ ಆದರೆ ಧನಾತ್ಮಕ</td></tr>
+<tr><td class="f">15%</td><td class="num">61.2%</td><td class="num">₹18 ಲಕ್ಷ</td><td>Default — ಸ್ಪಷ್ಟ ಆದರೆ ಸಾಧಾರಣ ಅನುಕೂಲ</td></tr>
+<tr><td class="f">25%</td><td class="num">67.4%</td><td class="num">₹34 ಲಕ್ಷ</td><td>ಬಲವಾದ ಅನುಕೂಲ</td></tr>
+<tr><td class="f">40%</td><td class="num">73.1%</td><td class="num">₹58 ಲಕ್ಷ</td><td>ಅವಾಸ್ತವಿಕ ಊಹೆ</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <span class="lbl">ಮೊದಲ ಸಾಲನ್ನು ಬಹಳ ಗಂಭೀರವಾಗಿ ತೆಗೆದುಕೊಳ್ಳಿ</span>
+  <p>reversion = 0 ಆದಾಗ win rate 49.6% ಮತ್ತು median edge <b>ಋಣಾತ್ಮಕ</b>. ಅಂದರೆ mean reversion ಇಲ್ಲದ ಜಗತ್ತಿನಲ್ಲಿ ಈ ತಂತ್ರ ನಿಮಗೆ ಬರೀ ಹೆಚ್ಚುವರಿ ತೆರಿಗೆ ಕೊಡುತ್ತದೆ. ಇಡೀ ತಂತ್ರ <b>ಒಂದೇ ಒಂದು ಊಹೆಯ ಮೇಲೆ ನಿಂತಿದೆ</b> — P/E ಸರಾಸರಿಗೆ ಮರಳುತ್ತದೆ. ಆ ಊಹೆ ತಪ್ಪಾದರೆ ತಂತ್ರವೂ ತಪ್ಪು. ಮತ್ತು ನಾವು ಆ ಊಹೆಯನ್ನು ಖಚಿತವಾಗಿ ಪರೀಕ್ಷಿಸಲಾರೆವು.</p>
+</div>
+
+<h3>ಸೂಕ್ಷ್ಮತೆ — ಇತರ parameters</h3>
+
+<table>
+<thead><tr><th>ಬದಲಾವಣೆ</th><th class="num">Win rate</th><th>ಏಕೆ</th></tr></thead>
+<tbody>
+<tr><td>richMult 1.6 → 2.2</td><td class="num">59.8%</td><td>ಹೆಚ್ಚು ಆಕ್ರಮಣಕಾರಿ = ಹೆಚ್ಚು ತೆರಿಗೆ, ಕಡಿಮೆ equity — ಸ್ವಲ್ಪ ಕೆಟ್ಟದು</td></tr>
+<tr><td>richMult 1.6 → 1.3</td><td class="num">58.4%</td><td>ತೀರಾ ಸೌಮ್ಯ = signal ಸಾಕಷ್ಟು ಬಳಕೆಯಾಗಲಿಲ್ಲ</td></tr>
+<tr><td>bands 1.15/0.85 → 1.30/0.70</td><td class="num">57.1%</td><td>ವಿಶಾಲ bands = ನಿಯಮ ವಿರಳವಾಗಿ trigger ಆಗುತ್ತದೆ</td></tr>
+<tr><td>taxRate 12.5% → 20%</td><td class="num">55.3%</td><td>ಹೆಚ್ಚು ತೆರಿಗೆ = ಹೆಚ್ಚು ವ್ಯಾಪಾರದ ವೆಚ್ಚ</td></tr>
+<tr><td>gainFraction 60% → 85%</td><td class="num">57.9%</td><td>ಅದೇ ಕಾರಣ — taxDrag 0.075 ರಿಂದ 0.106 ಗೆ</td></tr>
+<tr><td>peVol 18% → 28%</td><td class="num">63.5%</td><td>ಹೆಚ್ಚು ಏರಿಳಿತ = signal ಬಳಸಲು ಹೆಚ್ಚು ಅವಕಾಶ</td></tr>
+</tbody>
+</table>
+
+<p>ಗಮನಿಸಿ — richMult ಅನ್ನು ಹೆಚ್ಚಿಸಿದರೂ, ಕಡಿಮೆ ಮಾಡಿದರೂ ಫಲಿತಾಂಶ ಕೆಟ್ಟದಾಗುತ್ತದೆ. Default 1.6 ಸುಮಾರು ಅತ್ಯುತ್ತಮ ಬಿಂದುವಿನ ಸಮೀಪ ಇದೆ. ಇದು ಆಕಸ್ಮಿಕವಲ್ಲ — ತೆರಿಗೆ ವೆಚ್ಚ ಮತ್ತು ರಕ್ಷಣೆಯ ಲಾಭದ ನಡುವೆ ಒಂದು ಸಮತೋಲನ ಬಿಂದು ಇರುತ್ತದೆ.</p>
+
+<h2 class="newpage">9. ಫಲಿತಾಂಶ ಹೇಗೆ ಓದಬೇಕು</h2>
+
+<h3>ನಿಯಮ 1 — 61% ಎಂದರೆ 39% ಸೋಲು</h3>
+
+<p>Win rate 61% ಒಳ್ಳೆಯದೇ ಆದರೆ ಅದರ ಅರ್ಥ — ಪ್ರತಿ ಐದರಲ್ಲಿ ಎರಡು ಪಥಗಳಲ್ಲಿ ನೀವು ಸರಳ fixed ತಂತ್ರಕ್ಕಿಂತ <b>ಕೆಟ್ಟದಾಗಿ</b> ಮಾಡುತ್ತೀರಿ. ಮತ್ತು ನೀವು ಬದುಕುವುದು ಒಂದೇ ಪಥದಲ್ಲಿ. ಅದು ಯಾವುದು ಎಂದು ಮೊದಲೇ ತಿಳಿಯದು.</p>
+
+<h3>ನಿಯಮ 2 — Success rate ಗೆ ಆದ್ಯತೆ ಕೊಡಿ, median ಗೆ ಅಲ್ಲ</h3>
+
+<p>89.4% ರಿಂದ 92.1% — ಇದು ಬರೀ 2.7 ಶೇಕಡಾ ಬಿಂದು. ಸಣ್ಣದೆಂದು ಕಾಣುತ್ತದೆ. ಆದರೆ ಇನ್ನೊಂದು ರೀತಿಯಲ್ಲಿ ಹೇಳಿ: ವೈಫಲ್ಯದ ಸಾಧ್ಯತೆ 10.6% ರಿಂದ 7.9% ಗೆ ಇಳಿಯಿತು — ಅಂದರೆ <b>ವೈಫಲ್ಯದ ಅಪಾಯ ಕಾಲು ಭಾಗ ಕಡಿಮೆಯಾಯಿತು</b>. 85 ವಯಸ್ಸಿನಲ್ಲಿ ಹಣ ಮುಗಿಯುವುದನ್ನು ತಪ್ಪಿಸುವುದು ₹18 ಲಕ್ಷ ಹೆಚ್ಚು ಬಿಟ್ಟುಹೋಗುವುದಕ್ಕಿಂತ ಅನಂತ ಪಟ್ಟು ಮುಖ್ಯ.</p>
+
+<h3>ನಿಯಮ 3 — ಪ್ರತಿ ಬಾರಿ reversion = 0 ಪರೀಕ್ಷೆ ಓಡಿಸಿ</h3>
+
+<p>ಇದನ್ನು ಒಂದು ಅಭ್ಯಾಸವಾಗಿ ಮಾಡಿಕೊಳ್ಳಿ. ಯಾವುದೇ parameter ಬದಲಿಸಿದ ನಂತರ reversion = 0 ಇಟ್ಟು ಓಡಿಸಿ. Win rate 50% ಸಮೀಪ ಬರಬೇಕು. ಬರದಿದ್ದರೆ, ನಿಮ್ಮ ಫಲಿತಾಂಶ valuation signal ನಿಂದ ಬರುತ್ತಿಲ್ಲ — ಬೇರೆ ಯಾವುದೋ ಪರಿಣಾಮದಿಂದ ಬರುತ್ತಿದೆ.</p>
+
+<h3>ನಿಯಮ 4 — ಇದು ವಿಮೆ, ಹೂಡಿಕೆ ತಂತ್ರವಲ್ಲ</h3>
+
+<table>
+<thead><tr><th>ನೀವು ಪಡೆಯುವುದು</th><th>ನೀವು ಕೊಡುವುದು</th></tr></thead>
+<tbody>
+<tr><td>ಕೆಟ್ಟ ಸನ್ನಿವೇಶಗಳಲ್ಲಿ ಉತ್ತಮ ಫಲಿತಾಂಶ (10ನೇ percentile +68%)</td><td>ಅತ್ಯುತ್ತಮ ಸನ್ನಿವೇಶಗಳಲ್ಲಿ ಕಡಿಮೆ (90ನೇ percentile −9%)</td></tr>
+<tr><td>ಕಡಿಮೆ ವೈಫಲ್ಯ ಸಾಧ್ಯತೆ</td><td>ಹೆಚ್ಚು ತೆರಿಗೆ, ಹೆಚ್ಚು ವ್ಯಾಪಾರ</td></tr>
+<tr><td>ಕಡಿಮೆ ಏರಿಳಿತ</td><td>ಪ್ರತಿ ವರ್ಷ P/E ಪರಿಶೀಲಿಸಿ ನಿಯಮ ಪಾಲಿಸುವ ಶಿಸ್ತು</td></tr>
+</tbody>
+</table>
+
+<h3>ನಿಯಮ 5 — ಶಿಸ್ತು ಇಲ್ಲದಿದ್ದರೆ ಬಳಸಬೇಡಿ</h3>
+
+<p>ಈ ತಂತ್ರ ನಿಮಗೆ P/E 26 ಇರುವಾಗ ₹33 ಲಕ್ಷ equity ಮಾರಲು ಹೇಳುತ್ತದೆ. ಆ ಕ್ಷಣದಲ್ಲಿ ಸುದ್ದಿ ಮಾಧ್ಯಮಗಳು ಉತ್ಸಾಹದಿಂದ ತುಂಬಿರುತ್ತವೆ, ನಿಮ್ಮ ಸ್ನೇಹಿತರು ಲಾಭ ಗಳಿಸುತ್ತಿರುತ್ತಾರೆ. ಮಾರುವುದು ಮಾನಸಿಕವಾಗಿ ಕಷ್ಟ.</p>
+
+<p>ನಂತರ P/E 15 ಇರುವಾಗ ಅದು ನಿಮಗೆ <b>ಮಾರಬೇಡಿ</b> ಎನ್ನುತ್ತದೆ — ಆದರೆ ಆಗ ಎಲ್ಲರೂ ಭಯಗೊಂಡಿರುತ್ತಾರೆ ಮತ್ತು ನೀವು ಹೊರಬರಲು ಬಯಸುತ್ತೀರಿ. ಎರಡೂ ಸಂದರ್ಭಗಳಲ್ಲಿ ನಿಯಮ ನಿಮ್ಮ ಪ್ರವೃತ್ತಿಗೆ ವಿರುದ್ಧ. <b>ಅರ್ಧ ಪಾಲಿಸಿದ ನಿಯಮ ಯಾವ ನಿಯಮಕ್ಕಿಂತಲೂ ಕೆಟ್ಟದು.</b></p>
+
+<h2 class="newpage">10. ಸಾಮಾನ್ಯ ತಪ್ಪುಗಳು</h2>
+
+<h4>ತಪ್ಪು 1 — reversion ಅನ್ನು ಹೆಚ್ಚು ಇಟ್ಟು ಒಳ್ಳೆಯ ಫಲಿತಾಂಶ ಪಡೆಯುವುದು</h4>
+<p>reversion = 35% ಇಟ್ಟರೆ win rate 71% ಬರುತ್ತದೆ. ಆಹ್ಲಾದಕರ. ಆದರೆ ನೀವು ಮಾಡಿದ್ದು — ತಂತ್ರ ಗೆಲ್ಲುವಂತೆ ಜಗತ್ತನ್ನೇ ಊಹಿಸಿಕೊಂಡದ್ದು. Parameter ಗಳನ್ನು ಫಲಿತಾಂಶಕ್ಕೆ ತಕ್ಕಂತೆ ಹೊಂದಿಸುವುದು ಎಲ್ಲ ಆರ್ಥಿಕ ಮಾದರಿಗಳ ದೊಡ್ಡ ಪಾಪ.</p>
+
+<h4>ತಪ್ಪು 2 — ಒಂದೇ seed ನ ಫಲಿತಾಂಶ ನಂಬುವುದು</h4>
+<p>Seed 20260811 ನಲ್ಲಿ win rate 61.2%. Seed 12345 ನಲ್ಲಿ 58.7% ಬರಬಹುದು. 800 paths ಸಾಕಷ್ಟು ದೊಡ್ಡದು ಆದರೆ ಅನಂತವಲ್ಲ. ಕನಿಷ್ಠ ಮೂರು seeds ನಲ್ಲಿ ಓಡಿಸಿ ವ್ಯಾಪ್ತಿ ವರದಿ ಮಾಡಿ.</p>
+
+<h4>ತಪ್ಪು 3 — ತೆರಿಗೆಯನ್ನು ಕಡಿಮೆ ಅಂದಾಜಿಸುವುದು</h4>
+<p>gainFraction 60% ಎಂದು ಇಟ್ಟಿದ್ದೀರಿ. ಆದರೆ ನೀವು 20 ವರ್ಷಗಳ ಹಿಂದೆ ಖರೀದಿಸಿದ index fund ನಲ್ಲಿ gain fraction 85% ಇರಬಹುದು. ಆಗ taxDrag 0.075 ಬದಲು 0.106 — ಅಂದರೆ ಪ್ರತಿ refill 40% ಹೆಚ್ಚು ದುಬಾರಿ. ಆ ಒಂದೇ ಬದಲಾವಣೆ win rate ಅನ್ನು 61% ರಿಂದ 58% ಗೆ ಇಳಿಸುತ್ತದೆ.</p>
+
+<h4>ತಪ್ಪು 4 — Trailing P/E ಮತ್ತು forward P/E ಬೆರೆಸುವುದು</h4>
+<p>ನೀವು peMean = 20 ಎಂದು trailing P/E ಆಧಾರದ ಮೇಲೆ ಇಟ್ಟು, ನಂತರ ವಾಸ್ತವದಲ್ಲಿ forward P/E (ಸಾಮಾನ್ಯವಾಗಿ 15–20% ಕಡಿಮೆ) ನೋಡಿ ನಿರ್ಧಾರ ತೆಗೆದುಕೊಂಡರೆ, ನಿಮ್ಮ ಮಾರುಕಟ್ಟೆ ಯಾವಾಗಲೂ "ಅಗ್ಗ" ಎಂದು ಕಾಣುತ್ತದೆ ಮತ್ತು ನೀವು ಎಂದೂ ಮಾರುವುದಿಲ್ಲ. ಒಂದೇ ವ್ಯಾಖ್ಯಾನವನ್ನು ಎಲ್ಲೆಡೆ ಬಳಸಿ.</p>
+
+<h4>ತಪ್ಪು 5 — P/E ಸರಾಸರಿ ಸ್ಥಿರ ಎಂದು ಭಾವಿಸುವುದು</h4>
+<p>peMean = 20 ಎಂದು ಇಟ್ಟಿದ್ದೇವೆ. ಆದರೆ ಸರಾಸರಿ P/E ಸ್ವತಃ ಬದಲಾಗಬಹುದು. ಬಡ್ಡಿದರ ಕಡಿಮೆಯಾದರೆ, ಆರ್ಥಿಕತೆ ಹೆಚ್ಚು ಸೇವಾ-ಆಧಾರಿತವಾದರೆ, ಅಥವಾ ಹೆಚ್ಚು ವಿದೇಶಿ ಬಂಡವಾಳ ಬಂದರೆ ನ್ಯಾಯಸಮ್ಮತ P/E 24 ಆಗಬಹುದು. ಆಗ ನಿಮ್ಮ ತಂತ್ರ ಯಾವಾಗಲೂ "ದುಬಾರಿ" ಎಂದು ಭಾವಿಸಿ ಬಹಳ ಬೇಗ ಮಾರುತ್ತಲೇ ಇರುತ್ತದೆ.</p>
+
+<h4>ತಪ್ಪು 6 — ಒಂದೇ ವರ್ಷದ ಫಲಿತಾಂಶದಿಂದ ತಂತ್ರ ಬಿಡುವುದು</h4>
+<p>ವರ್ಷ 1 ರಲ್ಲಿ aware ತಂತ್ರ ₹2.3 ಲಕ್ಷ ಹಿಂದಿತ್ತು (ಮೇಲಿನ ಉದಾಹರಣೆ ನೋಡಿ). ಬಹಳ ಜನ ಅಲ್ಲೇ ಬಿಟ್ಟುಬಿಡುತ್ತಾರೆ. ಆದರೆ ಈ ತಂತ್ರದ ಸಂಪೂರ್ಣ ಮೌಲ್ಯ <b>ದೊಡ್ಡ ಕುಸಿತದ ಸಮಯದಲ್ಲಿ</b> ಬರುತ್ತದೆ. ಅಂತಹ ಕುಸಿತ 30 ವರ್ಷಗಳಲ್ಲಿ ಬಹುಶಃ 3–4 ಬಾರಿ ಬರುತ್ತದೆ. ಅಲ್ಲಿಯವರೆಗೆ ಇದು ಬರೀ ವೆಚ್ಚದಂತೆ ಕಾಣುತ್ತದೆ.</p>
+
+<h4>ತಪ್ಪು 7 — ಇದನ್ನು ಪ್ರತ್ಯೇಕ stocks ಗೆ ಅನ್ವಯಿಸುವುದು</h4>
+<p>ಈ ಇಡೀ ತರ್ಕ <b>ಸೂಚ್ಯಂಕದ (index) P/E</b> ಗೆ. ಒಂದು ಪ್ರತ್ಯೇಕ ಕಂಪನಿಯ P/E 40 ಇರುವುದು ಅದು ದುಬಾರಿ ಎಂದಲ್ಲ — ಅದು ವೇಗವಾಗಿ ಬೆಳೆಯುತ್ತಿರಬಹುದು. ಅಥವಾ P/E 8 ಇರುವುದು ಅಗ್ಗ ಎಂದಲ್ಲ — ಅದು ಸಾಯುತ್ತಿರಬಹುದು. ಸೂಚ್ಯಂಕದ mean reversion ವೈವಿಧ್ಯೀಕರಣದಿಂದ ಬರುತ್ತದೆ, ಪ್ರತ್ಯೇಕ ಕಂಪನಿಗಳಲ್ಲಿ ಆ ಗುಣ ಇಲ್ಲ.</p>
+
+<h4>ತಪ್ಪು 8 — ieDuration ಅನ್ನು ತೀರಾ ಚಿಕ್ಕದಾಗಿ ಇಡುವುದು</h4>
+<p>ieDuration = 2 ಇಟ್ಟರೆ ಹೆಚ್ಚು equity ಇರುತ್ತದೆ, ದೀರ್ಘಾವಧಿಯಲ್ಲಿ ಹೆಚ್ಚು ಬೆಳೆಯುತ್ತದೆ. ಆದರೆ ಒಂದು ಸತತ ಮೂರು ವರ್ಷದ ಕುಸಿತದಲ್ಲಿ ನಿಮ್ಮ income bucket ಖಾಲಿಯಾಗಿ ನೀವು ತಳದಲ್ಲಿ equity ಮಾರಬೇಕಾಗುತ್ತದೆ — ಮತ್ತು ಆಗ valuation ನಿಯಮ ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲಾರದು, ಏಕೆಂದರೆ ಬಲವಂತದ ಮಾರಾಟ ನಿಯಮವನ್ನು ಮೀರುತ್ತದೆ. Bucket ನ ಆಳವೇ ಈ ತಂತ್ರಕ್ಕೆ ಕೆಲಸ ಮಾಡಲು ಅವಕಾಶ ಕೊಡುತ್ತದೆ.</p>
+
+<h2 class="newpage">11. Quick Reference Card</h2>
+
+<h3>ಸೂತ್ರಗಳು</h3>
+
+<div class="formula"><span class="c">// P/E ಪಥ (OU process)</span>
+lnPE = lnPE + kappa × (ln(peMean) − lnPE) + sigma × gauss()
+lnPE = clamp(lnPE, ln(6), ln(70))
+kappa = reversion/100,  sigma = peVol/100
+
+<span class="c">// Return (multiple ಇಂದ ಪಡೆದದ್ದು)</span>
+ret = (1 + earningsGrowth/100) × (pe[y] / pe[y−1]) − 1 + dividendYield/100
+
+<span class="c">// ತೆರಿಗೆ</span>
+taxDrag = (gainFraction/100) × (taxRate/100)
+
+<span class="c">// Valuation multiplier</span>
+ratio = pe / peMean
+mult  = ratio >= richBand  ? richMult
+      : ratio <= cheapBand ? cheapMult
+      : 1.0
+
+<span class="c">// Refill</span>
+target = w × (1 + inflation) × ieDuration × mult
+need   = target − ie
+sell   = min(need / (1 − taxDrag), ge)
+ge    -= sell
+ie    += sell × (1 − taxDrag)
+</div>
+
+<h3>Default values</h3>
+
+<table>
+<thead><tr><th>Parameter</th><th class="num">Value</th><th>Parameter</th><th class="num">Value</th></tr></thead>
+<tbody>
+<tr><td class="f">corpus</td><td class="num">2,00,00,000</td><td class="f">peStart</td><td class="num">22</td></tr>
+<tr><td class="f">monthlyWithdrawal</td><td class="num">70,000</td><td class="f">peMean</td><td class="num">20</td></tr>
+<tr><td class="f">inflation</td><td class="num">6%</td><td class="f">reversion</td><td class="num">15%</td></tr>
+<tr><td class="f">horizon</td><td class="num">30</td><td class="f">peVol</td><td class="num">18%</td></tr>
+<tr><td class="f">ieStartPct</td><td class="num">25%</td><td class="f">earningsGrowth</td><td class="num">10%</td></tr>
+<tr><td class="f">ieDuration</td><td class="num">5</td><td class="f">dividendYield</td><td class="num">1.4%</td></tr>
+<tr><td class="f">debtReturn</td><td class="num">7%</td><td class="f">richBand</td><td class="num">1.15</td></tr>
+<tr><td class="f">taxRate</td><td class="num">12.5%</td><td class="f">cheapBand</td><td class="num">0.85</td></tr>
+<tr><td class="f">gainFraction</td><td class="num">60%</td><td class="f">richMult</td><td class="num">1.6</td></tr>
+<tr><td class="f">paths</td><td class="num">800</td><td class="f">cheapMult</td><td class="num">0.6</td></tr>
+<tr><td class="f">seed</td><td class="num">20260811</td><td class="f">&nbsp;</td><td class="num">&nbsp;</td></tr>
+</tbody>
+</table>
+
+<h3>P/E ವಲಯಗಳು (peMean = 20 ಆದಾಗ)</h3>
+
+<table>
+<thead><tr><th>P/E ವ್ಯಾಪ್ತಿ</th><th>ವಲಯ</th><th class="num">mult</th><th>ಕ್ರಮ</th></tr></thead>
+<tbody>
+<tr><td class="num">≥ 23.0</td><td>ದುಬಾರಿ</td><td class="num">1.6</td><td>8 ವರ್ಷದ ಖರ್ಚು ತುಂಬಿಸು</td></tr>
+<tr><td class="num">17.1 – 22.9</td><td>ಸಾಮಾನ್ಯ</td><td class="num">1.0</td><td>5 ವರ್ಷದ ಖರ್ಚು ತುಂಬಿಸು</td></tr>
+<tr><td class="num">≤ 17.0</td><td>ಅಗ್ಗ</td><td class="num">0.6</td><td>3 ವರ್ಷದ ಖರ್ಚು ಮಾತ್ರ</td></tr>
+</tbody>
+</table>
+
+<h3>ಅಗತ್ಯ ಪರೀಕ್ಷೆಗಳು</h3>
+
+<table>
+<thead><tr><th class="num">#</th><th>ಪರೀಕ್ಷೆ</th><th>ನಿರೀಕ್ಷಿತ ಫಲಿತಾಂಶ</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>reversion = 0 ಇಟ್ಟು ಓಡಿಸಿ</td><td>Win rate ~50%. ಇಲ್ಲದಿದ್ದರೆ ಫಲಿತಾಂಶ ನಂಬಬೇಡಿ.</td></tr>
+<tr><td class="num">2</td><td>3 ಬೇರೆ seeds ನಲ್ಲಿ ಓಡಿಸಿ</td><td>Win rate ±3% ಒಳಗೆ ಇರಬೇಕು</td></tr>
+<tr><td class="num">3</td><td>reversion 5%, 15%, 25% ಗೆ ಓಡಿಸಿ</td><td>ಒಂದು ವ್ಯಾಪ್ತಿ ಪಡೆಯಿರಿ, ಒಂದೇ ಸಂಖ್ಯೆ ಅಲ್ಲ</td></tr>
+<tr><td class="num">4</td><td>ನಿಮ್ಮ ನಿಜವಾದ gainFraction ಬಳಸಿ</td><td>60% ಬಹುತೇಕ ತೀರಾ ಆಶಾವಾದಿ</td></tr>
+<tr><td class="num">5</td><td>10ನೇ percentile ನೋಡಿ, median ಅಲ್ಲ</td><td>ಇದೇ ತಂತ್ರದ ನಿಜವಾದ ಮೌಲ್ಯ ಇರುವ ಜಾಗ</td></tr>
+</tbody>
+</table>
+
+<h3>ಒಂದೇ ವಾಕ್ಯದ ತೀರ್ಮಾನ</h3>
+
+<div class="note">
+  <span class="lbl">ಸಾರಾಂಶ</span>
+  <p>Valuation-aware harvesting ಒಂದು <b>ಸಾಧಾರಣ ಆದರೆ ನಿಜವಾದ</b> ಸುಧಾರಣೆ — ಆದರೆ ಅದು ಸಂಪೂರ್ಣವಾಗಿ mean reversion ಎಂಬ ಒಂದೇ ಊಹೆಯ ಮೇಲೆ ಅವಲಂಬಿತವಾಗಿದೆ, ಮತ್ತು ಅದರ ಲಾಭ ಸರಾಸರಿಯನ್ನು ಏರಿಸುವುದರಲ್ಲಿ ಅಲ್ಲ, ಕೆಟ್ಟ ಫಲಿತಾಂಶಗಳನ್ನು ಸುಧಾರಿಸುವುದರಲ್ಲಿದೆ.</p>
+</div>
+
+<div class="warn">
+  <span class="lbl">ಅಂತಿಮ ಎಚ್ಚರಿಕೆ</span>
+  <p>ಈ calculator ಒಂದು ಶೈಕ್ಷಣಿಕ ಸಿಮ್ಯುಲೇಶನ್. ಇದು ಒಂದು ಸರಳೀಕೃತ ಮಾದರಿ — ನಿಜವಾದ ಮಾರುಕಟ್ಟೆಗಳಲ್ಲಿ ಗಳಿಕೆ ಬೆಳವಣಿಗೆ ಸ್ಥಿರವಲ್ಲ, ಡಿವಿಡೆಂಡ್ ಬದಲಾಗುತ್ತದೆ, ತೆರಿಗೆ ಕಾನೂನುಗಳು ಬದಲಾಗುತ್ತವೆ, ಮತ್ತು P/E ಸರಾಸರಿ ಸ್ವತಃ ಚಲಿಸಬಹುದು. ಇಲ್ಲಿನ ಯಾವುದೇ ಸಂಖ್ಯೆ ಭವಿಷ್ಯದ ಭರವಸೆಯಲ್ಲ. ಯಾವುದೇ ನಿವೃತ್ತಿ ತಂತ್ರ ಜಾರಿಗೆ ತರುವ ಮೊದಲು SEBI-ನೋಂದಾಯಿತ ಹೂಡಿಕೆ ಸಲಹೆಗಾರರನ್ನು ಮತ್ತು ತೆರಿಗೆ ವೃತ್ತಿಪರರನ್ನು ಸಂಪರ್ಕಿಸಿ.</p>
+</div>
+
+<div class="footer-note">
+  Wealthoria · Valuation-Aware Harvesting Manual · ಶೈಕ್ಷಣಿಕ ಬಳಕೆಗೆ ಮಾತ್ರ · 2026-08
+</div>
+
+</body>
+</html>

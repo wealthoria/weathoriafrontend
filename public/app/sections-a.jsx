@@ -20,9 +20,10 @@ function NavBar({ onNav }) {
             <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>
             
             )}
+            {/*
              <a href="seminar.html" class="seminar-link">
    Seminar
-  </a>
+  </a>*/}
           </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">
@@ -118,7 +119,12 @@ function Hero({ onNav }) {
   alert("Clicked");
   window.open("subscription.html", "_self");
 }}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
-            <button className="btn btn-outline" onClick={() => onNav("consult")}>{h.ctaSecondary}</button>
+
+{h.ctaSecondary && (
+  <button className="btn btn-outline" onClick={() => onNav("consult")}>
+    {h.ctaSecondary}
+  </button>
+)}
           </div>
           <div className="trustline">
             <span className="avatars"><i /><i /><i /><i /></span>

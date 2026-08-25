@@ -322,7 +322,7 @@ const buyCourse = async (course) => {
     ===================================================== */
 
     const response = await fetch(
-     "http://api.wealthoria.in/api/payment/create-course-order",
+   "https://webinar-registration-backend.onrender.com/api/payment/create-course-order",
       {
         method: "POST",
 
@@ -383,7 +383,7 @@ const buyCourse = async (course) => {
 
             const verifyResponse =
               await fetch(
-                "http://api.wealthoria.in/api/payment/verify-course-payment",
+                "https://webinar-registration-backend.onrender.com/api/payment/verify-course-payment",
                 {
                   method: "POST",
 

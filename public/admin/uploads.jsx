@@ -5,8 +5,8 @@
    post-upload metadata, and a filter/sort/paginated asset grid.
    ========================================================================= */
 const { useState, useRef, useMemo, useCallback } = React;
-const { useMemberAuth, useRole } = window;
-const { useMemberData } = window;
+const { useAdminAuth, useRole } = window;
+const { useAdminData } = window;
 const { MIcon, useMToast, useConfirm } = window;
 const { Shell } = window;
 const { CATEGORIES } = window.MEMBER_DATA;
@@ -25,9 +25,9 @@ function detectType(file) {
 }
 
 function UploadsScreen() {
-  const { user } = useMemberAuth();
+  const { user } = useAdminAuth();
   const { isAdmin } = useRole();
-  const data = useMemberData();
+  const data = useAdminData();
   const { push } = useMToast();
   const confirm = useConfirm();
   const inputRef = useRef(null);

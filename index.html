@@ -104,11 +104,24 @@
     href="/app/calc.css"
   >
 
-  <!-- MEMBERS CSS -->
+
+  <!-- =====================================================
+       MEMBERS CSS
+       ===================================================== -->
 
   <link
     rel="stylesheet"
     href="/members/portal.css"
+  >
+
+
+  <!-- =====================================================
+       ADMIN CSS
+       ===================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="/admin/portal.css"
   >
 
 
@@ -231,7 +244,8 @@
     }
 
 
-    window.firebase = firebase;
+    window.firebase =
+      firebase;
 
     window.auth =
       firebase.auth();
@@ -265,72 +279,77 @@
 
 
   <!-- =====================================================
-       MEMBERS PORTAL
+       PUBLIC CONTENT
        
-       IMPORTANT ORDER:
-       
-       1. login.jsx
-       2. CourseVideos.jsx
-       3. dashboard.jsx
-       4. app.jsx
-       
-       Do NOT load these files twice.
-       ===================================================== -->
-
-<!-- MEMBER LOGIN -->
-<script
-  type="text/babel"
-  src="/members/login.jsx">
-</script>
-
-<!-- COURSE VIDEOS -->
-<script
-  type="text/babel"
-  src="/members/CourseVideos.jsx">
-</script>
-
-<!-- NEWSLETTER -->
-<script
-  type="text/babel"
-  src="/members/Newsletter.jsx">
-</script>
-
-<script
-  type="text/babel"
-  src="/members/PurchaseHistory.jsx">
-</script>
-
-<!-- SEMINAR REGISTRATIONS -->
-<script
-  type="text/babel"
-  src="/members/SeminarRegistrations.jsx">
-</script>
-
-
-<!-- WEEKLY ROUNDUP -->
-<script
-  type="text/babel"
-  src="/members/WeeklyRoundup.jsx?v=5">
-</script>
-
-<script
-  type="text/babel"
-  src="/members/dashboard.jsx?v=5">
-</script>
-<!-- MEMBERS ROUTER -->
-<script
-  type="text/babel"
-  src="/members/app.jsx">
-</script>
-
-  <!-- =====================================================
-       PUBLIC WEBSITE
+       IMPORTANT:
+       content.jsx MUST LOAD BEFORE admin/store.jsx
+       because admin/store.jsx uses window.CONTENT.
        ===================================================== -->
 
   <script
     type="text/babel"
-    src="/app/content.jsx?v=3">
+    src="/app/content.jsx?v=4">
   </script>
+
+
+  <!-- =====================================================
+       MEMBERS PORTAL
+       ===================================================== -->
+
+  <!-- MEMBER LOGIN -->
+  <script
+    type="text/babel"
+    src="/members/login.jsx">
+  </script>
+
+  <!-- COURSE VIDEOS -->
+  <script
+    type="text/babel"
+    src="/members/CourseVideos.jsx">
+  </script>
+
+  <!-- NEWSLETTER -->
+  <script
+    type="text/babel"
+    src="/members/Newsletter.jsx">
+  </script>
+
+  <!-- PURCHASE HISTORY -->
+  <script
+    type="text/babel"
+    src="/members/PurchaseHistory.jsx">
+  </script>
+
+  <!-- SEMINAR REGISTRATIONS -->
+  <script
+    type="text/babel"
+    src="/members/SeminarRegistrations.jsx">
+  </script>
+
+  <!-- WEEKLY ROUNDUP -->
+  <script
+    type="text/babel"
+    src="/members/WeeklyRoundup.jsx?v=5">
+  </script>
+
+  <!-- MEMBER DASHBOARD -->
+  <script
+    type="text/babel"
+    src="/members/dashboard.jsx?v=5">
+  </script>
+
+  <!-- MEMBERS ROUTER -->
+  <script
+    type="text/babel"
+    src="/members/app.jsx">
+  </script>
+
+
+  
+
+  <!-- =====================================================
+       PUBLIC WEBSITE UI
+       ===================================================== -->
 
   <script
     type="text/babel"
@@ -369,7 +388,7 @@
 
   <script
     type="text/babel"
-    src="/app/app.jsx?v=2">
+    src="/app/app.jsx?v=3">
   </script>
 
 

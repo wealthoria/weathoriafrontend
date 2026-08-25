@@ -36,12 +36,12 @@ function NavBar({ onNav }) {
         
         
    <a
-  className="nav-login"
+  className="btn btn-green member-login-button"
   href="/members/login"
   aria-label="Member Login"
 >
   <Icon name="user" size={17} />
-  <span className="nav-login-txt">Member</span>
+  <span >Member</span>
 </a>
  <a
   className="nav-login"
@@ -115,13 +115,11 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} style={{ fontSize: "58px" }}></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => {
-  alert("Clicked");
-  window.open("subscription.html", "_self");
+            <button className="btn btn-green" onClick={() => {window.open("subscription.html", "_self");
 }}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
 
 {h.ctaSecondary && (
-  <button className="btn btn-outline" onClick={() => onNav("consult")}>
+  <button className="btn btn-outline" onClick={() => window.open("courses-coming-soon.html", "_self")}>
     {h.ctaSecondary}
   </button>
 )}
@@ -150,7 +148,9 @@ function Hero({ onNav }) {
                 </div>
               )}
             </div>
-            <button className="btn btn-green btn-block" style={{ marginTop: 18 }} onClick={() => onNav("programs")}>{h.card.cta}</button>
+            <button className="btn btn-green btn-block" style={{ marginTop: 18 }} onClick={() => window.open("courses-coming-soon.html", "_self")}>
+              {h.card.cta}
+            </button>
           </div>
         </Reveal>
       </div>

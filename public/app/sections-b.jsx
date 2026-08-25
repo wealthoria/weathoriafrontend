@@ -22,7 +22,7 @@ function Programs({ onNav }) {
         </Reveal>
         <div className="prog-grid">
           {items.map((it, i) => (
-            <Reveal as="button" key={it.t} className="prog" delay={(i % 3) * 80} onClick={() => onNav("consult")}>
+            <Reveal as="button" key={it.t} className="prog" delay={(i % 3) * 80} onClick={() => window.open("courses-coming-soon.html", "_self")}>
               <div className="top">
                 <div className="iconwrap"><Icon name={it.ic} size={24} /></div>
                 <span className="badge badge-outline">{it.level}</span>

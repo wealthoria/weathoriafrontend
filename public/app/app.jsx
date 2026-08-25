@@ -6,8 +6,9 @@ const {
   NavBar, Hero, Ticker, Narrative, Metrics, Why,
   Programs, Process, Founder,
   Testimonials, YouTube, Seminars, Library,
- FAQ, Footer,
+  FAQ, Footer,
   SiteAnimations,
+  AdminApp,
 } = window;
 
 function App() {
@@ -68,6 +69,11 @@ function RootApp() {
 
   console.log("Current path:", path);
 
+ if (path.startsWith("/admin")) {
+  console.log("Opening Admin Portal");
+  return <AdminApp />;
+}
+
   if (path.startsWith("/members")) {
     console.log("Opening Members Portal");
 
@@ -78,8 +84,6 @@ function RootApp() {
 
   return <App />;
 }
-
-
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(

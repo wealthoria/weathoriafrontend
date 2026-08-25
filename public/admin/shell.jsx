@@ -1,17 +1,17 @@
 /* global React, window */
 /* =========================================================================
-   Member Portal — Shell (sidebar + topbar), MemberGuard, AccessDenied
+   admin Portal — Shell (sidebar + topbar), AdminGuard, AccessDenied
    ========================================================================= */
 const { useState } = React;
 const { useApp, Icon } = window;
-const { useMemberAuth, useRole } = window;
+const { useAdminAuth, useRole } = window;
 const { useMRouter, MIcon } = window;
 
-function MemberGuard({ children }) {
-  const auth = useMemberAuth();
+function AdminGuard({ children }) {
+  const auth = useAdminAuth();
   const { navigate } = useMRouter();
   React.useEffect(() => {
-    if (!auth.loading && !auth.isAuthenticated) navigate("/member/login");
+    if (!auth.loading && !auth.isAuthenticated) navigate("/admin/login");
   }, [auth.loading, auth.isAuthenticated, navigate]);
   if (auth.loading || !auth.isAuthenticated) return <div className="psplash2"><div className="spinner2" /></div>;
   return children;
@@ -24,30 +24,54 @@ function AccessDenied() {
       <div className="dic"><MIcon name="lock" size={30} /></div>
       <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--ink)", margin: "0 0 8px" }}>Admins only</h3>
       <p className="muted" style={{ maxWidth: 360, margin: "0 auto 18px" }}>You need an Admin role to view this page. Your current role does not have access.</p>
-      <button className="btn btn-green btn-sm" onClick={() => navigate("/member/dashboard")}>Back to dashboard</button>
+      <button className="btn btn-green btn-sm" onClick={() => navigate("/admin/dashboard")}>Back to dashboard</button>
     </div>
   );
 }
 
 const NAV = [
-  { to: "/member/dashboard", label: "Dashboard", icon: "dashboard" },
-  { to: "/member/content", label: "Content", icon: "content" },
-  { to: "/member/uploads", label: "Uploads", icon: "upload" },
-  { to: "/member/courses", label: "Courses", icon: "courses" },
-];
+  {
+    to: "/admin/dashboard",
+    label: "Dashboard",
+    icon: "dashboard"
+  },
 
+  {
+    to: "/admin/content",
+    label: "Content",
+    icon: "content"
+  },
+
+  {
+    to: "/admin/uploads",
+    label: "Uploads",
+    icon: "upload"
+  },
+
+  {
+    to: "/admin/courses",
+    label: "Courses",
+    icon: "courses"
+  },
+
+  {
+    to: "/admin/youtube",
+    label: "YouTube",
+    icon: "youtube"
+  }
+];
 function Shell({ title, subtitle, actions, children, wide }) {
   const { theme, toggleTheme } = useApp();
-  const { user, logout } = useMemberAuth();
+  const { user, logout } = useAdminAuth();
   const { isAdmin } = useRole();
   const { path, navigate } = useMRouter();
   const [open, setOpen] = useState(false);
 
   const initial = (user?.name || "M").charAt(0).toUpperCase();
-  const isActive = (to) => path === to || (to !== "/member/dashboard" && path.startsWith(to));
+  const isActive = (to) => path === to || (to !== "/admin/dashboard" && path.startsWith(to));
   const go = (to) => { setOpen(false); navigate(to); };
 
-  const nav = isAdmin ? [...NAV, { to: "/member/users", label: "Students", icon: "users", admin: true }] : NAV;
+  const nav = isAdmin ? [...NAV, { to: "/admin/users", label: "Students", icon: "users", admin: true }] : NAV;
 
   return (
     <div className="mportal">
@@ -57,7 +81,7 @@ function Shell({ title, subtitle, actions, children, wide }) {
           <img src="assets/logo-mark.png" alt="" style={{ height: 28 }} />
           <span className="w">Wealthoria</span>
         </div>
-        <div className="sb-tag">Member workspace</div>
+        <div className="sb-tag">admin workspace</div>
         <nav className="sb-nav">
           <div className="sb-sec">Manage</div>
           {nav.map((n) => (
@@ -74,7 +98,7 @@ function Shell({ title, subtitle, actions, children, wide }) {
               <div className="n">{user?.name}</div>
               <div className="r"><span className={`role-badge ${isAdmin ? "admin" : "editor"}`}>{user?.role}</span></div>
             </div>
-            <button className="row-act" title="Log out" onClick={() => { logout(); navigate("/member/login"); }}><MIcon name="logout" size={18} /></button>
+            <button className="row-act" title="Log out" onClick={() => { logout(); navigate("/admin/login"); }}><MIcon name="logout" size={18} /></button>
           </div>
         </div>
       </aside>
@@ -97,4 +121,4 @@ function Shell({ title, subtitle, actions, children, wide }) {
   );
 }
 
-Object.assign(window, { MemberGuard, AccessDenied, Shell });
+Object.assign(window, { AdminGuard, AccessDenied, Shell });

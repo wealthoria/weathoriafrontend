@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Courses — Wealthoria</title>
+
+  <link rel="icon" href="assets/logo-mark.png">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Marcellus&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: #f7f7f5;
+      color: #17201c;
+      min-height: 100vh;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    header {
+      height: 76px;
+      background: #ffffff;
+      border-bottom: 1px solid #e8e8e4;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 6%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand img {
+      width: 34px;
+      height: 34px;
+    }
+
+    .brand-name {
+      font-family: "Marcellus", serif;
+      font-size: 23px;
+    }
+
+    .back-btn {
+      border: 1px solid #ddd;
+      background: white;
+      padding: 10px 17px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background: #f3f3f0;
+    }
+
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero {
+      text-align: center;
+      padding: 75px 20px 45px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+
+      text-transform: uppercase;
+
+      color: #e8473f;
+
+      background: rgba(232, 71, 63, 0.08);
+
+      padding: 8px 13px;
+
+      border-radius: 30px;
+
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-family: "Marcellus", serif;
+      font-size: clamp(38px, 6vw, 64px);
+      line-height: 1.05;
+      margin-bottom: 18px;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: auto;
+
+      color: #69716d;
+
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+
+    /* =========================
+       COURSE LEVELS
+    ========================= */
+
+    .levels {
+      max-width: 1100px;
+      margin: 20px auto 80px;
+
+      padding: 0 22px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 20px;
+    }
+
+
+    /* =========================
+       CARD
+    ========================= */
+
+    .level-card {
+      position: relative;
+
+      min-height: 300px;
+
+      background: #ffffff;
+
+      border: 1px solid #e7e8e4;
+
+      border-radius: 22px;
+
+      padding: 30px;
+
+      overflow: hidden;
+
+      transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+    .level-card:hover {
+      transform: translateY(-5px);
+
+      box-shadow:
+        0 18px 45px rgba(20, 30, 25, 0.08);
+    }
+
+
+    /* number */
+
+    .number {
+      width: 46px;
+      height: 46px;
+
+      border-radius: 14px;
+
+      display: grid;
+      place-items: center;
+
+      background: #17201c;
+      color: #ffffff;
+
+      font-size: 14px;
+      font-weight: 800;
+
+      margin-bottom: 28px;
+    }
+
+
+    .level-card h2 {
+      font-family: "Marcellus", serif;
+
+      font-size: 30px;
+
+      margin-bottom: 10px;
+    }
+
+    .level-card p {
+      color: #6c746f;
+
+      line-height: 1.65;
+
+      font-size: 14px;
+
+      max-width: 420px;
+    }
+
+
+    /* =========================
+       COMING SOON
+    ========================= */
+
+    .coming-soon {
+      position: absolute;
+
+      right: 25px;
+      top: 25px;
+
+      padding: 7px 11px;
+
+      border-radius: 30px;
+
+      background: #fff4e9;
+
+      color: #b75b20;
+
+      font-size: 10px;
+
+      font-weight: 800;
+
+      letter-spacing: 1px;
+
+      text-transform: uppercase;
+    }
+
+
+    /* =========================
+       BOTTOM
+    ========================= */
+
+    .card-bottom {
+      position: absolute;
+
+      left: 30px;
+      right: 30px;
+      bottom: 28px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+    }
+
+    .course-status {
+      color: #858b87;
+
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .lock {
+      width: 38px;
+      height: 38px;
+
+      border-radius: 50%;
+
+      background: #f3f3f0;
+
+      display: grid;
+      place-items: center;
+
+      font-size: 16px;
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+      text-align: center;
+
+      padding: 30px 20px;
+
+      color: #858b87;
+
+      font-size: 12px;
+
+      border-top: 1px solid #e8e8e4;
+
+      background: #ffffff;
+    }
+
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 700px) {
+
+      header {
+        padding: 0 20px;
+      }
+
+      .hero {
+        padding-top: 55px;
+      }
+
+      .levels {
+        grid-template-columns: 1fr;
+      }
+
+      .level-card {
+        min-height: 270px;
+      }
+
+      .brand-name {
+        font-size: 20px;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+
+  <!-- =========================
+       HEADER
+  ========================= -->
+
+  <header>
+
+    <div class="brand">
+
+      <img
+        src="assets/logo-mark.png"
+        alt="Wealthoria"
+      >
+
+      <span class="brand-name">
+        Wealthoria
+      </span>
+
+    </div>
+
+
+    <a
+      href="javascript:history.back()"
+      class="back-btn"
+    >
+      ← Back
+    </a>
+
+  </header>
+
+
+
+  <!-- =========================
+       HERO
+  ========================= -->
+
+  <section class="hero">
+
+    <span class="eyebrow">
+      Wealthoria Learning
+    </span>
+
+    <h1>
+      Courses
+    </h1>
+
+    <p>
+      A structured learning journey designed
+      to help you build your financial knowledge
+      step by step.
+    </p>
+
+  </section>
+
+
+
+  <!-- =========================
+       LEVELS
+  ========================= -->
+
+  <section class="levels">
+
+
+    <!-- BEGINNER -->
+
+    <div class="level-card">
+
+      <span class="coming-soon">
+        Coming Soon
+      </span>
+
+      <div class="number">
+        01
+      </div>
+
+      <h2>
+        Beginner
+      </h2>
+
+      <p>
+        Start your journey with the fundamentals
+        of personal finance, investing and the
+        stock market.
+      </p>
+
+      <div class="card-bottom">
+
+        <span class="course-status">
+          Courses coming soon
+        </span>
+
+        <span class="lock">
+          🔒
+        </span>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- INTERMEDIATE -->
+
+    <div class="level-card">
+
+      <span class="coming-soon">
+        Coming Soon
+      </span>
+
+      <div class="number">
+        02
+      </div>
+
+      <h2>
+        Intermediate
+      </h2>
+
+      <p>
+        Develop stronger market knowledge and
+        understand practical investment concepts
+        with greater confidence.
+      </p>
+
+      <div class="card-bottom">
+
+        <span class="course-status">
+          Courses coming soon
+        </span>
+
+        <span class="lock">
+          🔒
+        </span>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- ADVANCED -->
+
+    <div class="level-card">
+
+      <span class="coming-soon">
+        Coming Soon
+      </span>
+
+      <div class="number">
+        03
+      </div>
+
+      <h2>
+        Advanced
+      </h2>
+
+      <p>
+        Explore advanced investing concepts,
+        market analysis and strategies for
+        experienced learners.
+      </p>
+
+      <div class="card-bottom">
+
+        <span class="course-status">
+          Courses coming soon
+        </span>
+
+        <span class="lock">
+          🔒
+        </span>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- EXPERT -->
+
+    <div class="level-card">
+
+      <span class="coming-soon">
+        Coming Soon
+      </span>
+
+      <div class="number">
+        04
+      </div>
+
+      <h2>
+        Expert
+      </h2>
+
+      <p>
+        Take your knowledge further with
+        professional-level concepts and
+        advanced investment learning.
+      </p>
+
+      <div class="card-bottom">
+
+        <span class="course-status">
+          Courses coming soon
+        </span>
+
+        <span class="lock">
+          🔒
+        </span>
+
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+
+  <!-- =========================
+       FOOTER
+    ========================= -->
+
+  <footer>
+
+    © 2026 Wealthoria Education Pvt. Ltd.
+    · Learning is the first investment.
+
+  </footer>
+
+
+</body>
+</html>

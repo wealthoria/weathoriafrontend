@@ -10,42 +10,16 @@ const { useState, useEffect } = React;
 const COURSE_VIDEOS = [
   {
     id: "course-1",
-    title: "Stock Market Basics",
+    title: "AI Adjacent Sectors",
     description:
-      "Understand the basics of the stock market before you start investing.",
-    category: "Investing",
+      "Explore the sectors benefiting from the rapid growth of Artificial Intelligence.",
+    category: "Fundamentals",
+    level: "Intermediate",
     price: 199,
-    youtubeId: "WqrNyi8bR0k"
-  },
-
-  {
-    id: "course-2",
-    title: "Trading Basics",
-    description:
-      "Learn the fundamentals of trading and understand how markets work.",
-    category: "Trading",
-    price: 299,
-    youtubeId: "2XRfKcIk-_k"
-  },
-
-  {
-    id: "course-3",
-    title: "Technical Analysis",
-    description:
-      "Learn charts, trends, support, resistance and technical indicators.",
-    category: "Technical Analysis",
-    price: 399,
-    youtubeId: "_zc-QR0-Wfk"
-  },
-
-  {
-    id: "course-4",
-    title: "Fundamental Analysis",
-    description:
-      "Learn how to understand company fundamentals and financial statements.",
-    category: "Investing",
-    price: 499,
-    youtubeId: "OKiLxaVzpBQ"
+    videoProvider: "vdocipher",
+    videoId: "48bc49d7ad7a4bd2b874d4738afbc39b",
+    videoEmbedUrl: "",
+    thumbnailUrl: ""
   }
 ];
 
@@ -55,6 +29,50 @@ const COURSE_VIDEOS = [
 ========================================================= */
 
 function CourseVideos() {
+
+  /* =======================================================
+     LOAD RAZORPAY CHECKOUT SDK
+  ======================================================= */
+
+  useEffect(() => {
+
+    if (window.Razorpay) {
+      return;
+    }
+
+    const existing =
+      document.querySelector(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      );
+
+    if (existing) {
+      return;
+    }
+
+    const script =
+      document.createElement("script");
+
+    script.src =
+      "https://checkout.razorpay.com/v1/checkout.js";
+
+    script.async = true;
+
+    script.onload = () => {
+      console.log(
+        "Razorpay Checkout SDK loaded"
+      );
+    };
+
+    script.onerror = () => {
+      console.error(
+        "Unable to load Razorpay Checkout SDK"
+      );
+    };
+
+    document.head.appendChild(script);
+
+  }, []);
+
 
   /* =======================================================
      SEARCH
@@ -78,7 +96,7 @@ function CourseVideos() {
 
   const [previewEnded, setPreviewEnded] = useState(false);
 
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(30);
 
 
   /* =======================================================
@@ -112,6 +130,44 @@ function CourseVideos() {
     }
 
   });
+
+
+  /* =======================================================
+     COURSES FROM FIRESTORE
+  ======================================================= */
+
+  const [firestoreCourses, setFirestoreCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  useEffect(() => {
+
+    if (!window.db) {
+      setCoursesLoading(false);
+      return;
+    }
+
+    const unsubscribe = window.db
+      .collection("courses")
+      .where("status", "==", "published")
+      .onSnapshot(
+        (snapshot) => {
+          const data = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          setFirestoreCourses(data);
+          setCoursesLoading(false);
+        },
+        (error) => {
+          console.error("Error loading courses:", error);
+          setCoursesLoading(false);
+        }
+      );
+
+    return () => unsubscribe();
+
+  }, []);
 
 
   /* =======================================================
@@ -162,7 +218,7 @@ function CourseVideos() {
 
     setPreviewEnded(false);
 
-    setTimeLeft(10);
+    setTimeLeft(30);
 
   };
 
@@ -179,13 +235,13 @@ function CourseVideos() {
 
     setPreviewEnded(false);
 
-    setTimeLeft(10);
+    setTimeLeft(30);
 
   };
 
 
   /* =======================================================
-     10 SECOND PREVIEW TIMER
+     30 SECOND PREVIEW TIMER
   ======================================================= */
 
   useEffect(() => {
@@ -247,58 +303,265 @@ function CourseVideos() {
   /* =======================================================
      BUY COURSE
   ======================================================= */
+const buyCourse = async (course) => {
 
-  const buyCourse = (course) => {
+  try {
 
-    /*
-      TEMPORARY DEMO PURCHASE.
-
-      Later you can replace this with
-      Razorpay + Firebase purchase logic.
-    */
-
-    const confirmPurchase = window.confirm(
-      `Buy ${course.title} for ₹${course.price}?`
-    );
-
-
-    if (!confirmPurchase) {
+    if (!course?.id) {
+      alert("Course information is missing.");
       return;
     }
 
+    if (!window.auth?.currentUser) {
+      alert("Please login first.");
+      return;
+    }
 
-    setPurchasedCourses((current) => {
+    /* =====================================================
+       1. CREATE RAZORPAY ORDER
+    ===================================================== */
 
-      if (current.includes(course.id)) {
-        return current;
+    const response = await fetch(
+      "http://localhost:5000/api/payment/create-course-order",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          courseId: course.id,
+          amount: Number(course.price || 0)
+        })
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data?.message ||
+        "Unable to create payment."
+      );
+
+    }
+
+
+    /* =====================================================
+       2. OPEN RAZORPAY
+    ===================================================== */
+
+    const options = {
+
+      key: data.keyId,
+
+      amount: data.amount,
+
+      currency: data.currency || "INR",
+
+      name: "Wealthoria",
+
+      description:
+        course.title,
+
+      order_id:
+        data.orderId,
+
+
+      handler:
+        async function (paymentResponse) {
+
+          try {
+
+            /* =============================================
+               3. VERIFY PAYMENT
+            ============================================= */
+
+            const verifyResponse =
+              await fetch(
+                "http://localhost:5000/api/payment/verify-course-payment",
+                {
+                  method: "POST",
+
+                  headers: {
+                    "Content-Type":
+                      "application/json"
+                  },
+
+                  body: JSON.stringify({
+
+                    courseId:
+                      course.id,
+
+                    razorpay_order_id:
+                      paymentResponse.razorpay_order_id,
+
+                    razorpay_payment_id:
+                      paymentResponse.razorpay_payment_id,
+
+                    razorpay_signature:
+                      paymentResponse.razorpay_signature
+
+                  })
+                }
+              );
+
+
+            const verifyData =
+              await verifyResponse.json();
+
+
+            if (!verifyResponse.ok) {
+
+              throw new Error(
+                verifyData?.message ||
+                "Payment verification failed."
+              );
+
+            }
+
+
+            /* =============================================
+               4. PAYMENT SUCCESS
+            ============================================= */
+
+            alert(
+              "Payment successful. Course unlocked."
+            );
+
+
+            setPurchasedCourses(
+              (current) => {
+
+                if (
+                  current.includes(
+                    course.id
+                  )
+                ) {
+
+                  return current;
+
+                }
+
+                return [
+                  ...current,
+                  course.id
+                ];
+
+              }
+            );
+
+
+            setPreviewEnded(false);
+
+            setTimeLeft(30);
+
+
+          } catch (error) {
+
+            console.error(
+              "Payment verification error:",
+              error
+            );
+
+
+            alert(
+              error.message ||
+              "Payment verification failed."
+            );
+
+          }
+
+        },
+
+
+      prefill: {
+
+        name:
+          window.auth.currentUser
+            ?.displayName || "",
+
+        email:
+          window.auth.currentUser
+            ?.email || ""
+
+      },
+
+
+      theme: {
+
+        color:
+          "#e8473f"
+
+      },
+
+      modal: {
+
+        ondismiss: function () {
+
+          console.log(
+            "Razorpay checkout closed."
+          );
+
+        }
+
       }
 
-      return [
-        ...current,
-        course.id
-      ];
-
-    });
+    };
 
 
-    setPreviewEnded(false);
+    if (
+      typeof window.Razorpay !==
+      "function"
+    ) {
 
-    setTimeLeft(10);
+      throw new Error(
+        "Razorpay Checkout is still loading. Please wait a moment and try again."
+      );
+
+    }
+
+
+    const razorpay =
+      new window.Razorpay(
+        options
+      );
+
+
+    razorpay.open();
+
+
+  } catch (error) {
+
+    console.error(
+      "Course payment error:",
+      error
+    );
 
 
     alert(
-      "Course unlocked successfully!"
+      error.message ||
+      "Unable to start payment."
     );
 
-  };
+  }
 
-
+};
   /* =======================================================
      FILTER COURSES
   ======================================================= */
 
+  const availableCourses =
+    firestoreCourses.length > 0
+      ? firestoreCourses
+      : COURSE_VIDEOS;
+
   const filteredCourses =
-    COURSE_VIDEOS.filter((course) => {
+    availableCourses.filter((course) => {
 
       const search =
         searchQuery
@@ -332,7 +595,12 @@ function CourseVideos() {
 
   return (
 
-    <section className="member-course-page">
+    <section
+      className="member-course-page"
+      onContextMenu={(event) =>
+        event.preventDefault()
+      }
+    >
 
 
       {/* =================================================
@@ -412,7 +680,17 @@ function CourseVideos() {
       <div className="member-course-grid">
 
 
-        {filteredCourses.length > 0 ? (
+        {coursesLoading ? (
+
+          <div className="member-course-empty">
+            <div className="member-course-empty-icon">⏳</div>
+            <h3>Loading courses...</h3>
+            <p>
+              Please wait while we load the latest courses.
+            </p>
+          </div>
+
+        ) : filteredCourses.length > 0 ? (
 
           filteredCourses.map((course) => {
 
@@ -434,13 +712,32 @@ function CourseVideos() {
 
                 <div className="member-course-thumbnail">
 
-                  <img
-                    src={
-                      `https://img.youtube.com/vi/` +
-                      `${course.youtubeId}/hqdefault.jpg`
-                    }
-                    alt={course.title}
-                  />
+                  {course.thumbnailUrl ? (
+                    <img
+                      src={course.thumbnailUrl}
+                      alt={course.title}
+                      onContextMenu={(event) =>
+                        event.preventDefault()
+                      }
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        background: "#20242b",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        fontWeight: 700,
+                        padding: "20px",
+                        textAlign: "center"
+                      }}
+                    >
+                      {course.title}
+                    </div>
+                  )}
 
 
                   {/* DARK OVERLAY */}
@@ -472,7 +769,7 @@ function CourseVideos() {
                   {!purchased && (
 
                     <span className="member-course-preview-badge">
-                      10 SEC PREVIEW
+                      30 SEC PREVIEW
                     </span>
 
                   )}
@@ -499,8 +796,21 @@ function CourseVideos() {
 
 
                   <span className="member-course-category">
-                    {course.category}
+                    {course.level || "Intermediate"}
                   </span>
+
+                  {course.category && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        marginLeft: "8px",
+                        fontSize: "12px",
+                        opacity: 0.75
+                      }}
+                    >
+                      {course.category}
+                    </span>
+                  )}
 
 
                   <h3>
@@ -653,89 +963,105 @@ function CourseVideos() {
 
               </div>
 
+{/* =========================================
+    VIDEO
+========================================= */}
 
-              {/* =========================================
-                  VIDEO
-              ========================================= */}
+<div className="member-course-video">
 
-              <div className="member-course-video">
+  {/* VIDEO PLAYS ONLY WHILE PREVIEW IS ACTIVE
+      OR AFTER THE COURSE IS PURCHASED */}
 
+  {(isPurchased(selectedCourse.id) || !previewEnded) && (
+    
+    selectedCourse.videoEmbedUrl ? (
 
-                <iframe
-                  src={
-                    `https://www.youtube.com/embed/` +
-                    `${selectedCourse.youtubeId}` +
-                    `?autoplay=1&rel=0`
-                  }
-                  title={
-                    selectedCourse.title
-                  }
-                  allow={
-                    "accelerometer; " +
-                    "autoplay; " +
-                    "clipboard-write; " +
-                    "encrypted-media; " +
-                    "gyroscope; " +
-                    "picture-in-picture"
-                  }
-                  allowFullScreen
-                />
+      <iframe
+        key={
+          selectedCourse.videoEmbedUrl +
+          "-" +
+          (isPurchased(selectedCourse.id)
+            ? "full"
+            : "preview")
+        }
+        src={selectedCourse.videoEmbedUrl}
+        title={selectedCourse.title}
+        allow="autoplay; encrypted-media; fullscreen"
+        allowFullScreen
+        onContextMenu={(event) =>
+          event.preventDefault()
+        }
+        style={{
+          width: "100%",
+          height: "100%",
+          border: 0
+        }}
+      />
 
+    ) : (
 
-                {/* =====================================
-                    LOCK SCREEN
-                ===================================== */}
+      <div
+        style={{
+          height: "100%",
+          minHeight: "360px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          background: "#111"
+        }}
+      >
+        Video player is not available.
+      </div>
 
-                {!isPurchased(
-                  selectedCourse.id
-                ) &&
-                  previewEnded && (
+    )
 
-                    <div className="member-course-lock">
-
-
-                      <div className="member-course-lock-icon">
-                        🔒
-                      </div>
-
-
-                      <span className="member-course-lock-label">
-                        PREVIEW ENDED
-                      </span>
-
-
-                      <h3>
-                        Buy to watch more
-                      </h3>
-
-
-                      <p>
-                        Your 10-second preview has
-                        ended. Purchase this course
-                        to watch the complete video.
-                      </p>
+  )}
 
 
-                      <button
-                        type="button"
-                        className="member-course-buy"
-                        onClick={() =>
-                          buyCourse(
-                            selectedCourse
-                          )
-                        }
-                      >
-                        Buy to Watch More · ₹
-                        {selectedCourse.price}
-                      </button>
+  {/* =========================================
+      PREVIEW ENDED
+  ========================================= */}
 
+  {!isPurchased(selectedCourse.id) &&
+    previewEnded && (
 
-                    </div>
+      <div className="member-course-lock">
 
-                  )}
+        <div className="member-course-lock-icon">
+          🔒
+        </div>
 
-              </div>
+        <span className="member-course-lock-label">
+          PREVIEW ENDED
+        </span>
 
+        <h3>
+          Buy to watch more
+        </h3>
+
+        <p>
+          Your 30-second preview has ended.
+          Purchase this course to watch the
+          complete video.
+        </p>
+
+        <button
+          type="button"
+          className="member-course-buy"
+          onClick={() =>
+            buyCourse(selectedCourse)
+          }
+        >
+          Buy to Watch More · ₹
+          {selectedCourse.price}
+        </button>
+
+      </div>
+
+    )}
+
+</div>
 
               {/* =========================================
                   PREVIEW TIMER

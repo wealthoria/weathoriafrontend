@@ -9,10 +9,17 @@
   <title>Wealthoria — Member workspace</title>
 
  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase/firebase.js"></script>
+ <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Storage - ADD THIS -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+
+<script src="firebase/firebase.js"></script>
 
 
   <meta name="description" content="Wealthoria member workspace: content management, uploads, course builder, and student administration.">
@@ -30,8 +37,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800;900&family=Marcellus&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/colors_and_type.css">
   <link rel="stylesheet" href="app/site.css">
-  <link rel="stylesheet" href="member/portal.css">
-  <link rel="stylesheet" href="member/dashboard.css">
+  <link rel="stylesheet" href="admin/portal.css">
+  <link rel="stylesheet" href="admin/dashboard.css">
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -44,21 +51,27 @@
   <script type="text/babel" src="app/ui.jsx"></script>
   <script type="text/babel" src="app/a11y.jsx"></script>
 
-  <!-- member portal -->
-  <script type="text/babel" src="member/data.jsx"></script>
-  <script type="text/babel" src="member/auth.jsx"></script>
-  <script type="text/babel" src="member/store.jsx"></script>
-  <script type="text/babel" src="member/ui.jsx"></script>
-  <script type="text/babel" src="member/analytics-data.jsx"></script>
-  <script type="text/babel" src="member/charts.jsx"></script>
-  <script type="text/babel" src="member/shell.jsx"></script>
-  <script type="text/babel" src="member/login.jsx"></script>
-  <script type="text/babel" src="member/dashboard.jsx"></script>
-  <script type="text/babel" src="member/content.jsx"></script>
-  <script type="text/babel" src="member/uploads.jsx"></script>
-  <script type="text/babel" src="member/courses.jsx"></script>
-  <script type="text/babel" src="member/users.jsx"></script>
-  <script type="text/babel" src="member/app.jsx"></script>
+  <!-- admin portal -->
+  <script type="text/babel" src="admin/data.jsx"></script>
+  <script type="text/babel" src="admin/auth.jsx"></script>
+  <script type="text/babel" src="admin/store.jsx"></script>
+  <script type="text/babel" src="admin/ui.jsx"></script>
+  <script type="text/babel" src="admin/analytics-data.jsx"></script>
+  <script type="text/babel" src="admin/charts.jsx"></script>
+  <script type="text/babel" src="admin/shell.jsx"></script>
+  <script type="text/babel" src="admin/login.jsx"></script>
+  <script type="text/babel" src="admin/dashboard.jsx"></script>
+  <script type="text/babel" src="admin/content.jsx"></script>
+  <script type="text/babel" src="admin/uploads.jsx"></script>
+  <script type="text/babel" src="admin/courses.jsx"></script>
+  <script type="text/babel" src="admin/users.jsx"></script>
+  <script
+  type="text/babel"
+  src="admin/youtube.jsx?v=1">
+</script>
+
+  <script type="text/babel" src="admin/app.jsx"></script>
+  
   <script src="pwa-register.js" defer></script>
 </body>
 </html>

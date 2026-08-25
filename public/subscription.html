@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -7,256 +8,1046 @@
 
 <title>Wealthoria Premium Subscription</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+  rel="stylesheet"
+>
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Poppins,sans-serif;
+/* =========================================================
+   WEALTHORIA THEME
+   SAME STYLE AS YOUR WORKING FORM
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
 }
 
-body{
-background:#f5f7fb;
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
 }
 
-.container{
-width:420px;
-background:#fff;
-padding:35px;
-border-radius:15px;
-box-shadow:0 10px 30px rgba(0,0,0,.15);
+body {
+  min-height: 100vh;
+
+  font-family: "Poppins", sans-serif;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 132, 63, 0.08),
+      transparent 30%
+    ),
+    #f7f8f5;
+
+  color: #222;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 30px 20px;
 }
 
-.logo{
-text-align:center;
-margin-bottom:15px;
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.subscription-page {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
 }
 
-.logo img{
-width:80px;
+
+/* =========================================================
+   FORM CARD
+   ========================================================= */
+
+.form-card {
+  width: 100%;
+
+  max-width: 470px;
+
+  background: #ffffff;
+
+  padding: 40px;
+
+  border-radius: 24px;
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.10);
+
+  border: 1px solid #eeeeee;
 }
 
-h2{
-text-align:center;
-margin-bottom:10px;
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+  text-align: center;
+
+  margin-bottom: 25px;
 }
 
-p{
-text-align:center;
-color:#666;
-margin-bottom:25px;
+.brand-name {
+ color: #ff6b35;
+  font-size: 20px;
+
+  font-weight: 800;
+
+  letter-spacing: 2px;
 }
 
-.price{
-font-size:28px;
-font-weight:bold;
-text-align:center;
-color:#00a86b;
-margin-bottom:25px;
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.form-header {
+  margin-bottom: 28px;
 }
 
-.input{
-margin-bottom:18px;
+.form-header .eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+color: #ff6b35;
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.4px;
+
+  text-transform: uppercase;
 }
 
-label{
-display:block;
-margin-bottom:6px;
-font-weight:600;
+.form-header h1 {
+  margin: 0 0 10px;
+
+  color: #222;
+
+  font-size: 32px;
+
+  line-height: 1.2;
+
+  font-weight: 700;
 }
 
-input{
-width:100%;
-padding:14px;
-border:1px solid #ddd;
-border-radius:8px;
-font-size:15px;
+.form-header p {
+  margin: 0;
+
+  color: #666;
+
+  font-size: 14px;
+
+  line-height: 1.7;
 }
 
-button{
-width:100%;
-padding:15px;
-background:#00a86b;
-border:none;
-border-radius:8px;
-color:#fff;
-font-size:16px;
-font-weight:bold;
-cursor:pointer;
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.input-group {
+  margin-bottom: 20px;
 }
 
-button:hover{
-background:#00895d;
+.input-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #333;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+.input-group input {
+  width: 100%;
+
+  height: 58px;
+
+  padding: 0 16px;
+
+  border: 1px solid #dddddd;
+
+  border-radius: 14px;
+
+  background: #fafafa;
+
+  color: #222;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    background .2s ease;
+}
+
+.input-group input::placeholder {
+  color: #999;
+}
+
+.input-group input:hover {
+  border-color: #ffb08a;
+}
+
+.input-group input:focus {
+  background: #ffffff;
+
+  border-color: #ff843f;
+
+  box-shadow:
+    0 0 0 4px rgba(255, 132, 63, 0.12);
+}
+
+
+/* =========================================================
+   PAYMENT BOX
+   ========================================================= */
+
+.pay-box {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin: 25px 0;
+
+  padding: 19px 20px;
+
+  background: #fff5f3;
+
+  border: 1px solid #ffd7cf;
+
+  border-radius: 16px;
+}
+
+.pay-box h3 {
+  margin: 0 0 5px;
+
+  color: #222;
+
+  font-size: 16px;
+
+  font-weight: 600;
+}
+
+.pay-box p {
+  margin: 0;
+
+  color: #777;
+
+  font-size: 13px;
+}
+
+.amount {
+   color: #ff6b35;
+
+  font-size: 32px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   SUBSCRIBE BUTTON
+   ========================================================= */
+
+.subscribe-button {
+  width: 100%;
+
+  height: 58px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ff6b35,
+      #ff8c42
+    );
+
+  color: #ffffff;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 28px rgba(255, 107, 53, 0.30);
+
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    opacity .2s ease;
+}
+
+.subscribe-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 16px 34px rgba(255, 107, 53, 0.35);
+}
+
+.subscribe-button:active {
+  transform: translateY(0);
+}
+
+.subscribe-button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   SECURE PAYMENT
+   ========================================================= */
+
+.secure {
+  margin-top: 17px;
+
+  text-align: center;
+
+  color: #777;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+.secure strong {
+  color: #555;
+}
+
+
+/* =========================================================
+   FOOT NOTE
+   ========================================================= */
+
+.form-note {
+  margin-top: 8px;
+
+  text-align: center;
+
+  color: #999;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  body {
+    padding: 15px;
+  }
+
+  .form-card {
+    padding: 28px 22px;
+
+    border-radius: 20px;
+  }
+
+  .form-header h1 {
+    font-size: 28px;
+  }
+
+  .amount {
+    font-size: 27px;
+  }
+
+}
+
+@media (max-width: 380px) {
+
+  .form-card {
+    padding: 24px 18px;
+  }
+
+  .form-header h1 {
+    font-size: 25px;
+  }
+
+  .pay-box {
+    padding: 16px;
+  }
+
 }
 
 </style>
 
 </head>
 
+
 <body>
 
-<div class="container">
 
-<div class="logo">
-<img src="assets/logo.png">
+<div class="subscription-page">
+
+  <div class="form-card">
+
+
+    <!-- =====================================================
+         BRAND
+         ===================================================== -->
+
+    <div class="brand">
+
+      <div class="brand-name">
+        WEALTHORIA
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="form-header">
+
+      <span class="eyebrow">
+        WEALTHORIA PREMIUM
+      </span>
+
+      <h1>
+        Subscribe Now
+      </h1>
+
+      <p>
+        Start your Wealthoria Premium membership
+        and access premium investment learning
+        resources.
+      </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         NAME
+         ===================================================== -->
+
+    <div class="input-group">
+
+      <label for="name">
+        Full Name
+      </label>
+
+      <input
+        id="name"
+        type="text"
+        placeholder="Enter your full name"
+        autocomplete="name"
+      >
+
+    </div>
+
+
+    <!-- =====================================================
+         EMAIL
+         ===================================================== -->
+
+    <div class="input-group">
+
+      <label for="email">
+        Email Address
+      </label>
+
+      <input
+        id="email"
+        type="email"
+        placeholder="Enter your email"
+        autocomplete="email"
+      >
+
+    </div>
+
+
+    <!-- =====================================================
+         PHONE
+         ===================================================== -->
+
+    <div class="input-group">
+
+      <label for="phone">
+        Phone Number
+      </label>
+
+      <input
+        id="phone"
+        type="tel"
+        placeholder="Enter your phone number"
+        autocomplete="tel"
+      >
+
+    </div>
+
+
+    <!-- =====================================================
+         PRICE
+         ===================================================== -->
+
+    <div class="pay-box">
+
+      <div>
+
+        <h3>
+          Wealthoria Premium
+        </h3>
+
+        <p>
+          1 Year Membership
+        </p>
+
+      </div>
+
+      <div class="amount">
+        ₹999
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         BUTTON
+         ===================================================== -->
+
+    <button
+      type="button"
+      class="subscribe-button"
+      id="subscribeBtn"
+      onclick="subscribeNow()"
+    >
+      Subscribe Now
+    </button>
+
+
+    <!-- =====================================================
+         SECURITY
+         ===================================================== -->
+
+    <div class="secure">
+      🔒 Secure payment powered by Razorpay
+    </div>
+
+    <div class="form-note">
+      Your payment information is securely processed.
+    </div>
+
+
+  </div>
+
 </div>
 
-<h2>Wealthoria Premium</h2>
 
-<p>Start Your Investment Learning Journey</p>
 
-<div class="price">
-₹1 / Week (Test)
-</div>
+<!-- =========================================================
+     FIREBASE
+     ========================================================= -->
 
-<div class="input">
-<label>Full Name</label>
-<input id="name" placeholder="Enter Full Name">
-</div>
-
-<div class="input">
-<label>Email</label>
-<input id="email" type="email" placeholder="Enter Email">
-</div>
-
-<div class="input">
-<label>Phone Number</label>
-<input id="phone" placeholder="Enter Phone Number">
-</div>
-
-<button onclick="subscribeNow()">
-Subscribe Now
-</button>
-
-</div>
-
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- Your Firebase Config -->
 <script src="firebase/firebase.js"></script>
+
+
+<!-- =========================================================
+     RAZORPAY
+     ========================================================= -->
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
 
 <script>
 
-async function subscribeNow(){
+async function subscribeNow() {
 
-const name=document.getElementById("name").value.trim();
-const email=document.getElementById("email").value.trim();
-const phone=document.getElementById("phone").value.trim();
+  const button =
+    document.getElementById("subscribeBtn");
 
-if(!name || !email || !phone){
 
-alert("Please fill all fields");
+  const name =
+    document
+      .getElementById("name")
+      .value
+      .trim();
 
-return;
 
-}
+  const email =
+    document
+      .getElementById("email")
+      .value
+      .trim()
+      .toLowerCase();
 
-try{
 
-console.log(window.db);
+  const phone =
+    document
+      .getElementById("phone")
+      .value
+      .trim();
 
-const existing = await window.db
-  .collection("subscriptions")
-  .where("email", "==", email)
-  .get();
 
-if (!existing.empty) {
-  alert("This email is already subscribed.");
-  return;
-}
+  /* =====================================================
+     VALIDATION
+     ===================================================== */
 
-const docRef=await window.db.collection("subscriptions").add({
+  if (!name || !email || !phone) {
 
-name:name,
+    alert(
+      "Please fill all fields."
+    );
 
-email:email,
+    return;
 
-phone:phone,
+  }
 
-plan:"Wealthoria Premium",
 
-amount:1,
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
 
-status:"pending",
+    alert(
+      "Please enter a valid email address."
+    );
 
-subscriptionId:"",
+    return;
 
-paymentId:"",
+  }
 
-customerId:"",
 
-nextBillingDate:"",
+  if (!/^[0-9]{10}$/.test(phone)) {
 
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    alert(
+      "Please enter a valid 10 digit phone number."
+    );
 
-});
+    return;
 
-alert("Saved Successfully");
+  }
 
-console.log(docRef.id);
-const response = await fetch("https://webinar-registration-backend.onrender.com/api/subscription/create", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        name,
-        email,
-        phone,
-        firestoreId: docRef.id
-    })
-});
 
-const data = await response.json();
+  try {
 
-if (!data.success) {
-    throw new Error(data.message);
-}
+    button.disabled = true;
 
-const options = {
-    key: data.key,
-    subscription_id: data.subscriptionId,
-    name: "Wealthoria Premium",
-    description: "₹1 Weekly Subscription",
-    handler: function (response) {
-        alert("Payment Successful");
-        console.log(response);
-    },
-    prefill: {
-        name,
-        email,
-        contact: phone
-    },
-    theme: {
-        color: "#00a86b"
+    button.innerText =
+      "Please wait...";
+
+
+    /* ===================================================
+       CHECK FIREBASE
+       =================================================== */
+
+    if (!window.db) {
+
+      throw new Error(
+        "Firebase database is not available."
+      );
+
     }
-};
 
-const rzp = new Razorpay(options);
-rzp.open();
 
-}catch(err){
+    /* ===================================================
+       CHECK DUPLICATE EMAIL
+       =================================================== */
 
-console.error(err);
+    const existing =
+      await window.db
+        .collection("subscriptions")
+        .where(
+          "email",
+          "==",
+          email
+        )
+        .limit(1)
+        .get();
 
-alert(err.message);
 
-}
+    if (!existing.empty) {
+
+      alert(
+        "This email is already subscribed."
+      );
+
+      button.disabled = false;
+
+      button.innerText =
+        "Subscribe Now";
+
+      return;
+
+    }
+
+
+    /* ===================================================
+       SAVE PENDING SUBSCRIPTION
+       =================================================== */
+
+    const docRef =
+      await window.db
+        .collection("subscriptions")
+        .add({
+
+          name: name,
+
+          email: email,
+
+          phone: phone,
+
+          plan:
+            "Wealthoria Premium - Yearly",
+
+          amount:
+            999,
+
+          currency:
+            "INR",
+
+          status:
+            "pending",
+
+          subscriptionId:
+            "",
+
+          paymentId:
+            "",
+
+          customerId:
+            "",
+
+          nextBillingDate:
+            "",
+
+          createdAt:
+            firebase.firestore
+              .FieldValue
+              .serverTimestamp()
+
+        });
+
+
+    console.log(
+      "Subscription document:",
+      docRef.id
+    );
+
+
+    /* ===================================================
+       CREATE RAZORPAY SUBSCRIPTION
+       =================================================== */
+
+    const response =
+      await fetch(
+        "https://webinar-registration-backend.onrender.com/api/subscription/create",
+        {
+
+          method:
+            "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json"
+
+          },
+
+          body:
+            JSON.stringify({
+
+              name:
+                name,
+
+              email:
+                email,
+
+              phone:
+                phone,
+
+              firestoreId:
+                docRef.id,
+
+              amount:
+                999
+
+            })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    console.log(
+      "Backend response:",
+      data
+    );
+
+
+    if (
+      !response.ok ||
+      !data.success
+    ) {
+
+      throw new Error(
+        data.message ||
+        "Unable to create subscription."
+      );
+
+    }
+
+
+    /* ===================================================
+       RAZORPAY OPTIONS
+       =================================================== */
+
+    const options = {
+
+      key:
+        data.key,
+
+      subscription_id:
+        data.subscriptionId,
+
+      name:
+        "Wealthoria Premium",
+
+      description:
+        "₹999 Yearly Subscription",
+
+
+      prefill: {
+
+        name:
+          name,
+
+        email:
+          email,
+
+        contact:
+          phone
+
+      },
+
+
+      notes: {
+
+        firestoreId:
+          docRef.id,
+
+        plan:
+          "Wealthoria Premium - Yearly",
+
+        amount:
+          "999"
+
+      },
+
+
+      theme: {
+
+        color:
+          "#ff843f"
+
+      },
+
+
+      handler:
+        async function(
+          razorpayResponse
+        ) {
+
+          console.log(
+            "Razorpay response:",
+            razorpayResponse
+          );
+
+
+          try {
+
+            await window.db
+              .collection(
+                "subscriptions"
+              )
+              .doc(
+                docRef.id
+              )
+              .update({
+
+                status:
+                  "active",
+
+                subscriptionId:
+                  razorpayResponse
+                    .razorpay_subscription_id ||
+                  data.subscriptionId,
+
+                paymentId:
+                  razorpayResponse
+                    .razorpay_payment_id ||
+                  "",
+
+                updatedAt:
+                  firebase.firestore
+                    .FieldValue
+                    .serverTimestamp()
+
+              });
+
+
+            alert(
+              "Your Wealthoria Premium subscription is active!"
+            );
+
+
+          } catch (
+            updateError
+          ) {
+
+            console.error(
+              "Firestore update error:",
+              updateError
+            );
+
+
+            alert(
+              "Payment was successful, but the subscription record could not be updated."
+            );
+
+          }
+
+
+          button.disabled =
+            false;
+
+          button.innerText =
+            "Subscribe Now";
+
+        }
+
+    };
+
+
+    /* ===================================================
+       OPEN RAZORPAY
+       =================================================== */
+
+    const rzp =
+      new Razorpay(
+        options
+      );
+
+
+    rzp.on(
+      "payment.failed",
+      function(
+        response
+      ) {
+
+        console.error(
+          "Payment failed:",
+          response.error
+        );
+
+
+        alert(
+          response.error &&
+          response.error.description
+            ? response.error.description
+            : "Subscription payment failed."
+        );
+
+
+        button.disabled =
+          false;
+
+        button.innerText =
+          "Subscribe Now";
+
+      }
+    );
+
+
+    rzp.open();
+
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      "Subscription error:",
+      error
+    );
+
+
+    alert(
+      error.message ||
+      "Something went wrong. Please try again."
+    );
+
+
+    button.disabled =
+      false;
+
+    button.innerText =
+      "Subscribe Now";
+
+  }
 
 }
 
 </script>
 
+
 </body>
+
 </html>

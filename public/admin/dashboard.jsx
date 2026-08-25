@@ -5,8 +5,8 @@
    date-range picker. Replaces the simple welcome dashboard.
    ========================================================================= */
 const { useState, useMemo, useEffect, useCallback } = React;
-const { useMemberAuth, useRole } = window;
-const { useMemberData } = window;
+const { useAdminAuth, useRole } = window;
+const { useAdminData } = window;
 const { useMRouter, MIcon, useMToast } = window;
 const { Shell } = window;
 const A = window.ANALYTICS;
@@ -36,9 +36,9 @@ function MetricCard({ icon, label, value, delta, spark, sparkKey, sparkColor }) 
 }
 
 function ControlPanel() {
-  const { user } = useMemberAuth();
+  const { user } = useAdminAuth();
   const { role } = useRole();
-  const data = useMemberData();
+  const data = useAdminData();
   const { navigate } = useMRouter();
   const { push } = useMToast();
 
@@ -82,7 +82,7 @@ function ControlPanel() {
 
   return (
     <Shell title="Control panel" subtitle={`Signed in as ${role} \u00b7 ${data.students.length} students`}
-      actions={<button className="btn btn-green btn-sm" onClick={() => navigate("/member/courses/new")}><MIcon name="plus" size={16} />New course</button>}>
+      actions={<button className="btn btn-green btn-sm" onClick={() => navigate("/admin/courses/new")}><MIcon name="plus" size={16} />New course</button>}>
       <div className="reveal-fade">
         {/* date range + quick actions */}
         <div className="cp-bar">
@@ -93,10 +93,10 @@ function ControlPanel() {
             <button className={custom ? "on" : ""} onClick={() => setCustom(true)}>Custom</button>
           </div>
           <div className="cp-actions">
-            <QuickAction icon="send" label="Publish draft" onClick={() => { navigate("/member/content"); }} />
+            <QuickAction icon="send" label="Publish draft" onClick={() => { navigate("/admin/content"); }} />
             <QuickAction icon="eye" label="Pending reviews" onClick={() => push("3 reviews pending (stubbed)")} />
             <QuickAction icon="download" label="Export CSV" onClick={() => exportCsv(data.students, push)} />
-            <QuickAction icon="plus" label="Add course" onClick={() => navigate("/member/courses/new")} />
+            <QuickAction icon="plus" label="Add course" onClick={() => navigate("/admin/courses/new")} />
           </div>
         </div>
 
@@ -226,6 +226,6 @@ function ActivityFeed() {
   );
 }
 
-/* keep the public name MemberDashboard so the router needs no change */
-function MemberDashboard() { return <ControlPanel />; }
-window.MemberDashboard = MemberDashboard;
+/* keep the public name AdminDashboard so the router needs no change */
+function AdminDashboard() { return <ControlPanel />; }
+window.AdminDashboard = AdminDashboard;

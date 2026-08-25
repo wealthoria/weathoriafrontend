@@ -28,7 +28,7 @@ const CONTENT = {
       title: ["Learning is the", "first investment"],
       lede: "Understand money, markets and investing before you ever put a rupee at risk. Structured financial education in plain language, and in Kannada.",
       ctaPrimary: "Become a Member",
-      ctaSecondary: "Join as student",
+      ctaSecondary: "Course",
       trust: "Trusted by 800+ learners across Karnataka",
       card: {
         title: "Your learning path",
@@ -255,7 +255,7 @@ const CONTENT = {
       title: ["ಹೂಡಿಕೆಗೂ ಮುನ್ನ", "ಕಲಿಕೆ."],
       lede: "ಒಂದು ರೂಪಾಯಿಯನ್ನು ಅಪಾಯಕ್ಕೆ ಸಿಲುಕಿಸುವ ಮೊದಲು ಹಣ, ಮಾರುಕಟ್ಟೆ ಮತ್ತು ಹೂಡಿಕೆಯನ್ನು ಸರಳ ಭಾಷೆಯಲ್ಲಿ ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ. ಸರಳ ಭಾಷೆಯಲ್ಲಿ, ಮತ್ತು ಕನ್ನಡದಲ್ಲಿ, ರಚನಾತ್ಮಕ ಹಣಕಾಸು ಶಿಕ್ಷಣ.",
       ctaPrimary: "ಸದಸ್ಯರಾಗಿ",
-      ctaSecondary: "",
+      ctaSecondary: "ಕೋರ್ಸ್",
       trust: "ಕರ್ನಾಟಕದಾದ್ಯಂತ 800+ ಕಲಿಯುವವರ ವಿಶ್ವಾಸ",
       card: {
         title: "ನಿಮ್ಮ ಕಲಿಕಾ ಮಾರ್ಗ",

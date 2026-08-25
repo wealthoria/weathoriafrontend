@@ -8,7 +8,7 @@
      - Navigations: network-first, fall back to cache, then offline.html.
    Bump CACHE_VERSION on any deploy to roll caches.
    ========================================================================= */
-const CACHE_VERSION = "wealthoria-v1";
+const CACHE_VERSION = "wealthoria-v2";
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -54,20 +54,70 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   // 1) Navigations -> network-first, fall back to cached page, then offline.html
-  if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(RUNTIME).then((c) => c.put(req, copy));
+  // 1) Navigations
+if (req.mode === "navigate") {
+
+  event.respondWith(
+
+    fetch(req)
+      .then((res) => {
+
+        const pathname =
+          new URL(req.url).pathname;
+
+        // Never cache Admin pages
+        if (pathname.startsWith("/admin")) {
           return res;
-        })
-        .catch(() =>
-          caches.match(req).then((hit) => hit || caches.match("Wealthoria.html").then((s) => s || caches.match("offline.html")))
-        )
-    );
-    return;
-  }
+        }
+
+        const copy = res.clone();
+
+        caches.open(RUNTIME)
+          .then((c) => c.put(req, copy))
+          .catch(() => {});
+
+        return res;
+      })
+
+      .catch(() => {
+
+        const pathname =
+          new URL(req.url).pathname;
+
+        // Do not show public/offline page for Admin routes
+        if (pathname.startsWith("/admin")) {
+          return new Response(
+            "Admin page unavailable offline.",
+            {
+              status: 503,
+              headers: {
+                "Content-Type": "text/plain"
+              }
+            }
+          );
+        }
+
+        return caches.match(req)
+          .then((hit) => {
+
+            if (hit) return hit;
+
+            return caches.match("Wealthoria.html")
+              .then((shell) => {
+
+                if (shell) return shell;
+
+                return caches.match("offline.html");
+              });
+
+          });
+
+      })
+
+  );
+
+  return;
+}
 
   // 2) Cross-origin CDN + fonts -> cache-first (immutable, versioned URLs)
   if (url.origin !== self.location.origin) {

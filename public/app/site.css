@@ -1041,3 +1041,21 @@ a { color: inherit; }
     max-width: 100% !important;
   }
 }
+
+
+.member-login-button{
+  font: var(--button-md);
+    border: 0;
+    border-radius: var(--rounded-xl);
+    cursor: pointer;
+    padding: 7px 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: filter .15s var(--ease), background .15s var(--ease), transform .12s var(--ease), box-shadow .15s var(--ease);
+    text-decoration: none;
+    white-space: nowrap;
+    
+}
+

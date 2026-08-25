@@ -1,20 +1,20 @@
 /* global React, window */
 /* =========================================================================
-   Member Portal — Content management (/member/content)
+   admin Portal — Content management (/admin/content)
    Search, filters (type/status/date), bulk select + bulk publish/delete,
    row actions (Edit/Preview/Publish-Unpublish/Delete). Editors see only their
    own content; Admins see all.
    ========================================================================= */
 const { useState, useMemo } = React;
-const { useMemberAuth, useRole } = window;
-const { useMemberData } = window;
+const { useAdminAuth, useRole } = window;
+const { useAdminData } = window;
 const { useMRouter, MIcon, StatusPill, useMToast, useConfirm } = window;
 const { Shell } = window;
 
 function ContentScreen() {
-  const { user } = useMemberAuth();
+  const { user } = useAdminAuth();
   const { isAdmin } = useRole();
-  const data = useMemberData();
+  const data = useAdminData();
   const { navigate } = useMRouter();
   const { push } = useMToast();
   const confirm = useConfirm();
@@ -27,8 +27,15 @@ function ContentScreen() {
   const [sel, setSel] = useState([]);
   const [editing, setEditing] = useState(null);
 
-  const scoped = useMemo(() => isAdmin ? data.content : data.content.filter((c) => c.authorId === user.id), [data.content, isAdmin, user.id]);
-
+const scoped = useMemo(
+  () =>
+    isAdmin
+      ? data.content
+      : data.content.filter(
+          (c) => c.authorId === (user?.uid || user?.id)
+        ),
+  [data.content, isAdmin, user]
+);
   const rows = useMemo(() => scoped.filter((c) => {
     if (q.trim() && !c.title.toLowerCase().includes(q.trim().toLowerCase())) return false;
     if (type !== "all" && c.type !== type) return false;
@@ -138,7 +145,23 @@ function ContentScreen() {
 
       {editing && <ContentEditor item={editing} onClose={() => setEditing(null)} onSave={(patch) => {
         if (editing.id === "new") {
-          const item = { id: "c" + Date.now(), title: patch.title, type: patch.type, status: patch.status, authorId: user.id, author: user.name, modified: new Date().toISOString().slice(0, 10) };
+        
+const item = {
+  id: "c" + Date.now(),
+  title: patch.title,
+  type: patch.type,
+  status: patch.status,
+
+  authorId: user?.uid || user?.id,
+
+  author:
+    user?.name ||
+    user?.displayName ||
+    user?.email ||
+    "Admin",
+
+  modified: new Date().toISOString().slice(0, 10)
+};         
           data.addContent(item);
           push(`Created "${item.title}"`);
         } else {

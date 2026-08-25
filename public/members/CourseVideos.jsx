@@ -322,7 +322,7 @@ const buyCourse = async (course) => {
     ===================================================== */
 
     const response = await fetch(
-     "http://localhost:10000/api/payment/create-course-order",
+     "http://api.wealthoria.in/api/payment/create-course-order",
       {
         method: "POST",
 
@@ -383,7 +383,7 @@ const buyCourse = async (course) => {
 
             const verifyResponse =
               await fetch(
-                "http://localhost:10000/api/payment/verify-course-payment",
+                "http://api.wealthoria.in/api/payment/verify-course-payment",
                 {
                   method: "POST",
 

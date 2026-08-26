@@ -10,6 +10,7 @@ const ROOT = __dirname;
 
 const THUMBNAIL_DIR = path.join(
   ROOT,
+  "public",
   "members",
   "course-thumbnails"
 );

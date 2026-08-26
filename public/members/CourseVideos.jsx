@@ -597,9 +597,7 @@ const buyCourse = async (course) => {
 
     <section
       className="member-course-page"
-      onContextMenu={(event) =>
-        event.preventDefault()
-      }
+      
     >
 
 

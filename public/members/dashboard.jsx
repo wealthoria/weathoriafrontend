@@ -108,13 +108,42 @@ function TradingViewChart({ theme }) {
 
 function MemberDashboard() {
 
-  // Resolve child pages during render so Babel's asynchronous
-  // loading cannot leave us with an old undefined reference.
+  // Resolve child pages during render.
   const CourseVideos = window.CourseVideos;
   const Newsletter = window.Newsletter;
   const SeminarRegistrations = window.SeminarRegistrations;
   const WeeklyRoundup = window.WeeklyRoundup;
-  const PurchaseHistory = window.PurchaseHistory;
+
+  const [PurchaseHistory, setPurchaseHistory] =
+    useState(window.PurchaseHistory || null);
+
+  useEffect(() => {
+
+    if (window.PurchaseHistory) {
+      setPurchaseHistory(
+        window.PurchaseHistory
+      );
+      return;
+    }
+
+    const timer =
+      setInterval(() => {
+
+        if (window.PurchaseHistory) {
+
+          setPurchaseHistory(
+            window.PurchaseHistory
+          );
+
+          clearInterval(timer);
+
+        }
+
+      }, 100);
+
+    return () => clearInterval(timer);
+
+  }, []);
 
   /* =======================================================
      MEMBER
@@ -802,7 +831,18 @@ return (
 
 {showPurchaseHistory ? (
 
-  <PurchaseHistory />
+  PurchaseHistory ? (
+    <PurchaseHistory />
+  ) : (
+    <div
+      style={{
+        padding: 40,
+        textAlign: "center"
+      }}
+    >
+      Loading Purchase History...
+    </div>
+  )
 
 ) :
          showCourses ? (

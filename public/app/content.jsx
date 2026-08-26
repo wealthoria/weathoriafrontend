@@ -28,7 +28,7 @@ const CONTENT = {
       title: ["Learning is the", "first investment"],
       lede: "Understand money, markets and investing before you ever put a rupee at risk. Structured financial education in plain language, and in Kannada.",
       ctaPrimary: "Become a Member",
-      ctaSecondary: "Course",
+      ctaSecondary: "Courses",
       trust: "Trusted by 800+ learners across Karnataka",
       card: {
         title: "Your learning path",
@@ -178,7 +178,7 @@ const CONTENT = {
       sub: "Self-serve resources to keep learning between sessions, all free.",
       items: [
         { ic: "file", tag: "Guide", t: "Beginner's guide to investing", d: "A plain-language primer covering the absolute basics." },
-        { ic: "calc", tag: "Calculator", t: "SIP & goal calculator", d: "See how disciplined monthly investing compounds over time." },
+        { ic: "calc", tag: "Calculators", t: "Explore calculators", d: "See how disciplined monthly investing compounds over time." },
         { ic: "list", tag: "Checklist", t: "Personal finance checklist", d: "The 10 money habits to set up before you invest." },
         { ic: "book", tag: "Glossary", t: "Investing terms, demystified", d: "Every key term explained in one simple place." },
       ],
@@ -255,7 +255,7 @@ const CONTENT = {
       title: ["ಹೂಡಿಕೆಗೂ ಮುನ್ನ", "ಕಲಿಕೆ."],
       lede: "ಒಂದು ರೂಪಾಯಿಯನ್ನು ಅಪಾಯಕ್ಕೆ ಸಿಲುಕಿಸುವ ಮೊದಲು ಹಣ, ಮಾರುಕಟ್ಟೆ ಮತ್ತು ಹೂಡಿಕೆಯನ್ನು ಸರಳ ಭಾಷೆಯಲ್ಲಿ ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ. ಸರಳ ಭಾಷೆಯಲ್ಲಿ, ಮತ್ತು ಕನ್ನಡದಲ್ಲಿ, ರಚನಾತ್ಮಕ ಹಣಕಾಸು ಶಿಕ್ಷಣ.",
       ctaPrimary: "ಸದಸ್ಯರಾಗಿ",
-      ctaSecondary: "ಕೋರ್ಸ್",
+      ctaSecondary: "ಕೋರ್ಸ್‌ಗಳು",
       trust: "ಕರ್ನಾಟಕದಾದ್ಯಂತ 800+ ಕಲಿಯುವವರ ವಿಶ್ವಾಸ",
       card: {
         title: "ನಿಮ್ಮ ಕಲಿಕಾ ಮಾರ್ಗ",
@@ -405,7 +405,7 @@ const CONTENT = {
       sub: "ತರಗತಿಗಳ ನಡುವೆ ಕಲಿಕೆ ಮುಂದುವರಿಸಲು ಸ್ವಯಂ-ಸೇವಾ ಸಂಪನ್ಮೂಲಗಳು, ಎಲ್ಲವೂ ಉಚಿತ.",
       items: [
         { ic: "file", tag: "ಮಾರ್ಗದರ್ಶಿ", t: "ಹೂಡಿಕೆಗೆ ಆರಂಭಿಕ ಮಾರ್ಗದರ್ಶಿ", d: "ಮೂಲಾಂಶಗಳನ್ನು ಒಳಗೊಂಡ ಸರಳ ಭಾಷೆಯ ಪರಿಚಯ." },
-        { ic: "calc", tag: "ಕ್ಯಾಲ್ಕುಲೇಟರ್", t: "SIP ಮತ್ತು ಗುರಿ ಕ್ಯಾಲ್ಕುಲೇಟರ್", d: "ಶಿಸ್ತಿನ ಮಾಸಿಕ ಹೂಡಿಕೆ ಕಾಲಾನಂತರ ಹೇಗೆ ಬೆಳೆಯುತ್ತದೆ ನೋಡಿ." },
+        { ic: "calc", tag: "ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು", t: "ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳನ್ನು ಅನ್ವೇಷಿಸಿ", d: "ಶಿಸ್ತಿನ ಮಾಸಿಕ ಹೂಡಿಕೆ ಕಾಲಾನಂತರ ಹೇಗೆ ಬೆಳೆಯುತ್ತದೆ ನೋಡಿ." },
         { ic: "list", tag: "ಪರಿಶೀಲನಾ ಪಟ್ಟಿ", t: "ವೈಯಕ್ತಿಕ ಹಣಕಾಸು ಪರಿಶೀಲನಾ ಪಟ್ಟಿ", d: "ಹೂಡಿಕೆಗೆ ಮೊದಲು ಹೊಂದಿಸಬೇಕಾದ 10 ಹಣದ ಅಭ್ಯಾಸಗಳು." },
         { ic: "book", tag: "ಪದಕೋಶ", t: "ಹೂಡಿಕೆ ಪದಗಳ ವಿವರಣೆ", d: "ಪ್ರತಿ ಪ್ರಮುಖ ಪದವೂ ಒಂದೇ ಸರಳ ಸ್ಥಳದಲ್ಲಿ ವಿವರಿಸಲಾಗಿದೆ." },
       ],

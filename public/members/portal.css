@@ -3462,3 +3462,24 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   }
 
 }
+
+.member-course-level-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.member-course-level-button {
+  border: 0;
+  background: transparent;
+  color: #e8473f;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.member-course-level-button:hover {
+  text-decoration: underline;
+}

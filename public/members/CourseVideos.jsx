@@ -25,6 +25,34 @@ const COURSE_VIDEOS = [
 
 
 /* =========================================================
+   COURSE LEVEL SECTIONS
+========================================================= */
+
+const COURSE_LEVELS = [
+  {
+    id: "beginner",
+    title: "Beginner Videos",
+    subtitle: "Start with the fundamentals"
+  },
+  {
+    id: "intermediate",
+    title: "Intermediate Videos",
+    subtitle: "Build practical market knowledge"
+  },
+  {
+    id: "advanced",
+    title: "Advanced Videos",
+    subtitle: "Explore advanced market concepts"
+  },
+  {
+    id: "expert",
+    title: "Expert Videos",
+    subtitle: "Professional-level learning"
+  }
+];
+
+
+/* =========================================================
    COURSE VIDEOS
 ========================================================= */
 
@@ -74,11 +102,204 @@ function CourseVideos() {
   }, []);
 
 
+  useEffect(() => {
+
+    const STYLE_ID =
+      "wealthoria-course-level-sections";
+
+    if (document.getElementById(STYLE_ID)) {
+      return;
+    }
+
+    const style =
+      document.createElement("style");
+
+    style.id = STYLE_ID;
+
+    style.textContent = `
+      .member-course-level-buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 26px 0 30px;
+      }
+
+      .member-course-level-btn {
+        min-width: 120px;
+        padding: 11px 20px;
+        border: 1px solid #dedede;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #555;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          background .2s ease,
+          border-color .2s ease,
+          color .2s ease,
+          transform .2s ease;
+      }
+
+      .member-course-level-btn:hover {
+        border-color: #e8473f;
+        color: #e8473f;
+        transform: translateY(-1px);
+      }
+
+      .member-course-level-btn.active {
+        background: #e8473f;
+        border-color: #e8473f;
+        color: #ffffff;
+      }
+
+      .member-course-sections {
+        width: 100%;
+      }
+
+      .member-course-level-section {
+        width: 100%;
+      }
+
+      .member-course-level-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+      }
+
+      .member-course-level-head h3 {
+        margin: 4px 0 0;
+        font-size: 18px;
+        line-height: 1.3;
+      }
+
+      .member-course-level-count {
+        font-size: 12px;
+        font-weight: 700;
+        opacity: .65;
+        white-space: nowrap;
+      }
+
+      .member-course-grid {
+        display: grid;
+        grid-template-columns:
+          repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .member-course-level-empty {
+        padding: 44px 20px;
+        text-align: center;
+        border: 1px dashed #d8d8d8;
+        border-radius: 16px;
+        background: rgba(0,0,0,.015);
+      }
+
+      .member-course-level-empty-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      .member-course-level-empty h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+
+      .member-course-level-empty p {
+        margin: 0;
+        font-size: 13px;
+        color: #777;
+      }
+
+      .course-thumb-fallback {
+        width: 100%;
+        height: 100%;
+        min-height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+        background:
+          linear-gradient(
+            135deg,
+            #20242b,
+            #334155
+          );
+        color: #ffffff;
+        font-weight: 700;
+      }
+
+      .member-course-body > p {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      @media (max-width: 1100px) {
+        .member-course-grid {
+          grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .member-course-grid {
+          grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+        }
+
+        .member-course-level-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .member-course-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .member-course-level-btn {
+          min-width: 0;
+          flex: 1 1 calc(50% - 10px);
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+
+    return () => {
+      const node =
+        document.getElementById(STYLE_ID);
+
+      if (node) {
+        node.remove();
+      }
+    };
+
+  }, []);
+
+
   /* =======================================================
      SEARCH
   ======================================================= */
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  /* =======================================================
+     SELECTED COURSE LEVEL
+  ======================================================= */
+
+  const [selectedLevel, setSelectedLevel] =
+    useState(null);
 
 
   /* =======================================================
@@ -428,32 +649,81 @@ const buyCourse = async (course) => {
             /* =============================================
                4. PAYMENT SUCCESS
             ============================================= */
+/* =====================================================
+   SAVE COURSE PURCHASE TO FIRESTORE
+===================================================== */
 
-            alert(
-              "Payment successful. Course unlocked."
-            );
+if (window.db && window.auth?.currentUser) {
+
+  await window.db
+    .collection("coursePurchases")
+    .add({
+
+      userId:
+        window.auth.currentUser.uid,
+
+      userEmail:
+        window.auth.currentUser.email || "",
+
+      courseId:
+        String(course.id),
+
+      courseTitle:
+        course.title || "",
+
+      amount:
+        Number(course.price || 0),
+
+      razorpayOrderId:
+        paymentResponse.razorpay_order_id,
+
+      razorpayPaymentId:
+        paymentResponse.razorpay_payment_id,
+
+      status:
+        "paid",
+
+      paidAt:
+        new Date(),
+
+      createdAt:
+        new Date()
+
+    });
+
+  console.log(
+    "Course purchase saved to Firestore"
+  );
+
+}
 
 
-            setPurchasedCourses(
-              (current) => {
+/* =====================================================
+   UNLOCK COURSE
+===================================================== */
 
-                if (
-                  current.includes(
-                    course.id
-                  )
-                ) {
+alert(
+  "Payment successful. Course unlocked."
+);
 
-                  return current;
+setPurchasedCourses(
+  (current) => {
 
-                }
+    if (
+      current.includes(course.id)
+    ) {
 
-                return [
-                  ...current,
-                  course.id
-                ];
+      return current;
 
-              }
-            );
+    }
+
+    return [
+      ...current,
+      course.id
+    ];
+
+  }
+);
 
 
             setPreviewEnded(false);
@@ -672,237 +942,344 @@ const buyCourse = async (course) => {
 
 
       {/* =================================================
-          COURSE GRID
+          COURSE LEVEL BUTTONS
       ================================================= */}
 
-      <div className="member-course-grid">
-
-
-        {coursesLoading ? (
-
-          <div className="member-course-empty">
-            <div className="member-course-empty-icon">⏳</div>
-            <h3>Loading courses...</h3>
-            <p>
-              Please wait while we load the latest courses.
-            </p>
-          </div>
-
-        ) : filteredCourses.length > 0 ? (
-
-          filteredCourses.map((course) => {
-
-            const purchased =
-              isPurchased(course.id);
-
-
-            return (
-
-              <article
-                className="member-course-card"
-                key={course.id}
-              >
-
-
-                {/* =========================================
-                    THUMBNAIL
-                ========================================= */}
-
-                <div className="member-course-thumbnail">
-
-                  {course.thumbnailUrl ? (
-                    <img
-                      src={course.thumbnailUrl}
-                      alt={course.title}
-                      onContextMenu={(event) =>
-                        event.preventDefault()
-                      }
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        background: "#20242b",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#fff",
-                        fontWeight: 700,
-                        padding: "20px",
-                        textAlign: "center"
-                      }}
-                    >
-                      {course.title}
-                    </div>
-                  )}
-
-
-                  {/* DARK OVERLAY */}
-
-                  <div className="member-course-overlay">
-
-
-                    {/* PLAY BUTTON */}
-
-                    <button
-                      type="button"
-                      className="member-course-play"
-                      onClick={() =>
-                        openCourse(course)
-                      }
-                      aria-label={
-                        `Watch ${course.title}`
-                      }
-                    >
-                      ▶
-                    </button>
-
-
-                  </div>
-
-
-                  {/* PREVIEW LABEL */}
-
-                  {!purchased && (
-
-                    <span className="member-course-preview-badge">
-                      30 SEC PREVIEW
-                    </span>
-
-                  )}
-
-
-                  {/* UNLOCKED LABEL */}
-
-                  {purchased && (
-
-                    <span className="member-course-unlocked-badge">
-                      ✓ UNLOCKED
-                    </span>
-
-                  )}
-
-                </div>
-
-
-                {/* =========================================
-                    COURSE DETAILS
-                ========================================= */}
-
-                <div className="member-course-body">
-
-
-                  <span className="member-course-category">
-                    {course.level || "Intermediate"}
-                  </span>
-
-                  {course.category && (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        marginLeft: "8px",
-                        fontSize: "12px",
-                        opacity: 0.75
-                      }}
-                    >
-                      {course.category}
-                    </span>
-                  )}
-
-
-                  <h3>
-                    {course.title}
-                  </h3>
-
-
-                  <p>
-                    {course.description}
-                  </p>
-
-
-                  {/* COURSE FOOTER */}
-
-                  <div className="member-course-footer">
-
-
-                    <div className="member-course-price">
-
-                      <small>
-                        Course
-                      </small>
-
-
-                      <strong>
-                        ₹{course.price}
-                      </strong>
-
-                    </div>
-
-
-                    <button
-                      type="button"
-                      className="member-course-button"
-                      onClick={() =>
-                        openCourse(course)
-                      }
-                    >
-
-                      {purchased
-                        ? "Watch Course →"
-                        : "Preview →"}
-
-                    </button>
-
-
-                  </div>
-
-
-                </div>
-
-              </article>
-
-            );
-
-          })
-
-        ) : (
-
-          /* =================================================
-             NO SEARCH RESULTS
-          ================================================= */
-
-          <div className="member-course-empty">
-
-            <div className="member-course-empty-icon">
-              🔍
-            </div>
-
-            <h3>
-              No courses found
-            </h3>
-
-            <p>
-              Try searching for another course,
-              category or topic.
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                setSearchQuery("")
-              }
-            >
-              View All Courses
-            </button>
-
-          </div>
-
-        )}
+      <div className="member-course-level-buttons">
+
+        {COURSE_LEVELS.map((level) => (
+
+          <button
+            key={level.id}
+            type="button"
+            className={
+              selectedLevel === level.id
+                ? "member-course-level-btn active"
+                : "member-course-level-btn"
+            }
+            onClick={() =>
+              setSelectedLevel(
+                selectedLevel === level.id
+                  ? null
+                  : level.id
+              )
+            }
+          >
+            {level.title.replace(" Videos", "")}
+          </button>
+
+        ))}
 
       </div>
 
 
+      {/* =================================================
+          COURSE LIST
+      ================================================= */}
+
+      {coursesLoading ? (
+
+        <div className="member-course-empty">
+
+          <div className="member-course-empty-icon">
+            ⏳
+          </div>
+
+          <h3>
+            Loading courses...
+          </h3>
+
+          <p>
+            Please wait while we load the latest courses.
+          </p>
+
+        </div>
+
+      ) : !selectedLevel ? (
+
+        <div className="member-course-level-empty">
+
+          <div className="member-course-level-empty-icon">
+            🎓
+          </div>
+
+          <h3>
+            Choose a course level
+          </h3>
+
+          <p>
+            Select Beginner, Intermediate, Advanced,
+            or Expert to view the available videos.
+          </p>
+
+        </div>
+
+      ) : (
+
+        <div className="member-course-sections">
+
+          {COURSE_LEVELS
+            .filter(
+              (level) =>
+                level.id === selectedLevel
+            )
+            .map((level) => {
+
+              const levelCourses =
+                filteredCourses.filter(
+                  (course) =>
+                    String(
+                      course.level || ""
+                    ).toLowerCase() ===
+                    level.id
+                );
+
+
+              return (
+
+                <section
+                  key={level.id}
+                  className="member-course-level-section"
+                >
+
+                  {/* LEVEL HEADER */}
+
+                  <div className="member-course-level-head">
+
+                    <div>
+
+                      <span className="member-eyebrow">
+                        {level.title}
+                      </span>
+
+                      <h3>
+                        {level.subtitle}
+                      </h3>
+
+                    </div>
+
+                    <span className="member-course-level-count">
+                      {levelCourses.length}{" "}
+                      {levelCourses.length === 1
+                        ? "Video"
+                        : "Videos"}
+                    </span>
+
+                  </div>
+
+
+                  {/* NO VIDEOS */}
+
+                  {levelCourses.length === 0 ? (
+
+                    <div className="member-course-level-empty">
+
+                      <div className="member-course-level-empty-icon">
+                        🎬
+                      </div>
+
+                      <h3>
+                        No {level.title.replace(" Videos", "")} videos yet
+                      </h3>
+
+                      <p>
+                        Courses added to this level will appear here.
+                      </p>
+
+                    </div>
+
+                  ) : (
+
+                    <div className="member-course-grid">
+
+                      {levelCourses.map((course) => {
+
+                        const purchased =
+                          isPurchased(
+                            course.id
+                          );
+
+
+                        return (
+
+                          <article
+                            className="member-course-card"
+                            key={course.id}
+                          >
+
+                            {/* THUMBNAIL */}
+
+                            <div className="member-course-thumbnail">
+
+                              {course.thumbnailUrl ? (
+
+                                <img
+                                  src={
+                                    course.thumbnailUrl
+                                  }
+                                  alt={
+                                    course.title
+                                  }
+                                  onContextMenu={(event) =>
+                                    event.preventDefault()
+                                  }
+                                />
+
+                              ) : (
+
+                                <div
+                                  className="course-thumb-fallback"
+                                >
+                                  {course.title}
+                                </div>
+
+                              )}
+
+
+                              <div className="member-course-overlay">
+
+                                <button
+                                  type="button"
+                                  className="member-course-play"
+                                  onClick={() =>
+                                    openCourse(
+                                      course
+                                    )
+                                  }
+                                  aria-label={
+                                    `Watch ${course.title}`
+                                  }
+                                >
+                                  ▶
+                                </button>
+
+                              </div>
+
+
+                              {!purchased && (
+
+                                <span className="member-course-preview-badge">
+                                  30 SEC PREVIEW
+                                </span>
+
+                              )}
+
+
+                              {purchased && (
+
+                                <span className="member-course-unlocked-badge">
+                                  ✓ UNLOCKED
+                                </span>
+
+                              )}
+
+                            </div>
+
+
+                            {/* COURSE DETAILS */}
+
+                            <div className="member-course-body">
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "7px",
+                                  marginBottom: "6px",
+                                  flexWrap: "wrap"
+                                }}
+                              >
+
+                                <span className="member-course-category">
+                                  {level.title.replace(
+                                    " Videos",
+                                    ""
+                                  )}
+                                </span>
+
+                                {course.category && (
+
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      opacity: 0.65
+                                    }}
+                                  >
+                                    {course.category}
+                                  </span>
+
+                                )}
+
+                              </div>
+
+
+                              <h3>
+                                {course.title}
+                              </h3>
+
+
+                              <p>
+                                {course.description}
+                              </p>
+
+
+                              <div className="member-course-footer">
+
+                                <div className="member-course-price">
+
+                                  <small>
+                                    Course
+                                  </small>
+
+                                  <strong>
+                                    ₹
+                                    {Number(
+                                      course.price || 0
+                                    ).toLocaleString(
+                                      "en-IN"
+                                    )}
+                                  </strong>
+
+                                </div>
+
+
+                                <button
+                                  type="button"
+                                  className="member-course-button"
+                                  onClick={() =>
+                                    openCourse(
+                                      course
+                                    )
+                                  }
+                                >
+                                  {purchased
+                                    ? "Watch Course →"
+                                    : "Preview →"}
+                                </button>
+
+                              </div>
+
+                            </div>
+
+                          </article>
+
+                        );
+
+                      })}
+
+                    </div>
+
+                  )}
+
+                </section>
+
+              );
+
+            })}
+
+        </div>
+
+      )}
       {/* =================================================
           VIDEO MODAL
       ================================================= */}
@@ -975,13 +1352,25 @@ const buyCourse = async (course) => {
     selectedCourse.videoEmbedUrl ? (
 
       <iframe
-        key={
-          selectedCourse.videoEmbedUrl +
-          "-" +
-          (isPurchased(selectedCourse.id)
-            ? "full"
-            : "preview")
-        }
+      key={
+    selectedCourse.videoEmbedUrl +
+    "-" +
+    (isPurchased(selectedCourse.id)
+      ? "full"
+      : "preview")
+  }
+  src={(() => {
+    const url =
+      selectedCourse.videoEmbedUrl;
+
+    if (isPurchased(selectedCourse.id)) {
+      return url;
+    }
+
+    return url.includes("?")
+      ? `${url}&controls=off`
+      : `${url}?controls=off`;
+  })()}
         src={selectedCourse.videoEmbedUrl}
         title={selectedCourse.title}
         allow="autoplay; encrypted-media; fullscreen"

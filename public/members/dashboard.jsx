@@ -484,7 +484,7 @@ return (
     ▶
   </span>
 
-  Course Videos
+  Courses
 </button>
 <button
   className={`member-nav-item ${
@@ -529,32 +529,6 @@ return (
             DATA & RESEARCH
           </div>
 
-
-          <button
-            className={`member-nav-item ${
-              showCharts
-                ? "active"
-                : ""
-            }`}
-            
-           onClick={() => {
-  setShowCharts(true);
-  setShowCalculator(false);
-  setSelectedCalculator(null);
-
-  setShowCourses(false);
-  setShowNewsletter(false);
-  setShowWeeklyRoundup(false);
-}}
-          >
-
-            <span className="member-nav-icon">
-              ◒
-            </span>
-
-            Charts
-
-          </button>
 
 <button
   className={`member-nav-item ${
@@ -1201,7 +1175,7 @@ return (
                   <div>
 
                     <span>
-                      Course Videos
+                      Courses
                     </span>
 
                     <strong>
@@ -1414,7 +1388,7 @@ return (
                       <div>
 
                         <strong>
-                          Course Videos
+                          Course 
                         </strong>
 
                         <small>

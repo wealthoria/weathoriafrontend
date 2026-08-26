@@ -799,10 +799,22 @@ return (
               CHART PAGE
               ================================================= */}
 
-
 {showPurchaseHistory ? (
 
-  <PurchaseHistory />
+  window.PurchaseHistory ? (
+    React.createElement(
+      window.PurchaseHistory
+    )
+  ) : (
+    <div
+      style={{
+        padding: "40px",
+        textAlign: "center"
+      }}
+    >
+      Loading Purchase History...
+    </div>
+  )
 
 ) :
          showCourses ? (

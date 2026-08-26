@@ -1,4 +1,4 @@
-/* global React, window */
+
 
 const { useState, useEffect } = React;
 
@@ -114,6 +114,7 @@ function MemberDashboard() {
   const Newsletter = window.Newsletter;
   const SeminarRegistrations = window.SeminarRegistrations;
   const WeeklyRoundup = window.WeeklyRoundup;
+  const PurchaseHistory = window.PurchaseHistory;
 
   /* =======================================================
      MEMBER
@@ -125,6 +126,7 @@ function MemberDashboard() {
   const [showWeeklyRoundup, setShowWeeklyRoundup] = useState(false);
 
 const [showSeminarRegistrations, setShowSeminarRegistrations] = useState(false);
+const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
 
   /* =======================================================
      DASHBOARD STATES
@@ -534,14 +536,33 @@ return (
   className={`member-nav-item ${
     showCalculator ? "active" : ""
   }`}
-  onClick={() => {
+  onClick={async () => {
+
     setShowCalculator(true);
-    setSelectedCalculator(null);
+    setSelectedCalculator(
+      "/Fundamental_Analysis_Lab.html"
+    );
 
     setShowCourses(false);
     setShowNewsletter(false);
     setShowWeeklyRoundup(false);
     setShowCharts(false);
+    setShowPurchaseHistory(false);
+
+    try {
+      if (
+        !document.fullscreenElement &&
+        document.documentElement.requestFullscreen
+      ) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (error) {
+      console.warn(
+        "Browser fullscreen is not available:",
+        error
+      );
+    }
+
   }}
 >
   <span className="member-nav-icon">
@@ -578,25 +599,28 @@ return (
           <div className="member-nav-section">
             ACCOUNT
           </div>
+<button
+  className={`member-nav-item ${
+    showPurchaseHistory ? "active" : ""
+  }`}
+  onClick={() => {
 
+    setShowPurchaseHistory(true);
 
-          <button
-            className="member-nav-item"
-            onClick={() =>
-              navigate(
-                "/members/purchase-history"
-              )
-            }
-          >
+    setShowCourses(false);
+    setShowNewsletter(false);
+    setShowWeeklyRoundup(false);
+    setShowCharts(false);
+    setShowCalculator(false);
 
-            <span className="member-nav-icon">
-              ▣
-            </span>
+  }}
+>
+  <span className="member-nav-icon">
+    ▣
+  </span>
 
-            Purchase History
-
-          </button>
-
+  Purchase History
+</button>
 
           <button
             className="member-nav-item"
@@ -775,7 +799,13 @@ return (
               CHART PAGE
               ================================================= */}
 
-         {showCourses ? (
+
+{showPurchaseHistory ? (
+
+  <PurchaseHistory />
+
+) :
+         showCourses ? (
   <CourseVideos />
 )  :  showNewsletter ? (
 
@@ -853,262 +883,45 @@ return (
 
           ) : showCalculator ? (
 
+            <div className="fundamental-fullscreen">
 
-            /* =================================================
-               CALCULATOR
-               ================================================= */
- <section className="member-calculator-page">
+              <button
+                type="button"
+                className="fundamental-fullscreen-close"
+                aria-label="Close Fundamental Analysis Lab"
+                title="Close"
+                onClick={async () => {
 
-    {!selectedCalculator ? (
+                  try {
+                    if (
+                      document.fullscreenElement &&
+                      document.exitFullscreen
+                    ) {
+                      await document.exitFullscreen();
+                    }
+                  } catch (error) {
+                    console.warn(
+                      "Could not exit fullscreen:",
+                      error
+                    );
+                  }
 
-      <>
-        <div className="member-calculator-header">
+                  setSelectedCalculator(null);
+                  setShowCalculator(false);
 
-          <div>
-            <span className="member-eyebrow">
-              FINANCIAL TOOLS
-            </span>
+                }}
+              >
+                ×
+              </button>
 
-            <h2>
-              Wealthoria Calculators
-            </h2>
+              <iframe
+                src="/Fundamental_Analysis_Lab.html"
+                title="Wealthoria Fundamental Analysis Lab"
+                className="fundamental-fullscreen-frame"
+                allow="fullscreen"
+              />
 
-            <p>
-              Explore financial planning, taxation,
-              portfolio and investment analysis tools.
-            </p>
-          </div>
-
-          <button
-            className="member-panel-link"
-            onClick={() => setShowCalculator(false)}
-          >
-            ← Back to Dashboard
-          </button>
-
-        </div>
-
-
-        <div className="calculator-grid">
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/1_Safe_Withdrawal_Solver.html"
-              )
-            }
-          >
-            <span className="calculator-icon">↗</span>
-
-            <div>
-              <h3>Safe Withdrawal Solver</h3>
-              <p>
-                Explore sustainable retirement withdrawals.
-              </p>
             </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/2_LTCG_Harvest_Optimiser.html"
-              )
-            }
-          >
-            <span className="calculator-icon">₹</span>
-
-            <div>
-              <h3>LTCG Harvest Optimiser</h3>
-              <p>
-                Explore tax-aware capital gains harvesting.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/3_Sequence_Risk_Lab.html"
-              )
-            }
-          >
-            <span className="calculator-icon">◒</span>
-
-            <div>
-              <h3>Sequence Risk Lab</h3>
-              <p>
-                Understand retirement sequence risk.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/4_Plan_Diagnostics.html"
-              )
-            }
-          >
-            <span className="calculator-icon">⌁</span>
-
-            <div>
-              <h3>Plan Diagnostics</h3>
-              <p>
-                Analyse your financial plan.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/5_Valuation_Aware_Harvesting.html"
-              )
-            }
-          >
-            <span className="calculator-icon">◈</span>
-
-            <div>
-              <h3>Valuation-Aware Harvesting</h3>
-              <p>
-                Explore valuation-aware tax harvesting.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/6_Global_Allocation_Modeller.html"
-              )
-            }
-          >
-            <span className="calculator-icon">◎</span>
-
-            <div>
-              <h3>Global Allocation Modeller</h3>
-              <p>
-                Explore portfolio allocation.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/7_Tax_Regime_Calculator.html"
-              )
-            }
-          >
-            <span className="calculator-icon">₹</span>
-
-            <div>
-              <h3>Tax Regime Calculator</h3>
-              <p>
-                Compare tax regime calculations.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card"
-            onClick={() =>
-              setSelectedCalculator(
-                "/8_DERS_Calculator.html"
-              )
-            }
-          >
-            <span className="calculator-icon">⌘</span>
-
-            <div>
-              <h3>DERS Calculator</h3>
-              <p>
-                Analyse retirement sustainability.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-
-          <button
-            className="calculator-card calculator-card-featured"
-            onClick={() =>
-              setSelectedCalculator(
-                "/Fundamental_Analysis_Lab.html"
-              )
-            }
-          >
-            <span className="calculator-icon">◆</span>
-
-            <div>
-              <h3>Fundamental Analysis Lab</h3>
-              <p>
-                Advanced valuation and financial analysis tools.
-              </p>
-            </div>
-
-            <span>→</span>
-          </button>
-
-        </div>
-      </>
-
-    ) : (
-
-      <section className="calculator-viewer">
-
-        <div className="calculator-viewer-header">
-
-          <button
-            className="member-panel-link"
-            onClick={() => setSelectedCalculator(null)}
-          >
-            ← Back to Calculators
-          </button>
-
-        </div>
-
-        <iframe
-          src={selectedCalculator}
-          title="Wealthoria Financial Calculator"
-          className="member-calculator-frame"
-        />
-
-      </section>
-
-    )}
-
-  </section>
-
 
           ) : (
 
@@ -1493,6 +1306,90 @@ return (
 
 }
 
+
+
+/* =========================================================
+   FUNDAMENTAL ANALYSIS LAB — FULL SCREEN
+========================================================= */
+
+(function injectFundamentalFullscreenStyles() {
+
+  if (
+    document.getElementById(
+      "fundamental-fullscreen-styles"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "fundamental-fullscreen-styles";
+
+  style.textContent = `
+    .fundamental-fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .fundamental-fullscreen-frame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .fundamental-fullscreen-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      z-index: 1000000;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,0,0,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.96);
+      color: #18181b;
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,.10);
+    }
+
+    .fundamental-fullscreen-close:hover {
+      background: #e8473f;
+      border-color: #e8473f;
+      color: #ffffff;
+    }
+
+    @media (max-width: 600px) {
+      .fundamental-fullscreen-close {
+        top: 10px;
+        right: 10px;
+        width: 38px;
+        height: 38px;
+        font-size: 24px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+
+})();
 
 /* =========================================================
    EXPORT

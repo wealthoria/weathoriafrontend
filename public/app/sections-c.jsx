@@ -403,24 +403,19 @@ function YouTube() {
 
 
           <Reveal>
-
             <a
-              className="btn btn-outline"
-              href={
-                y.channelUrl || "#"
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+    className="btn btn-outline"
+    href="https://www.youtube.com/@Wealthoria_edu"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Visit Our Channel
 
-              {y.cta}
-
-              <Icon
-                name="arrow"
-                size={18}
-              />
-
-            </a>
+    <Icon
+      name="arrow"
+      size={18}
+    />
+  </a>
 
           </Reveal>
 

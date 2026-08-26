@@ -114,7 +114,6 @@ function MemberDashboard() {
   const Newsletter = window.Newsletter;
   const SeminarRegistrations = window.SeminarRegistrations;
   const WeeklyRoundup = window.WeeklyRoundup;
-  const PurchaseHistory = window.PurchaseHistory;
 
   /* =======================================================
      MEMBER

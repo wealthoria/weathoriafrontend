@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 // try to parse the JSX). So everything real lives in `public/` and is copied to the
 // build output verbatim; Vite only processes the tiny root index.html entry.
 export default defineConfig({
-  base: "./",
+  base: "/",
   publicDir: "public",
   build: {
     outDir: "dist",

@@ -1,4 +1,3 @@
-
 const { useState, useEffect } = React;
 
 
@@ -11,201 +10,430 @@ function MemberHistoryPurchase() {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
-const [fromDate, setFromDate] = useState("");
-const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
 
   /* =======================================================
      LOAD PURCHASES FOR CURRENT USER
   ======================================================= */
-useEffect(() => {
 
-  if (!window.auth) {
-    setError("Firebase Authentication is not available.");
-    setLoading(false);
-    return;
-  }
+  useEffect(() => {
 
-  if (!window.db) {
-    setError("Firestore is not available.");
-    setLoading(false);
-    return;
-  }
+    if (!window.auth) {
 
-  let unsubscribePurchases = null;
+      setError(
+        "Firebase Authentication is not available."
+      );
 
-  const unsubscribeAuth =
-    window.auth.onAuthStateChanged((user) => {
+      setLoading(false);
 
-      if (unsubscribePurchases) {
-        unsubscribePurchases();
-        unsubscribePurchases = null;
-      }
-
-      if (!user) {
-        setPurchases([]);
-        setError(
-          "Please login to view your purchase history."
-        );
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError("");
-
-      unsubscribePurchases =
-        window.db
-          .collection("coursePurchases")
-          .where("userId", "==", user.uid)
-          .onSnapshot(
-
-            (snapshot) => {
-
-              const rows =
-                snapshot.docs.map((doc) => ({
-                  id: doc.id,
-                  ...doc.data()
-                }));
-
-              rows.sort((a, b) => {
-
-                const getTime = (value) => {
-
-                  if (!value) return 0;
-
-                  if (
-                    typeof value.toMillis ===
-                    "function"
-                  ) {
-                    return value.toMillis();
-                  }
-
-                  if (
-                    typeof value.toDate ===
-                    "function"
-                  ) {
-                    return value.toDate().getTime();
-                  }
-
-                  const parsed =
-                    new Date(value).getTime();
-
-                  return Number.isNaN(parsed)
-                    ? 0
-                    : parsed;
-                };
-
-                return (
-                  getTime(b.paidAt) -
-                  getTime(a.paidAt)
-                );
-
-              });
-
-              setPurchases(rows);
-              setLoading(false);
-              setError("");
-
-            },
-
-            (err) => {
-
-              console.error(
-                "Purchase history error:",
-                err
-              );
-
-              setError(
-                "Unable to load your purchase history."
-              );
-
-              setLoading(false);
-
-            }
-
-          );
-
-    });
-
-  return () => {
-
-    unsubscribeAuth();
-
-    if (unsubscribePurchases) {
-      unsubscribePurchases();
+      return;
     }
 
-  };
 
-}, []);
+    if (!window.db) {
+
+      setError(
+        "Firestore is not available."
+      );
+
+      setLoading(false);
+
+      return;
+    }
+
+
+    let unsubscribePurchases = null;
+
+
+    const unsubscribeAuth =
+      window.auth.onAuthStateChanged((user) => {
+
+
+        /* =============================================
+           DEBUG 1 - CURRENT FIREBASE USER
+        ============================================= */
+
+        console.log(
+          "PURCHASE HISTORY USER:",
+          user?.uid,
+          user?.email
+        );
+
+
+        /* =============================================
+           REMOVE PREVIOUS FIRESTORE LISTENER
+        ============================================= */
+
+        if (unsubscribePurchases) {
+
+          unsubscribePurchases();
+
+          unsubscribePurchases = null;
+
+        }
+
+
+        /* =============================================
+           USER NOT LOGGED IN
+        ============================================= */
+
+        if (!user) {
+
+          setPurchases([]);
+
+          setError(
+            "Please login to view your purchase history."
+          );
+
+          setLoading(false);
+
+          return;
+        }
+
+
+        /* =============================================
+           USER LOGGED IN
+        ============================================= */
+
+        setLoading(true);
+
+        setError("");
+
+
+        /* =============================================
+           DEBUG 2 - UID USED FOR QUERY
+        ============================================= */
+
+        console.log(
+          "QUERYING coursePurchases FOR UID:",
+          user.uid
+        );
+
+
+        /* =============================================
+           FIRESTORE PURCHASE QUERY
+        ============================================= */
+
+        unsubscribePurchases =
+          window.db
+
+            .collection(
+              "coursePurchases"
+            )
+
+            .where(
+              "userId",
+              "==",
+              user.uid
+            )
+
+            .onSnapshot(
+
+              (snapshot) => {
+
+
+                /* =========================================
+                   DEBUG 3 - NUMBER OF PURCHASE DOCUMENTS
+                ========================================= */
+
+                console.log(
+                  "PURCHASE HISTORY DOC COUNT:",
+                  snapshot.size
+                );
+
+
+                /* =========================================
+                   DEBUG 4 - ACTUAL DOCUMENTS
+                ========================================= */
+
+                console.log(
+                  "PURCHASE HISTORY DOCS:",
+                  snapshot.docs.map(
+                    (doc) => ({
+                      id: doc.id,
+                      ...doc.data()
+                    })
+                  )
+                );
+
+
+                /* =========================================
+                   CONVERT FIRESTORE DOCUMENTS TO ARRAY
+                ========================================= */
+
+                const rows =
+                  snapshot.docs.map(
+                    (doc) => ({
+
+                      id:
+                        doc.id,
+
+                      ...doc.data()
+
+                    })
+                  );
+
+
+                /* =========================================
+                   SORT NEWEST FIRST
+                ========================================= */
+
+                rows.sort(
+                  (a, b) => {
+
+                    const getTime =
+                      (value) => {
+
+                        if (!value) {
+                          return 0;
+                        }
+
+
+                        /* Firestore Timestamp */
+
+                        if (
+                          typeof value.toMillis ===
+                          "function"
+                        ) {
+
+                          return value.toMillis();
+
+                        }
+
+
+                        /* Firestore Timestamp alternative */
+
+                        if (
+                          typeof value.toDate ===
+                          "function"
+                        ) {
+
+                          return value
+                            .toDate()
+                            .getTime();
+
+                        }
+
+
+                        /* Normal date */
+
+                        const parsed =
+                          new Date(value)
+                            .getTime();
+
+
+                        return Number.isNaN(
+                          parsed
+                        )
+
+                          ? 0
+
+                          : parsed;
+
+                      };
+
+
+                    return (
+                      getTime(b.paidAt) -
+                      getTime(a.paidAt)
+                    );
+
+                  }
+                );
+
+
+                /* =========================================
+                   SAVE PURCHASES
+                ========================================= */
+
+                setPurchases(
+                  rows
+                );
+
+                setLoading(
+                  false
+                );
+
+                setError("");
+
+
+              },
+
+
+              /* =========================================
+                 FIRESTORE ERROR
+              ========================================= */
+
+              (err) => {
+
+                console.error(
+                  "Purchase history error:",
+                  err
+                );
+
+
+                console.error(
+                  "Purchase history error code:",
+                  err?.code
+                );
+
+
+                console.error(
+                  "Purchase history error message:",
+                  err?.message
+                );
+
+
+                setError(
+                  "Unable to load your purchase history."
+                );
+
+
+                setLoading(
+                  false
+                );
+
+              }
+
+            );
+
+
+      });
+
+
+    /* =====================================================
+       CLEANUP
+    ===================================================== */
+
+    return () => {
+
+      unsubscribeAuth();
+
+
+      if (
+        unsubscribePurchases
+      ) {
+
+        unsubscribePurchases();
+
+      }
+
+    };
+
+
+  }, []);
+
+
   /* =======================================================
      FORMAT DATE
   ======================================================= */
 
-  const formatDate = (value) => {
+  const formatDate =
+    (value) => {
 
-    if (!value) {
-      return "—";
-    }
+      if (!value) {
 
-    let date = null;
-
-    try {
-
-      if (
-        typeof value.toDate === "function"
-      ) {
-        date = value.toDate();
-      } else {
-        date = new Date(value);
-      }
-
-      if (
-        !date ||
-        Number.isNaN(date.getTime())
-      ) {
         return "—";
+
       }
 
-      return date.toLocaleString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
+
+      let date = null;
+
+
+      try {
+
+        if (
+          typeof value.toDate ===
+          "function"
+        ) {
+
+          date =
+            value.toDate();
+
+        } else {
+
+          date =
+            new Date(value);
+
         }
-      );
 
-    } catch (err) {
 
-      return "—";
+        if (
+          !date ||
+          Number.isNaN(
+            date.getTime()
+          )
+        ) {
 
-    }
+          return "—";
 
-  };
+        }
+
+
+        return date.toLocaleString(
+          "en-IN",
+          {
+
+            day:
+              "2-digit",
+
+            month:
+              "short",
+
+            year:
+              "numeric",
+
+            hour:
+              "2-digit",
+
+            minute:
+              "2-digit"
+
+          }
+        );
+
+
+      } catch (err) {
+
+        return "—";
+
+      }
+
+    };
 
 
   /* =======================================================
      FORMAT AMOUNT
   ======================================================= */
 
-  const formatAmount = (amount) => {
+  const formatAmount =
+    (amount) => {
 
-    const value = Number(amount || 0);
+      const value =
+        Number(
+          amount || 0
+        );
 
-    return value.toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
-      }
-    );
 
-  };
+      return value.toLocaleString(
+        "en-IN",
+        {
+
+          minimumFractionDigits:
+            0,
+
+          maximumFractionDigits:
+            2
+
+        }
+      );
+
+    };
 
 
   /* =======================================================
@@ -213,117 +441,176 @@ useEffect(() => {
   ======================================================= */
 
   const filteredPurchases =
-    purchases.filter((purchase) => {
+    purchases.filter(
+      (purchase) => {
 
-      const query =
-        search.trim().toLowerCase();
-
-      const matchesSearch =
-        !query ||
-        String(
-          purchase.courseTitle || ""
-        )
-          .toLowerCase()
-          .includes(query) ||
-        String(
-          purchase.razorpayPaymentId || ""
-        )
-          .toLowerCase()
-          .includes(query) ||
-        String(
-          purchase.razorpayOrderId || ""
-        )
-          .toLowerCase()
-          .includes(query) ||
-        String(
-          purchase.courseId || ""
-        )
-          .toLowerCase()
-          .includes(query);
+        const query =
+          search
+            .trim()
+            .toLowerCase();
 
 
-      const getPurchaseTime = (value) => {
+        /* ===============================================
+           SEARCH
+        =============================================== */
 
-        if (!value) {
-          return 0;
+        const matchesSearch =
+          !query ||
+
+          String(
+            purchase.courseTitle ||
+            ""
+          )
+            .toLowerCase()
+            .includes(query) ||
+
+          String(
+            purchase.razorpayPaymentId ||
+            ""
+          )
+            .toLowerCase()
+            .includes(query) ||
+
+          String(
+            purchase.razorpayOrderId ||
+            ""
+          )
+            .toLowerCase()
+            .includes(query) ||
+
+          String(
+            purchase.courseId ||
+            ""
+          )
+            .toLowerCase()
+            .includes(query);
+
+
+        /* ===============================================
+           PURCHASE DATE
+        =============================================== */
+
+        const getPurchaseTime =
+          (value) => {
+
+            if (!value) {
+              return 0;
+            }
+
+
+            if (
+              typeof value.toMillis ===
+              "function"
+            ) {
+
+              return value.toMillis();
+
+            }
+
+
+            if (
+              typeof value.toDate ===
+              "function"
+            ) {
+
+              return value
+                .toDate()
+                .getTime();
+
+            }
+
+
+            const time =
+              new Date(value)
+                .getTime();
+
+
+            return Number.isNaN(
+              time
+            )
+
+              ? 0
+
+              : time;
+
+          };
+
+
+        const purchaseTime =
+          getPurchaseTime(
+            purchase.paidAt
+          );
+
+
+        let matchesFromDate =
+          true;
+
+        let matchesToDate =
+          true;
+
+
+        /* ===============================================
+           FROM DATE
+        =============================================== */
+
+        if (fromDate) {
+
+          const start =
+            new Date(
+              `${fromDate}T00:00:00`
+            )
+              .getTime();
+
+
+          matchesFromDate =
+            purchaseTime >=
+            start;
+
         }
 
-        if (
-          typeof value.toMillis ===
-          "function"
-        ) {
-          return value.toMillis();
+
+        /* ===============================================
+           TO DATE
+        =============================================== */
+
+        if (toDate) {
+
+          const end =
+            new Date(
+              `${toDate}T23:59:59.999`
+            )
+              .getTime();
+
+
+          matchesToDate =
+            purchaseTime <=
+            end;
+
         }
 
-        if (
-          typeof value.toDate ===
-          "function"
-        ) {
-          return value.toDate().getTime();
-        }
 
-        const time =
-          new Date(value).getTime();
-
-        return Number.isNaN(time)
-          ? 0
-          : time;
-
-      };
-
-
-      const purchaseTime =
-        getPurchaseTime(
-          purchase.paidAt
+        return (
+          matchesSearch &&
+          matchesFromDate &&
+          matchesToDate
         );
 
-
-      let matchesFromDate = true;
-      let matchesToDate = true;
-
-
-      if (fromDate) {
-
-        const start =
-          new Date(
-            `${fromDate}T00:00:00`
-          ).getTime();
-
-        matchesFromDate =
-          purchaseTime >= start;
-
       }
+    );
 
 
-      if (toDate) {
+  /* =======================================================
+     CLEAR FILTERS
+  ======================================================= */
 
-        const end =
-          new Date(
-            `${toDate}T23:59:59.999`
-          ).getTime();
+  const clearFilters =
+    () => {
 
-        matchesToDate =
-          purchaseTime <= end;
+      setSearch("");
+      setFromDate("");
+      setToDate("");
 
-      }
-
-
-      return (
-        matchesSearch &&
-        matchesFromDate &&
-        matchesToDate
-      );
-
-    });
-
-
-  const clearFilters = () => {
-
-    setSearch("");
-    setFromDate("");
-    setToDate("");
-
-  };
+    };
 
 
   /* =======================================================
@@ -332,10 +619,14 @@ useEffect(() => {
 
   return (
 
-    <section className="member-purchase-history-page">
+    <section
+      className="member-purchase-history-page"
+    >
+
 
       <style>
         {`
+
           .member-purchase-history-page {
             width: 100%;
           }
@@ -606,6 +897,7 @@ useEffect(() => {
             }
 
           }
+
         `}
       </style>
 
@@ -640,115 +932,143 @@ useEffect(() => {
           SUMMARY
       ===================================================== */}
 
-      {!loading && !error && (
+      {!loading &&
+        !error && (
 
-        <div className="purchase-history-summary">
+          <div className="purchase-history-summary">
 
-          <div className="purchase-history-stat">
+            <div className="purchase-history-stat">
 
-            <small>
-              Courses Purchased
-            </small>
+              <small>
+                Courses Purchased
+              </small>
 
-            <strong>
-              {purchases.length}
-            </strong>
+              <strong>
+                {purchases.length}
+              </strong>
+
+            </div>
+
+
+            <div className="purchase-history-stat">
+
+              <small>
+                Total Spent
+              </small>
+
+              <strong>
+                ₹
+                {formatAmount(
+                  purchases.reduce(
+                    (total, item) =>
+                      total +
+                      Number(
+                        item.amount || 0
+                      ),
+                    0
+                  )
+                )}
+              </strong>
+
+            </div>
 
           </div>
 
-
-          <div className="purchase-history-stat">
-
-            <small>
-              Total Spent
-            </small>
-
-            <strong>
-              ₹
-              {formatAmount(
-                purchases.reduce(
-                  (total, item) =>
-                    total +
-                    Number(
-                      item.amount || 0
-                    ),
-                  0
-                )
-              )}
-            </strong>
-
-          </div>
-
-        </div>
-
-      )}
+        )}
 
 
       {/* =====================================================
           SEARCH + DATE FILTERS
       ===================================================== */}
 
-      {!loading && !error && (
+      {!loading &&
+        !error && (
 
-        <>
-          <div className="purchase-history-filters">
+          <>
 
-            <input
-              className="purchase-history-filter-input"
-              type="text"
-              placeholder="Search course or payment..."
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-            />
+            <div className="purchase-history-filters">
 
-            <input
-              className="purchase-history-filter-input"
-              type="date"
-              value={fromDate}
-              onChange={(e) =>
-                setFromDate(e.target.value)
-              }
-              aria-label="From date"
-            />
+              <input
+                className="purchase-history-filter-input"
+                type="text"
+                placeholder="Search course or payment..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
 
-            <input
-              className="purchase-history-filter-input"
-              type="date"
-              value={toDate}
-              onChange={(e) =>
-                setToDate(e.target.value)
-              }
-              aria-label="To date"
-            />
 
-            <button
-              type="button"
-              className="purchase-history-clear"
-              onClick={clearFilters}
-            >
-              Clear
-            </button>
+              <input
+                className="purchase-history-filter-input"
+                type="date"
+                value={fromDate}
+                onChange={(e) =>
+                  setFromDate(
+                    e.target.value
+                  )
+                }
+                aria-label="From date"
+              />
 
-          </div>
 
-          {purchases.length > 0 && (
-            <div className="purchase-history-results">
-              Showing{" "}
-              <strong>
-                {filteredPurchases.length}
-              </strong>{" "}
-              of{" "}
-              <strong>
-                {purchases.length}
-              </strong>{" "}
-              purchases
+              <input
+                className="purchase-history-filter-input"
+                type="date"
+                value={toDate}
+                onChange={(e) =>
+                  setToDate(
+                    e.target.value
+                  )
+                }
+                aria-label="To date"
+              />
+
+
+              <button
+                type="button"
+                className="purchase-history-clear"
+                onClick={
+                  clearFilters
+                }
+              >
+                Clear
+              </button>
+
             </div>
-          )}
-        </>
 
-      )}
+
+            {purchases.length > 0 && (
+
+              <div className="purchase-history-results">
+
+                Showing{" "}
+
+                <strong>
+                  {
+                    filteredPurchases.length
+                  }
+                </strong>{" "}
+
+                of{" "}
+
+                <strong>
+                  {
+                    purchases.length
+                  }
+                </strong>{" "}
+
+                purchases
+
+              </div>
+
+            )}
+
+          </>
+
+        )}
 
 
       {/* =====================================================
@@ -758,7 +1078,9 @@ useEffect(() => {
       {loading && (
 
         <div className="purchase-history-loading">
+
           Loading your purchases...
+
         </div>
 
       )}
@@ -768,25 +1090,30 @@ useEffect(() => {
           ERROR
       ===================================================== */}
 
-      {!loading && error && (
+      {!loading &&
+        error && (
 
-        <div className="purchase-history-error">
+          <div
+            className="purchase-history-error"
+          >
 
-          <div className="purchase-history-empty-icon">
-            ⚠
+            <div
+              className="purchase-history-empty-icon"
+            >
+              ⚠
+            </div>
+
+            <h3>
+              Unable to load purchases
+            </h3>
+
+            <p>
+              {error}
+            </p>
+
           </div>
 
-          <h3>
-            Unable to load purchases
-          </h3>
-
-          <p>
-            {error}
-          </p>
-
-        </div>
-
-      )}
+        )}
 
 
       {/* =====================================================
@@ -798,9 +1125,13 @@ useEffect(() => {
         filteredPurchases.length === 0 &&
         purchases.length === 0 && (
 
-          <div className="purchase-history-empty">
+          <div
+            className="purchase-history-empty"
+          >
 
-            <div className="purchase-history-empty-icon">
+            <div
+              className="purchase-history-empty-icon"
+            >
               🧾
             </div>
 
@@ -827,9 +1158,13 @@ useEffect(() => {
         purchases.length > 0 &&
         filteredPurchases.length === 0 && (
 
-          <div className="purchase-history-empty">
+          <div
+            className="purchase-history-empty"
+          >
 
-            <div className="purchase-history-empty-icon">
+            <div
+              className="purchase-history-empty-icon"
+            >
               🔍
             </div>
 
@@ -847,7 +1182,9 @@ useEffect(() => {
               style={{
                 marginTop: "16px"
               }}
-              onClick={clearFilters}
+              onClick={
+                clearFilters
+              }
             >
               Clear Filters
             </button>
@@ -867,116 +1204,146 @@ useEffect(() => {
 
           <div className="purchase-history-list">
 
-            {filteredPurchases.map((purchase) => (
+            {filteredPurchases.map(
+              (purchase) => (
 
-              <article
-                key={purchase.id}
-                className="purchase-history-card"
-              >
+                <article
+                  key={
+                    purchase.id
+                  }
+                  className="purchase-history-card"
+                >
 
-                <div className="purchase-history-main">
+                  <div
+                    className="purchase-history-main"
+                  >
 
-                  <div>
+                    <div>
 
-                    <span className="purchase-history-course-label">
-                      COURSE
-                    </span>
+                      <span
+                        className="purchase-history-course-label"
+                      >
+                        COURSE
+                      </span>
 
-                    <h3>
-                      {purchase.courseTitle ||
-                        "Course"}
-                    </h3>
+                      <h3>
+                        {
+                          purchase.courseTitle ||
+                          "Course"
+                        }
+                      </h3>
 
-                    <div className="purchase-history-date">
-                      Purchased{" "}
-                      {formatDate(
-                        purchase.paidAt
+                      <div
+                        className="purchase-history-date"
+                      >
+                        Purchased{" "}
+                        {formatDate(
+                          purchase.paidAt
+                        )}
+                      </div>
+
+                    </div>
+
+
+                    <div
+                      className="purchase-history-price"
+                    >
+                      ₹
+                      {formatAmount(
+                        purchase.amount
                       )}
                     </div>
 
                   </div>
 
 
-                  <div className="purchase-history-price">
-                    ₹
-                    {formatAmount(
-                      purchase.amount
-                    )}
-                  </div>
+                  <div
+                    className="purchase-history-details"
+                  >
 
-                </div>
-
-
-                <div className="purchase-history-details">
-
-                  <div className="purchase-history-detail">
-
-                    <span>
-                      Payment ID
-                    </span>
-
-                    <strong
-                      title={
-                        purchase.razorpayPaymentId ||
-                        ""
-                      }
+                    <div
+                      className="purchase-history-detail"
                     >
-                      {purchase.razorpayPaymentId ||
-                        "—"}
-                    </strong>
 
-                  </div>
+                      <span>
+                        Payment ID
+                      </span>
+
+                      <strong
+                        title={
+                          purchase.razorpayPaymentId ||
+                          ""
+                        }
+                      >
+                        {
+                          purchase.razorpayPaymentId ||
+                          "—"
+                        }
+                      </strong>
+
+                    </div>
 
 
-                  <div className="purchase-history-detail">
-
-                    <span>
-                      Order ID
-                    </span>
-
-                    <strong
-                      title={
-                        purchase.razorpayOrderId ||
-                        ""
-                      }
+                    <div
+                      className="purchase-history-detail"
                     >
-                      {purchase.razorpayOrderId ||
-                        "—"}
-                    </strong>
 
-                  </div>
+                      <span>
+                        Order ID
+                      </span>
+
+                      <strong
+                        title={
+                          purchase.razorpayOrderId ||
+                          ""
+                        }
+                      >
+                        {
+                          purchase.razorpayOrderId ||
+                          "—"
+                        }
+                      </strong>
+
+                    </div>
 
 
-                  <div className="purchase-history-detail">
-
-                    <span>
-                      Course ID
-                    </span>
-
-                    <strong
-                      title={
-                        purchase.courseId ||
-                        ""
-                      }
+                    <div
+                      className="purchase-history-detail"
                     >
-                      {purchase.courseId ||
-                        "—"}
-                    </strong>
+
+                      <span>
+                        Course ID
+                      </span>
+
+                      <strong
+                        title={
+                          purchase.courseId ||
+                          ""
+                        }
+                      >
+                        {
+                          purchase.courseId ||
+                          "—"
+                        }
+                      </strong>
+
+                    </div>
 
                   </div>
 
-                </div>
 
+                  <div
+                    className="purchase-history-status"
+                  >
+                    ✓
+                    {purchase.status ||
+                      "paid"}
+                  </div>
 
-                <div className="purchase-history-status">
-                  ✓
-                  {purchase.status ||
-                    "paid"}
-                </div>
+                </article>
 
-              </article>
-
-            ))}
+              )
+            )}
 
           </div>
 
@@ -985,12 +1352,12 @@ useEffect(() => {
     </section>
 
   );
-
 }
 
 
 /* =========================================================
    EXPORT
 ========================================================= */
+
 window.MemberHistoryPurchase =
   MemberHistoryPurchase;

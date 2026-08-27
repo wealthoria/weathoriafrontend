@@ -807,7 +807,7 @@ return (
   ) : (
     <div
       style={{
-        padding: "40px",
+        padding: 40,
         textAlign: "center"
       }}
     >

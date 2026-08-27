@@ -38,19 +38,17 @@ useEffect(() => {
   const unsubscribeAuth =
     window.auth.onAuthStateChanged((user) => {
 
+      if (unsubscribePurchases) {
+        unsubscribePurchases();
+        unsubscribePurchases = null;
+      }
+
       if (!user) {
-
-        if (unsubscribePurchases) {
-          unsubscribePurchases();
-          unsubscribePurchases = null;
-        }
-
         setPurchases([]);
         setError(
           "Please login to view your purchase history."
         );
         setLoading(false);
-
         return;
       }
 
@@ -75,9 +73,7 @@ useEffect(() => {
 
                 const getTime = (value) => {
 
-                  if (!value) {
-                    return 0;
-                  }
+                  if (!value) return 0;
 
                   if (
                     typeof value.toMillis ===
@@ -128,6 +124,7 @@ useEffect(() => {
               setLoading(false);
 
             }
+
           );
 
     });
@@ -143,7 +140,6 @@ useEffect(() => {
   };
 
 }, []);
-
   /* =======================================================
      FORMAT DATE
   ======================================================= */

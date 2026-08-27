@@ -323,35 +323,82 @@ function CourseVideos() {
   /* =======================================================
      PURCHASED COURSES
   ======================================================= */
+const [purchasedCourses, setPurchasedCourses] =
+  useState([]);
 
-  const [purchasedCourses, setPurchasedCourses] = useState(() => {
+useEffect(() => {
 
-    try {
+  if (!window.auth || !window.db) {
+    return;
+  }
 
-      const saved =
-        localStorage.getItem(
-          "wealthoria-purchased-courses"
-        );
+  const unsubscribeAuth =
+    window.auth.onAuthStateChanged((user) => {
 
-      if (!saved) {
-        return [];
+      if (!user) {
+        setPurchasedCourses([]);
+        return;
       }
 
-      return JSON.parse(saved);
+      const unsubscribePurchases =
+        window.db
+          .collection("coursePurchases")
+          .where("userId", "==", user.uid)
+          .onSnapshot(
+            (snapshot) => {
 
-    } catch (error) {
+              const ids =
+                snapshot.docs
+                  .map((doc) => {
 
-      console.error(
-        "Error loading purchased courses:",
-        error
-      );
+                    const data =
+                      doc.data() || {};
 
-      return [];
+                    return {
+                      courseId:
+                        String(
+                          data.courseId || ""
+                        ),
+                      status:
+                        data.status || "paid"
+                    };
 
-    }
+                  })
+                  .filter(
+                    (item) =>
+                      item.courseId &&
+                      item.status === "paid"
+                  )
+                  .map(
+                    (item) =>
+                      item.courseId
+                  );
 
-  });
+              setPurchasedCourses(
+                [...new Set(ids)]
+              );
 
+            },
+            (error) => {
+
+              console.error(
+                "Purchase lookup error:",
+                error
+              );
+
+              setPurchasedCourses([]);
+
+            }
+          );
+
+      return unsubscribePurchases;
+
+    });
+
+  return () =>
+    unsubscribeAuth();
+
+}, []);
 
   /* =======================================================
      COURSES FROM FIRESTORE
@@ -395,36 +442,16 @@ function CourseVideos() {
      SAVE PURCHASED COURSES
   ======================================================= */
 
-  useEffect(() => {
-
-    try {
-
-      localStorage.setItem(
-        "wealthoria-purchased-courses",
-        JSON.stringify(purchasedCourses)
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Error saving purchased courses:",
-        error
-      );
-
-    }
-
-  }, [purchasedCourses]);
-
 
   /* =======================================================
      CHECK PURCHASE
   ======================================================= */
 
   const isPurchased = (courseId) => {
-
-    return purchasedCourses.includes(courseId);
-
-  };
+  return purchasedCourses.includes(
+    String(courseId)
+  );
+};
 
 
   /* =======================================================
@@ -704,25 +731,6 @@ if (window.db && window.auth?.currentUser) {
 
 alert(
   "Payment successful. Course unlocked."
-);
-
-setPurchasedCourses(
-  (current) => {
-
-    if (
-      current.includes(course.id)
-    ) {
-
-      return current;
-
-    }
-
-    return [
-      ...current,
-      course.id
-    ];
-
-  }
 );
 
 
@@ -1371,7 +1379,6 @@ setPurchasedCourses(
       ? `${url}&controls=off`
       : `${url}?controls=off`;
   })()}
-        src={selectedCourse.videoEmbedUrl}
         title={selectedCourse.title}
         allow="autoplay; encrypted-media; fullscreen"
         allowFullScreen

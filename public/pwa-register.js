@@ -8,7 +8,7 @@
   // 1) register the service worker
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("service-worker.js").then(function (reg) {
+      navigator.serviceWorker.register("/service-worker.js").then(function (reg) {
         // when a new SW is ready, activate it on next load silently
         reg.addEventListener("updatefound", function () {
           var sw = reg.installing;

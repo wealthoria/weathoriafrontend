@@ -1,3 +1,5 @@
+
+console.log("MEMBER HISTORY SCRIPT LOADED");
 const { useState, useEffect } = React;
 
 

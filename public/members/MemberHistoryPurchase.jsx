@@ -1,5 +1,4 @@
 
-
 const { useState, useEffect } = React;
 
 
@@ -7,7 +6,7 @@ const { useState, useEffect } = React;
    PURCHASE HISTORY
 ========================================================= */
 
-function PurchaseHistory() {
+function MemberHistoryPurchase() {
 
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -966,6 +965,5 @@ const [toDate, setToDate] = useState("");
 /* =========================================================
    EXPORT
 ========================================================= */
-
-window.PurchaseHistory =
-  PurchaseHistory;
+window.MemberHistoryPurchase =
+  MemberHistoryPurchase;

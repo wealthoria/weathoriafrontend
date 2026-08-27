@@ -797,25 +797,15 @@ return (
           {/* =================================================
               CHART PAGE
               ================================================= */}
-
 {showPurchaseHistory ? (
-
-  window.PurchaseHistory ? (
-    React.createElement(
-      window.PurchaseHistory
-    )
+  MemberHistoryPurchase ? (
+    <MemberHistoryPurchase />
   ) : (
-    <div
-      style={{
-        padding: 40,
-        textAlign: "center"
-      }}
-    >
+    <div style={{ padding: 40, textAlign: "center" }}>
       Loading Purchase History...
     </div>
   )
-
-) :
+)  :
          showCourses ? (
   <CourseVideos />
 )  :  showNewsletter ? (

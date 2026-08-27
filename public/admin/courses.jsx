@@ -1058,7 +1058,7 @@ function CourseForm({
 
         const response =
           await fetch(
-            "http://localhost:5174/api/upload-course-thumbnail",
+            "https://webinar-registration-backend.onrender.com/api/upload-course-thumbnail",
             {
               method: "POST",
               body: formData

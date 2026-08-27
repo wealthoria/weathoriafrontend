@@ -598,21 +598,20 @@ return (
           <div className="member-nav-section">
             ACCOUNT
           </div>
-<button
+
+    <button
   className={`member-nav-item ${
     showPurchaseHistory ? "active" : ""
   }`}
   onClick={() => {
+  setShowPurchaseHistory(true);
 
-    setShowPurchaseHistory(true);
-
-    setShowCourses(false);
-    setShowNewsletter(false);
-    setShowWeeklyRoundup(false);
-    setShowCharts(false);
-    setShowCalculator(false);
-
-  }}
+  setShowCourses(false);
+  setShowNewsletter(false);
+  setShowWeeklyRoundup(false);
+  setShowCharts(false);
+  setShowCalculator(false);
+}}
 >
   <span className="member-nav-icon">
     ▣
@@ -799,22 +798,27 @@ return (
               ================================================= */}
 {showPurchaseHistory ? (
 
-  window.MemberHistoryPurchase ? (
-    React.createElement(
-      window.MemberHistoryPurchase
-    )
-  ) : (
-    <div
-      style={{
-        padding: 40,
-        textAlign: "center"
-      }}
-    >
-      Loading Purchase History...
-    </div>
-  )
+  <section
+    style={{
+      width: "100%",
+      minHeight: "750px"
+    }}
+  >
 
-)  :
+    <iframe
+      src="/members/purchase-history.html"
+      title="Purchase History"
+      style={{
+        width: "100%",
+        minHeight: "750px",
+        border: "0",
+        display: "block"
+      }}
+    />
+
+  </section>
+
+) : 
          showCourses ? (
   <CourseVideos />
 )  :  showNewsletter ? (

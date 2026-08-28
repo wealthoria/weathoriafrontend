@@ -100,8 +100,13 @@ function Hero({ onNav }) {
   return (
     <section className="hero" id="top">
       <div className="hero-video" aria-hidden="true">
-        <video
-          autoPlay loop muted playsInline preload="auto"
+       <video
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="metadata"
+>
           poster="assets/hero-bg.png"
           ref={(el) => {if (el && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {el.removeAttribute("autoplay");el.pause();}}}>
           

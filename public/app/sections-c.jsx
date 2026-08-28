@@ -268,8 +268,25 @@ function YouTube() {
   /* =========================================================
      LOAD VIDEOS FROM FIRESTORE
   ========================================================= */
+useEffect(() => {
 
-  useEffect(() => {
+  const section =
+    document.getElementById("resources");
+
+  if (!section) {
+    return;
+  }
+
+  let unsubscribe = null;
+  let loaded = false;
+
+  const loadYouTubeVideos = () => {
+
+    if (loaded) {
+      return;
+    }
+
+    loaded = true;
 
     if (!window.db) {
 
@@ -281,8 +298,11 @@ function YouTube() {
 
     }
 
+    console.log(
+      "Loading YouTube videos..."
+    );
 
-    const unsubscribe =
+    unsubscribe =
       window.db
         .collection("youtube_videos")
         .onSnapshot(
@@ -297,17 +317,14 @@ function YouTube() {
                 })
               );
 
-
             console.log(
               "YOUTUBE FIRESTORE DATA:",
               data
             );
 
-
             setVideos(data);
 
           },
-
 
           (error) => {
 
@@ -320,13 +337,51 @@ function YouTube() {
 
         );
 
+  };
 
-    return () =>
+
+  const observer =
+    new IntersectionObserver(
+
+      (entries) => {
+
+        if (
+          entries.some(
+            (entry) =>
+              entry.isIntersecting
+          )
+        ) {
+
+          loadYouTubeVideos();
+
+          observer.disconnect();
+
+        }
+
+      },
+
+      {
+        rootMargin:
+          "500px 0px"
+      }
+
+    );
+
+
+  observer.observe(section);
+
+
+  return () => {
+
+    observer.disconnect();
+
+    if (unsubscribe) {
       unsubscribe();
+    }
 
-  }, []);
+  };
 
-
+}, []);
   /* =========================================================
      GET YOUTUBE VIDEO ID
   ========================================================= */

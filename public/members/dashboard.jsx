@@ -191,139 +191,335 @@ const [showSettings, setShowSettings] = useState(false);
 /* =======================================================
    CHECK MEMBER LOGIN
    ======================================================= */
+/* =======================================================
+   CHECK MEMBER LOGIN
+======================================================= */
 
-const [authChecking, setAuthChecking] = useState(true);
+const [authChecking, setAuthChecking] =
+  useState(true);
 
 useEffect(() => {
 
-  if (!window.auth) {
-    console.error("Firebase Auth is not initialized.");
-    setAuthChecking(false);
-
-    if (window.membersNavigate) {
-      window.membersNavigate("/members/login");
-    }
-
-    return;
-  }
-
-  const unsubscribe = window.auth.onAuthStateChanged(async (user) => {
-
-    console.log("Firebase current user:", user);
-
-    // -----------------------------------------
-    // NOT LOGGED IN
-    // -----------------------------------------
-
-    if (!user) {
-
-      localStorage.removeItem("wealthoria-member");
-      sessionStorage.removeItem("wealthoria-member");
-
-      setMember(null);
-      setAuthChecking(false);
-
-      if (window.membersNavigate) {
-        window.membersNavigate("/members/login");
-      } else {
-        window.location.href = "/members/login";
-      }
-
-      return;
-    }
-
-    // -----------------------------------------
-    // LOGGED IN - GET SAVED MEMBER
-    // -----------------------------------------
-
-    const saved =
-      localStorage.getItem("wealthoria-member") ||
-      sessionStorage.getItem("wealthoria-member");
-
-    if (!saved) {
-
-      console.warn(
-        "Firebase user exists but member session is missing."
-      );
-
-      await window.auth.signOut();
-
-      setMember(null);
-      setAuthChecking(false);
-
-      if (window.membersNavigate) {
-        window.membersNavigate("/members/login");
-      } else {
-        window.location.href = "/members/login";
-      }
-
-      return;
-    }
+  const checkMemberSession = async () => {
 
     try {
 
-      const parsedMember = JSON.parse(saved);
+      /* =================================================
+         GET SAVED MEMBER SESSION
+      ================================================= */
 
-      // Make sure saved session belongs to
-      // the currently authenticated Firebase user.
-
-      if (
-        parsedMember.uid &&
-        parsedMember.uid !== user.uid
-      ) {
-
-        console.warn(
-          "Member session does not match Firebase user."
+      const saved =
+        localStorage.getItem(
+          "wealthoria-member"
+        ) ||
+        sessionStorage.getItem(
+          "wealthoria-member"
         );
 
-        localStorage.removeItem("wealthoria-member");
-        sessionStorage.removeItem("wealthoria-member");
 
-        await window.auth.signOut();
+      if (!saved) {
+
+        console.warn(
+          "Member session not found."
+        );
 
         setMember(null);
         setAuthChecking(false);
 
         if (window.membersNavigate) {
-          window.membersNavigate("/members/login");
+
+          window.membersNavigate(
+            "/members/login"
+          );
+
         } else {
-          window.location.href = "/members/login";
+
+          window.location.href =
+            "/members/login";
+
         }
 
         return;
+
       }
 
-      setMember(parsedMember);
-      setAuthChecking(false);
+
+      /* =================================================
+         PARSE SESSION
+      ================================================= */
+
+      let parsedMember;
+
+      try {
+
+        parsedMember =
+          JSON.parse(saved);
+
+      } catch (error) {
+
+        console.error(
+          "Invalid member session:",
+          error
+        );
+
+        localStorage.removeItem(
+          "wealthoria-member"
+        );
+
+        sessionStorage.removeItem(
+          "wealthoria-member"
+        );
+
+        setMember(null);
+        setAuthChecking(false);
+
+        if (window.membersNavigate) {
+
+          window.membersNavigate(
+            "/members/login"
+          );
+
+        } else {
+
+          window.location.href =
+            "/members/login";
+
+        }
+
+        return;
+
+      }
+
+
+      /* =================================================
+         CHECK SESSION DATA
+      ================================================= */
+
+      if (
+        !parsedMember.uid ||
+        !parsedMember.token
+      ) {
+
+        console.warn(
+          "Member session is incomplete."
+        );
+
+
+        localStorage.removeItem(
+          "wealthoria-member"
+        );
+
+        sessionStorage.removeItem(
+          "wealthoria-member"
+        );
+
+
+        setMember(null);
+        setAuthChecking(false);
+
+
+        if (window.membersNavigate) {
+
+          window.membersNavigate(
+            "/members/login"
+          );
+
+        } else {
+
+          window.location.href =
+            "/members/login";
+
+        }
+
+        return;
+
+      }
+
+
+      /* =================================================
+         GET LATEST MEMBER FROM BACKEND
+      ================================================= */
+
+      try {
+
+        const API_BASE_URL =
+         "https://webinar-registration-backend.onrender.com";
+
+
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/members/me`,
+            {
+              method: "GET",
+
+              headers: {
+                "Authorization":
+                  `Bearer ${parsedMember.token}`
+              }
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !data.member
+        ) {
+
+          throw new Error(
+            data?.message ||
+            "Member session is no longer valid."
+          );
+
+        }
+
+
+        const latestMember =
+          data.member;
+
+
+        /* =================================================
+           CREATE UPDATED SESSION
+        ================================================= */
+
+        const updatedSession = {
+
+          ...parsedMember,
+
+          uid:
+            latestMember.uid ||
+            parsedMember.uid,
+
+          email:
+            latestMember.email ||
+            parsedMember.email,
+
+          name:
+            latestMember.name ||
+            "",
+
+          role:
+            latestMember.role ||
+            "member"
+
+        };
+
+
+        /* =================================================
+           SAVE UPDATED SESSION
+        ================================================= */
+
+        if (
+          localStorage.getItem(
+            "wealthoria-member"
+          )
+        ) {
+
+          localStorage.setItem(
+            "wealthoria-member",
+            JSON.stringify(
+              updatedSession
+            )
+          );
+
+        }
+
+
+        if (
+          sessionStorage.getItem(
+            "wealthoria-member"
+          )
+        ) {
+
+          sessionStorage.setItem(
+            "wealthoria-member",
+            JSON.stringify(
+              updatedSession
+            )
+          );
+
+        }
+
+
+        /* =================================================
+           SET MEMBER
+        ================================================= */
+
+        console.log(
+          "Member session verified:",
+          updatedSession.uid
+        );
+
+
+        setMember(
+          updatedSession
+        );
+
+
+        setAuthChecking(
+          false
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Member backend session check failed:",
+          error
+        );
+
+
+        localStorage.removeItem(
+          "wealthoria-member"
+        );
+
+        sessionStorage.removeItem(
+          "wealthoria-member"
+        );
+
+
+        setMember(null);
+        setAuthChecking(false);
+
+
+        if (window.membersNavigate) {
+
+          window.membersNavigate(
+            "/members/login"
+          );
+
+        } else {
+
+          window.location.href =
+            "/members/login";
+
+        }
+
+      }
 
     } catch (error) {
 
       console.error(
-        "Invalid member session:",
+        "Member session error:",
         error
       );
 
-      localStorage.removeItem("wealthoria-member");
-      sessionStorage.removeItem("wealthoria-member");
-
-      await window.auth.signOut();
 
       setMember(null);
       setAuthChecking(false);
 
-      if (window.membersNavigate) {
-        window.membersNavigate("/members/login");
-      } else {
-        window.location.href = "/members/login";
-      }
     }
 
-  });
+  };
 
-  return () => unsubscribe();
+
+  checkMemberSession();
 
 }, []);
-
 
   /* =======================================================
      NAVIGATION
@@ -343,27 +539,31 @@ useEffect(() => {
   /* =======================================================
      LOGOUT
      ======================================================= */
-const logout = async () => {
-  try {
-    if (window.auth) {
-      await window.auth.signOut();
-    }
-  } catch (error) {
-    console.error("Logout error:", error);
-  }
+const logout = () => {
 
-  // Remove saved member session
-  localStorage.removeItem("wealthoria-member");
-  sessionStorage.removeItem("wealthoria-member");
+  localStorage.removeItem(
+    "wealthoria-member"
+  );
 
-  // Go to login
+  sessionStorage.removeItem(
+    "wealthoria-member"
+  );
+
+
   if (window.membersNavigate) {
-    window.membersNavigate("/members/login");
-  } else {
-    window.location.href = "/members/login";
-  }
-};
 
+    window.membersNavigate(
+      "/members/login"
+    );
+
+  } else {
+
+    window.location.href =
+      "/members/login";
+
+  }
+
+};
   /* =======================================================
      MEMBER DETAILS
      ======================================================= */

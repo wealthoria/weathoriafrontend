@@ -1,6 +1,9 @@
-/* global React, window, firebase */
+/* global React, window */
 
-const { useState, useEffect } = React;
+const {
+  useState,
+  useEffect
+} = React;
 
 
 /* =========================================================
@@ -9,291 +12,552 @@ const { useState, useEffect } = React;
 
 function MemberSettings() {
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [uid, setUid] = useState("");
+  const [savingProfile, setSavingProfile] =
+    useState(false);
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] =
+    useState(false);
 
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  const [uid, setUid] =
+    useState("");
+
+  const [name, setName] =
+    useState("");
+
+  const [email, setEmail] =
+    useState("");
+
+  const [currentPassword, setCurrentPassword] =
+    useState("");
+
+  const [newPassword, setNewPassword] =
+    useState("");
+
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
 
 
   /* =========================================================
-     LOAD CURRENT MEMBER
+     LOCAL BACKEND
+  ========================================================= */
+
+  const API_BASE_URL =
+  "https://webinar-registration-backend.onrender.com";
+
+
+  /* =========================================================
+     GET MEMBER SESSION
+  ========================================================= */
+
+  const getSession = () => {
+
+    const saved =
+      localStorage.getItem(
+        "wealthoria-member"
+      ) ||
+      sessionStorage.getItem(
+        "wealthoria-member"
+      );
+
+    if (!saved) {
+      return null;
+    }
+
+    try {
+
+      return JSON.parse(saved);
+
+    } catch (err) {
+
+      console.error(
+        "Session parse error:",
+        err
+      );
+
+      return null;
+    }
+  };
+
+
+  /* =========================================================
+     SAVE UPDATED SESSION
+  ========================================================= */
+
+  const saveSession =
+    (updatedSession) => {
+
+      if (
+        localStorage.getItem(
+          "wealthoria-member"
+        )
+      ) {
+
+        localStorage.setItem(
+          "wealthoria-member",
+          JSON.stringify(
+            updatedSession
+          )
+        );
+      }
+
+
+      if (
+        sessionStorage.getItem(
+          "wealthoria-member"
+        )
+      ) {
+
+        sessionStorage.setItem(
+          "wealthoria-member",
+          JSON.stringify(
+            updatedSession
+          )
+        );
+      }
+
+    };
+
+
+  /* =========================================================
+     LOAD MEMBER DATA
   ========================================================= */
 
   useEffect(() => {
 
-    const user = window.auth?.currentUser;
+    const loadMember =
+      async () => {
 
-    console.log(
-      "Settings Firebase user:",
-      user
-    );
+        try {
 
-    if (!user) {
-
-      setError(
-        "Please login again."
-      );
-
-      setLoading(false);
-
-      return;
-    }
+          setLoading(true);
+          setError("");
+          setSuccess("");
 
 
-    setUid(
-      user.uid || ""
-    );
-
-    setEmail(
-      user.email || ""
-    );
+          const session =
+            getSession();
 
 
-    if (!window.db) {
+          if (!session) {
 
-      setError(
-        "Firestore is not available."
-      );
-
-      setLoading(false);
-
-      return;
-    }
-
-
-    window.db
-      .collection("members")
-      .doc(user.uid)
-      .get()
-      .then((doc) => {
-
-        if (doc.exists) {
-
-          const data = doc.data();
-
-          setName(
-            data.name || ""
-          );
-
-          setEmail(
-            data.email ||
-            user.email ||
-            ""
-          );
-
-        }
-
-        else {
-
-          const saved =
-            localStorage.getItem(
-              "wealthoria-member"
-            ) ||
-            sessionStorage.getItem(
-              "wealthoria-member"
+            throw new Error(
+              "Your member session was not found. Please login again."
             );
-
-          if (saved) {
-
-            try {
-
-              const parsed =
-                JSON.parse(saved);
-
-              setName(
-                parsed.name || ""
-              );
-
-              setEmail(
-                parsed.email ||
-                user.email ||
-                ""
-              );
-
-            } catch (err) {
-
-              console.warn(
-                "Could not read saved member session:",
-                err
-              );
-
-            }
 
           }
 
+
+          if (
+            !session.uid ||
+            !session.token
+          ) {
+
+            throw new Error(
+              "Your member session is invalid. Please login again."
+            );
+
+          }
+
+
+          /* ---------------------------------------------
+             INITIAL VALUES
+          --------------------------------------------- */
+
+          setUid(
+            session.uid
+          );
+
+          setName(
+            session.name || ""
+          );
+
+          setEmail(
+            session.email || ""
+          );
+
+
+          /* ---------------------------------------------
+             GET LATEST MEMBER FROM BACKEND
+          --------------------------------------------- */
+
+          const response =
+            await fetch(
+              `${API_BASE_URL}/api/members/me`,
+              {
+                method: "GET",
+
+                headers: {
+                  "Authorization":
+                    `Bearer ${session.token}`
+                }
+              }
+            );
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              data?.message ||
+              "Unable to load member details."
+            );
+
+          }
+
+
+          if (
+            data?.success &&
+            data?.member
+          ) {
+
+            const member =
+              data.member;
+
+
+            setUid(
+              member.uid ||
+              session.uid
+            );
+
+            setName(
+              member.name || ""
+            );
+
+            setEmail(
+              member.email || ""
+            );
+
+
+            /* -------------------------------------------
+               UPDATE SESSION
+            ------------------------------------------- */
+
+            saveSession({
+
+              ...session,
+
+              uid:
+                member.uid ||
+                session.uid,
+
+              name:
+                member.name ||
+                "",
+
+              email:
+                member.email ||
+                ""
+
+            });
+
+          }
+
+
+        } catch (err) {
+
+          console.error(
+            "Settings load error:",
+            err
+          );
+
+
+          setError(
+            err?.message ||
+            "Unable to load your account details."
+          );
+
+        } finally {
+
+          setLoading(false);
+
         }
 
-      })
-      .catch((err) => {
+      };
 
-        console.error(
-          "Settings load error:",
-          err
-        );
 
-        setError(
-          "Unable to load your account details."
-        );
-
-      })
-      .finally(() => {
-
-        setLoading(false);
-
-      });
+    loadMember();
 
   }, []);
 
 
   /* =========================================================
-     UPDATE LOCAL SESSION
+     SAVE PROFILE
   ========================================================= */
 
-  const updateLocalSession = (
-    updatedName,
-    updatedEmail
-  ) => {
+  const saveProfile =
+    async () => {
 
-    const storages = [
-      localStorage,
-      sessionStorage
-    ];
+      setSuccess("");
+      setError("");
 
-    storages.forEach((storage) => {
 
-      const saved =
-        storage.getItem(
-          "wealthoria-member"
+      const session =
+        getSession();
+
+
+      if (!session) {
+
+        setError(
+          "Your session was not found. Please login again."
         );
 
-      if (!saved) {
         return;
+
       }
+
+
+      if (!session.token) {
+
+        setError(
+          "Your session is invalid. Please login again."
+        );
+
+        return;
+
+      }
+
+
+      const cleanName =
+        name.trim();
+
+
+      const cleanEmail =
+        email.trim().toLowerCase();
+
+
+      /* ---------------------------------------------
+         VALIDATE NAME
+      --------------------------------------------- */
+
+      if (!cleanName) {
+
+        setError(
+          "Name is required."
+        );
+
+        return;
+
+      }
+
+
+      /* ---------------------------------------------
+         VALIDATE EMAIL
+      --------------------------------------------- */
+
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          cleanEmail
+        )
+      ) {
+
+        setError(
+          "Please enter a valid email address."
+        );
+
+        return;
+
+      }
+
 
       try {
 
-        const parsed =
-          JSON.parse(saved);
+        setSavingProfile(true);
 
-        parsed.name =
-          updatedName;
 
-        parsed.email =
-          updatedEmail;
-
-        parsed.uid =
-          uid;
-
-        storage.setItem(
-          "wealthoria-member",
-          JSON.stringify(parsed)
+        console.log(
+          "Updating member profile:",
+          session.uid
         );
+
+
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/members/profile`,
+            {
+              method: "PUT",
+
+              headers: {
+
+                "Content-Type":
+                  "application/json",
+
+                "Authorization":
+                  `Bearer ${session.token}`
+
+              },
+
+              body:
+                JSON.stringify({
+
+                  name:
+                    cleanName,
+
+                  email:
+                    cleanEmail
+
+                })
+
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data?.message ||
+            "Unable to update profile."
+          );
+
+        }
+
+
+        /* ---------------------------------------------
+           UPDATE SCREEN
+        --------------------------------------------- */
+
+        setName(
+          cleanName
+        );
+
+        setEmail(
+          cleanEmail
+        );
+
+
+        /* ---------------------------------------------
+           UPDATE LOCAL SESSION
+        --------------------------------------------- */
+
+        saveSession({
+
+          ...session,
+
+          uid:
+            session.uid,
+
+          name:
+            cleanName,
+
+          email:
+            cleanEmail
+
+        });
+
+
+        setSuccess(
+          "Profile updated successfully."
+        );
+
+
+        console.log(
+          "Profile updated successfully."
+        );
+
 
       } catch (err) {
 
-        console.warn(
-          "Session update failed:",
+        console.error(
+          "Profile update error:",
           err
         );
 
+
+        setError(
+          err?.message ||
+          "Unable to update profile."
+        );
+
+      } finally {
+
+        setSavingProfile(false);
+
       }
 
-    });
-
-  };
+    };
 
 
   /* =========================================================
-     SAVE CHANGES
+     CHANGE PASSWORD
   ========================================================= */
 
-  const saveChanges = async () => {
+  const changePassword =
+    async () => {
 
-    setSuccess("");
-    setError("");
-
-
-    const user =
-      window.auth?.currentUser;
+      setSuccess("");
+      setError("");
 
 
-    if (!user) {
-
-      setError(
-        "Your login session has expired. Please login again."
-      );
-
-      return;
-    }
+      const session =
+        getSession();
 
 
-    const cleanName =
-      name.trim();
+      if (!session) {
 
-    const cleanEmail =
-      email.trim().toLowerCase();
+        setError(
+          "Your session was not found. Please login again."
+        );
 
+        return;
 
-    /* =======================================================
-       VALIDATE NAME
-    ======================================================= */
-
-    if (!cleanName) {
-
-      setError(
-        "Please enter your name."
-      );
-
-      return;
-    }
+      }
 
 
-    /* =======================================================
-       VALIDATE EMAIL
-    ======================================================= */
+      if (!session.token) {
 
-    if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        cleanEmail
-      )
-    ) {
+        setError(
+          "Your session is invalid. Please login again."
+        );
 
-      setError(
-        "Please enter a valid email address."
-      );
+        return;
 
-      return;
-    }
+      }
 
 
-    const currentEmail =
-      (user.email || "")
-        .trim()
-        .toLowerCase();
+      /* ---------------------------------------------
+         VALIDATE CURRENT PASSWORD
+      --------------------------------------------- */
+
+      if (!currentPassword) {
+
+        setError(
+          "Current password is required."
+        );
+
+        return;
+
+      }
 
 
-    const emailChanged =
-      cleanEmail !== currentEmail;
+      /* ---------------------------------------------
+         VALIDATE NEW PASSWORD
+      --------------------------------------------- */
 
+      if (!newPassword) {
 
-    const passwordChanged =
-      newPassword.trim().length > 0;
+        setError(
+          "New password is required."
+        );
 
+        return;
 
-    /* =======================================================
-       PASSWORD VALIDATION
-    ======================================================= */
+      }
 
-    if (passwordChanged) {
 
       if (
         newPassword.length < 6
@@ -304,6 +568,7 @@ function MemberSettings() {
         );
 
         return;
+
       }
 
 
@@ -317,323 +582,148 @@ function MemberSettings() {
         );
 
         return;
+
       }
 
-    }
+
+      try {
+
+        setSavingPassword(true);
 
 
-    /* =======================================================
-       CURRENT PASSWORD REQUIRED
-       ONLY FOR EMAIL/PASSWORD CHANGES
-    ======================================================= */
-
-    if (
-      (emailChanged || passwordChanged) &&
-      !currentPassword
-    ) {
-
-      setError(
-        "Enter your current password to change your email or password."
-      );
-
-      return;
-    }
+        console.log(
+          "Changing member password:",
+          session.uid
+        );
 
 
-    try {
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/members/change-password`,
+            {
+              method: "POST",
 
-      setSaving(true);
+              headers: {
+
+                "Content-Type":
+                  "application/json",
+
+                "Authorization":
+                  `Bearer ${session.token}`
+
+              },
+
+              body:
+                JSON.stringify({
+
+                  currentPassword:
+                    currentPassword,
+
+                  newPassword:
+                    newPassword
+
+                })
+
+            }
+          );
 
 
-      /* =====================================================
-         RE-AUTHENTICATE
-      ===================================================== */
+        const data =
+          await response.json();
 
-      if (
-        emailChanged ||
-        passwordChanged
-      ) {
 
-        if (
-          !window.firebase ||
-          !firebase.auth
-        ) {
+        if (!response.ok) {
 
           throw new Error(
-            "Firebase Authentication is not available."
+            data?.message ||
+            "Unable to change password."
           );
 
         }
 
 
-        if (!user.email) {
+        /* ---------------------------------------------
+           CLEAR PASSWORD FIELDS
+        --------------------------------------------- */
 
-          throw new Error(
-            "This account does not have an email/password login."
-          );
-
-        }
-
-
-        console.log(
-          "Re-authenticating Firebase user..."
-        );
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
 
 
-        const credential =
-          firebase.auth.EmailAuthProvider.credential(
-            user.email,
-            currentPassword
-          );
-
-
-        await user.reauthenticateWithCredential(
-          credential
+        setSuccess(
+          "Password updated successfully."
         );
 
 
         console.log(
-          "Firebase re-authentication successful."
-        );
-
-      }
-
-
-      /* =====================================================
-         UPDATE FIREBASE DISPLAY NAME
-      ===================================================== */
-
-      if (
-        user.displayName !==
-        cleanName
-      ) {
-
-        await user.updateProfile({
-          displayName:
-            cleanName
-        });
-
-      }
-
-
-      /* =====================================================
-         UPDATE FIREBASE EMAIL
-      ===================================================== */
-
-      if (emailChanged) {
-
-        await user.updateEmail(
-          cleanEmail
-        );
-
-      }
-
-
-      /* =====================================================
-         UPDATE FIREBASE PASSWORD
-      ===================================================== */
-
-     await firebase
-  .auth()
-  .sendPasswordResetEmail(user.email);
-
-      /* =====================================================
-         UPDATE FIRESTORE
-      ===================================================== */
-
-      if (!window.db) {
-
-        throw new Error(
-          "Firestore is not available."
-        );
-
-      }
-
-
-      await window.db
-        .collection("members")
-        .doc(user.uid)
-        .set(
-          {
-            name:
-              cleanName,
-
-            email:
-              cleanEmail,
-
-            uid:
-              user.uid,
-
-            updatedAt:
-              firebase.firestore
-                .FieldValue
-                .serverTimestamp()
-          },
-          {
-            merge: true
-          }
+          "Member password updated successfully."
         );
 
 
-      /* =====================================================
-         UPDATE LOCAL MEMBER SESSION
-      ===================================================== */
+      } catch (err) {
 
-      updateLocalSession(
-        cleanName,
-        cleanEmail
-      );
-
-
-      /* =====================================================
-         CLEAR PASSWORD FIELDS
-      ===================================================== */
-
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-
-
-      /* =====================================================
-         SUCCESS
-      ===================================================== */
-
-      setName(
-        cleanName
-      );
-
-      setEmail(
-        cleanEmail
-      );
-
-
-      setSuccess(
-        "Account details updated successfully."
-      );
-
-
-      console.log(
-        "Settings update completed successfully."
-      );
-
-
-    } catch (err) {
-
-      console.error(
-        "Settings update error:",
-        err
-      );
-
-
-      /* =====================================================
-         FIREBASE AUTH ERRORS
-      ===================================================== */
-
-      if (
-        err?.code ===
-          "auth/wrong-password" ||
-        err?.code ===
-          "auth/invalid-credential" ||
-        err?.code ===
-          "auth/internal-error"
-      ) {
-
-        setError(
-          "Current password is incorrect. Please enter the same password you use to log in."
+        console.error(
+          "Password update error:",
+          err
         );
 
-      }
-
-      else if (
-        err?.code ===
-        "auth/requires-recent-login"
-      ) {
-
-        setError(
-          "Firebase requires a fresh login. Please log out and log in again, then try again."
-        );
-
-      }
-
-      else if (
-        err?.code ===
-        "auth/email-already-in-use"
-      ) {
-
-        setError(
-          "This email address is already in use."
-        );
-
-      }
-
-      else if (
-        err?.code ===
-        "auth/invalid-email"
-      ) {
-
-        setError(
-          "Please enter a valid email address."
-        );
-
-      }
-
-      else if (
-        err?.code ===
-        "auth/weak-password"
-      ) {
-
-        setError(
-          "The new password is too weak."
-        );
-
-      }
-
-      else if (
-        err?.code ===
-        "auth/user-disabled"
-      ) {
-
-        setError(
-          "This account has been disabled."
-        );
-
-      }
-
-      else {
 
         setError(
           err?.message ||
-          "Unable to update your account."
+          "Unable to change password."
         );
+
+      } finally {
+
+        setSavingPassword(false);
 
       }
 
-    } finally {
-
-      setSaving(false);
-
-    }
-
-  };
+    };
 
 
   /* =========================================================
-     BACK TO DASHBOARD
+     BACK
   ========================================================= */
 
-  const goBack = () => {
+  const goBack =
+    () => {
 
-    if (
-      window.membersNavigate
-    ) {
+      if (
+        window.membersNavigate
+      ) {
 
-      window.membersNavigate(
-        "/members/dashboard"
-      );
+        window.membersNavigate(
+          "/members/dashboard"
+        );
 
-    }
+      } else {
 
-  };
+        window.location.href =
+          "/members/dashboard";
+
+      }
+
+    };
+
+
+  /* =========================================================
+     CLEAR MESSAGES WHEN TYPING
+  ========================================================= */
+
+  const clearMessages =
+    () => {
+
+      if (success) {
+        setSuccess("");
+      }
+
+      if (error) {
+        setError("");
+      }
+
+    };
 
 
   /* =========================================================
@@ -652,13 +742,18 @@ function MemberSettings() {
         }}
       >
 
-        <div className="member-panel">
+        <div
+          className="member-panel"
+        >
 
           <div
             style={{
-              padding: "50px 30px",
-              textAlign: "center",
-              opacity: 0.6
+              padding:
+                "60px 30px",
+              textAlign:
+                "center",
+              opacity:
+                0.6
             }}
           >
 
@@ -676,7 +771,7 @@ function MemberSettings() {
 
 
   /* =========================================================
-     PAGE
+     MAIN SETTINGS PAGE
   ========================================================= */
 
   return (
@@ -695,31 +790,47 @@ function MemberSettings() {
 
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          gap: "24px",
-          marginBottom: "28px"
+          display:
+            "flex",
+
+          justifyContent:
+            "space-between",
+
+          alignItems:
+            "flex-end",
+
+          gap:
+            "24px",
+
+          marginBottom:
+            "28px"
         }}
       >
 
         <div>
 
-          <span className="member-eyebrow">
+          <span
+            className="member-eyebrow"
+          >
             ACCOUNT
           </span>
 
+
           <h2
             style={{
-              margin: "6px 0 8px"
+              margin:
+                "6px 0 8px"
             }}
           >
             Settings
           </h2>
 
+
           <p
             style={{
-              margin: 0,
+              margin:
+                0,
+
               color:
                 "var(--muted, #71717a)"
             }}
@@ -733,7 +844,9 @@ function MemberSettings() {
         <button
           type="button"
           className="member-panel-link"
-          onClick={goBack}
+          onClick={
+            goBack
+          }
         >
           ← Back to Dashboard
         </button>
@@ -748,33 +861,41 @@ function MemberSettings() {
       <div
         className="member-panel"
         style={{
-          width: "100%",
-          maxWidth: "820px",
-          margin: "0 auto",
-          overflow: "hidden"
+          width:
+            "100%",
+
+          maxWidth:
+            "820px",
+
+          margin:
+            "0 auto",
+
+          overflow:
+            "hidden"
         }}
       >
-
-        {/* ===================================================
-            PROFILE HEADER
-        =================================================== */}
 
         <div
           className="member-panel-header"
           style={{
-            paddingBottom: "22px"
+            paddingBottom:
+              "22px"
           }}
         >
 
           <div>
 
-            <span className="member-panel-label">
+            <span
+              className="member-panel-label"
+            >
               PROFILE
             </span>
 
+
             <h3
               style={{
-                marginTop: "5px"
+                marginTop:
+                  "5px"
               }}
             >
               Personal Information
@@ -784,10 +905,6 @@ function MemberSettings() {
 
         </div>
 
-
-        {/* ===================================================
-            FORM
-        =================================================== */}
 
         <div
           style={{
@@ -806,16 +923,22 @@ function MemberSettings() {
               style={{
                 marginBottom:
                   "22px",
+
                 padding:
                   "13px 15px",
+
                 borderRadius:
                   "10px",
+
                 background:
                   "rgba(34,155,91,.09)",
+
                 color:
                   "#218a50",
+
                 fontSize:
                   "13px",
+
                 fontWeight:
                   600
               }}
@@ -838,18 +961,27 @@ function MemberSettings() {
               style={{
                 marginBottom:
                   "22px",
+
                 padding:
                   "13px 15px",
+
                 borderRadius:
                   "10px",
+
                 background:
                   "rgba(220,60,50,.09)",
+
                 color:
                   "#c52f2f",
+
                 fontSize:
                   "13px",
+
                 fontWeight:
-                  600
+                  600,
+
+                lineHeight:
+                  1.5
               }}
             >
 
@@ -861,255 +993,171 @@ function MemberSettings() {
 
 
           {/* =================================================
-              PERSONAL INFORMATION
+              NAME
           ================================================= */}
 
           <div
-            style={{
-              display: "grid",
-              gap: "20px"
-            }}
+            className="field"
           >
 
-            {/* NAME */}
-
-            <div className="field">
-
-              <label>
-                Name
-              </label>
-
-              <input
-                className="input"
-                type="text"
-                value={name}
-                onChange={(e) =>
-                  setName(
-                    e.target.value
-                  )
-                }
-                placeholder="Enter your name"
-                disabled={saving}
-              />
-
-            </div>
+            <label>
+              Name
+            </label>
 
 
-            {/* EMAIL */}
+            <input
+              className="input"
+              type="text"
+              value={name}
+              onChange={(event) => {
 
-            <div className="field">
+                setName(
+                  event.target.value
+                );
 
-              <label>
-                Email
-              </label>
+                clearMessages();
 
-              <input
-                className="input"
-                type="email"
-                value={email}
-                onChange={(e) =>
-                  setEmail(
-                    e.target.value
-                  )
-                }
-                placeholder="Enter your email"
-                autoComplete="email"
-                disabled={saving}
-              />
-
-            </div>
-
-
-            {/* USER ID */}
-
-            <div className="field">
-
-              <label>
-                User ID
-              </label>
-
-              <input
-                className="input"
-                type="text"
-                value={uid}
-                readOnly
-                style={{
-                  background:
-                    "rgba(0,0,0,.035)",
-                  opacity: 0.7,
-                  cursor:
-                    "not-allowed"
-                }}
-              />
-
-              <small
-                style={{
-                  display: "block",
-                  marginTop: "6px",
-                  fontSize: "12px",
-                  opacity: 0.55
-                }}
-              >
-                Your User ID cannot be changed.
-              </small>
-
-            </div>
+              }}
+              placeholder="Enter your name"
+              disabled={
+                savingProfile ||
+                savingPassword
+              }
+            />
 
           </div>
 
 
           {/* =================================================
-              SECURITY
+              EMAIL
           ================================================= */}
 
           <div
+            className="field"
             style={{
-              marginTop: "32px",
-              paddingTop: "26px",
-              borderTop:
-                "1px solid rgba(0,0,0,.08)"
+              marginTop:
+                "20px"
             }}
           >
 
-            <span className="member-panel-label">
-              SECURITY
-            </span>
+            <label>
+              Email
+            </label>
 
-            <h3
-              style={{
-                margin:
-                  "6px 0 20px"
+
+            <input
+              className="input"
+              type="email"
+              value={email}
+              onChange={(event) => {
+
+                setEmail(
+                  event.target.value
+                );
+
+                clearMessages();
+
               }}
-            >
-              Password & Security
-            </h3>
-
-
-            <div
-              style={{
-                display: "grid",
-                gap: "20px"
-              }}
-            >
-
-              {/* CURRENT PASSWORD */}
-
-              <div className="field">
-
-                <label>
-                  Current Password
-                </label>
-
-                <input
-                  className="input"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) =>
-                    setCurrentPassword(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Enter current password"
-                  autoComplete="current-password"
-                  disabled={saving}
-                />
-
-                <small
-                  style={{
-                    display:
-                      "block",
-                    marginTop:
-                      "6px",
-                    fontSize:
-                      "12px",
-                    opacity:
-                      0.55
-                  }}
-                >
-                  Required only when changing your email or password.
-                </small>
-
-              </div>
-
-
-              {/* NEW PASSWORD */}
-
-              <div className="field">
-
-                <label>
-                  New Password
-                </label>
-
-                <input
-                  className="input"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) =>
-                    setNewPassword(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Enter new password"
-                  autoComplete="new-password"
-                  disabled={saving}
-                />
-
-              </div>
-
-
-              {/* CONFIRM PASSWORD */}
-
-              <div className="field">
-
-                <label>
-                  Confirm New Password
-                </label>
-
-                <input
-                  className="input"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) =>
-                    setConfirmPassword(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Confirm new password"
-                  autoComplete="new-password"
-                  disabled={saving}
-                />
-
-              </div>
-
-            </div>
+              placeholder="Enter your email"
+              autoComplete="email"
+              disabled={
+                savingProfile ||
+                savingPassword
+              }
+            />
 
           </div>
 
 
           {/* =================================================
-              ACTIONS
+              USER ID
+          ================================================= */}
+
+          <div
+            className="field"
+            style={{
+              marginTop:
+                "20px"
+            }}
+          >
+
+            <label>
+              User ID
+            </label>
+
+
+            <input
+              className="input"
+              type="text"
+              value={uid}
+              readOnly
+              style={{
+                background:
+                  "rgba(0,0,0,.035)",
+
+                opacity:
+                  0.7,
+
+                cursor:
+                  "not-allowed"
+              }}
+            />
+
+
+            <small
+              style={{
+                display:
+                  "block",
+
+                marginTop:
+                  "6px",
+
+                fontSize:
+                  "12px",
+
+                opacity:
+                  0.55
+              }}
+            >
+              Your User ID cannot be changed.
+            </small>
+
+          </div>
+
+
+          {/* =================================================
+              SAVE PROFILE
           ================================================= */}
 
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "14px",
-              marginTop: "30px",
-              paddingTop: "25px",
-              borderTop:
-                "1px solid rgba(0,0,0,.08)"
+              marginTop:
+                "28px",
+
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
+              gap:
+                "14px"
             }}
           >
 
             <button
               type="button"
               className="btn btn-green"
-              onClick={saveChanges}
-              disabled={saving}
+              onClick={
+                saveProfile
+              }
+              disabled={
+                savingProfile ||
+                savingPassword
+              }
             >
 
-              {saving
+              {savingProfile
                 ? "Saving..."
                 : "Save Changes"}
 
@@ -1119,8 +1167,13 @@ function MemberSettings() {
             <button
               type="button"
               className="member-panel-link"
-              onClick={goBack}
-              disabled={saving}
+              onClick={
+                goBack
+              }
+              disabled={
+                savingProfile ||
+                savingPassword
+              }
             >
               Cancel
             </button>
@@ -1129,27 +1182,254 @@ function MemberSettings() {
 
 
           {/* =================================================
-              SECURITY NOTE
+              SECURITY
           ================================================= */}
 
           <div
             style={{
-              marginTop: "24px",
-              fontSize: "12px",
-              lineHeight: 1.6,
-              opacity: 0.58
+              marginTop:
+                "36px",
+
+              paddingTop:
+                "28px",
+
+              borderTop:
+                "1px solid rgba(0,0,0,.08)"
             }}
           >
 
-            <strong>
-              Security
-            </strong>
+            <span
+              className="member-panel-label"
+            >
+              SECURITY
+            </span>
 
-            <br />
 
-            Your current password is never displayed
-            or stored in Firestore. Firebase
-            Authentication securely manages passwords.
+            <h3
+              style={{
+                margin:
+                  "6px 0 10px"
+              }}
+            >
+              Change Password
+            </h3>
+
+
+            <p
+              style={{
+                margin:
+                  "0 0 22px",
+
+                fontSize:
+                  "13px",
+
+                lineHeight:
+                  1.6,
+
+                opacity:
+                  0.65
+              }}
+            >
+              Your member password is managed securely
+              through the Wealthoria member system.
+            </p>
+
+
+            {/* CURRENT PASSWORD */}
+
+            <div
+              className="field"
+            >
+
+              <label>
+                Current Password
+              </label>
+
+
+              <input
+                className="input"
+                type="password"
+                value={currentPassword}
+                onChange={(event) => {
+
+                  setCurrentPassword(
+                    event.target.value
+                  );
+
+                  clearMessages();
+
+                }}
+                placeholder="Enter current password"
+                autoComplete="current-password"
+                disabled={
+                  savingProfile ||
+                  savingPassword
+                }
+              />
+
+            </div>
+
+
+            {/* NEW PASSWORD */}
+
+            <div
+              className="field"
+              style={{
+                marginTop:
+                  "20px"
+              }}
+            >
+
+              <label>
+                New Password
+              </label>
+
+
+              <input
+                className="input"
+                type="password"
+                value={newPassword}
+                onChange={(event) => {
+
+                  setNewPassword(
+                    event.target.value
+                  );
+
+                  clearMessages();
+
+                }}
+                placeholder="Enter new password"
+                autoComplete="new-password"
+                disabled={
+                  savingProfile ||
+                  savingPassword
+                }
+              />
+
+
+              <small
+                style={{
+                  display:
+                    "block",
+
+                  marginTop:
+                    "6px",
+
+                  fontSize:
+                    "12px",
+
+                  opacity:
+                    0.55
+                }}
+              >
+                Minimum 6 characters.
+              </small>
+
+            </div>
+
+
+            {/* CONFIRM PASSWORD */}
+
+            <div
+              className="field"
+              style={{
+                marginTop:
+                  "20px"
+              }}
+            >
+
+              <label>
+                Confirm New Password
+              </label>
+
+
+              <input
+                className="input"
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => {
+
+                  setConfirmPassword(
+                    event.target.value
+                  );
+
+                  clearMessages();
+
+                }}
+                placeholder="Confirm new password"
+                autoComplete="new-password"
+                disabled={
+                  savingProfile ||
+                  savingPassword
+                }
+              />
+
+            </div>
+
+
+            {/* CHANGE PASSWORD BUTTON */}
+
+            <div
+              style={{
+                marginTop:
+                  "26px"
+              }}
+            >
+
+              <button
+                type="button"
+                className="btn btn-green"
+                onClick={
+                  changePassword
+                }
+                disabled={
+                  savingProfile ||
+                  savingPassword
+                }
+              >
+
+                {savingPassword
+                  ? "Updating..."
+                  : "Update Password"}
+
+              </button>
+
+            </div>
+
+
+            {/* SECURITY MESSAGE */}
+
+            <div
+              style={{
+                marginTop:
+                  "24px",
+
+                padding:
+                  "14px 16px",
+
+                borderRadius:
+                  "10px",
+
+                background:
+                  "rgba(0,0,0,.025)",
+
+                fontSize:
+                  "12px",
+
+                lineHeight:
+                  1.6,
+
+                opacity:
+                  0.65
+              }}
+            >
+
+              Your password is never displayed in the
+              member interface. The server verifies the
+              current password and stores only a secure
+              password hash in Firestore.
+
+            </div>
 
           </div>
 
@@ -1173,6 +1453,7 @@ window.MemberSettings =
 
 window.Settings =
   MemberSettings;
+
 
 console.log(
   "MemberSettings loaded successfully"

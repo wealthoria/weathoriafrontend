@@ -3,281 +3,453 @@
 const { useState } = React;
 
 function MemberLogin() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(true);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [remember, setRemember] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+
+  /* =========================================================
+     BACKEND URL
+  ========================================================= */
+
+  const API_BASE_URL =
+   "https://webinar-registration-backend.onrender.com";
+
+
+  /* =========================================================
+     LOGIN
+  ========================================================= */
 
   const submitLogin = async (event) => {
+
     event.preventDefault();
 
     setError("");
 
-    const cleanEmail = email.trim().toLowerCase();
 
-    // =========================================
-    // FRONTEND VALIDATION
-    // =========================================
+    const cleanEmail =
+      email.trim().toLowerCase();
+
+
+    /* =======================================================
+       VALIDATION
+    ======================================================= */
 
     if (!cleanEmail) {
-      setError("Email is required.");
+
+      setError(
+        "Email is required."
+      );
+
       return;
+
     }
+
 
     if (
-!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)    ) {
-      setError("Please enter a valid email address.");
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        cleanEmail
+      )
+    ) {
+
+      setError(
+        "Please enter a valid email address."
+      );
+
       return;
+
     }
+
 
     if (!password) {
-      setError("Password is required.");
+
+      setError(
+        "Password is required."
+      );
+
       return;
+
     }
 
-    if (password.length < 6) {
+
+    if (
+      password.length < 6
+    ) {
+
       setError(
         "Password must be at least 6 characters."
       );
+
       return;
+
     }
+
 
     setLoading(true);
 
+
     try {
 
-      // =========================================
-      // CHECK FIREBASE
-      // =========================================
+      /* =====================================================
+         SEND LOGIN TO BACKEND
+      ===================================================== */
 
-      if (!window.auth) {
-        throw new Error(
-          "Firebase Authentication is not initialized."
+      console.log(
+        "Member login request:",
+        cleanEmail
+      );
+
+
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/members/login`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body:
+              JSON.stringify({
+                email:
+                  cleanEmail,
+
+                password:
+                  password
+              })
+          }
         );
+
+
+      let data = null;
+
+
+      try {
+
+        data =
+          await response.json();
+
+      } catch (jsonError) {
+
+        console.error(
+          "Could not parse login response:",
+          jsonError
+        );
+
       }
 
-      if (!window.db) {
-        throw new Error(
-          "Firestore is not initialized."
-        );
+
+      /* =====================================================
+         CHECK RESPONSE
+      ===================================================== */
+
+      if (!response.ok) {
+
+        throw {
+          status:
+            response.status,
+
+          message:
+            data?.message ||
+            "Incorrect email or password."
+        };
+
       }
 
-      // =========================================
-      // FIREBASE AUTHENTICATION
-      // =========================================
-
-      const userCredential =
-        await window.auth.signInWithEmailAndPassword(
-          cleanEmail,
-          password
-        );
-
-      const user = userCredential.user;
-
-      console.log(
-        "Firebase login successful:",
-        user.uid
-      );
-
-      console.log(
-        "Firebase email:",
-        user.email
-      );
-
-      // =========================================
-      // FIND MEMBER BY EMAIL
-      // =========================================
-
-      const memberDoc =
-  await window.db
-    .collection("members")
-    .doc(user.uid)
-    .get();
-
-if (!memberDoc.exists) {
-
-  await window.auth.signOut();
-
-  throw new Error(
-    "Member account was not found."
-  );
-
-}
-
-const member =
-  memberDoc.data();
-
-      // Member not found
-      if (memberSnapshot.empty) {
-
-        await window.auth.signOut();
-
-        throw new Error(
-          "Member account was not found."
-        );
-      }
-
-      // Get first matching document
-      const memberDoc =
-        memberSnapshot.docs[0];
-
-      const member = memberDoc.data();
-
-      console.log(
-        "Member document ID:",
-        memberDoc.id
-      );
-
-      console.log(
-        "Member data:",
-        member
-      );
-
-      // =========================================
-      // CHECK MEMBER ROLE
-      // =========================================
 
       if (
-        member.role &&
-        member.role.toLowerCase() !== "member"
+        !data ||
+        !data.success
       ) {
 
-        await window.auth.signOut();
+        throw {
+          status:
+            response.status,
 
-        throw new Error(
-          "You are not authorized to access the Members Portal."
-        );
+          message:
+            data?.message ||
+            "Unable to login."
+        };
+
       }
 
-      // =========================================
-      // CREATE MEMBER SESSION
-      // =========================================
+
+      console.log(
+        "Member login successful:",
+        data.uid
+      );
+
+
+      /* =====================================================
+         CREATE MEMBER SESSION
+      ===================================================== */
 
       const session = {
-        uid: user.uid,
-        email: user.email,
-        name: member.name || "",
-        role: member.role || "member"
+
+        uid:
+          data.uid,
+
+        email:
+          data.email ||
+          cleanEmail,
+
+        name:
+          data.name ||
+          "",
+
+        role:
+          data.role ||
+          "member",
+
+        token:
+          data.token
+
       };
 
-      // =========================================
-      // REMEMBER ME
-      // =========================================
+
+      /* =====================================================
+         SAVE SESSION
+      ===================================================== */
 
       if (remember) {
 
         localStorage.setItem(
           "wealthoria-member",
-          JSON.stringify(session)
+          JSON.stringify(
+            session
+          )
         );
 
-        // Remove previous temporary session
+
         sessionStorage.removeItem(
           "wealthoria-member"
         );
 
-      } else {
+      }
+
+      else {
 
         sessionStorage.setItem(
           "wealthoria-member",
-          JSON.stringify(session)
+          JSON.stringify(
+            session
+          )
         );
 
-        // Remove previous remembered session
+
         localStorage.removeItem(
           "wealthoria-member"
         );
+
       }
+
 
       console.log(
         "Member session saved:",
-        session
+        {
+          uid:
+            session.uid,
+
+          email:
+            session.email,
+
+          name:
+            session.name,
+
+          role:
+            session.role
+        }
       );
 
-      // =========================================
-      // GO TO MEMBER DASHBOARD
-      // =========================================
 
-      if (window.membersNavigate) {
+      /* =====================================================
+         GO TO DASHBOARD
+      ===================================================== */
+
+      if (
+        window.membersNavigate
+      ) {
 
         window.membersNavigate(
           "/members/dashboard"
         );
 
-      } else {
+      }
+
+      else {
 
         window.location.href =
           "/members/dashboard";
 
       }
 
-   } catch (err) {
-  console.error("Member login error:", err);
 
-  let message = "Unable to LOgin in.";
+    } catch (err) {
 
-  if (
-    err.code === "auth/invalid-credential" ||
-    err.code === "auth/wrong-password" ||
-    err.code === "auth/user-not-found"
-  ) {
-    message = "Incorrect email or password.";
-  } 
-  else if (err.code === "auth/invalid-email") {
-    message = "Please enter a valid email address.";
-  } 
-  else if (err.code === "auth/too-many-requests") {
-    message = "Too many login attempts. Please try again later.";
-  } 
-  else if (err.code === "auth/user-disabled") {
-    message = "This account has been disabled.";
-  } 
-  else if (err.message === "Member account was not found.") {
-    message = "This email is not registered as a member.";
-  }
+      console.error(
+        "Member login error:",
+        err
+      );
 
-  setError(message);
 
-} finally {
-  setLoading(false);
-}
+      let message =
+        "Unable to login.";
+
+
+      if (
+        err?.status === 401
+      ) {
+
+        message =
+          "Incorrect email or password.";
+
+      }
+
+      else if (
+        err?.status === 403
+      ) {
+
+        message =
+          err.message ||
+          "You are not authorized to access the Members Portal.";
+
+      }
+
+      else if (
+        err?.status === 404
+      ) {
+
+        message =
+          "Member account was not found.";
+
+      }
+
+      else if (
+        err?.status === 500
+      ) {
+
+        message =
+          err.message ||
+          "Server error. Please try again.";
+
+      }
+
+      else if (
+        err?.name ===
+        "TypeError"
+      ) {
+
+        message =
+          "Unable to connect to the member server.";
+
+      }
+
+      else if (
+        err?.message
+      ) {
+
+        message =
+          err.message;
+
+      }
+
+
+      setError(
+        message
+      );
+
+
+    } finally {
+
+      setLoading(
+        false
+      );
+
+    }
+
   };
 
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
+
   return (
-    <div className="members-login-page">
 
-      {/* =========================================
+    <div
+      className="members-login-page"
+    >
+
+      {/* =====================================================
           BRAND
-      ========================================= */}
-<a
-  href="/"
-  className="members-login-brand"
-  aria-label="Go to Wealthoria website" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "inherit" }}
->
-  <img
-    src="/assets/logo-mark.png"
-    alt="Wealthoria"
-  />
+      ===================================================== */}
 
-  <span>
-    Wealthoria
-  </span>
-</a>
+      <a
+        href="/"
+        className="members-login-brand"
+        aria-label="Go to Wealthoria website"
+        style={{
+          display:
+            "flex",
+
+          alignItems:
+            "center",
+
+          gap:
+            "8px",
+
+          textDecoration:
+            "none",
+
+          color:
+            "inherit"
+        }}
+      >
+
+        <img
+          src="/assets/logo-mark.png"
+          alt="Wealthoria"
+        />
+
+        <span>
+          Wealthoria
+        </span>
+
+      </a>
 
 
-      {/* =========================================
+      {/* =====================================================
           LOGIN CARD
-      ========================================= */}
+      ===================================================== */}
 
-      <div className="members-login-card">
+      <div
+        className="members-login-card"
+      >
 
-        <div className="members-login-heading">
+        <div
+          className="members-login-heading"
+        >
 
-          <span className="members-eyebrow">
+          <span
+            className="members-eyebrow"
+          >
             MEMBER PORTAL
           </span>
+
 
           <h1>
             Member sign in
@@ -286,60 +458,86 @@ const member =
         </div>
 
 
-        {/* =========================================
+        {/* ===================================================
             ERROR
-        ========================================= */}
+        =================================================== */}
 
         {error && (
-          <div className="members-login-error">
+
+          <div
+            className="members-login-error"
+          >
+
             {error}
+
           </div>
+
         )}
 
 
-        {/* =========================================
+        {/* ===================================================
             LOGIN FORM
-        ========================================= */}
+        =================================================== */}
 
         <form
           onSubmit={submitLogin}
           noValidate
         >
 
-          {/* EMAIL */}
+          {/* =================================================
+              EMAIL
+          ================================================= */}
 
-          <div className="members-field">
+          <div
+            className="members-field"
+          >
 
             <label>
               Email
             </label>
 
+
             <input
               type="email"
               value={email}
               onChange={(event) => {
-                setEmail(event.target.value);
+
+                setEmail(
+                  event.target.value
+                );
+
 
                 if (error) {
+
                   setError("");
+
                 }
+
               }}
               placeholder="you@wealthoria.in"
               autoComplete="username"
+              disabled={loading}
             />
 
           </div>
 
 
-          {/* PASSWORD */}
+          {/* =================================================
+              PASSWORD
+          ================================================= */}
 
-          <div className="members-field">
+          <div
+            className="members-field"
+          >
 
             <label>
               Password
             </label>
 
-            <div className="members-password">
+
+            <div
+              className="members-password"
+            >
 
               <input
                 type={
@@ -349,27 +547,40 @@ const member =
                 }
                 value={password}
                 onChange={(event) => {
-                  setPassword(event.target.value);
+
+                  setPassword(
+                    event.target.value
+                  );
+
 
                   if (error) {
+
                     setError("");
+
                   }
+
                 }}
                 placeholder="Your password"
                 autoComplete="current-password"
+                disabled={loading}
               />
+
 
               <button
                 type="button"
                 onClick={() =>
                   setShowPassword(
-                    (current) => !current
+                    (current) =>
+                      !current
                   )
                 }
+                disabled={loading}
               >
+
                 {showPassword
                   ? "Hide"
                   : "Show"}
+
               </button>
 
             </div>
@@ -377,11 +588,13 @@ const member =
           </div>
 
 
-          {/* =========================================
+          {/* =================================================
               OPTIONS
-          ========================================= */}
+          ================================================= */}
 
-          <div className="members-login-options">
+          <div
+            className="members-login-options"
+          >
 
             <label>
 
@@ -393,6 +606,7 @@ const member =
                     event.target.checked
                   )
                 }
+                disabled={loading}
               />
 
               <span>
@@ -418,16 +632,19 @@ const member =
                 }
 
               }}
+              disabled={loading}
             >
+
               Forgot password?
+
             </button>
 
           </div>
 
 
-          {/* =========================================
+          {/* =================================================
               LOGIN BUTTON
-          ========================================= */}
+          ================================================= */}
 
           <button
             className="members-login-button"
@@ -444,10 +661,22 @@ const member =
         </form>
 
       </div>
-      
 
     </div>
+
   );
+
 }
 
-window.MemberLogin = MemberLogin;
+
+/* =========================================================
+   EXPORT
+========================================================= */
+
+window.MemberLogin =
+  MemberLogin;
+
+
+console.log(
+  "MemberLogin loaded successfully"
+);

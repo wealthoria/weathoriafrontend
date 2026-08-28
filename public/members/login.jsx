@@ -27,8 +27,7 @@ function MemberLogin() {
     }
 
     if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
-    ) {
+!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)    ) {
       setError("Please enter a valid email address.");
       return;
     }
@@ -91,12 +90,24 @@ function MemberLogin() {
       // FIND MEMBER BY EMAIL
       // =========================================
 
-      const memberSnapshot =
-        await window.db
-          .collection("members")
-          .where("email", "==", cleanEmail)
-          .limit(1)
-          .get();
+      const memberDoc =
+  await window.db
+    .collection("members")
+    .doc(user.uid)
+    .get();
+
+if (!memberDoc.exists) {
+
+  await window.auth.signOut();
+
+  throw new Error(
+    "Member account was not found."
+  );
+
+}
+
+const member =
+  memberDoc.data();
 
       // Member not found
       if (memberSnapshot.empty) {

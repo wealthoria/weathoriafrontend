@@ -127,6 +127,7 @@ function MemberDashboard() {
 const [showSeminarRegistrations, setShowSeminarRegistrations] = useState(false);
 const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
 
+const [showSettings, setShowSettings] = useState(false);
   /* =======================================================
      DASHBOARD STATES
      ======================================================= */
@@ -726,19 +727,21 @@ return (
 
 
             {/* SETTINGS */}
+<button
+  className="member-header-button"
+  onClick={() => {
+    setShowSettings(true);
 
-            <button
-              className="member-header-button"
-              onClick={() =>
-                navigate(
-                  "/members/settings"
-                )
-              }
-            >
-
-              ⚙ Settings
-
-            </button>
+    setShowCourses(false);
+    setShowNewsletter(false);
+    setShowWeeklyRoundup(false);
+    setShowCharts(false);
+    setShowCalculator(false);
+    setShowPurchaseHistory(false);
+  }}
+>
+  ⚙ Settings
+</button>
 
 
             {/* PROFILE */}
@@ -796,7 +799,22 @@ return (
           {/* =================================================
               CHART PAGE
               ================================================= */}
-{showPurchaseHistory ? (
+{showSettings ? (
+
+  window.MemberSettings ? (
+    <window.MemberSettings />
+  ) : (
+    <div
+      style={{
+        padding: 40,
+        textAlign: "center"
+      }}
+    >
+      Loading Settings...
+    </div>
+  )
+
+) : showPurchaseHistory ? (
 
   <section
     style={{
@@ -819,6 +837,10 @@ return (
   </section>
 
 ) : 
+
+
+
+
          showCourses ? (
   <CourseVideos />
 )  :  showNewsletter ? (

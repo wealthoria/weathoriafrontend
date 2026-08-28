@@ -223,7 +223,23 @@ function MembersRouter() {
       );
 
   }
+  /* =========================================================
+     SETTINGS
+  ========================================================= */
 
+  if (
+    path === "/members/settings"
+  ) {
+
+    return window.MemberSettings
+      ? React.createElement(window.MemberSettings)
+      : (
+        <div className="members-router-loading">
+          Loading Settings...
+        </div>
+      );
+
+  }
 
   /* =========================================================
      SEMINAR REGISTRATIONS

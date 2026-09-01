@@ -73,6 +73,28 @@ function MembersRouter() {
   );
 
 
+  
+
+  /* =========================================================
+   MEMBER SUBSCRIPTION
+========================================================= */
+
+if (
+  path === "/members/subscription"
+) {
+
+  return window.MemberSubscription
+    ? React.createElement(
+        window.MemberSubscription
+      )
+    : (
+        <div className="members-router-loading">
+          Loading Subscription...
+        </div>
+      );
+
+}
+
   /* =========================================================
      MEMBER LOGIN
   ========================================================= */

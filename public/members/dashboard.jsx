@@ -1016,7 +1016,7 @@ return (
     </div>
   )
 
-) : ) : showPurchaseHistory ? (
+) :showPurchaseHistory ? (
 
   PurchaseHistory ? (
     <PurchaseHistory />

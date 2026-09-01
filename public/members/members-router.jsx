@@ -93,25 +93,7 @@ function MembersRouter() {
 
 
 
-  /* =========================================================
-   MEMBER SUBSCRIPTION
-========================================================= */
-
-if (
-  path === "/members/subscription"
-) {
-
-  return window.MemberSubscription
-    ? React.createElement(
-        window.MemberSubscription
-      )
-    : (
-        <div className="members-router-loading">
-          Loading Subscription...
-        </div>
-      );
-
-}
+  
   /* =========================================================
      LOGIN
   ========================================================= */
@@ -343,6 +325,20 @@ if (
   }
 
 
+
+  if (
+  path === "/members/subscription"
+) {
+  return window.MemberSubscription
+    ? React.createElement(
+        window.MemberSubscription
+      )
+    : (
+        <div className="members-router-loading">
+          Loading Subscription...
+        </div>
+      );
+}
   /* =========================================================
      FORGOT PASSWORD
   ========================================================= */

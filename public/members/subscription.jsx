@@ -89,7 +89,7 @@ function MemberSubscription() {
             email: cleanEmail,
             phone: cleanPhone,
             password,
-            amount: 999
+            
           })
         }
       );

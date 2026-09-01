@@ -51,7 +51,7 @@ const {
 ========================================================= */
 
 const API_BASE_URL =
-  "http://localhost:10000";
+  "https://webinar-registration-backend.onrender.com";
 
 const CATEGORIES = [
   "Newsletter",

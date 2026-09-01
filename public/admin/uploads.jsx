@@ -1,4 +1,3 @@
-/* global React, window */
 
 /* =========================================================================
    WEALTHORIA ADMIN — UPLOADS
@@ -403,18 +402,13 @@ function UploadsScreen() {
   } = useAdminAuth();
 
 
-  const {
-    isAdmin
-  } = useRole();
+  const {isAdmin} = useRole();
 
 
-  const data =
-    useAdminData();
+  const data =useAdminData();
 
 
-  const {
-    push
-  } = useMToast();
+  const { push} = useMToast();
 
 
   const confirm =
@@ -424,7 +418,10 @@ function UploadsScreen() {
   const inputRef =
     useRef(null);
 
-
+const [editingAsset, setEditingAsset] = useState(null);
+const [pdfAsset, setPdfAsset] = useState(null);
+const [expandedDescriptionId, setExpandedDescriptionId] = useState(null);
+const [expandedTagsId, setExpandedTagsId] = useState(null);
   /* =======================================================
      STATE
   ======================================================= */
@@ -1113,6 +1110,268 @@ function UploadsScreen() {
     };
 
 
+
+  /* =======================================================
+     SAVE EDITED CONTENT
+  ======================================================= */
+
+  const saveEditedAsset = async (
+    meta
+  ) => {
+
+    if (!editingAsset) {
+      return;
+    }
+
+    try {
+
+      if (!window.db) {
+        throw new Error(
+          "Firestore is not initialized."
+        );
+      }
+
+      const now =
+        new Date().toISOString();
+
+      const updateData = {
+        title:
+          meta.title.trim(),
+
+        description:
+          meta.description.trim(),
+
+        category:
+          meta.category,
+
+        tags:
+          Array.isArray(meta.tags)
+            ? meta.tags
+            : [],
+
+        publishedAt:
+          meta.publishedAt,
+
+        status:
+          meta.status,
+
+        updatedAt:
+          now,
+
+        modified:
+          now.slice(0, 10)
+      };
+
+
+      let newPdf = null;
+      let newThumbnail = null;
+
+
+      /* =====================================================
+         OPTIONAL PDF REPLACEMENT
+      ===================================================== */
+
+      if (meta.pdfFile) {
+
+        newPdf =
+          await uploadFile(
+            meta.pdfFile,
+            "pdf",
+            "/api/upload-content-pdf",
+            () => {}
+          );
+
+        Object.assign(
+          updateData,
+          {
+            pdfUrl:
+              newPdf.url,
+
+            pdfPath:
+              newPdf.path,
+
+            pdfName:
+              newPdf.filename ||
+              meta.pdfFile.name,
+
+            pdfSize:
+              newPdf.size ||
+              meta.pdfFile.size
+          }
+        );
+
+      }
+
+
+      /* =====================================================
+         OPTIONAL THUMBNAIL REPLACEMENT
+      ===================================================== */
+
+      if (meta.thumbnailFile) {
+
+        newThumbnail =
+          await uploadFile(
+            meta.thumbnailFile,
+            "thumbnail",
+            "/api/upload-content-thumbnail",
+            () => {}
+          );
+
+        Object.assign(
+          updateData,
+          {
+            thumbnailUrl:
+              newThumbnail.url,
+
+            thumbnailPath:
+              newThumbnail.path,
+
+            thumbnailName:
+              newThumbnail.filename ||
+              meta.thumbnailFile.name,
+
+            thumbnailSize:
+              newThumbnail.size ||
+              meta.thumbnailFile.size
+          }
+        );
+
+      }
+
+
+      /* =====================================================
+         UPDATE EXISTING FIRESTORE DOCUMENT
+      ===================================================== */
+
+      await window.db
+        .collection("content")
+        .doc(editingAsset.id)
+        .set(
+          updateData,
+          {
+            merge: true
+          }
+        );
+
+
+      /* =====================================================
+         DELETE OLD FILES ONLY AFTER SUCCESSFUL UPDATE
+      ===================================================== */
+
+      if (
+        editingAsset.pdfPath &&
+        newPdf
+      ) {
+
+        try {
+
+          await fetch(
+            `${API_BASE_URL}/api/delete-content-files`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify({
+                  pdfPath:
+                    editingAsset.pdfPath,
+
+                  thumbnailPath:
+                    ""
+                })
+            }
+          );
+
+        } catch (error) {
+
+          console.warn(
+            "Old PDF cleanup failed:",
+            error
+          );
+
+        }
+
+      }
+
+
+      if (
+        editingAsset.thumbnailPath &&
+        newThumbnail
+      ) {
+
+        try {
+
+          await fetch(
+            `${API_BASE_URL}/api/delete-content-files`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify({
+                  pdfPath:
+                    "",
+
+                  thumbnailPath:
+                    editingAsset.thumbnailPath
+                })
+            }
+          );
+
+        } catch (error) {
+
+          console.warn(
+            "Old thumbnail cleanup failed:",
+            error
+          );
+
+        }
+
+      }
+
+
+      if (
+        data.refreshContent
+      ) {
+
+        await data.refreshContent();
+
+      }
+
+
+      push(
+        "Content updated successfully."
+      );
+
+
+      setEditingAsset(null);
+
+
+    } catch (error) {
+
+      console.error(
+        "Edit content error:",
+        error
+      );
+
+      push(
+        error?.message ||
+        "Unable to update content."
+      );
+
+    }
+
+  };
+
+
   /* =======================================================
      RENDER
   ======================================================= */
@@ -1723,152 +1982,197 @@ function UploadsScreen() {
                         </span>
 
                       </div>
+{item.description && (
+  <div className="asset-description-wrap">
+
+    {expandedDescriptionId === item.id ? (
+      <p className="asset-description expanded">
+        {item.description}
+        <span
+          className="asset-inline-toggle"
+          role="button"
+          tabIndex={0}
+          onClick={() => setExpandedDescriptionId(null)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setExpandedDescriptionId(null);
+            }
+          }}
+        >
+          less
+        </span>
+      </p>
+    ) : (
+      <p className="asset-description">
+        {item.description.length > 150
+          ? item.description.slice(0, 150).trimEnd() + "..."
+          : item.description}
+
+        {item.description.length > 150 && (
+          <span
+            className="asset-inline-toggle"
+            role="button"
+            tabIndex={0}
+            onClick={() => setExpandedDescriptionId(item.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setExpandedDescriptionId(item.id);
+              }
+            }}
+          >
+            ...
+          </span>
+        )}
+      </p>
+    )}
+
+  </div>
+)}
+
+{Array.isArray(item.tags) && item.tags.length > 0 && (
+  <div className="asset-tags-wrap">
+
+    {expandedTagsId === item.id ? (
+      <div className="atags asset-tags-expanded">
+        {item.tags.map((tag) => (
+          <span
+            className="badge badge-soft"
+            key={tag}
+          >
+            {tag}
+          </span>
+        ))}
+
+        <span
+          className="asset-inline-toggle"
+          role="button"
+          tabIndex={0}
+          onClick={() => setExpandedTagsId(null)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setExpandedTagsId(null);
+            }
+          }}
+        >
+          less
+        </span>
+      </div>
+    ) : (
+      <div className="atags">
+        {item.tags.slice(0, 4).map((tag) => (
+          <span
+            className="badge badge-soft"
+            key={tag}
+          >
+            {tag}
+          </span>
+        ))}
+
+        {item.tags.length > 4 && (
+          <span
+            className="asset-inline-toggle asset-tags-more"
+            role="button"
+            tabIndex={0}
+            onClick={() => setExpandedTagsId(item.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setExpandedTagsId(item.id);
+              }
+            }}
+          >
+            ...
+          </span>
+        )}
+      </div>
+    )}
+
+  </div>
+)}
+
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10
+  }}
+>
+
+  {/* EDIT */}
+  <button
+    type="button"
+    className="row-act"
+    title="Edit"
+    onClick={() =>
+      setEditingAsset(item)
+    }
+    style={{
+      flex: 1,
+      height: 34,
+      justifyContent: "center",
+      boxShadow:
+        "inset 0 0 0 1px var(--hair)"
+    }}
+  >
+    ✎
+    <span style={{ marginLeft: 5 }}>
+      Edit
+    </span>
+  </button>
 
 
-                      {item.description && (
-
-                        <p
-                          style={{
-                            margin:
-                              "10px 0 0",
-
-                            fontSize:
-                              12,
-
-                            lineHeight:
-                              1.5,
-
-                            opacity:
-                              0.7
-                          }}
-                        >
-                          {
-                            item.description
-                          }
-                        </p>
-
-                      )}
-
-
-                      <div
-                        className="atags"
-                      >
-
-                        {Array.isArray(
-                          item.tags
-                        ) &&
-                          item.tags.map(
-                            (
-                              tag
-                            ) => (
-
-                              <span
-                                className="badge badge-soft"
-
-                                key={
-                                  tag
-                                }
-
-                                style={{
-                                  fontSize:
-                                    11
-                                }}
-                              >
-                                {
-                                  tag
-                                }
-                              </span>
-
-                            )
-                          )}
-
-                      </div>
+  {/* OPEN PDF */}
+  {item.pdfUrl && (
+    <button
+      type="button"
+      className="row-act"
+      title="Open PDF"
+      onClick={() =>
+        setPdfAsset(item)
+      }
+      style={{
+        width: 34,
+        height: 34,
+        justifyContent: "center",
+        boxShadow:
+          "inset 0 0 0 1px var(--hair)"
+      }}
+    >
+      <MIcon
+        name="eye"
+        size={15}
+      />
+    </button>
+  )}
 
 
-                      <div
-                        style={{
-                          display:
-                            "flex",
+  {/* DELETE */}
+  <button
+    type="button"
+    className="row-act danger"
+    title="Delete"
+    onClick={() =>
+      removeAsset(item)
+    }
+    style={{
+      width: 34,
+      height: 34,
+      justifyContent: "center",
+      boxShadow:
+        "inset 0 0 0 1px var(--hair)"
+    }}
+  >
+    <MIcon
+      name="trash"
+      size={15}
+    />
+  </button>
 
-                          gap:
-                            6,
-
-                          marginTop:
-                            12
-                        }}
-                      >
-
-                        {item.pdfUrl && (
-
-                          <a
-                            href={
-                              getFileUrl(
-                                item.pdfUrl
-                              )
-                            }
-
-                            target="_blank"
-
-                            rel="noopener noreferrer"
-
-                            className="btn btn-ghost btn-sm"
-
-                            style={{
-                              flex:
-                                1,
-
-                              textDecoration:
-                                "none",
-
-                              justifyContent:
-                                "center"
-                            }}
-                          >
-
-                            <MIcon
-                              name="eye"
-                              size={15}
-                            />
-
-                            Preview
-
-                          </a>
-
-                        )}
-
-
-                        <button
-                          className="row-act danger"
-
-                          title="Delete"
-
-                          onClick={() =>
-                            removeAsset(
-                              item
-                            )
-                          }
-
-                          style={{
-                            width:
-                              38,
-
-                            height:
-                              38,
-
-                            boxShadow:
-                              "inset 0 0 0 1px var(--hair)"
-                          }}
-                        >
-
-                          <MIcon
-                            name="trash"
-                            size={16}
-                          />
-
-                        </button>
-
-                      </div>
-
+</div>
 
                       <div
                         style={{
@@ -2030,11 +2334,96 @@ function UploadsScreen() {
           </React.Fragment>
 
         )}
+{pdfAsset && pdfAsset.pdfUrl && (
+  <div
+    className="mscrim open"
+    onClick={(event) => {
+      if (
+        event.target === event.currentTarget
+      ) {
+        setPdfAsset(null);
+      }
+    }}
+  >
+    <div
+      className="mmodal"
+      style={{
+        width: "94vw",
+        maxWidth: 1100,
+        height: "88vh",
+        padding: 12
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingBottom: 10
+        }}
+      >
+        <strong>
+          {pdfAsset.title ||
+            "PDF Preview"}
+        </strong>
 
+        <button
+          type="button"
+          className="row-act"
+          onClick={() =>
+            setPdfAsset(null)
+          }
+          style={{
+            width: 34,
+            height: 34
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      <iframe
+        src={`${getFileUrl(
+          pdfAsset.pdfUrl
+        )}#toolbar=0&navpanes=0`}
+        title={
+          pdfAsset.title ||
+          "PDF Preview"
+        }
+        style={{
+          width: "100%",
+          height:
+            "calc(100% - 44px)",
+          border: 0,
+          display: "block"
+        }}
+      />
+    </div>
+  </div>
+)}
 
         {/* =================================================
             METADATA MODAL
         ================================================= */}
+
+        {editingAsset && (
+          <EditContentModal
+
+            asset={
+              editingAsset
+            }
+
+            onCancel={() =>
+              setEditingAsset(null)
+            }
+
+            onSave={
+              saveEditedAsset
+            }
+
+          />
+        )}
+
 
         {metaQueue.length >
           0 && (
@@ -2292,6 +2681,629 @@ function UploadsScreen() {
 /* =========================================================
    METADATA MODAL
 ========================================================= */
+
+
+/* =========================================================
+   EDIT CONTENT MODAL
+========================================================= */
+
+function EditContentModal({
+  asset,
+  onCancel,
+  onSave
+}) {
+
+  const [
+    title,
+    setTitle
+  ] = useState(
+    asset.title ||
+    asset.name ||
+    ""
+  );
+
+
+  const [
+    description,
+    setDescription
+  ] = useState(
+    asset.description ||
+    ""
+  );
+
+
+  const [
+    category,
+    setCategory
+  ] = useState(
+    asset.category ||
+    "Newsletter"
+  );
+
+
+  const [
+    tagsStr,
+    setTagsStr
+  ] = useState(
+    Array.isArray(asset.tags)
+      ? asset.tags.join(", ")
+      : ""
+  );
+
+
+  const [
+    publishedAt,
+    setPublishedAt
+  ] = useState(
+    String(
+      asset.publishedAt ||
+      new Date()
+        .toISOString()
+        .slice(0, 10)
+    ).slice(0, 10)
+  );
+
+
+  const [
+    status,
+    setStatus
+  ] = useState(
+    asset.status ||
+    "published"
+  );
+
+
+  const [
+    pdfFile,
+    setPdfFile
+  ] = useState(null);
+
+
+  const [
+    thumbnailFile,
+    setThumbnailFile
+  ] = useState(null);
+
+
+  const [
+    pdfName,
+    setPdfName
+  ] = useState(
+    ""
+  );
+
+
+  const [
+    thumbnailName,
+    setThumbnailName
+  ] = useState(
+    ""
+  );
+
+
+  const pdfInputRef =
+    useRef(null);
+
+  const thumbnailInputRef =
+    useRef(null);
+
+
+  const choosePdf = (
+    event
+  ) => {
+
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+
+    const isPdf =
+      file.type ===
+        "application/pdf" ||
+      file.name
+        .toLowerCase()
+        .endsWith(".pdf");
+
+
+    if (!isPdf) {
+
+      alert(
+        "Please choose a PDF file."
+      );
+
+      return;
+    }
+
+
+    if (
+      file.size >
+      MAX_PDF_SIZE
+    ) {
+
+      alert(
+        "PDF must be smaller than 25 MB."
+      );
+
+      return;
+    }
+
+
+    setPdfFile(file);
+
+    setPdfName(
+      file.name
+    );
+
+  };
+
+
+  const chooseThumbnail = (
+    event
+  ) => {
+
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+
+    const validTypes = [
+      "image/png",
+      "image/jpeg",
+      "image/webp"
+    ];
+
+
+    if (
+      !validTypes.includes(
+        file.type
+      )
+    ) {
+
+      alert(
+        "Thumbnail must be PNG, JPG or WebP."
+      );
+
+      return;
+    }
+
+
+    if (
+      file.size >
+      MAX_THUMBNAIL_SIZE
+    ) {
+
+      alert(
+        "Thumbnail must be smaller than 5 MB."
+      );
+
+      return;
+    }
+
+
+    setThumbnailFile(
+      file
+    );
+
+    setThumbnailName(
+      file.name
+    );
+
+  };
+
+
+  const save = () => {
+
+    const cleanTitle =
+      title.trim();
+
+    const cleanDescription =
+      description.trim();
+
+    if (!cleanTitle) {
+
+      alert(
+        "Title is required."
+      );
+
+      return;
+    }
+
+
+    if (!cleanDescription) {
+
+      alert(
+        "Description is required."
+      );
+
+      return;
+    }
+
+
+    onSave({
+
+      title:
+        cleanTitle,
+
+      description:
+        cleanDescription,
+
+      category:
+        category,
+
+      tags:
+        tagsStr
+          .split(",")
+          .map(
+            (tag) =>
+              tag.trim()
+          )
+          .filter(Boolean),
+
+      publishedAt:
+        publishedAt,
+
+      status:
+        status,
+
+      pdfFile:
+        pdfFile,
+
+      thumbnailFile:
+        thumbnailFile
+    });
+
+  };
+
+
+  return (
+
+    <div
+      className="mscrim open"
+      onClick={(event) => {
+
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+
+          onCancel();
+
+        }
+
+      }}
+    >
+
+      <div
+        className="mmodal upload-edit-modal"
+        role="dialog"
+        aria-modal="true"
+      >
+
+        <div
+          className="edit-modal-header"
+        >
+
+          <div>
+
+            <span
+              className="edit-modal-eyebrow"
+            >
+              EDIT CONTENT
+            </span>
+
+            <h3>
+              Edit upload
+            </h3>
+
+          </div>
+
+
+          <button
+            type="button"
+            className="row-act"
+            onClick={
+              onCancel
+            }
+            style={{
+              width: 34,
+              height: 34
+            }}
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <div className="field">
+
+          <label>
+            Title
+          </label>
+
+          <input
+            className="input"
+            value={title}
+            onChange={(event) =>
+              setTitle(
+                event.target.value
+              )
+            }
+          />
+
+        </div>
+
+
+        <div className="field">
+
+          <label>
+            Description
+          </label>
+
+          <textarea
+            className="textarea"
+            value={description}
+            onChange={(event) =>
+              setDescription(
+                event.target.value
+              )
+            }
+            placeholder="Short description"
+          />
+
+        </div>
+
+
+        <div
+          className="field-grid2"
+        >
+
+          <div className="field">
+
+            <label>
+              Category
+            </label>
+
+            <select
+              className="select"
+              value={category}
+              onChange={(event) =>
+                setCategory(
+                  event.target.value
+                )
+              }
+            >
+
+              {CATEGORIES.map(
+                (item) => (
+
+                  <option
+                    key={item}
+                    value={item}
+                  >
+                    {item}
+                  </option>
+
+                )
+              )}
+
+            </select>
+
+          </div>
+
+
+          <div className="field">
+
+            <label>
+              Publish Date
+            </label>
+
+            <input
+              className="input"
+              type="date"
+              value={publishedAt}
+              onChange={(event) =>
+                setPublishedAt(
+                  event.target.value
+                )
+              }
+            />
+
+          </div>
+
+        </div>
+
+
+        <div className="field">
+
+          <label>
+            Tags (comma separated)
+          </label>
+
+          <input
+            className="input"
+            value={tagsStr}
+            onChange={(event) =>
+              setTagsStr(
+                event.target.value
+              )
+            }
+            placeholder="e.g. market, stocks, beginner"
+          />
+
+        </div>
+
+
+        <div className="field">
+
+          <label>
+            Status
+          </label>
+
+          <select
+            className="select"
+            value={status}
+            onChange={(event) =>
+              setStatus(
+                event.target.value
+              )
+            }
+          >
+
+            <option value="published">
+              Published
+            </option>
+
+            <option value="draft">
+              Draft
+            </option>
+
+          </select>
+
+        </div>
+
+
+        {/* =====================================================
+            REPLACE PDF
+        ===================================================== */}
+
+        <div className="edit-upload-box">
+
+          <div>
+
+            <strong>
+              PDF
+            </strong>
+
+            <span>
+              {pdfName ||
+                asset.pdfName ||
+                "Keep existing PDF"}
+            </span>
+
+          </div>
+
+
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            hidden
+            onChange={
+              choosePdf
+            }
+          />
+
+
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() =>
+              pdfInputRef
+                .current
+                ?.click()
+            }
+          >
+            Upload PDF
+          </button>
+
+        </div>
+
+
+        {/* =====================================================
+            REPLACE THUMBNAIL
+        ===================================================== */}
+
+        <div className="edit-upload-box">
+
+          <div>
+
+            <strong>
+              Thumbnail
+            </strong>
+
+            <span>
+              {thumbnailName ||
+                asset.thumbnailName ||
+                "Keep existing thumbnail"}
+            </span>
+
+          </div>
+
+
+          <input
+            ref={thumbnailInputRef}
+            type="file"
+            accept="
+              image/png,
+              image/jpeg,
+              image/webp
+            "
+            hidden
+            onChange={
+              chooseThumbnail
+            }
+          />
+
+
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() =>
+              thumbnailInputRef
+                .current
+                ?.click()
+            }
+          >
+            Upload
+          </button>
+
+        </div>
+
+
+        <div className="mactions">
+
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={
+              onCancel
+            }
+          >
+            Cancel
+          </button>
+
+
+          <button
+            type="button"
+            className="btn btn-green btn-sm"
+            onClick={save}
+          >
+            Save changes
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}
+
 
 function MetadataModal({
   asset,
@@ -3032,6 +4044,3 @@ window.UploadsScreen =
   UploadsScreen;
 
 
-console.log(
-  "UploadsScreen loaded successfully — server upload mode"
-);

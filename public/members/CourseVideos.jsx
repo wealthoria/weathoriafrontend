@@ -560,10 +560,17 @@ const buyCourse = async (course) => {
       return;
     }
 
-    if (!window.auth?.currentUser) {
-      alert("Please login first.");
-      return;
-    }
+   const memberSession =
+  JSON.parse(
+    localStorage.getItem("wealthoria-member") ||
+    sessionStorage.getItem("wealthoria-member") ||
+    "null"
+  );
+
+if (!memberSession?.token) {
+  alert("Please login first.");
+  return;
+}
 
     /* =====================================================
        1. CREATE RAZORPAY ORDER

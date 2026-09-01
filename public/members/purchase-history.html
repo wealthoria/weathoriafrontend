@@ -57,10 +57,7 @@
     src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
   </script>
 
-  <script
-    src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js">
-  </script>
-
+  
   <script
     src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
   </script>
@@ -109,9 +106,7 @@
 
     window.firebase = firebase;
 
-    window.auth =
-      firebase.auth();
-
+    
     window.db =
       firebase.firestore();
 
@@ -897,259 +892,179 @@
       /* =================================================
          LOAD CURRENT USER PURCHASES
       ================================================= */
+useEffect(() => {
 
-      useEffect(() => {
+  if (!window.db) {
 
-        if (!window.auth) {
+    setError(
+      "Firestore is not available."
+    );
 
-          setError(
-            "Firebase Authentication is not available."
+    setLoading(false);
+
+    return;
+  }
+
+
+  let session = null;
+
+  try {
+
+    session = JSON.parse(
+      localStorage.getItem("wealthoria-member") ||
+      sessionStorage.getItem("wealthoria-member") ||
+      "null"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Unable to read member session:",
+      error
+    );
+
+  }
+
+
+  if (!session?.uid) {
+
+    setPurchases([]);
+
+    setError(
+      "Please login to view your purchase history."
+    );
+
+    setLoading(false);
+
+    return;
+  }
+
+
+  console.log(
+    "PURCHASE HISTORY MEMBER:",
+    session.uid,
+    session.email
+  );
+
+
+  setLoading(true);
+  setError("");
+
+
+  const unsubscribePurchases =
+    window.db
+      .collection("coursePurchases")
+      .where(
+        "userId",
+        "==",
+        session.uid
+      )
+      .onSnapshot(
+
+        (snapshot) => {
+
+          console.log(
+            "PURCHASE HISTORY DOC COUNT:",
+            snapshot.size
           );
 
-          setLoading(false);
 
-          return;
-
-        }
-
-
-        if (!window.db) {
-
-          setError(
-            "Firestore is not available."
-          );
-
-          setLoading(false);
-
-          return;
-
-        }
+          const rows =
+            snapshot.docs.map(
+              (doc) => ({
+                id: doc.id,
+                ...doc.data()
+              })
+            );
 
 
-        let unsubscribePurchases =
-          null;
+          rows.sort(
+            (a, b) => {
+
+              const getTime =
+                (value) => {
+
+                  if (!value) {
+                    return 0;
+                  }
 
 
-        const unsubscribeAuth =
-          window.auth.onAuthStateChanged(
-            (user) => {
+                  if (
+                    typeof value.toMillis ===
+                    "function"
+                  ) {
 
-              console.log(
-                "PURCHASE HISTORY USER:",
-                user?.uid,
-                user?.email
-              );
+                    return value.toMillis();
 
-
-              if (
-                unsubscribePurchases
-              ) {
-
-                unsubscribePurchases();
-
-                unsubscribePurchases =
-                  null;
-
-              }
+                  }
 
 
-              if (!user) {
+                  if (
+                    typeof value.toDate ===
+                    "function"
+                  ) {
 
-                setPurchases([]);
+                    return value
+                      .toDate()
+                      .getTime();
 
-                setError(
-                  "Please login to view your purchase history."
-                );
-
-                setLoading(false);
-
-                return;
-
-              }
+                  }
 
 
-              setLoading(true);
-
-              setError("");
-
-
-              console.log(
-                "QUERYING coursePurchases FOR UID:",
-                user.uid
-              );
+                  const parsed =
+                    new Date(value).getTime();
 
 
-              unsubscribePurchases =
-                window.db
-
-                  .collection(
-                    "coursePurchases"
+                  return Number.isNaN(
+                    parsed
                   )
+                    ? 0
+                    : parsed;
 
-                  .where(
-                    "userId",
-                    "==",
-                    user.uid
-                  )
-
-                  .onSnapshot(
-
-                    (snapshot) => {
-
-                      console.log(
-                        "PURCHASE HISTORY DOC COUNT:",
-                        snapshot.size
-                      );
+                };
 
 
-                      console.log(
-                        "PURCHASE HISTORY DOCS:",
-                        snapshot.docs.map(
-                          (doc) => ({
-                            id: doc.id,
-                            ...doc.data()
-                          })
-                        )
-                      );
-
-
-                      const rows =
-                        snapshot.docs.map(
-                          (doc) => ({
-                            id: doc.id,
-                            ...doc.data()
-                          })
-                        );
-
-
-                      rows.sort(
-                        (a, b) => {
-
-                          const getTime =
-                            (value) => {
-
-                              if (!value) {
-                                return 0;
-                              }
-
-
-                              if (
-                                typeof value.toMillis ===
-                                "function"
-                              ) {
-
-                                return value.toMillis();
-
-                              }
-
-
-                              if (
-                                typeof value.toDate ===
-                                "function"
-                              ) {
-
-                                return value
-                                  .toDate()
-                                  .getTime();
-
-                              }
-
-
-                              const parsed =
-                                new Date(
-                                  value
-                                ).getTime();
-
-
-                              return Number.isNaN(
-                                parsed
-                              )
-                                ? 0
-                                : parsed;
-
-                            };
-
-
-                          return (
-                            getTime(
-                              b.paidAt
-                            ) -
-                            getTime(
-                              a.paidAt
-                            )
-                          );
-
-                        }
-                      );
-
-
-                      setPurchases(
-                        rows
-                      );
-
-                      setLoading(
-                        false
-                      );
-
-                      setError("");
-
-                    },
-
-
-                    (err) => {
-
-                      console.error(
-                        "Purchase history error:",
-                        err
-                      );
-
-
-                      console.error(
-                        "Purchase history error code:",
-                        err?.code
-                      );
-
-
-                      console.error(
-                        "Purchase history error message:",
-                        err?.message
-                      );
-
-
-                      setError(
-                        "Unable to load your purchase history."
-                      );
-
-
-                      setLoading(
-                        false
-                      );
-
-                    }
-
-                  );
+              return (
+                getTime(b.paidAt) -
+                getTime(a.paidAt)
+              );
 
             }
           );
 
 
-        return () => {
+          setPurchases(rows);
 
-          unsubscribeAuth();
+          setLoading(false);
+
+          setError("");
+
+        },
+
+        (err) => {
+
+          console.error(
+            "Purchase history error:",
+            err
+          );
+
+          setError(
+            "Unable to load your purchase history."
+          );
+
+          setLoading(false);
+
+        }
+      );
 
 
-          if (
-            unsubscribePurchases
-          ) {
+  return () => {
 
-            unsubscribePurchases();
+    unsubscribePurchases();
 
-          }
+  };
 
-        };
-
-      }, []);
-
+}, []);
 
       /* =================================================
          FORMAT DATE
@@ -1947,25 +1862,6 @@
     /* =====================================================
        AUTH REDIRECT
     ===================================================== */
-
-    window.auth.onAuthStateChanged(
-      (user) => {
-
-        console.log(
-          "Purchase History auth:",
-          user?.uid
-        );
-
-
-        if (!user) {
-
-          window.location.href =
-            "/members/login";
-
-        }
-
-      }
-    );
 
 
     /* =====================================================

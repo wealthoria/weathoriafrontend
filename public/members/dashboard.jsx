@@ -110,10 +110,12 @@ function MemberDashboard() {
 
   // Resolve child pages during render so Babel's asynchronous
   // loading cannot leave us with an old undefined reference.
-  const CourseVideos = window.CourseVideos;
-  const Newsletter = window.Newsletter;
-  const SeminarRegistrations = window.SeminarRegistrations;
-  const WeeklyRoundup = window.WeeklyRoundup;
+ const CourseVideos = window.CourseVideos;
+const Newsletter = window.Newsletter;
+const SeminarRegistrations = window.SeminarRegistrations;
+const WeeklyRoundup = window.WeeklyRoundup;
+const PurchaseHistory = window.PurchaseHistory;
+const MemberSettings = window.MemberSettings;
 
   /* =======================================================
      MEMBER
@@ -1014,27 +1016,21 @@ return (
     </div>
   )
 
-) : showPurchaseHistory ? (
+) : ) : showPurchaseHistory ? (
 
-  <section
-    style={{
-      width: "100%",
-      minHeight: "750px"
-    }}
-  >
-
-    <iframe
-      src="/members/purchase-history.html"
-      title="Purchase History"
+  PurchaseHistory ? (
+    <PurchaseHistory />
+  ) : (
+    <div
       style={{
-        width: "100%",
-        minHeight: "750px",
-        border: "0",
-        display: "block"
+        padding: 40,
+        textAlign: "center"
       }}
-    />
-
-  </section>
+    >
+      <h2>Purchase History is loading</h2>
+      <p>Please refresh the page once.</p>
+    </div>
+  )
 
 ) : 
 

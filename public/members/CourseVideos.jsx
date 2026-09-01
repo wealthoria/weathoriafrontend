@@ -6,6 +6,21 @@ const { useState, useEffect } = React;
 /* =========================================================
    COURSE DATA
 ========================================================= */
+const getMemberSession = () => {
+  try {
+    return JSON.parse(
+      localStorage.getItem("wealthoria-member") ||
+      sessionStorage.getItem("wealthoria-member") ||
+      "null"
+    );
+  } catch (error) {
+    console.error(
+      "Unable to read member session:",
+      error
+    );
+    return null;
+  }
+};
 
 const COURSE_VIDEOS = [
   {
@@ -328,78 +343,75 @@ const [purchasedCourses, setPurchasedCourses] =
 
 useEffect(() => {
 
-  if (!window.auth || !window.db) {
+  const session =
+    getMemberSession();
+
+  if (!session?.uid || !window.db) {
+    setPurchasedCourses([]);
     return;
   }
 
-  const unsubscribeAuth =
-    window.auth.onAuthStateChanged((user) => {
+  const unsubscribe =
+    window.db
+      .collection("coursePurchases")
+      .where(
+        "userId",
+        "==",
+        session.uid
+      )
+      .onSnapshot(
+        (snapshot) => {
 
-      if (!user) {
-        setPurchasedCourses([]);
-        return;
-      }
+          const ids =
+            snapshot.docs
+              .map((doc) => {
 
-      const unsubscribePurchases =
-        window.db
-          .collection("coursePurchases")
-          .where("userId", "==", user.uid)
-          .onSnapshot(
-            (snapshot) => {
+                const data =
+                  doc.data() || {};
 
-              const ids =
-                snapshot.docs
-                  .map((doc) => {
+                return {
+                  courseId:
+                    String(
+                      data.courseId || ""
+                    ),
 
-                    const data =
-                      doc.data() || {};
+                  status:
+                    data.status || "paid"
+                };
 
-                    return {
-                      courseId:
-                        String(
-                          data.courseId || ""
-                        ),
-                      status:
-                        data.status || "paid"
-                    };
-
-                  })
-                  .filter(
-                    (item) =>
-                      item.courseId &&
-                      item.status === "paid"
-                  )
-                  .map(
-                    (item) =>
-                      item.courseId
-                  );
-
-              setPurchasedCourses(
-                [...new Set(ids)]
+              })
+              .filter(
+                (item) =>
+                  item.courseId &&
+                  item.status === "paid"
+              )
+              .map(
+                (item) =>
+                  item.courseId
               );
 
-            },
-            (error) => {
-
-              console.error(
-                "Purchase lookup error:",
-                error
-              );
-
-              setPurchasedCourses([]);
-
-            }
+          setPurchasedCourses(
+            [...new Set(ids)]
           );
 
-      return unsubscribePurchases;
+        },
 
-    });
+        (error) => {
+
+          console.error(
+            "Purchase lookup error:",
+            error
+          );
+
+          setPurchasedCourses([]);
+
+        }
+      );
 
   return () =>
-    unsubscribeAuth();
+    unsubscribe();
 
 }, []);
-
   /* =======================================================
      COURSES FROM FIRESTORE
   ======================================================= */
@@ -581,9 +593,11 @@ if (!memberSession?.token) {
       {
         method: "POST",
 
-        headers: {
-          "Content-Type": "application/json"
-        },
+      headers: {
+  "Content-Type": "application/json",
+  "Authorization":
+    `Bearer ${memberSession.token}`
+},
 
         body: JSON.stringify({
           courseId: course.id,
@@ -638,18 +652,15 @@ if (!memberSession?.token) {
 /* =============================================
    3. VERIFY PAYMENT
 ============================================= */
+const memberSession =
+  getMemberSession();
 
-const user =
-  window.auth?.currentUser;
-
-if (!user) {
+if (!memberSession?.token) {
   throw new Error(
     "Please login again before completing payment."
   );
 }
 
-const idToken =
-  await user.getIdToken();
 
 const verifyResponse =
   await fetch(
@@ -660,7 +671,7 @@ const verifyResponse =
       headers: {
         "Content-Type": "application/json",
         "Authorization":
-          `Bearer ${idToken}`
+  `Bearer ${memberSession.token}`
       },
 
       body: JSON.stringify({
@@ -705,17 +716,16 @@ if (!verifyResponse.ok) {
    SAVE COURSE PURCHASE TO FIRESTORE
 ===================================================== */
 
-if (window.db && window.auth?.currentUser) {
+if(window.db && memberSession?.uid) {
 
   await window.db
     .collection("coursePurchases")
     .add({
 
-      userId:
-        window.auth.currentUser.uid,
+      userId:  memberSession.uid,
 
       userEmail:
-        window.auth.currentUser.email || "",
+        memberSession.email || "",
 
       courseId:
         String(course.id),
@@ -782,17 +792,15 @@ alert(
         },
 
 
-      prefill: {
+     prefill: {
 
-        name:
-          window.auth.currentUser
-            ?.displayName || "",
+  name:
+    memberSession.name || "",
 
-        email:
-          window.auth.currentUser
-            ?.email || ""
+  email:
+    memberSession.email || ""
 
-      },
+},
 
 
       theme: {

@@ -1851,16 +1851,47 @@ const openPage =
   className="member-header-button"
   type="button"
   onClick={() => {
-    if (window.enableMemberNotifications) {
+    console.log("🔔 Notification button clicked");
+
+    // If already loaded, use it
+    if (typeof window.enableMemberNotifications === "function") {
       window.enableMemberNotifications();
-    } else {
-      console.error("Notification system is not loaded.");
+      return;
     }
+
+    // Otherwise load notifications.js now
+    console.log("📥 Loading notifications.js...");
+
+    const script = document.createElement("script");
+
+    script.src = "/firebase/notifications.js?v=20";
+
+    script.onload = () => {
+      console.log("✅ notifications.js loaded");
+
+      if (
+        typeof window.enableMemberNotifications === "function"
+      ) {
+        console.log("✅ Notification function available");
+        window.enableMemberNotifications();
+      } else {
+        console.error(
+          "❌ notifications.js loaded but function is missing"
+        );
+        alert("Notification system could not be initialized.");
+      }
+    };
+
+    script.onerror = () => {
+      console.error("❌ Could not load notifications.js");
+      alert("Could not load notification system.");
+    };
+
+    document.head.appendChild(script);
   }}
 >
   🔔 Notifications
 </button>
-
 
 
             <button

@@ -1,6 +1,10 @@
 (function () {
   console.log("🔥 NOTIFICATIONS.JS STARTED");
 
+  // =========================================================
+  // ENABLE MEMBER NOTIFICATIONS
+  // =========================================================
+
   window.enableMemberNotifications = async function () {
     console.log("🔔 enableMemberNotifications called");
 
@@ -8,49 +12,67 @@
       // --------------------------------------------------
       // 1. Firebase check
       // --------------------------------------------------
+
       if (!window.firebase) {
         alert("Firebase is not loaded.");
         return;
       }
 
-      console.log("Firebase loaded:", firebase.SDK_VERSION);
+      console.log(
+        "Firebase loaded:",
+        firebase.SDK_VERSION
+      );
 
       // --------------------------------------------------
-      // 2. Browser notification check
+      // 2. Browser notification support
       // --------------------------------------------------
+
       if (!("Notification" in window)) {
-        alert("This browser does not support notifications.");
+        alert(
+          "This browser does not support notifications."
+        );
         return;
       }
 
       // --------------------------------------------------
       // 3. Firebase Messaging check
       // --------------------------------------------------
-     if (
-  !window.firebase ||
-  typeof window.firebase.messaging !== "function"
-) {
-  console.error(
-    "Firebase Messaging SDK is not available.",
-    window.firebase
-  );
 
-  alert(
-    "Firebase Messaging SDK is not loaded. Please refresh the page."
-  );
+      if (
+        !window.firebase ||
+        typeof window.firebase.messaging !== "function"
+      ) {
+        console.error(
+          "Firebase Messaging SDK is not available.",
+          window.firebase
+        );
 
-  return;
-}
+        alert(
+          "Firebase Messaging SDK is not loaded. Please refresh the page."
+        );
+
+        return;
+      }
+
+      console.log(
+        "✅ Firebase Messaging SDK is available."
+      );
+
       // --------------------------------------------------
       // 4. Get logged-in member
       // --------------------------------------------------
+
       let member = null;
 
       const localMember =
-        localStorage.getItem("wealthoria-member");
+        localStorage.getItem(
+          "wealthoria-member"
+        );
 
       const sessionMember =
-        sessionStorage.getItem("wealthoria-member");
+        sessionStorage.getItem(
+          "wealthoria-member"
+        );
 
       try {
         if (localMember) {
@@ -58,35 +80,66 @@
         } else if (sessionMember) {
           member = JSON.parse(sessionMember);
         }
-      } catch (e) {
-        console.error("Member session parse error:", e);
+      } catch (error) {
+        console.error(
+          "Member session parse error:",
+          error
+        );
       }
 
-      console.log("Logged-in member:", member);
+      // Do NOT print JWT/token in console
+      console.log(
+        "Logged-in member:",
+        member
+          ? {
+              uid: member.uid,
+              email: member.email,
+              name: member.name,
+              role: member.role
+            }
+          : null
+      );
 
-      if (!member || !member.uid || !member.token) {
-        alert("Please login as a member first.");
+      if (
+        !member ||
+        !member.uid ||
+        !member.token
+      ) {
+        alert(
+          "Please login as a member first."
+        );
         return;
       }
 
       // --------------------------------------------------
-      // 5. Ask permission
+      // 5. Ask notification permission
       // --------------------------------------------------
+
       const permission =
         await Notification.requestPermission();
 
-      console.log("Notification permission:", permission);
+      console.log(
+        "Notification permission:",
+        permission
+      );
 
       if (permission !== "granted") {
-        alert("Notification permission was not granted.");
+        alert(
+          "Notification permission was not granted."
+        );
         return;
       }
 
       // --------------------------------------------------
-      // 6. Service worker
+      // 6. Service Worker
       // --------------------------------------------------
-      if (!("serviceWorker" in navigator)) {
-        alert("Service Worker is not supported.");
+
+      if (
+        !("serviceWorker" in navigator)
+      ) {
+        alert(
+          "Service Worker is not supported."
+        );
         return;
       }
 
@@ -99,61 +152,157 @@
       );
 
       // --------------------------------------------------
-      // 7. Create Firebase Messaging instance
+      // 7. Firebase Messaging instance
       // --------------------------------------------------
+
       const messaging =
         firebase.messaging();
 
+      console.log(
+        "✅ Firebase Messaging instance created."
+      );
+
       // --------------------------------------------------
-      // 8. VAPID key
+      // 8. FOREGROUND NOTIFICATION LISTENER
       // --------------------------------------------------
+
+      if (
+        !window.memberForegroundListenerReady
+      ) {
+        messaging.onMessage(
+          function (payload) {
+            console.log(
+              "🔔 Foreground notification received:",
+              payload
+            );
+
+            const title =
+              payload.notification?.title ||
+              payload.data?.title ||
+              "Wealthoria";
+
+            const body =
+              payload.notification?.body ||
+              payload.data?.body ||
+              "You have a new notification.";
+
+            // ------------------------------------------
+            // Show browser notification
+            // ------------------------------------------
+
+            if (
+              Notification.permission ===
+              "granted"
+            ) {
+              try {
+                const notification =
+                  new Notification(
+                    title,
+                    {
+                      body: body,
+                      icon:
+                        "/icons/icon-192.png"
+                    }
+                  );
+
+                notification.onclick =
+                  function () {
+                    window.focus();
+                    notification.close();
+                  };
+
+                console.log(
+                  "✅ Foreground browser notification displayed."
+                );
+
+              } catch (notificationError) {
+                console.error(
+                  "❌ Could not display browser notification:",
+                  notificationError
+                );
+              }
+            } else {
+              console.warn(
+                "⚠️ Notification permission is not granted."
+              );
+            }
+          }
+        );
+
+        window.memberForegroundListenerReady =
+          true;
+
+        console.log(
+          "✅ Foreground notification listener ready."
+        );
+      } else {
+        console.log(
+          "ℹ️ Foreground notification listener already exists."
+        );
+      }
+
+      // --------------------------------------------------
+      // 9. VAPID KEY
+      // --------------------------------------------------
+
       const vapidKey =
         "BEoUv-g5znqXgkiql7pW95Ucw67PDIgJWNGYLkFVo4vu8ZxZEp0DSk0ggnl1piEktPvsBfJKqATvsAJO-GUFvpc";
 
       // --------------------------------------------------
-      // 9. Get FCM token
+      // 10. Get FCM TOKEN
       // --------------------------------------------------
-      console.log("Requesting FCM token...");
+
+      console.log(
+        "Requesting FCM token..."
+      );
 
       const fcmToken =
         await messaging.getToken({
           vapidKey: vapidKey,
-          serviceWorkerRegistration: registration
+
+          serviceWorkerRegistration:
+            registration
         });
 
       if (!fcmToken) {
-        alert("Could not get FCM token.");
+        alert(
+          "Could not get FCM token."
+        );
         return;
       }
 
       console.log(
-        "✅ FCM token received:",
-        fcmToken
+        "✅ FCM token received successfully."
       );
 
       // --------------------------------------------------
-      // 10. Send token to backend
+      // 11. Send FCM token to backend
       // --------------------------------------------------
+
       console.log(
         "Sending token to backend..."
       );
 
-      const response = await fetch(
-        "https://webinar-registration-backend.onrender.com/api/members/notification-token",
-        {
-          method: "POST",
+      const response =
+        await fetch(
+          "https://webinar-registration-backend.onrender.com/api/members/notification-token",
+          {
+            method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization":
-              "Bearer " + member.token
-          },
+            headers: {
+              "Content-Type":
+                "application/json",
 
-          body: JSON.stringify({
-            token: fcmToken
-          })
-        }
-      );
+              "Authorization":
+                "Bearer " +
+                member.token
+            },
+
+            body: JSON.stringify({
+              token: fcmToken
+            })
+          }
+        );
 
       const data =
         await response.json();
@@ -163,17 +312,23 @@
         data
       );
 
+      // --------------------------------------------------
+      // 12. Backend error
+      // --------------------------------------------------
+
       if (!response.ok) {
         alert(
           data.message ||
           "Failed to save notification token."
         );
+
         return;
       }
 
       // --------------------------------------------------
-      // 11. Success
+      // 13. Success
       // --------------------------------------------------
+
       console.log(
         "✅ Notification token saved successfully."
       );
@@ -195,6 +350,10 @@
       );
     }
   };
+
+  // =========================================================
+  // SCRIPT LOADED
+  // =========================================================
 
   console.log(
     "✅ Wealthoria notification system loaded."

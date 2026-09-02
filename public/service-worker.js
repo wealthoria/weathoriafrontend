@@ -53,7 +53,7 @@ messaging.setBackgroundMessageHandler(function(payload) {
 });
 
 
-const CACHE_VERSION = "wealthoria-v2";
+const CACHE_VERSION = "wealthoria-v3";
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 

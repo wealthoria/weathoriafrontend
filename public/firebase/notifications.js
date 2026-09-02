@@ -1,3 +1,6 @@
+
+console.log("🔥 NOTIFICATIONS.JS STARTED");
+
 (function () {
   async function enableMemberNotifications() {
     try {

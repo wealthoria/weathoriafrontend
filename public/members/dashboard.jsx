@@ -1846,6 +1846,23 @@ const openPage =
             </button>
 
 
+{/* NOTIFICATIONS */}
+<button
+  className="member-header-button"
+  type="button"
+  onClick={() => {
+    if (window.enableMemberNotifications) {
+      window.enableMemberNotifications();
+    } else {
+      console.error("Notification system is not loaded.");
+    }
+  }}
+>
+  🔔 Notifications
+</button>
+
+
+
             <button
               type="button"
               className="wd-header-button"

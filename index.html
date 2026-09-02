@@ -276,7 +276,31 @@
 
   </script>
 
-<script src="/firebase/notifications.js?v=3"></script>
+<script src="/firebase/notifications.js?v=3" defer></script>
+<script>
+  console.log("Loading Wealthoria notification system...");
+
+  const notificationScript = document.createElement("script");
+
+  notificationScript.src = "/firebase/notifications.js?v=10";
+
+  notificationScript.onload = function () {
+    console.log("✅ notifications.js loaded successfully");
+    console.log(
+      "Notification function:",
+      typeof window.enableMemberNotifications
+    );
+  };
+
+  notificationScript.onerror = function (error) {
+    console.error(
+      "❌ Failed to load notifications.js",
+      error
+    );
+  };
+
+  document.head.appendChild(notificationScript);
+</script>
 
 
 

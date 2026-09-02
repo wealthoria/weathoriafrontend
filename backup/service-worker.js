@@ -8,51 +8,6 @@
      - Navigations: network-first, fall back to cache, then offline.html.
    Bump CACHE_VERSION on any deploy to roll caches.
    ========================================================================= */
-
-
-
-   importScripts(
-  "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"
-);
-
-importScripts(
-  "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
-);
-
-firebase.initializeApp({
-  apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
-  authDomain: "wealthoria-6fc11.firebaseapp.com",
-  projectId: "wealthoria-6fc11",
-  storageBucket: "wealthoria-6fc11.firebasestorage.app",
-  messagingSenderId: "141910518023",
-  appId: "1:141910518023:web:7198ed847f459cb71ebda2"
-});
-
-const messaging = firebase.messaging();
-
-messaging.setBackgroundMessageHandler(function(payload) {
-  console.log(
-    "[firebase-messaging-sw.js] Received background message ",
-    payload
-  );
-
-  const notificationTitle =
-    payload.notification?.title || "Wealthoria";
-
-  const notificationOptions = {
-    body:
-      payload.notification?.body ||
-      "You have a new notification.",
-    icon: "/icons/icon-192.png"
-  };
-
-  return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
-  );
-});
-
-
 const CACHE_VERSION = "wealthoria-v2";
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;

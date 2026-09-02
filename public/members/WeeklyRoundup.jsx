@@ -2,178 +2,344 @@
 
 const { useState, useEffect } = React;
 
-/* =========================================================
-   WEEKLY ROUNDUP
-   Displays inside the Members dashboard content area.
-========================================================= */
-
 function WeeklyRoundup() {
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRoundup, setSelectedRoundup] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [selectedPdf, setSelectedPdf] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
-  const roundups = [
-    {
-      id: 1,
-      title: "Weekly Market Roundup",
-      date: "This Week",
-      category: "Market Insights",
-      summary:
-        "A concise overview of the important market movements, trends and developments from the week.",
-      content:
-        "Use this space to publish the weekly Wealthoria market roundup. Add the week's key market movements, important events, sector updates and educational observations here."
-    },
-    {
-      id: 2,
-      title: "Markets & Economy",
-      date: "Latest",
-      category: "Economy",
-      summary:
-        "Key economic developments and what they mean for investors.",
-      content:
-        "Add the latest economic developments, policy updates, inflation information and other important investor-focused observations here."
-    },
-    {
-      id: 3,
-      title: "Investor Learning Corner",
-      date: "Latest",
-      category: "Education",
-      summary:
-        "Simple financial concepts and practical lessons for members.",
-      content:
-        "Add educational content here to help members understand investing concepts before making investment decisions."
+
+  const API_BASE_URL =
+    "https://webinar-registration-backend.onrender.com";
+
+
+  const getFileUrl = (fileUrl) => {
+
+    if (!fileUrl) {
+      return "";
     }
-  ];
 
-  const filteredRoundups =
-    roundups.filter((item) => {
+    if (
+      fileUrl.startsWith("http://") ||
+      fileUrl.startsWith("https://")
+    ) {
+      return fileUrl;
+    }
 
-      const query =
-        searchQuery.trim().toLowerCase();
+    if (fileUrl.startsWith("/")) {
+      return API_BASE_URL + fileUrl;
+    }
 
-      if (!query) return true;
+    return API_BASE_URL + "/" + fileUrl;
+  };
 
-      return (
-        item.title.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query) ||
-        item.summary.toLowerCase().includes(query) ||
-        item.content.toLowerCase().includes(query)
+
+  const formatDate = (value) => {
+
+    if (!value) {
+      return "";
+    }
+
+    try {
+
+      if (
+        value &&
+        typeof value.toDate === "function"
+      ) {
+
+        return value
+          .toDate()
+          .toLocaleDateString(
+            "en-IN",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            }
+          );
+      }
+
+      const date =
+        new Date(value);
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return String(value);
+      }
+
+      return date.toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
       );
 
-    });
+    } catch (error) {
+
+      return String(value);
+
+    }
+  };
 
 
-  /* =======================================================
-     DETAIL VIEW
-  ======================================================= */
+  useEffect(() => {
 
-  if (selectedRoundup) {
+    if (!window.db) {
 
-    return (
+      console.error(
+        "Firestore is not available."
+      );
 
-      <section className="member-weekly-roundup-page">
+      setError(
+        "Weekly Roundup service is not available."
+      );
 
-        <div className="member-chart-header">
+      setLoading(false);
 
-          <div>
+      return;
+    }
 
-            <span className="member-eyebrow">
-              WEEKLY ROUNDUP
-            </span>
 
-            <h2>
-              {selectedRoundup.title}
-            </h2>
+    const unsubscribe =
+      window.db
+        .collection("content")
+        .where(
+          "category",
+          "==",
+          "Weekly Roundup"
+        )
+        .where(
+          "status",
+          "==",
+          "published"
+        )
+        .onSnapshot(
 
-            <p>
-              {selectedRoundup.date}
-              {" • "}
-              {selectedRoundup.category}
-            </p>
+          (snapshot) => {
 
-          </div>
+            const rows =
+              snapshot.docs.map(
+                (doc) => {
 
-          <button
-            type="button"
-            className="member-panel-link"
-            onClick={() =>
-              setSelectedRoundup(null)
+                  const data =
+                    doc.data() || {};
+
+                  return {
+
+                    id: doc.id,
+
+                    title:
+                      data.title ||
+                      data.pdfName ||
+                      "Weekly Roundup",
+
+                    description:
+                      data.description ||
+                      "",
+
+                    tags:
+                      Array.isArray(data.tags)
+                        ? data.tags
+                        : [],
+
+                    pdfUrl:
+                      data.pdfUrl ||
+                      "",
+
+                    thumbnailUrl:
+                      data.thumbnailUrl ||
+                      "",
+
+                    publishedAt:
+                      data.publishedAt ||
+                      data.createdAt ||
+                      ""
+                  };
+
+                }
+              );
+
+
+            setReports(rows);
+
+            setLoading(false);
+
+            setError("");
+
+          },
+
+
+          (err) => {
+
+            console.error(
+              "Weekly Roundup Firestore error:",
+              err
+            );
+
+            setError(
+              "Unable to load Weekly Roundup reports."
+            );
+
+            setLoading(false);
+
+          }
+        );
+
+
+    return () => {
+      unsubscribe();
+    };
+
+  }, []);
+
+
+  const filteredReports =
+    reports.filter(
+      (report) => {
+
+        const searchText =
+          search
+            .trim()
+            .toLowerCase();
+
+
+        const matchesSearch =
+          !searchText ||
+          report.title
+            .toLowerCase()
+            .includes(searchText) ||
+          report.description
+            .toLowerCase()
+            .includes(searchText) ||
+          report.tags.some(
+            (tag) =>
+              String(tag)
+                .toLowerCase()
+                .includes(searchText)
+          );
+
+
+        let matchesDate = true;
+
+
+        if (selectedDate) {
+
+          let reportDate = "";
+
+
+          if (
+            report.publishedAt &&
+            typeof report.publishedAt.toDate ===
+              "function"
+          ) {
+
+            const date =
+              report.publishedAt
+                .toDate();
+
+            reportDate =
+              date
+                .toISOString()
+                .slice(0, 10);
+
+          } else {
+
+            const date =
+              new Date(
+                report.publishedAt
+              );
+
+            if (
+              !Number.isNaN(
+                date.getTime()
+              )
+            ) {
+
+              reportDate =
+                date
+                  .toISOString()
+                  .slice(0, 10);
+
             }
-          >
-            ← Back to Weekly Roundup
-          </button>
 
-        </div>
+          }
 
 
-        <article
-          className="member-weekly-roundup-article"
-          style={{
-            marginTop: 24,
-            padding: 28,
-            borderRadius: 18,
-            background:
-              "var(--member-card-bg, #ffffff)",
-            border:
-              "1px solid var(--member-border, #e7e7e7)"
-          }}
-        >
+          matchesDate =
+            reportDate ===
+            selectedDate;
 
-          <span
-            style={{
-              display: "inline-block",
-              marginBottom: 14,
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "#e8473f"
-            }}
-          >
-            {selectedRoundup.category}
-          </span>
+        }
 
-          <h3
-            style={{
-              marginTop: 0,
-              marginBottom: 14
-            }}
-          >
-            {selectedRoundup.title}
-          </h3>
 
-          <p
-            style={{
-              lineHeight: 1.8,
-              marginBottom: 0
-            }}
-          >
-            {selectedRoundup.content}
-          </p>
+        return (
+          matchesSearch &&
+          matchesDate
+        );
 
-        </article>
-
-      </section>
-
+      }
     );
 
+
+  if (loading) {
+
+    return (
+      <section className="member-newsletter-page">
+
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center"
+          }}
+        >
+          Loading Weekly Roundup...
+        </div>
+
+      </section>
+    );
   }
 
 
-  /* =======================================================
-     LIST VIEW
-  ======================================================= */
+  if (error) {
+
+    return (
+      <section className="member-newsletter-page">
+
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center"
+          }}
+        >
+          {error}
+        </div>
+
+      </section>
+    );
+  }
+
 
   return (
 
-    <section className="member-weekly-roundup-page">
+    <section className="member-newsletter-page">
 
-      <div className="member-chart-header">
+
+      {/* HEADER */}
+
+      <div className="member-newsletter-header">
 
         <div>
 
           <span className="member-eyebrow">
-            MEMBER LEARNING
+            WEALTHORIA
           </span>
 
           <h2>
@@ -181,204 +347,273 @@ function WeeklyRoundup() {
           </h2>
 
           <p>
-            Stay updated with weekly market
-            insights and investor-focused updates.
+            Read the latest Wealthoria weekly
+            market updates and investment insights.
           </p>
 
         </div>
 
-        <button
-          type="button"
-          className="member-panel-link"
-          onClick={() => {
-
-            if (window.membersNavigate) {
-              window.membersNavigate(
-                "/members/dashboard"
-              );
-            }
-
-          }}
-        >
-          ← Back to Dashboard
-        </button>
-
       </div>
 
 
-      {/* =====================================================
-          SEARCH
-      ===================================================== */}
+      {/* FILTERS */}
 
       <div
+        className="newsletter-filters"
         style={{
-          marginTop: 22,
-          marginBottom: 24
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          marginTop: 20,
+          marginBottom: 24,
+          flexWrap: "wrap"
         }}
       >
 
-        <div
-          style={{
-            position: "relative",
-            maxWidth: 620
-          }}
-        >
+        <input
+          type="search"
+          value={search}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+          placeholder="Search weekly roundup..."
+          className="newsletter-search"
+        />
 
-          <span
-            style={{
-              position: "absolute",
-              left: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: 18,
-              opacity: 0.55
+
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(event) =>
+            setSelectedDate(
+              event.target.value
+            )
+          }
+          className="newsletter-date-filter"
+        />
+
+
+        {(search || selectedDate) && (
+
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setSelectedDate("");
             }}
+            className="newsletter-clear-filter"
           >
-            🔍
-          </span>
+            Clear
+          </button>
 
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(event) =>
-              setSearchQuery(
-                event.target.value
-              )
-            }
-            placeholder="Search weekly roundup..."
-            aria-label="Search weekly roundup"
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              padding:
-                "14px 18px 14px 46px",
-              borderRadius: 12,
-              border:
-                "1px solid var(--member-border, #dddddd)",
-              background:
-                "var(--member-input-bg, #ffffff)",
-              color:
-                "var(--member-text, #222222)",
-              outline: "none",
-              fontSize: 15
-            }}
-          />
-
-        </div>
+        )}
 
       </div>
 
 
-      {/* =====================================================
-          CARDS
-      ===================================================== */}
+      {/* REPORTS */}
 
-      {filteredRoundups.length === 0 ? (
+      {filteredReports.length === 0 ? (
 
         <div
           style={{
             padding: 40,
-            textAlign: "center",
-            borderRadius: 16,
-            border:
-              "1px solid var(--member-border, #e7e7e7)"
+            textAlign: "center"
           }}
         >
-
-          <h3>
-            No roundup found
-          </h3>
-
-          <p>
-            Try another search.
-          </p>
-
+          No Weekly Roundup reports available yet.
         </div>
 
       ) : (
 
-        <div
-          className="member-dashboard-grid"
-        >
+        <div className="member-newsletter-grid">
 
-          {filteredRoundups.map(
-            (item) => (
+          {filteredReports.map((report) => (
 
-              <article
-                key={item.id}
-                className="member-panel"
-                style={{
-                  cursor: "default"
-                }}
-              >
+            <article
+              className="member-newsletter-card"
+              key={report.id}
+            >
 
-                <div
-                  className="member-panel-header"
-                >
 
-                  <div>
+              {/* THUMBNAIL */}
 
-                    <span
-                      className="member-panel-label"
-                    >
-                      {item.category}
-                    </span>
+              <div className="member-newsletter-icon">
 
-                    <h3>
-                      {item.title}
-                    </h3>
+                {report.thumbnailUrl ? (
 
-                  </div>
-
-                  <span
+                  <img
+                    src={getFileUrl(
+                      report.thumbnailUrl
+                    )}
+                    alt={report.title}
                     style={{
-                      fontSize: 13,
-                      opacity: 0.65
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block"
                     }}
-                  >
-                    {item.date}
-                  </span>
+                  />
 
-                </div>
+                ) : (
+
+                  <span>PDF</span>
+
+                )}
+
+              </div>
+
+
+              {/* CONTENT */}
+
+              <div className="member-newsletter-content">
+
+                <span className="member-newsletter-date">
+
+                  {formatDate(
+                    report.publishedAt
+                  )}
+
+                </span>
+
+
+                <h3>
+                  {report.title}
+                </h3>
 
 
                 <p>
-                  {item.summary}
+                  {report.description}
                 </p>
 
 
-                <button
-                  type="button"
-                  className="member-panel-link"
-                  onClick={() =>
-                    setSelectedRoundup(item)
+                {report.tags.length > 0 && (
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                      marginTop: 10
+                    }}
+                  >
+
+                    {report.tags
+                      .slice(0, 4)
+                      .map((tag) => (
+
+                        <span
+                          key={tag}
+                          className="badge badge-soft"
+                          style={{
+                            fontSize: 10
+                          }}
+                        >
+                          {tag}
+                        </span>
+
+                      ))}
+
+                  </div>
+
+                )}
+
+              </div>
+
+
+              {/* BUTTON */}
+
+              <button
+                type="button"
+                className="member-newsletter-button"
+                disabled={!report.pdfUrl}
+                onClick={() => {
+
+                  if (!report.pdfUrl) {
+                    return;
                   }
-                  style={{
-                    marginTop: 10
-                  }}
-                >
-                  Read roundup →
-                </button>
 
-              </article>
+                  setSelectedPdf(report);
 
-            )
-          )}
+                }}
+              >
+                Read Report →
+              </button>
+
+
+            </article>
+
+          ))}
+
+        </div>
+
+      )}
+
+
+      {/* PDF POPUP */}
+
+      {selectedPdf && (
+
+        <div
+          className="member-pdf-overlay"
+          onClick={() =>
+            setSelectedPdf(null)
+          }
+        >
+
+          <div
+            className="member-pdf-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+
+            <div className="member-pdf-header">
+
+              <div>
+
+                <span>
+                  WEEKLY ROUNDUP
+                </span>
+
+                <h3>
+                  {selectedPdf.title}
+                </h3>
+
+              </div>
+
+
+              <button
+                type="button"
+                className="member-pdf-close"
+                onClick={() =>
+                  setSelectedPdf(null)
+                }
+              >
+                ×
+              </button>
+
+            </div>
+
+
+            <iframe
+              src={`${getFileUrl(
+                selectedPdf.pdfUrl
+              )}#toolbar=0&navpanes=0`}
+              title={selectedPdf.title}
+              className="member-pdf-frame"
+            />
+
+          </div>
 
         </div>
 
       )}
 
     </section>
-
   );
-
 }
 
 
-/* =========================================================
-   EXPORT
-========================================================= */
-
-window.WeeklyRoundup =
-  WeeklyRoundup;
+window.WeeklyRoundup = WeeklyRoundup;

@@ -1,161 +1,1241 @@
+/* global React, window */
 
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
 
-const { useState, useEffect } = React;
 
 /* =========================================================
-   TRADINGVIEW CHART
-   ========================================================= */
+   CONFIG
+========================================================= */
 
-function TradingViewChart({ theme }) {
+const DASHBOARD_API =
+  "https://webinar-registration-backend.onrender.com";
 
-  const containerRef = React.useRef(null);
 
-  React.useEffect(() => {
+/* =========================================================
+   HELPERS
+========================================================= */
 
-    const container = containerRef.current;
+function getDashboardFileUrl(fileUrl) {
 
-    if (!container) return;
+  if (!fileUrl) {
+    return "";
+  }
 
-    // Clear previous TradingView widget
+  if (
+    fileUrl.startsWith("http://") ||
+    fileUrl.startsWith("https://")
+  ) {
+    return fileUrl;
+  }
+
+  if (fileUrl.startsWith("/")) {
+    return DASHBOARD_API + fileUrl;
+  }
+
+  return DASHBOARD_API + "/" + fileUrl;
+}
+
+
+function getDashboardDate(value) {
+
+  if (!value) {
+    return "";
+  }
+
+  try {
+
+    const date =
+      typeof value.toDate === "function"
+        ? value.toDate()
+        : new Date(value);
+
+    if (
+      Number.isNaN(date.getTime())
+    ) {
+      return "";
+    }
+
+    return date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      }
+    );
+
+  } catch (error) {
+
+    return "";
+
+  }
+}
+
+
+function getDashboardTime(value) {
+
+  if (!value) {
+    return 0;
+  }
+
+  try {
+
+    if (
+      typeof value.toMillis === "function"
+    ) {
+      return value.toMillis();
+    }
+
+    if (
+      typeof value.toDate === "function"
+    ) {
+      return value.toDate().getTime();
+    }
+
+    const time =
+      new Date(value).getTime();
+
+    return Number.isNaN(time)
+      ? 0
+      : time;
+
+  } catch (error) {
+
+    return 0;
+
+  }
+}
+
+
+/* =========================================================
+   TRADING VIEW
+========================================================= */
+
+function DashboardTradingView({ theme }) {
+
+  const containerRef =
+    useRef(null);
+
+
+  useEffect(() => {
+
+    const container =
+      containerRef.current;
+
+    if (!container) {
+      return;
+    }
+
     container.innerHTML = "";
 
 
-    // Create TradingView script
-    const script = document.createElement("script");
+    const script =
+      document.createElement("script");
+
 
     script.src =
       "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
 
-    script.type = "text/javascript";
+    script.type =
+      "text/javascript";
 
     script.async = true;
 
 
-    script.innerHTML = JSON.stringify({
+    script.innerHTML =
+      JSON.stringify({
 
-      autosize: true,
+        autosize: true,
 
-      // NIFTY 50
-      symbol: "NSE:NIFTY",
+        symbol:
+          "NSE:NIFTY",
 
-      interval: "D",
+        interval:
+          "D",
 
-      timezone: "Asia/Kolkata",
+        timezone:
+          "Asia/Kolkata",
 
-      // Follow Member Portal theme
-      theme: theme === "dark" ? "dark" : "light",
+        theme:
+          theme === "dark"
+            ? "dark"
+            : "light",
 
-      style: "1",
+        style:
+          "1",
 
-      locale: "en",
+        locale:
+          "en",
 
-      // Keep NIFTY as the primary symbol
-      allow_symbol_change: false,
+        allow_symbol_change:
+          false,
 
-      hide_side_toolbar: false,
+        hide_side_toolbar:
+          false,
 
-      hide_top_toolbar: false,
+        hide_top_toolbar:
+          false,
 
-      hide_legend: false,
+        hide_legend:
+          false,
 
-      hide_volume: false,
+        hide_volume:
+          false,
 
-      withdateranges: true,
+        withdateranges:
+          true,
 
-      save_image: true,
+        save_image:
+          true,
 
-      calendar: false,
+        calendar:
+          false,
 
-      studies: [],
+        studies:
+          [],
 
-      support_host:
-        "https://www.tradingview.com"
+        support_host:
+          "https://www.tradingview.com"
 
-    });
+      });
 
 
-    container.appendChild(script);
+    container.appendChild(
+      script
+    );
 
 
     return () => {
-
       container.innerHTML = "";
-
     };
 
   }, [theme]);
 
 
   return (
-
     <div
       ref={containerRef}
-      className="tradingview-widget-container"
-      style={{
-        width: "100%",
-        height: "650px"
-      }}
+      className="wd-tradingview"
     />
-
   );
 
 }
 
 
 /* =========================================================
+   DASHBOARD CONTENT CARD
+   LATEST NEWSLETTER
+========================================================= */
+
+function DashboardNewsletter({ onOpen }) {
+
+  const [newsletter, setNewsletter] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+
+  useEffect(() => {
+
+    if (!window.db) {
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+    const unsubscribe =
+      window.db
+        .collection("content")
+        .where(
+          "category",
+          "==",
+          "Newsletter"
+        )
+        .where(
+          "status",
+          "==",
+          "published"
+        )
+        .onSnapshot(
+
+          (snapshot) => {
+
+            const rows =
+              snapshot.docs.map(
+                (doc) => {
+
+                  const data =
+                    doc.data() || {};
+
+                  return {
+
+                    id: doc.id,
+
+                    title:
+                      data.title ||
+                      data.pdfName ||
+                      "Newsletter",
+
+                    description:
+                      data.description ||
+                      "",
+
+                    tags:
+                      Array.isArray(data.tags)
+                        ? data.tags
+                        : [],
+
+                    thumbnailUrl:
+                      data.thumbnailUrl ||
+                      "",
+
+                    pdfUrl:
+                      data.pdfUrl ||
+                      "",
+
+                    publishedAt:
+                      data.publishedAt ||
+                      data.createdAt ||
+                      ""
+
+                  };
+
+                }
+              );
+
+
+            rows.sort(
+              (a, b) =>
+                getDashboardTime(
+                  b.publishedAt
+                ) -
+                getDashboardTime(
+                  a.publishedAt
+                )
+            );
+
+
+            setNewsletter(
+              rows[0] || null
+            );
+
+            setLoading(false);
+
+          },
+
+          (error) => {
+
+            console.error(
+              "Dashboard Newsletter error:",
+              error
+            );
+
+            setLoading(false);
+
+          }
+
+        );
+
+
+    return () =>
+      unsubscribe();
+
+  }, []);
+
+
+  const openNewsletter =
+    () => {
+
+      if (
+        window.membersNavigate
+      ) {
+
+       onOpen();
+
+      }
+
+    };
+
+
+  if (loading) {
+
+    return (
+      <section className="wd-panel">
+
+        <div className="wd-panel-loading">
+          Loading Newsletter...
+        </div>
+
+      </section>
+    );
+
+  }
+
+
+  return (
+
+    <section className="wd-panel">
+
+      <div className="wd-panel-head">
+
+        <div>
+
+          <span className="wd-panel-label">
+            NEWSLETTER
+          </span>
+
+          <h3>
+            Latest Newsletter
+          </h3>
+
+        </div>
+
+
+        <button
+          type="button"
+          className="wd-view-button"
+          onClick={openNewsletter}
+        >
+          View all →
+        </button>
+
+      </div>
+
+
+      {!newsletter ? (
+
+        <div className="wd-empty">
+          No published newsletter available.
+        </div>
+
+      ) : (
+
+        <button
+          type="button"
+          className="wd-feature"
+          onClick={openNewsletter}
+        >
+
+          <div className="wd-feature-image">
+
+            {newsletter.thumbnailUrl ? (
+
+              <img
+                src={getDashboardFileUrl(
+                  newsletter.thumbnailUrl
+                )}
+                alt={newsletter.title}
+              />
+
+            ) : (
+
+              <span>PDF</span>
+
+            )}
+
+          </div>
+
+
+          <div className="wd-feature-text">
+
+            <span className="wd-feature-type">
+              NEWSLETTER
+            </span>
+
+            <h4>
+              {newsletter.title}
+            </h4>
+
+            <p>
+              {newsletter.description}
+            </p>
+
+            <span className="wd-feature-date">
+              {getDashboardDate(
+                newsletter.publishedAt
+              )}
+            </span>
+
+            <span className="wd-feature-link">
+              Read Newsletter →
+            </span>
+
+          </div>
+
+        </button>
+
+      )}
+
+    </section>
+
+  );
+}
+
+
+window.DashboardNewsletter =
+  DashboardNewsletter;
+
+
+/* =========================================================
+   DASHBOARD CONTENT CARD
+   LATEST WEEKLY ROUNDUP
+========================================================= */
+
+function DashboardWeeklyRoundup({onOpen}) {
+
+  const [report, setReport] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+
+  useEffect(() => {
+
+    if (!window.db) {
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+    const unsubscribe =
+      window.db
+        .collection("content")
+        .where(
+          "category",
+          "==",
+          "Weekly Roundup"
+        )
+        .where(
+          "status",
+          "==",
+          "published"
+        )
+        .onSnapshot(
+
+          (snapshot) => {
+
+            const rows =
+              snapshot.docs.map(
+                (doc) => {
+
+                  const data =
+                    doc.data() || {};
+
+                  return {
+
+                    id: doc.id,
+
+                    title:
+                      data.title ||
+                      data.pdfName ||
+                      "Weekly Roundup",
+
+                    description:
+                      data.description ||
+                      "",
+
+                    thumbnailUrl:
+                      data.thumbnailUrl ||
+                      "",
+
+                    pdfUrl:
+                      data.pdfUrl ||
+                      "",
+
+                    publishedAt:
+                      data.publishedAt ||
+                      data.createdAt ||
+                      ""
+
+                  };
+
+                }
+              );
+
+
+            rows.sort(
+              (a, b) =>
+                getDashboardTime(
+                  b.publishedAt
+                ) -
+                getDashboardTime(
+                  a.publishedAt
+                )
+            );
+
+
+            setReport(
+              rows[0] || null
+            );
+
+            setLoading(false);
+
+          },
+
+          (error) => {
+
+            console.error(
+              "Dashboard Weekly Roundup error:",
+              error
+            );
+
+            setLoading(false);
+
+          }
+
+        );
+
+
+    return () =>
+      unsubscribe();
+
+  }, []);
+
+
+  const openWeekly =
+    () => {
+
+      if (
+        window.membersNavigate
+      ) {
+
+       onOpen();
+
+      }
+
+    };
+
+
+  if (loading) {
+
+    return (
+      <section className="wd-panel">
+
+        <div className="wd-panel-loading">
+          Loading Weekly Roundup...
+        </div>
+
+      </section>
+    );
+
+  }
+
+
+  return (
+
+    <section className="wd-panel">
+
+      <div className="wd-panel-head">
+
+        <div>
+
+          <span className="wd-panel-label">
+            WEEKLY ROUNDUP
+          </span>
+
+          <h3>
+            Latest Market Report
+          </h3>
+
+        </div>
+
+
+        <button
+          type="button"
+          className="wd-view-button"
+          onClick={openWeekly}
+        >
+          View all →
+        </button>
+
+      </div>
+
+
+      {!report ? (
+
+        <div className="wd-empty">
+          No published market report available.
+        </div>
+
+      ) : (
+
+        <button
+          type="button"
+          className="wd-feature"
+          onClick={openWeekly}
+        >
+
+          <div className="wd-feature-image">
+
+            {report.thumbnailUrl ? (
+
+              <img
+                src={getDashboardFileUrl(
+                  report.thumbnailUrl
+                )}
+                alt={report.title}
+              />
+
+            ) : (
+
+              <span>PDF</span>
+
+            )}
+
+          </div>
+
+
+          <div className="wd-feature-text">
+
+            <span className="wd-feature-type">
+              WEEKLY ROUNDUP
+            </span>
+
+            <h4>
+              {report.title}
+            </h4>
+
+            <p>
+              {report.description}
+            </p>
+
+            <span className="wd-feature-date">
+              {getDashboardDate(
+                report.publishedAt
+              )}
+            </span>
+
+            <span className="wd-feature-link">
+              Read Report →
+            </span>
+
+          </div>
+
+        </button>
+
+      )}
+
+    </section>
+
+  );
+}
+
+
+window.DashboardWeeklyRoundup =
+  DashboardWeeklyRoundup;
+
+
+/* =========================================================
    MEMBER DASHBOARD
-   ========================================================= */
+========================================================= */
 
 function MemberDashboard() {
 
-  // Resolve child pages during render so Babel's asynchronous
-  // loading cannot leave us with an old undefined reference.
- const CourseVideos = window.CourseVideos;
-const Newsletter = window.Newsletter;
-const SeminarRegistrations = window.SeminarRegistrations;
-const WeeklyRoundup = window.WeeklyRoundup;
-const PurchaseHistory = window.PurchaseHistory;
-const MemberSettings = window.MemberSettings;
+  const CourseVideos =
+    window.CourseVideos;
+
+  const Newsletter =
+    window.Newsletter;
+
+  const WeeklyRoundup =
+    window.WeeklyRoundup;
+
+  const PurchaseHistory =
+    window.PurchaseHistory;
+
+  const MemberSettings =
+    window.MemberSettings;
+
+  const DashboardNewsletter =
+    window.DashboardNewsletter;
+
+  const DashboardWeeklyRoundup =
+    window.DashboardWeeklyRoundup;
+
 
   /* =======================================================
      MEMBER
-     ======================================================= */
+  ======================================================= */
 
-  const [member, setMember] = useState(null);
-  const [showCourses, setShowCourses] = useState(false);
-  const [showNewsletter, setShowNewsletter] = useState(false);
-  const [showWeeklyRoundup, setShowWeeklyRoundup] = useState(false);
+  const [member, setMember] =
+    useState(null);
 
-const [showSeminarRegistrations, setShowSeminarRegistrations] = useState(false);
-const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
+  const [authChecking, setAuthChecking] =
+    useState(true);
 
-const [showSettings, setShowSettings] = useState(false);
+
   /* =======================================================
-     DASHBOARD STATES
-     ======================================================= */
+     ACTIVE PAGE
+  ======================================================= */
 
-  const [showCalculator, setShowCalculator] =
+const [activePage, setActivePage] =
+  useState(
+    () =>
+      sessionStorage.getItem(
+        "wealthoria-active-page"
+      ) || "dashboard"
+  );
+  /* =======================================================
+     SIDEBAR
+  ======================================================= */
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(true);
+
+  const [mobileDrawerOpen, setMobileDrawerOpen] =
     useState(false);
 
-    const [selectedCalculator, setSelectedCalculator] = useState(null);
-  const [showCharts, setShowCharts] =
-    useState(false);
+
+  /* =======================================================
+     STATS
+  ======================================================= */
+
+  const [stats, setStats] =
+    useState({
+
+      totalContent: 0,
+
+      courses: 0,
+
+      marketReports: 0,
+
+      notifications: 0,
+
+      purchases: 0
+
+    });
+
+
+  const [statsLoading, setStatsLoading] =
+    useState(true);
 
 
   /* =======================================================
      THEME
-     ======================================================= */
+  ======================================================= */
 
-  const [theme, setTheme] = useState(
-    () =>
-      localStorage.getItem("wl-theme") ||
-      "light"
-  );
+  const [theme, setTheme] =
+    useState(
+      () =>
+        localStorage.getItem(
+          "wl-theme"
+        ) || "light"
+    );
 
 
   /* =======================================================
-     APPLY THEME
-     ======================================================= */
+     MEMBER SESSION
+  ======================================================= */
+
+  useEffect(() => {
+
+    const checkMemberSession =
+      async () => {
+
+        try {
+
+          const saved =
+            localStorage.getItem(
+              "wealthoria-member"
+            ) ||
+            sessionStorage.getItem(
+              "wealthoria-member"
+            );
+
+
+          if (!saved) {
+
+            setMember(null);
+            setAuthChecking(false);
+
+            if (
+              window.membersNavigate
+            ) {
+
+              window.membersNavigate(
+                "/members/login"
+              );
+
+            } else {
+
+              window.location.href =
+                "/members/login";
+
+            }
+
+            return;
+
+          }
+
+
+          let parsedMember;
+
+          try {
+
+            parsedMember =
+              JSON.parse(saved);
+
+          } catch (error) {
+
+            localStorage.removeItem(
+              "wealthoria-member"
+            );
+
+            sessionStorage.removeItem(
+              "wealthoria-member"
+            );
+
+            setMember(null);
+            setAuthChecking(false);
+
+            return;
+
+          }
+
+
+          if (
+            !parsedMember.uid ||
+            !parsedMember.token
+          ) {
+
+            setMember(null);
+            setAuthChecking(false);
+
+            return;
+
+          }
+
+
+          const response =
+            await fetch(
+              `${DASHBOARD_API}/api/members/me`,
+              {
+                method: "GET",
+
+                headers: {
+
+                  Authorization:
+                    `Bearer ${parsedMember.token}`
+
+                }
+
+              }
+            );
+
+
+          const data =
+            await response.json();
+
+
+          if (
+            !response.ok ||
+            !data.success ||
+            !data.member
+          ) {
+
+            throw new Error(
+              data?.message ||
+              "Member session is no longer valid."
+            );
+
+          }
+
+
+          const latestMember =
+            data.member;
+
+
+          const updatedSession = {
+
+            ...parsedMember,
+
+            uid:
+              latestMember.uid ||
+              parsedMember.uid,
+
+            email:
+              latestMember.email ||
+              parsedMember.email,
+
+            name:
+              latestMember.name ||
+              "",
+
+            role:
+              latestMember.role ||
+              "member"
+
+          };
+
+
+          if (
+            localStorage.getItem(
+              "wealthoria-member"
+            )
+          ) {
+
+            localStorage.setItem(
+              "wealthoria-member",
+              JSON.stringify(
+                updatedSession
+              )
+            );
+
+          }
+
+
+          if (
+            sessionStorage.getItem(
+              "wealthoria-member"
+            )
+          ) {
+
+            sessionStorage.setItem(
+              "wealthoria-member",
+              JSON.stringify(
+                updatedSession
+              )
+            );
+
+          }
+
+
+          setMember(
+            updatedSession
+          );
+
+          setAuthChecking(false);
+
+
+        } catch (error) {
+
+          console.error(
+            "Member session error:",
+            error
+          );
+
+          localStorage.removeItem(
+            "wealthoria-member"
+          );
+
+          sessionStorage.removeItem(
+            "wealthoria-member"
+          );
+
+          setMember(null);
+          setAuthChecking(false);
+
+
+          if (
+            window.membersNavigate
+          ) {
+
+            window.membersNavigate(
+              "/members/login"
+            );
+
+          }
+
+        }
+
+      };
+
+
+    checkMemberSession();
+
+  }, []);
+
+
+  /* =======================================================
+     LOAD REAL DASHBOARD COUNTS
+  ======================================================= */
+
+  useEffect(() => {
+
+    if (
+      !member ||
+      !window.db
+    ) {
+
+      return;
+
+    }
+
+
+    let cancelled = false;
+
+
+    const loadStats =
+      async () => {
+
+        try {
+
+          setStatsLoading(true);
+
+
+          const [
+            contentSnapshot,
+            courseSnapshot,
+            reportSnapshot,
+            purchaseSnapshot,
+            notificationSnapshot
+          ] =
+            await Promise.all([
+
+              /* Total published content */
+
+              window.db
+                .collection("content")
+                .where(
+                  "status",
+                  "==",
+                  "published"
+                )
+                .get(),
+
+
+              /* Published courses */
+
+              window.db
+                .collection("courses")
+                .where(
+                  "status",
+                  "==",
+                  "published"
+                )
+                .get(),
+
+
+              /* Published Weekly Roundups */
+
+              window.db
+                .collection("content")
+                .where(
+                  "category",
+                  "==",
+                  "Weekly Roundup"
+                )
+                .where(
+                  "status",
+                  "==",
+                  "published"
+                )
+                .get(),
+
+
+              /* Current member purchases */
+
+              window.db
+                .collection("coursePurchases")
+                .where(
+                  "userId",
+                  "==",
+                  member.uid
+                )
+                .get(),
+
+
+              /* Current member notifications */
+
+              window.db
+                .collection("notifications")
+                .where(
+                  "userId",
+                  "==",
+                  member.uid
+                )
+                .get()
+
+            ]);
+
+
+          if (cancelled) {
+            return;
+          }
+
+
+          setStats({
+
+            totalContent:
+              contentSnapshot.size,
+
+            courses:
+              courseSnapshot.size,
+
+            marketReports:
+              reportSnapshot.size,
+
+            purchases:
+              purchaseSnapshot.size,
+
+            notifications:
+              notificationSnapshot.size
+
+          });
+
+
+        } catch (error) {
+
+          console.error(
+            "Dashboard statistics error:",
+            error
+          );
+
+
+          if (!cancelled) {
+
+            setStats({
+              totalContent: 0,
+              courses: 0,
+              marketReports: 0,
+              purchases: 0,
+              notifications: 0
+            });
+
+          }
+
+        } finally {
+
+          if (!cancelled) {
+
+            setStatsLoading(
+              false
+            );
+
+          }
+
+        }
+
+      };
+
+
+    loadStats();
+
+
+    return () => {
+
+      cancelled = true;
+
+    };
+
+  }, [member]);
+
+
+  /* =======================================================
+     THEME
+  ======================================================= */
 
   useEffect(() => {
 
@@ -172,403 +1252,128 @@ const [showSettings, setShowSettings] = useState(false);
   }, [theme]);
 
 
-  /* =======================================================
-     TOGGLE THEME
-     ======================================================= */
-
-  const toggleTheme = () => {
-
-    setTheme((current) =>
-      current === "dark"
-        ? "light"
-        : "dark"
-    );
-
-  };
-
-
-  /* =======================================================
-     LOAD MEMBER
-     ======================================================= */
-/* =======================================================
-   CHECK MEMBER LOGIN
-   ======================================================= */
-/* =======================================================
-   CHECK MEMBER LOGIN
-======================================================= */
-
-const [authChecking, setAuthChecking] =
-  useState(true);
-
-useEffect(() => {
-
-  const checkMemberSession = async () => {
-
-    try {
-
-      /* =================================================
-         GET SAVED MEMBER SESSION
-      ================================================= */
-
-      const saved =
-        localStorage.getItem(
-          "wealthoria-member"
-        ) ||
-        sessionStorage.getItem(
-          "wealthoria-member"
-        );
-
-
-      if (!saved) {
-
-        console.warn(
-          "Member session not found."
-        );
-
-        setMember(null);
-        setAuthChecking(false);
-
-        if (window.membersNavigate) {
-
-          window.membersNavigate(
-            "/members/login"
-          );
-
-        } else {
-
-          window.location.href =
-            "/members/login";
-
-        }
-
-        return;
-
-      }
-
-
-      /* =================================================
-         PARSE SESSION
-      ================================================= */
-
-      let parsedMember;
-
-      try {
-
-        parsedMember =
-          JSON.parse(saved);
-
-      } catch (error) {
-
-        console.error(
-          "Invalid member session:",
-          error
-        );
-
-        localStorage.removeItem(
-          "wealthoria-member"
-        );
-
-        sessionStorage.removeItem(
-          "wealthoria-member"
-        );
-
-        setMember(null);
-        setAuthChecking(false);
-
-        if (window.membersNavigate) {
-
-          window.membersNavigate(
-            "/members/login"
-          );
-
-        } else {
-
-          window.location.href =
-            "/members/login";
-
-        }
-
-        return;
-
-      }
-
-
-      /* =================================================
-         CHECK SESSION DATA
-      ================================================= */
-
-      if (
-        !parsedMember.uid ||
-        !parsedMember.token
-      ) {
-
-        console.warn(
-          "Member session is incomplete."
-        );
-
-
-        localStorage.removeItem(
-          "wealthoria-member"
-        );
-
-        sessionStorage.removeItem(
-          "wealthoria-member"
-        );
-
-
-        setMember(null);
-        setAuthChecking(false);
-
-
-        if (window.membersNavigate) {
-
-          window.membersNavigate(
-            "/members/login"
-          );
-
-        } else {
-
-          window.location.href =
-            "/members/login";
-
-        }
-
-        return;
-
-      }
-
-
-      /* =================================================
-         GET LATEST MEMBER FROM BACKEND
-      ================================================= */
-
-      try {
-
-        const API_BASE_URL =
-         "https://webinar-registration-backend.onrender.com";
-
-
-        const response =
-          await fetch(
-            `${API_BASE_URL}/api/members/me`,
-            {
-              method: "GET",
-
-              headers: {
-                "Authorization":
-                  `Bearer ${parsedMember.token}`
-              }
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (
-          !response.ok ||
-          !data.success ||
-          !data.member
-        ) {
-
-          throw new Error(
-            data?.message ||
-            "Member session is no longer valid."
-          );
-
-        }
-
-
-        const latestMember =
-          data.member;
-
-
-        /* =================================================
-           CREATE UPDATED SESSION
-        ================================================= */
-
-        const updatedSession = {
-
-          ...parsedMember,
-
-          uid:
-            latestMember.uid ||
-            parsedMember.uid,
-
-          email:
-            latestMember.email ||
-            parsedMember.email,
-
-          name:
-            latestMember.name ||
-            "",
-
-          role:
-            latestMember.role ||
-            "member"
-
-        };
-
-
-        /* =================================================
-           SAVE UPDATED SESSION
-        ================================================= */
-
-        if (
-          localStorage.getItem(
-            "wealthoria-member"
-          )
-        ) {
-
-          localStorage.setItem(
-            "wealthoria-member",
-            JSON.stringify(
-              updatedSession
-            )
-          );
-
-        }
-
-
-        if (
-          sessionStorage.getItem(
-            "wealthoria-member"
-          )
-        ) {
-
-          sessionStorage.setItem(
-            "wealthoria-member",
-            JSON.stringify(
-              updatedSession
-            )
-          );
-
-        }
-
-
-        /* =================================================
-           SET MEMBER
-        ================================================= */
-
-        console.log(
-          "Member session verified:",
-          updatedSession.uid
-        );
-
-
-        setMember(
-          updatedSession
-        );
-
-
-        setAuthChecking(
-          false
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Member backend session check failed:",
-          error
-        );
-
-
-        localStorage.removeItem(
-          "wealthoria-member"
-        );
-
-        sessionStorage.removeItem(
-          "wealthoria-member"
-        );
-
-
-        setMember(null);
-        setAuthChecking(false);
-
-
-        if (window.membersNavigate) {
-
-          window.membersNavigate(
-            "/members/login"
-          );
-
-        } else {
-
-          window.location.href =
-            "/members/login";
-
-        }
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Member session error:",
-        error
+  const toggleTheme =
+    () => {
+
+      setTheme(
+        (current) =>
+          current === "dark"
+            ? "light"
+            : "dark"
       );
 
+    };
 
-      setMember(null);
-      setAuthChecking(false);
-
-    }
-
-  };
-
-
-  checkMemberSession();
-
-}, []);
 
   /* =======================================================
-     NAVIGATION
-     ======================================================= */
+     OPEN PAGE
+  ======================================================= */
+const openPage =
+  (page) => {
 
-  const navigate = (path) => {
+    setActivePage(page);
 
-    if (window.membersNavigate) {
+    sessionStorage.setItem(
+      "wealthoria-active-page",
+      page
+    );
 
-      window.membersNavigate(path);
-
-    }
+    setMobileDrawerOpen(false);
 
   };
+
+  /* =======================================================
+     NAVIGATE EXTERNAL MEMBER PAGE
+  ======================================================= */
+
+  const openRoute =
+    (path) => {
+
+      setMobileDrawerOpen(
+        false
+      );
+
+      if (
+        window.membersNavigate
+      ) {
+
+        window.membersNavigate(
+          path
+        );
+
+      } else {
+
+        window.location.href =
+          path;
+
+      }
+
+    };
 
 
   /* =======================================================
      LOGOUT
-     ======================================================= */
-const logout = () => {
+  ======================================================= */
 
-  localStorage.removeItem(
-    "wealthoria-member"
-  );
+  const logout =
+    () => {
 
-  sessionStorage.removeItem(
-    "wealthoria-member"
-  );
+      localStorage.removeItem(
+        "wealthoria-member"
+      );
+
+      sessionStorage.removeItem(
+        "wealthoria-member"
+      );
 
 
-  if (window.membersNavigate) {
+      if (
+        window.membersNavigate
+      ) {
 
-    window.membersNavigate(
-      "/members/login"
-    );
+        window.membersNavigate(
+          "/members/login"
+        );
 
-  } else {
+      } else {
 
-    window.location.href =
-      "/members/login";
+        window.location.href =
+          "/members/login";
 
-  }
+      }
 
-};
+    };
+
+
+  /* =======================================================
+     GREETING
+  ======================================================= */
+
+  const getGreeting =
+    () => {
+
+      const hour =
+        new Date().getHours();
+
+
+      if (hour < 12) {
+        return "Good morning";
+      }
+
+
+      if (hour < 17) {
+        return "Good afternoon";
+      }
+
+
+      return "Good evening";
+
+    };
+
+
   /* =======================================================
      MEMBER DETAILS
-     ======================================================= */
+  ======================================================= */
 
   const name =
     member?.name ||
@@ -580,267 +1385,334 @@ const logout = () => {
 
 
   /* =======================================================
-     RENDER
-     ======================================================= */
+     AUTH LOADING
+  ======================================================= */
 
   if (authChecking) {
+
+    return (
+      <div className="wd-auth-loading">
+        Checking login...
+      </div>
+    );
+
+  }
+
+
+  if (!member) {
+
+    return null;
+
+  }
+
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <div className="member-loading">
-      Checking login...
-    </div>
-  );
-}
 
-if (!member) {
-  return null;
-}
+    <div
+      className={
+        sidebarOpen
+          ? "wd-app"
+          : "wd-app wd-sidebar-collapsed"
+      }
+    >
 
-return (
-  <div className="member-dashboard">
 
+      {/* ===================================================
+          MOBILE DRAWER OVERLAY
+      =================================================== */}
+
+      {mobileDrawerOpen && (
+
+        <div
+          className="wd-drawer-overlay"
+          onClick={() =>
+            setMobileDrawerOpen(
+              false
+            )
+          }
+        />
+
+      )}
 
 
       {/* ===================================================
           SIDEBAR
-          =================================================== */}
+      =================================================== */}
 
-      <aside className="member-sidebar">
+      <aside
+        className={
+          mobileDrawerOpen
+            ? "wd-sidebar wd-mobile-open"
+            : "wd-sidebar"
+        }
+      >
 
 
-        <div className="member-sidebar-brand">
+        {/* SIDEBAR HEADER */}
 
-          <img
-            src="/assets/logo-mark.png"
-            alt="Wealthoria"
-          />
+        <div className="wd-sidebar-header">
 
-          <span>
-            Wealthoria
-          </span>
+          <div className="wd-brand">
+
+            <img
+              src="/assets/logo-mark.png"
+              alt="Wealthoria"
+            />
+
+            <span>
+              Wealthoria
+            </span>
+
+          </div>
+
+
+          {/* MOBILE CLOSE */}
+
+          <button
+            type="button"
+            className="wd-mobile-close"
+            onClick={() =>
+              setMobileDrawerOpen(
+                false
+              )
+            }
+          >
+            ×
+          </button>
 
         </div>
 
 
-        <nav className="member-sidebar-nav">
+        {/* SIDEBAR NAV */}
+
+        <nav className="wd-sidebar-nav">
 
 
-          {/* OVERVIEW */}
-
-          <div className="member-nav-section">
+          <div className="wd-nav-title">
             OVERVIEW
           </div>
 
 
           <button
-            className="member-nav-item active"
+            type="button"
+            className={
+              activePage ===
+              "dashboard"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
             onClick={() =>
-              navigate(
-                "/members/dashboard"
-              )
+              openPage("dashboard")
             }
           >
 
-            <span className="member-nav-icon">
+            <span>
               ⌂
             </span>
 
-            Dashboard
+            <b>
+              Dashboard
+            </b>
 
           </button>
 
 
-          {/* LEARNING */}
-
-          <div className="member-nav-section">
+          <div className="wd-nav-title">
             LEARNING
           </div>
 
 
           <button
-            className="member-nav-item"
+            type="button"
+            className={
+              activePage ===
+              "courses"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
             onClick={() =>
-              navigate(
-                "/members/articles"
-              )
+              openPage("courses")
             }
           >
 
-            <span className="member-nav-icon">
-              ▤
+            <span>
+              ▶
             </span>
 
-            Articles & Reports
+            <b>
+              Courses
+            </b>
 
           </button>
-<button
-  className={`member-nav-item ${
-    showCourses ? "active" : ""
-  }`}
-  onClick={() => {
-    setShowCourses(true);
-    setShowNewsletter(false);
-    setShowWeeklyRoundup(false);
-    setShowCharts(false);
-    setShowCalculator(false);
-  }}
->
-  <span className="member-nav-icon">
-    ▶
-  </span>
 
-  Courses
-</button>
-<button
-  className={`member-nav-item ${
-    showWeeklyRoundup ? "active" : ""
-  }`}
-  onClick={() => {
-    setShowWeeklyRoundup(true);
-    setShowCourses(false);
-    setShowNewsletter(false);
-    setShowCharts(false);
-    setShowCalculator(false);
-  }}
->
-  <span className="member-nav-icon">
-    ↗
-  </span>
 
-  Weekly Roundup
-</button>
-<button
-  className={`member-nav-item ${
-    showNewsletter ? "active" : ""
-  }`}
-  onClick={() => {
-    setShowNewsletter(true);
-    setShowCourses(false);
-    setShowWeeklyRoundup(false);
-    setShowCharts(false);
-    setShowCalculator(false);
-  }}
->
-  <span className="member-nav-icon">
-    ✉
-  </span>
+          <button
+            type="button"
+            className={
+              activePage ===
+              "newsletter"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() =>
+              openPage("newsletter")
+            }
+          >
 
-  Newsletter
-</button>
+            <span>
+              ✉
+            </span>
 
-          {/* DATA & RESEARCH */}
+            <b>
+              Newsletter
+            </b>
 
-          <div className="member-nav-section">
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              activePage ===
+              "weekly"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() =>
+              openPage("weekly")
+            }
+          >
+
+            <span>
+              ↗
+            </span>
+
+            <b>
+              Weekly Roundup
+            </b>
+
+          </button>
+
+
+
+
+          <div className="wd-nav-title">
             DATA & RESEARCH
           </div>
 
 
-<button
-  className={`member-nav-item ${
-    showCalculator ? "active" : ""
-  }`}
-  onClick={async () => {
-
-    setShowCalculator(true);
-    setSelectedCalculator(
-      "/Fundamental_Analysis_Lab.html"
-    );
-
-    setShowCourses(false);
-    setShowNewsletter(false);
-    setShowWeeklyRoundup(false);
-    setShowCharts(false);
-    setShowPurchaseHistory(false);
-
-    try {
-      if (
-        !document.fullscreenElement &&
-        document.documentElement.requestFullscreen
-      ) {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch (error) {
-      console.warn(
-        "Browser fullscreen is not available:",
-        error
-      );
-    }
-
-  }}
->
-  <span className="member-nav-icon">
-    =
-  </span>
-
-  Calculators
-</button>
-
-
-{/*
           <button
-  className={`member-nav-item ${
-    showSeminarRegistrations ? "active" : ""
-  }`}
-  onClick={() => {
-    setShowSeminarRegistrations(true);
-    setShowCourses(false);
-    setShowNewsletter(false);
-    setShowCharts(false);
-    setShowCalculator(false);
-  }}
->
-  <span className="member-nav-icon">
-    ▣
-  </span>
-
-  Seminar Registrations
-</button>*/}
-
-
-          {/* ACCOUNT */}
-
-          <div className="member-nav-section">
-            ACCOUNT
-          </div>
-
-    <button
-  className={`member-nav-item ${
-    showPurchaseHistory ? "active" : ""
-  }`}
-  onClick={() => {
-  setShowPurchaseHistory(true);
-
-  setShowCourses(false);
-  setShowNewsletter(false);
-  setShowWeeklyRoundup(false);
-  setShowCharts(false);
-  setShowCalculator(false);
-}}
->
-  <span className="member-nav-icon">
-    ▣
-  </span>
-
-  Purchase History
-</button>
-
-          <button
-            className="member-nav-item"
+            type="button"
+            className={
+              activePage ===
+              "charts"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
             onClick={() =>
-              navigate(
-                "/members/notifications"
-              )
+              openPage("charts")
             }
           >
 
-            <span className="member-nav-icon">
+            <span>
+              ◒
+            </span>
+
+            <b>
+              Market Charts
+            </b>
+
+          </button>
+
+
+          <button
+            type="button"
+            className={
+              activePage ===
+              "calculator"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() =>
+              openPage("calculator")
+            }
+          >
+
+            <span>
+              =
+            </span>
+
+            <b>
+              Calculators
+            </b>
+
+          </button>
+
+
+          <div className="wd-nav-title">
+            ACCOUNT
+          </div>
+
+
+          <button
+            type="button"
+            className={
+              activePage ===
+              "purchase"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() =>
+              openPage("purchase")
+            }
+          >
+
+            <span>
+              ▣
+            </span>
+
+            <b>
+              Purchase History
+            </b>
+
+            {stats.purchases > 0 && (
+
+              <em>
+                {stats.purchases}
+              </em>
+
+            )}
+
+          </button>
+
+
+          <button
+            type="button"
+            className="wd-nav-item"
+           onClick={() =>
+  openPage("purchase")
+}
+          >
+
+            <span>
               ♢
             </span>
 
-            Notifications
+            <b>
+              Notifications
+            </b>
 
-            <span className="member-notification-count">
-              3
-            </span>
+            {stats.notifications > 0 && (
+
+              <em>
+                {stats.notifications}
+              </em>
+
+            )}
 
           </button>
 
@@ -848,118 +1720,152 @@ return (
         </nav>
 
 
-        <div className="member-sidebar-bottom">
+        {/* SIDEBAR PROFILE */}
 
-          <div className="member-sidebar-user">
+        <div className="wd-sidebar-user">
 
-            <div className="member-avatar">
+          <div className="wd-user-avatar">
 
-              {name
-                .charAt(0)
-                .toUpperCase()}
+            {name
+              .charAt(0)
+              .toUpperCase()}
 
-            </div>
+          </div>
 
 
-            <div className="member-sidebar-user-info">
+          <div className="wd-user-text">
 
-              <strong>
-                {name}
-              </strong>
+            <strong>
+              {name}
+            </strong>
 
-              <span>
-                {role}
-              </span>
-
-            </div>
+            <span>
+              {role}
+            </span>
 
           </div>
 
         </div>
-
 
       </aside>
 
 
       {/* ===================================================
           MAIN
-          =================================================== */}
+      =================================================== */}
 
-      <main className="member-dashboard-main">
+      <main className="wd-main">
 
 
         {/* =================================================
             HEADER
-            ================================================= */}
+        ================================================= */}
 
-        <header className="member-dashboard-header">
+        <header className="wd-header">
 
 
-          <div>
+          <div className="wd-header-left">
 
-            <span className="member-page-label">
-              MEMBER PORTAL
-            </span>
 
-            <h1>
-              Dashboard
-            </h1>
+            {/* DESKTOP SIDEBAR TOGGLE */}
+
+            <button
+              type="button"
+              className="wd-sidebar-toggle"
+              onClick={() =>
+                setSidebarOpen(
+                  (value) => !value
+                )
+              }
+              aria-label="Toggle sidebar"
+            >
+              ☰
+            </button>
+
+
+            {/* MOBILE DRAWER */}
+
+            <button
+              type="button"
+              className="wd-mobile-menu"
+              onClick={() =>
+                setMobileDrawerOpen(
+                  true
+                )
+              }
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+
+
+            <div>
+
+              <span className="wd-header-label">
+                MEMBER PORTAL
+              </span>
+
+              <h1>
+
+                {activePage === "dashboard"
+                  ? "Dashboard"
+                  : activePage === "courses"
+                  ? "Courses"
+                  : activePage === "newsletter"
+                  ? "Newsletter"
+                  : activePage === "weekly"
+                  ? "Weekly Roundup"
+                  : activePage === "purchase"
+                  ? "Purchase History"
+                  : activePage === "charts"
+                  ? "Market Charts"
+                  : activePage === "calculator"
+                  ? "Calculators"
+                  : activePage === "settings"
+                  ? "Settings"
+                  : "Dashboard"}
+
+              </h1>
+
+            </div>
 
           </div>
 
 
-          <div className="member-header-actions">
+          <div className="wd-header-right">
 
-
-            {/* =================================================
-                LIGHT / DARK
-                ================================================= */}
 
             <button
-              className="member-header-button"
-              onClick={toggleTheme}
               type="button"
+              className="wd-header-button"
+              onClick={toggleTheme}
             >
-
               {theme === "dark"
                 ? "☀ Light"
                 : "☾ Dark"}
-
             </button>
 
 
-            {/* SETTINGS */}
-<button
-  className="member-header-button"
-  onClick={() => {
-    setShowSettings(true);
-
-    setShowCourses(false);
-    setShowNewsletter(false);
-    setShowWeeklyRoundup(false);
-    setShowCharts(false);
-    setShowCalculator(false);
-    setShowPurchaseHistory(false);
-  }}
->
-  ⚙ Settings
-</button>
+            <button
+              type="button"
+              className="wd-header-button"
+              onClick={() =>
+                openPage("settings")
+              }
+            >
+              ⚙ Settings
+            </button>
 
 
-            {/* PROFILE */}
+            <div className="wd-profile">
 
-            <div className="member-profile">
-
-              <div className="member-avatar">
-
+              <div className="wd-user-avatar">
                 {name
                   .charAt(0)
                   .toUpperCase()}
-
               </div>
 
-
-              <div className="member-profile-info">
+              <div className="wd-profile-text">
 
                 <strong>
                   {name}
@@ -974,17 +1880,13 @@ return (
             </div>
 
 
-            {/* LOGOUT */}
-
             <button
-              className="member-header-button"
+              type="button"
+              className="wd-header-button"
               onClick={logout}
             >
-
               ↪ Logout
-
             </button>
-
 
           </div>
 
@@ -992,80 +1894,78 @@ return (
 
 
         {/* =================================================
-            CONTENT
-            ================================================= */}
+            PAGE CONTENT
+        ================================================= */}
 
-        <div className="member-dashboard-content">
-
-
-          {/* =================================================
-              CHART PAGE
-              ================================================= */}
-{showSettings ? (
-
-  window.MemberSettings ? (
-    <window.MemberSettings />
-  ) : (
-    <div
-      style={{
-        padding: 40,
-        textAlign: "center"
-      }}
-    >
-      Loading Settings...
-    </div>
-  )
-
-) :showPurchaseHistory ? (
-
-  PurchaseHistory ? (
-    <PurchaseHistory />
-  ) : (
-    <div
-      style={{
-        padding: 40,
-        textAlign: "center"
-      }}
-    >
-      <h2>Purchase History is loading</h2>
-      <p>Please refresh the page once.</p>
-    </div>
-  )
-
-) : 
+        <div className="wd-content">
 
 
+          {/* SETTINGS */}
+
+          {activePage === "settings" ? (
+
+            MemberSettings ? (
+              <MemberSettings />
+            ) : (
+              <div className="wd-page-state">
+                Settings is loading...
+              </div>
+            )
 
 
-         showCourses ? (
-  <CourseVideos />
-)  :  showNewsletter ? (
+          ) : activePage === "courses" ? (
 
-  <Newsletter />
-
-) : showWeeklyRoundup ? (
-
-  WeeklyRoundup ? (
-    <WeeklyRoundup />
-  ) : (
-    <div style={{ padding: 40, textAlign: "center" }}>
-      <h2>Weekly Roundup is loading</h2>
-      <p>Please refresh the page once.</p>
-    </div>
-  )
-
-) : showCharts ? (
-  
-
-            <section className="member-chart-page">
+            CourseVideos ? (
+              <CourseVideos />
+            ) : (
+              <div className="wd-page-state">
+                Courses are loading...
+              </div>
+            )
 
 
-              <div className="member-chart-header">
+          ) : activePage === "newsletter" ? (
 
+            Newsletter ? (
+              <Newsletter />
+            ) : (
+              <div className="wd-page-state">
+                Newsletter is loading...
+              </div>
+            )
+
+
+          ) : activePage === "weekly" ? (
+
+            WeeklyRoundup ? (
+              <WeeklyRoundup />
+            ) : (
+              <div className="wd-page-state">
+                Weekly Roundup is loading...
+              </div>
+            )
+
+
+          ) : activePage === "purchase" ? (
+
+            PurchaseHistory ? (
+              <PurchaseHistory />
+            ) : (
+              <div className="wd-page-state">
+                Purchase History is loading...
+              </div>
+            )
+
+
+          ) : activePage === "charts" ? (
+
+            <section className="wd-chart-page">
+
+              <div className="wd-chart-head">
 
                 <div>
 
-                  <span className="member-eyebrow">
+                  <span className="wd-panel-label">
                     MARKET DATA
                   </span>
 
@@ -1083,65 +1983,39 @@ return (
 
 
                 <button
-                  className="member-panel-link"
+                  type="button"
+                  className="wd-view-button"
                   onClick={() =>
-                    setShowCharts(false)
+                    openPage("dashboard")
                   }
                 >
-
-                  ← Back to Dashboard
-
+                  ← Dashboard
                 </button>
-
 
               </div>
 
 
-              {/* =================================================
-                  NIFTY TRADINGVIEW
-                  ================================================= */}
+              <div className="wd-chart-box">
 
-              <div className="member-chart-container">
-
-                <TradingViewChart
+                <DashboardTradingView
                   theme={theme}
                 />
 
               </div>
 
-
             </section>
 
 
-          ) : showCalculator ? (
+          ) : activePage === "calculator" ? (
 
-            <div className="fundamental-fullscreen">
+            <section className="wd-calculator-page">
 
               <button
                 type="button"
-                className="fundamental-fullscreen-close"
-                aria-label="Close Fundamental Analysis Lab"
-                title="Close"
-                onClick={async () => {
-
-                  try {
-                    if (
-                      document.fullscreenElement &&
-                      document.exitFullscreen
-                    ) {
-                      await document.exitFullscreen();
-                    }
-                  } catch (error) {
-                    console.warn(
-                      "Could not exit fullscreen:",
-                      error
-                    );
-                  }
-
-                  setSelectedCalculator(null);
-                  setShowCalculator(false);
-
-                }}
+                className="wd-calculator-close"
+                onClick={() =>
+                  openPage("dashboard")
+                }
               >
                 ×
               </button>
@@ -1149,37 +2023,38 @@ return (
               <iframe
                 src="/Fundamental_Analysis_Lab.html"
                 title="Wealthoria Fundamental Analysis Lab"
-                className="fundamental-fullscreen-frame"
+                className="wd-calculator-frame"
                 allow="fullscreen"
               />
 
-            </div>
+            </section>
+
 
           ) : (
 
 
             /* =================================================
-               DEFAULT DASHBOARD
-               ================================================= */
+               DASHBOARD HOME
+            ================================================= */
 
             <>
 
-
               {/* WELCOME */}
 
-              <section className="member-welcome">
+              <section className="wd-welcome">
 
-                <span className="member-eyebrow">
+                <span>
                   WELCOME BACK
                 </span>
 
                 <h2>
-                  Good morning, {name} 👋
+                  {getGreeting()}, {name} 👋
                 </h2>
 
                 <p>
-                  Welcome to your
-                  Wealthoria member portal.
+                  Stay informed, keep learning,
+                  and make smarter financial
+                  decisions with Wealthoria.
                 </p>
 
               </section>
@@ -1187,12 +2062,12 @@ return (
 
               {/* STATS */}
 
-              <section className="member-stats">
+              <section className="wd-stats">
 
 
-                <div className="member-stat-card">
+                <div className="wd-stat-card">
 
-                  <div className="member-stat-icon">
+                  <div className="wd-stat-icon">
                     ◈
                   </div>
 
@@ -1203,17 +2078,23 @@ return (
                     </span>
 
                     <strong>
-                      24
+                      {statsLoading
+                        ? "—"
+                        : stats.totalContent}
                     </strong>
+
+                    <small>
+                      Published resources
+                    </small>
 
                   </div>
 
                 </div>
 
 
-                <div className="member-stat-card">
+                <div className="wd-stat-card">
 
-                  <div className="member-stat-icon">
+                  <div className="wd-stat-icon">
                     ▶
                   </div>
 
@@ -1224,17 +2105,23 @@ return (
                     </span>
 
                     <strong>
-                      18
+                      {statsLoading
+                        ? "—"
+                        : stats.courses}
                     </strong>
+
+                    <small>
+                      Published courses
+                    </small>
 
                   </div>
 
                 </div>
 
 
-                <div className="member-stat-card">
+                <div className="wd-stat-card">
 
-                  <div className="member-stat-icon">
+                  <div className="wd-stat-icon">
                     ◒
                   </div>
 
@@ -1245,17 +2132,23 @@ return (
                     </span>
 
                     <strong>
-                      12
+                      {statsLoading
+                        ? "—"
+                        : stats.marketReports}
                     </strong>
+
+                    <small>
+                      Weekly Roundups
+                    </small>
 
                   </div>
 
                 </div>
 
 
-                <div className="member-stat-card">
+                <div className="wd-stat-card">
 
-                  <div className="member-stat-icon">
+                  <div className="wd-stat-icon">
                     ♢
                   </div>
 
@@ -1266,9 +2159,15 @@ return (
                     </span>
 
                     <strong>
-                      3
+                      {statsLoading
+                        ? "—"
+                        : stats.notifications}
                     </strong>
 
+                    <small>
+                      Your notifications
+                    </small>
+
                   </div>
 
                 </div>
@@ -1277,355 +2176,333 @@ return (
               </section>
 
 
-              {/* =================================================
-                  TWO PANELS
-                  ================================================= */}
+              {/* LATEST CONTENT */}
 
-              <section className="member-dashboard-grid">
+              <section className="wd-feature-grid">
+
+              {DashboardNewsletter && (
+  <DashboardNewsletter
+    onOpen={() => openPage("newsletter")}
+  />
+)}
+
+{DashboardWeeklyRoundup && (
+  <DashboardWeeklyRoundup
+    onOpen={() => openPage("weekly")}
+  />
+)}
+
+              </section>
 
 
-                {/* RECENT ARTICLES */}
+              {/* LOWER ROW */}
 
-                <div className="member-panel">
+              <section className="wd-two-column">
 
 
-                  <div className="member-panel-header">
+                {/* COURSES */}
+
+                <section className="wd-panel">
+
+                  <div className="wd-panel-head">
 
                     <div>
 
-                      <span className="member-panel-label">
-                        LIBRARY
+                      <span className="wd-panel-label">
+                        LEARNING
                       </span>
 
                       <h3>
-                        Recent Articles & Reports
+                        Continue Learning
                       </h3>
 
                     </div>
 
 
                     <button
-                      className="member-panel-link"
+                      type="button"
+                      className="wd-view-button"
                       onClick={() =>
-                        navigate(
-                          "/members/articles"
-                        )
+                        openPage("courses")
                       }
                     >
-
                       View all →
-
                     </button>
 
-
                   </div>
 
 
-                  <div className="member-content-list">
+                  <button
+                    type="button"
+                    className="wd-action-card"
+                    onClick={() =>
+                      openPage("courses")
+                    }
+                  >
 
-
-                    <div className="member-content-row">
-
-                      <div className="member-content-icon">
-                        PDF
-                      </div>
-
-                      <div className="member-content-info">
-
-                        <strong>
-                          Wealth Building Basics
-                        </strong>
-
-                        <span>
-                          Financial Education
-                        </span>
-
-                      </div>
-
+                    <div className="wd-action-icon">
+                      ▶
                     </div>
-
-
-                    <div className="member-content-row">
-
-                      <div className="member-content-icon">
-                        RPT
-                      </div>
-
-                      <div className="member-content-info">
-
-                        <strong>
-                          Monthly Market Report
-                        </strong>
-
-                        <span>
-                          Market Research
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="member-content-row">
-
-                      <div className="member-content-icon">
-                        PDF
-                      </div>
-
-                      <div className="member-content-info">
-
-                        <strong>
-                          Investment Planning Guide
-                        </strong>
-
-                        <span>
-                          Personal Finance
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                  </div>
-
-
-                </div>
-
-
-                {/* QUICK ACCESS */}
-
-                <div className="member-panel">
-
-
-                  <div className="member-panel-header">
 
                     <div>
 
-                      <span className="member-panel-label">
-                        QUICK ACCESS
+                      <strong>
+                        Explore Courses
+                      </strong>
+
+                      <span>
+                        {stats.courses} published
+                        courses available
+                      </span>
+
+                    </div>
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+                </section>
+
+
+                {/* PURCHASE HISTORY */}
+
+                <section className="wd-panel">
+
+                  <div className="wd-panel-head">
+
+                    <div>
+
+                      <span className="wd-panel-label">
+                        ACCOUNT
                       </span>
 
                       <h3>
-                        Explore
+                        Purchase History
                       </h3>
 
                     </div>
 
-                  </div>
-
-
-                  <div className="member-actions">
-
 
                     <button
+                      type="button"
+                      className="wd-view-button"
                       onClick={() =>
-                        navigate(
-                          "/members/trading"
-                        )
+                        openPage("purchase")
                       }
                     >
-
-                      <span className="action-icon">
-                        ▶
-                      </span>
-
-                      <div>
-
-                        <strong>
-                          Course 
-                        </strong>
-
-                        <small>
-                          Learn trading concepts
-                        </small>
-
-                      </div>
-
-                      <span>
-                        →
-                      </span>
-
+                      View all →
                     </button>
-
-
-                    <button
-                      onClick={() =>
-                        navigate(
-                          "/members/weekly-roundup"
-                        )
-                      }
-                    >
-
-                      <span className="action-icon">
-                        ↗
-                      </span>
-
-                      <div>
-
-                        <strong>
-                          Weekly Roundup
-                        </strong>
-
-                        <small>
-                          Latest market updates
-                        </small>
-
-                      </div>
-
-                      <span>
-                        →
-                      </span>
-
-                    </button>
-
-
-                    <button
-                      onClick={() =>
-                        navigate(
-                          "/members/charts"
-                        )
-                      }
-                    >
-
-                      <span className="action-icon">
-                        ◒
-                      </span>
-
-                      <div>
-
-                        <strong>
-                          Market Charts
-                        </strong>
-
-                        <small>
-                          View market data
-                        </small>
-
-                      </div>
-
-                      <span>
-                        →
-                      </span>
-
-                    </button>
-
 
                   </div>
 
 
-                </div>
+                  <button
+                    type="button"
+                    className="wd-action-card"
+                    onClick={() =>
+                      openPage("purchase")
+                    }
+                  >
+
+                    <div className="wd-action-icon">
+                      ₹
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        Your Purchases
+                      </strong>
+
+                      <span>
+                        {stats.purchases} course
+                        {stats.purchases === 1
+                          ? ""
+                          : "s"} purchased
+                      </span>
+
+                    </div>
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+                </section>
 
 
               </section>
 
+
+              {/* QUICK ACCESS */}
+
+              <section className="wd-panel">
+
+                <div className="wd-panel-head">
+
+                  <div>
+
+                    <span className="wd-panel-label">
+                      QUICK ACCESS
+                    </span>
+
+                    <h3>
+                      Explore Wealthoria
+                    </h3>
+
+                  </div>
+
+                </div>
+
+
+                <div className="wd-quick-grid">
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPage("newsletter")
+                    }
+                  >
+
+                    <span>
+                      ✉
+                    </span>
+
+                    <div>
+
+                      <strong>
+                        Newsletter
+                      </strong>
+
+                      <small>
+                        Latest insights
+                      </small>
+
+                    </div>
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPage("weekly")
+                    }
+                  >
+
+                    <span>
+                      ↗
+                    </span>
+
+                    <div>
+
+                      <strong>
+                        Weekly Roundup
+                      </strong>
+
+                      <small>
+                        Market reports
+                      </small>
+
+                    </div>
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPage("courses")
+                    }
+                  >
+
+                    <span>
+                      ▶
+                    </span>
+
+                    <div>
+
+                      <strong>
+                        Courses
+                      </strong>
+
+                      <small>
+                        Learn & grow
+                      </small>
+
+                    </div>
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPage("purchase")
+                    }
+                  >
+
+                    <span>
+                      ▣
+                    </span>
+
+                    <div>
+
+                      <strong>
+                        Purchases
+                      </strong>
+
+                      <small>
+                        Payment history
+                      </small>
+
+                    </div>
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+
+                </div>
+
+              </section>
 
             </>
 
           )}
 
-
         </div>
 
-
       </main>
-
 
     </div>
 
   );
-  
 
 }
 
 
-
-/* =========================================================
-   FUNDAMENTAL ANALYSIS LAB — FULL SCREEN
-========================================================= */
-
-(function injectFundamentalFullscreenStyles() {
-
-  if (
-    document.getElementById(
-      "fundamental-fullscreen-styles"
-    )
-  ) {
-    return;
-  }
-
-  const style =
-    document.createElement("style");
-
-  style.id =
-    "fundamental-fullscreen-styles";
-
-  style.textContent = `
-    .fundamental-fullscreen {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      background: #ffffff;
-      overflow: hidden;
-    }
-
-    .fundamental-fullscreen-frame {
-      display: block;
-      width: 100%;
-      height: 100%;
-      flex: 1;
-      border: 0;
-      background: #ffffff;
-    }
-
-    .fundamental-fullscreen-close {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-      z-index: 1000000;
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(0,0,0,.12);
-      border-radius: 999px;
-      background: rgba(255,255,255,.96);
-      color: #18181b;
-      font-size: 28px;
-      line-height: 1;
-      font-weight: 500;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0,0,0,.10);
-    }
-
-    .fundamental-fullscreen-close:hover {
-      background: #e8473f;
-      border-color: #e8473f;
-      color: #ffffff;
-    }
-
-    @media (max-width: 600px) {
-      .fundamental-fullscreen-close {
-        top: 10px;
-        right: 10px;
-        width: 38px;
-        height: 38px;
-        font-size: 24px;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-
-})();
-
 /* =========================================================
    EXPORT
-   ========================================================= */
+========================================================= */
 
 window.MemberDashboard =
   MemberDashboard;

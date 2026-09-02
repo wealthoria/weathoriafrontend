@@ -114,7 +114,11 @@ if (
 
   }
 
-
+if (path === "/members/forgot-password") {
+  return React.createElement(
+    window.ForgotPassword
+  );
+}
   /* =========================================================
      MEMBER DASHBOARD
   ========================================================= */

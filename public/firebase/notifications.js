@@ -26,11 +26,21 @@
       // --------------------------------------------------
       // 3. Firebase Messaging check
       // --------------------------------------------------
-      if (!firebase.messaging) {
-        alert("Firebase Messaging is not loaded.");
-        return;
-      }
+     if (
+  !window.firebase ||
+  typeof window.firebase.messaging !== "function"
+) {
+  console.error(
+    "Firebase Messaging SDK is not available.",
+    window.firebase
+  );
 
+  alert(
+    "Firebase Messaging SDK is not loaded. Please refresh the page."
+  );
+
+  return;
+}
       // --------------------------------------------------
       // 4. Get logged-in member
       // --------------------------------------------------

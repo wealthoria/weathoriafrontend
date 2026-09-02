@@ -1850,44 +1850,127 @@ const openPage =
 <button
   className="member-header-button"
   type="button"
-  onClick={() => {
+  onClick={async () => {
     console.log("🔔 Notification button clicked");
 
-    // If already loaded, use it
-    if (typeof window.enableMemberNotifications === "function") {
-      window.enableMemberNotifications();
-      return;
-    }
+    try {
+      // Load a script dynamically
+      const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+          // Prevent loading the same script twice
+          const existing = document.querySelector(
+            `script[src="${src}"]`
+          );
 
-    // Otherwise load notifications.js now
-    console.log("📥 Loading notifications.js...");
+          if (existing) {
+            console.log("✅ Script already exists:", src);
+            resolve();
+            return;
+          }
 
-    const script = document.createElement("script");
+          const script = document.createElement("script");
+          script.src = src;
 
-    script.src = "/firebase/notifications.js?v=20";
+          script.onload = () => {
+            console.log("✅ Script loaded:", src);
+            resolve();
+          };
 
-    script.onload = () => {
-      console.log("✅ notifications.js loaded");
+          script.onerror = (error) => {
+            console.error("❌ Script failed to load:", src, error);
+            reject(new Error("Failed to load: " + src));
+          };
+
+          document.head.appendChild(script);
+        });
+      };
+
+      // --------------------------------------------------
+      // 1. Check Firebase
+      // --------------------------------------------------
+
+      if (!window.firebase) {
+        alert("Firebase is not loaded.");
+        return;
+      }
+
+      console.log("🔥 Firebase:", firebase.SDK_VERSION);
+
+      // --------------------------------------------------
+      // 2. Load Firebase Messaging SDK
+      // --------------------------------------------------
+
+      if (typeof firebase.messaging !== "function") {
+        console.log("📥 Firebase Messaging SDK not available.");
+        console.log("📥 Loading Firebase Messaging SDK...");
+
+        await loadScript(
+          "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
+        );
+
+        console.log(
+          "🔥 Firebase Messaging after loading:",
+          typeof firebase.messaging
+        );
+      }
+
+      // --------------------------------------------------
+      // 3. Make sure Messaging is available
+      // --------------------------------------------------
+
+      if (typeof firebase.messaging !== "function") {
+        console.error("❌ Firebase Messaging still unavailable.");
+        alert("Firebase Messaging SDK could not be loaded.");
+        return;
+      }
+
+      console.log("✅ Firebase Messaging SDK is ready.");
+
+      // --------------------------------------------------
+      // 4. Load notifications.js
+      // --------------------------------------------------
+
+      if (typeof window.enableMemberNotifications !== "function") {
+        console.log("📥 Loading notifications.js...");
+
+        await loadScript(
+          "/firebase/notifications.js?v=21"
+        );
+
+        console.log("✅ notifications.js loaded");
+      }
+
+      // --------------------------------------------------
+      // 5. Start notification setup
+      // --------------------------------------------------
 
       if (
-        typeof window.enableMemberNotifications === "function"
+        typeof window.enableMemberNotifications ===
+        "function"
       ) {
         console.log("✅ Notification function available");
+
         window.enableMemberNotifications();
       } else {
         console.error(
           "❌ notifications.js loaded but function is missing"
         );
-        alert("Notification system could not be initialized.");
+
+        alert(
+          "Notification system could not be initialized."
+        );
       }
-    };
+    } catch (error) {
+      console.error(
+        "❌ Notification loading error:",
+        error
+      );
 
-    script.onerror = () => {
-      console.error("❌ Could not load notifications.js");
-      alert("Could not load notification system.");
-    };
-
-    document.head.appendChild(script);
+      alert(
+        "Unable to load notification system:\n" +
+          error.message
+      );
+    }
   }}
 >
   🔔 Notifications

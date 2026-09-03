@@ -92,12 +92,41 @@ function ControlPanel() {
             ))}
             <button className={custom ? "on" : ""} onClick={() => setCustom(true)}>Custom</button>
           </div>
-          <div className="cp-actions">
-            <QuickAction icon="send" label="Publish draft" onClick={() => { navigate("/admin/content"); }} />
-            <QuickAction icon="eye" label="Pending reviews" onClick={() => push("3 reviews pending (stubbed)")} />
-            <QuickAction icon="download" label="Export CSV" onClick={() => exportCsv(data.students, push)} />
-            <QuickAction icon="plus" label="Add course" onClick={() => navigate("/admin/courses/new")} />
-          </div>
+         <div className="cp-actions">
+
+  <QuickAction
+    icon="send"
+    label="Send Push Notification"
+    onClick={() =>
+      navigate("/admin/notifications")
+    }
+  />
+
+  <QuickAction
+    icon="eye"
+    label="Pending reviews"
+    onClick={() =>
+      push("3 reviews pending (stubbed)")
+    }
+  />
+
+  <QuickAction
+    icon="download"
+    label="Export CSV"
+    onClick={() =>
+      exportCsv(data.students, push)
+    }
+  />
+
+  <QuickAction
+    icon="plus"
+    label="Add course"
+    onClick={() =>
+      navigate("/admin/courses/new")
+    }
+  />
+
+</div>
         </div>
 
         {custom && (

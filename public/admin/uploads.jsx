@@ -54,7 +54,9 @@ const API_BASE_URL =
 
 const CATEGORIES = [
   "Newsletter",
-  "Weekly Roundup"
+  "Weekly Roundup",
+   "Articles & Reports",
+   "Vedios"
 ];
 
 const MAX_PDF_SIZE =

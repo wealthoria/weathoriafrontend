@@ -645,9 +645,7 @@ function DashboardWeeklyRoundup({onOpen}) {
             WEEKLY ROUNDUP
           </span>
 
-          <h3>
-            Latest Market Report
-          </h3>
+         
 
         </div>
 
@@ -2278,29 +2276,6 @@ function MemberDashboard() {
           </div>
 
 
-          <button
-            type="button"
-            className={
-              activePage ===
-              "charts"
-                ? "wd-nav-item active"
-                : "wd-nav-item"
-            }
-            onClick={() =>
-              openPage("charts")
-            }
-          >
-
-            <span>
-              ◒
-            </span>
-
-            <b>
-              Market Charts
-            </b>
-
-          </button>
-
 
           <button
             type="button"
@@ -2756,57 +2731,6 @@ function MemberDashboard() {
             </section>
 
 
-          ) : activePage === "charts" ? (
-
-            <section className="wd-chart-page">
-
-
-              <div className="wd-chart-head">
-
-                <div>
-
-                  <span className="wd-panel-label">
-                    MARKET DATA
-                  </span>
-
-                  <h2>
-                    Market Charts
-                  </h2>
-
-                  <p>
-                    Track market movements
-                    and explore financial
-                    charts.
-                  </p>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  className="wd-view-button"
-                  onClick={() =>
-                    openPage("dashboard")
-                  }
-                >
-                  ← Dashboard
-                </button>
-
-              </div>
-
-
-              <div className="wd-chart-box">
-
-                <DashboardTradingView
-                  theme={theme}
-                />
-
-              </div>
-
-
-            </section>
-
-
           ) : activePage === "calculator" ? (
 
             <section className="wd-calculator-page">
@@ -2941,16 +2865,7 @@ function MemberDashboard() {
 
                   <div>
 
-                    <span>
-                      Market Reports
-                    </span>
-
-
-                    <strong>
-                      {statsLoading
-                        ? "—"
-                        : stats.marketReports}
-                    </strong>
+                  
 
 
                     <small>

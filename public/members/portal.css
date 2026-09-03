@@ -5222,7 +5222,6 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   position: fixed;
   top: 24px;
   right: 24px;
-
   z-index: 99999;
 
   width: 390px;
@@ -5240,7 +5239,6 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
   display: flex;
   align-items: flex-start;
-
   gap: 12px;
 
   padding: 16px;
@@ -5287,6 +5285,10 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
   font-size: 14px;
   font-weight: 700;
+
+  line-height: 1.35;
+
+  color: #111827;
 }
 
 .member-notification-slide-content p {
@@ -5297,6 +5299,8 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   line-height: 1.45;
 
   color: #6b7280;
+
+  word-break: break-word;
 }
 
 .member-notification-slide-close {
@@ -5304,11 +5308,19 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
   background: transparent;
 
-  font-size: 20px;
-
-  cursor: pointer;
+  padding: 0;
 
   color: #6b7280;
+
+  font-size: 20px;
+
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.member-notification-slide-close:hover {
+  color: #111827;
 }
 
 .member-notification-page-list {
@@ -5326,8 +5338,7 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
   padding: 16px;
 
-  border:
-    1px solid #e5e7eb;
+  border: 1px solid #e5e7eb;
 
   border-radius: 12px;
 
@@ -5341,12 +5352,17 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   flex: 0 0 40px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
   border-radius: 10px;
 
   background: #f3f4f6;
+}
+
+.member-notification-page-content {
+  flex: 1;
 }
 
 .member-notification-page-item strong {
@@ -5385,6 +5401,7 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   padding: 0 5px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -5396,6 +5413,8 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
   font-size: 10px;
   font-weight: 700;
+
+  line-height: 1;
 }
 
 @keyframes wealthoriaNotificationSlideIn {

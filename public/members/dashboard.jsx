@@ -740,6 +740,266 @@ window.DashboardWeeklyRoundup =
 /* =========================================================
    MEMBER DASHBOARD
 ========================================================= */
+/* =========================================================
+   MEMBER NOTIFICATIONS PAGE
+========================================================= */
+
+function MemberNotificationsPage({
+  member,
+  onNotificationsRead
+}) {
+
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+
+  useEffect(() => {
+
+    if (!member?.token) {
+      return;
+    }
+
+
+    let cancelled = false;
+
+
+    const loadNotifications =
+      async () => {
+
+        try {
+
+          setLoading(true);
+
+
+          const response =
+            await fetch(
+              `${DASHBOARD_API}/api/members/notifications`,
+              {
+                method:
+                  "GET",
+
+                headers: {
+
+                  Authorization:
+                    `Bearer ${member.token}`
+
+                }
+
+              }
+            );
+
+
+          const data =
+            await response.json();
+
+
+          if (
+            !response.ok ||
+            !data?.success
+          ) {
+
+            throw new Error(
+              data?.message ||
+              "Unable to load notifications."
+            );
+
+          }
+
+
+          if (cancelled) {
+            return;
+          }
+
+
+          const rows =
+            Array.isArray(
+              data.notifications
+            )
+              ? data.notifications
+              : [];
+
+
+          setNotifications(
+            rows
+          );
+
+
+          // =================================================
+          // MARK EVERY UNREAD NOTIFICATION AS READ
+          // =================================================
+
+          const unread =
+            rows.filter(
+              notification =>
+                notification.read !== true
+            );
+
+
+          for (
+            const notification of unread
+          ) {
+
+            try {
+
+              await fetch(
+                `${DASHBOARD_API}/api/members/notifications/${notification.id}/read`,
+                {
+                  method:
+                    "POST",
+
+                  headers: {
+
+                    Authorization:
+                      `Bearer ${member.token}`
+
+                  }
+
+                }
+              );
+
+            } catch (error) {
+
+              console.error(
+                "❌ Could not mark notification as read:",
+                error
+              );
+
+            }
+
+          }
+
+
+          if (!cancelled) {
+
+            onNotificationsRead();
+
+          }
+
+
+        } catch (error) {
+
+          console.error(
+            "❌ Notifications page error:",
+            error
+          );
+
+
+        } finally {
+
+          if (!cancelled) {
+
+            setLoading(false);
+
+          }
+
+        }
+
+      };
+
+
+    loadNotifications();
+
+
+    return () => {
+
+      cancelled = true;
+
+    };
+
+  }, [member]);
+
+
+  if (loading) {
+
+    return (
+
+      <div className="wd-page-state">
+
+        Loading notifications...
+
+      </div>
+
+    );
+
+  }
+
+
+  if (
+    notifications.length === 0
+  ) {
+
+    return (
+
+      <div className="wd-empty">
+
+        No notifications yet.
+
+      </div>
+
+    );
+
+  }
+
+
+  return (
+
+    <div className="member-notification-page-list">
+
+      {notifications.map(
+        notification => (
+
+          <div
+            key={notification.id}
+            className="member-notification-page-item"
+          >
+
+            <div className="member-notification-page-icon">
+
+              🔔
+
+            </div>
+
+
+            <div className="member-notification-page-content">
+
+              <strong>
+                {notification.title}
+              </strong>
+
+
+              <p>
+                {notification.message}
+              </p>
+
+
+              <small>
+                {notification.read
+                  ? "Read"
+                  : "New"}
+              </small>
+
+            </div>
+
+          </div>
+
+        )
+      )}
+
+    </div>
+
+  );
+
+}
+
+
+
+/* =========================================================
+   MEMBER DASHBOARD
+========================================================= */
+
 function MemberDashboard() {
 
   const CourseVideos =
@@ -771,7 +1031,6 @@ function MemberDashboard() {
   const [member, setMember] =
     useState(null);
 
-
   const [authChecking, setAuthChecking] =
     useState(true);
 
@@ -780,11 +1039,16 @@ function MemberDashboard() {
      NOTIFICATIONS
   ======================================================= */
 
-  const [notificationSlides, setNotificationSlides] =
+  const [
+    notificationSlides,
+    setNotificationSlides
+  ] =
     useState([]);
 
-
-  const [unreadNotifications, setUnreadNotifications] =
+  const [
+    unreadNotifications,
+    setUnreadNotifications
+  ] =
     useState(0);
 
 
@@ -808,8 +1072,10 @@ function MemberDashboard() {
   const [sidebarOpen, setSidebarOpen] =
     useState(true);
 
-
-  const [mobileDrawerOpen, setMobileDrawerOpen] =
+  const [
+    mobileDrawerOpen,
+    setMobileDrawerOpen
+  ] =
     useState(false);
 
 
@@ -893,6 +1159,7 @@ function MemberDashboard() {
             }
 
             return;
+
           }
 
 
@@ -919,6 +1186,7 @@ function MemberDashboard() {
             setAuthChecking(false);
 
             return;
+
           }
 
 
@@ -932,6 +1200,7 @@ function MemberDashboard() {
             setAuthChecking(false);
 
             return;
+
           }
 
 
@@ -939,7 +1208,8 @@ function MemberDashboard() {
             await fetch(
               `${DASHBOARD_API}/api/members/me`,
               {
-                method: "GET",
+                method:
+                  "GET",
 
                 headers: {
 
@@ -1051,7 +1321,6 @@ function MemberDashboard() {
             "wealthoria-member"
           );
 
-
           sessionStorage.removeItem(
             "wealthoria-member"
           );
@@ -1083,23 +1352,24 @@ function MemberDashboard() {
 
 
   /* =======================================================
-     LOAD NOTIFICATIONS AFTER LOGIN
+     LOAD UNREAD COUNT ONLY
+     
+     IMPORTANT:
+     Existing unread notifications DO NOT become slides.
   ======================================================= */
 
   useEffect(() => {
 
     if (
-      !member ||
-      !member.token
+      !member?.token
     ) {
+
       return;
+
     }
 
 
-    let cancelled = false;
-
-
-    const loadNotifications =
+    const loadUnreadCount =
       async () => {
 
         try {
@@ -1108,7 +1378,8 @@ function MemberDashboard() {
             await fetch(
               `${DASHBOARD_API}/api/members/notifications`,
               {
-                method: "GET",
+                method:
+                  "GET",
 
                 headers: {
 
@@ -1136,59 +1407,28 @@ function MemberDashboard() {
             );
 
             return;
+
           }
 
 
-          if (cancelled) {
-            return;
-          }
-
-
-          const notifications =
-            Array.isArray(
-              data.notifications
-            )
-              ? data.notifications
-              : [];
-
-
-          const unread =
-            notifications.filter(
-              (notification) =>
-                notification.read !== true
+          const count =
+            Number(
+              data.unreadCount || 0
             );
 
 
           setUnreadNotifications(
-            Number(
-              data.unreadCount ||
-              unread.length ||
-              0
-            )
+            count
           );
 
-
-          // Show only the latest unread
-          // notifications as dashboard slides.
-
-          setNotificationSlides(
-            unread.slice(0, 5)
-          );
-
-
-          // Keep dashboard stats notification
-          // count synchronized.
 
           setStats(
-            (current) => ({
+            current => ({
+
               ...current,
 
               notifications:
-                Number(
-                  data.unreadCount ||
-                  unread.length ||
-                  0
-                )
+                count
 
             })
           );
@@ -1197,7 +1437,7 @@ function MemberDashboard() {
         } catch (error) {
 
           console.error(
-            "Notification loading error:",
+            "Unread notification count error:",
             error
           );
 
@@ -1206,42 +1446,49 @@ function MemberDashboard() {
       };
 
 
-    loadNotifications();
-
-
-    return () => {
-
-      cancelled = true;
-
-    };
-
+    loadUnreadCount();
 
   }, [member]);
 
 
   /* =======================================================
-     LOAD FIREBASE NOTIFICATION LISTENER
-     AUTOMATICALLY AFTER LOGIN
+     START FCM AUTOMATICALLY AFTER LOGIN
   ======================================================= */
 
   useEffect(() => {
 
     if (
-      !member ||
-      !member.uid
+      !member?.uid
     ) {
+
       return;
+
     }
 
 
-    const loadNotificationSystem =
+    let cancelled = false;
+
+
+    const startFCM =
       async () => {
 
         try {
 
-          // ------------------------------------------------
-          // Load notifications.js if not already loaded
-          // ------------------------------------------------
+          // notifications.js may already
+          // be loaded by another part
+          // of the application.
+
+          if (
+            typeof window.initializeMemberForegroundNotifications ===
+            "function"
+          ) {
+
+            await window.initializeMemberForegroundNotifications();
+
+            return;
+
+          }
+
 
           const existingScript =
             document.querySelector(
@@ -1250,9 +1497,7 @@ function MemberDashboard() {
 
 
           if (
-            !existingScript &&
-            typeof window.initializeMemberForegroundNotifications !==
-              "function"
+            !existingScript
           ) {
 
             const script =
@@ -1262,7 +1507,7 @@ function MemberDashboard() {
 
 
             script.src =
-              "/firebase/notifications.js?v=22";
+              "/firebase/notifications.js?v=24";
 
 
             script.async = true;
@@ -1275,7 +1520,10 @@ function MemberDashboard() {
 
 
             await new Promise(
-              (resolve, reject) => {
+              (
+                resolve,
+                reject
+              ) => {
 
                 script.onload =
                   resolve;
@@ -1290,17 +1538,17 @@ function MemberDashboard() {
               }
             );
 
-
-            console.log(
-              "✅ notifications.js automatically loaded after member login."
-            );
-
           }
 
 
-          // ------------------------------------------------
-          // Start foreground listener
-          // ------------------------------------------------
+          if (
+            cancelled
+          ) {
+
+            return;
+
+          }
+
 
           if (
             typeof window.initializeMemberForegroundNotifications ===
@@ -1314,7 +1562,7 @@ function MemberDashboard() {
         } catch (error) {
 
           console.error(
-            "❌ Automatic notification listener error:",
+            "❌ Automatic FCM startup error:",
             error
           );
 
@@ -1323,13 +1571,23 @@ function MemberDashboard() {
       };
 
 
-    loadNotificationSystem();
+    startFCM();
+
+
+    return () => {
+
+      cancelled = true;
+
+    };
 
   }, [member]);
 
 
   /* =======================================================
-     LIVE NOTIFICATION SLIDE
+     LIVE NEW NOTIFICATION
+     
+     ONLY a newly received FCM notification
+     creates a slide.
   ======================================================= */
 
   useEffect(() => {
@@ -1342,14 +1600,16 @@ function MemberDashboard() {
 
 
         if (!notification) {
+
           return;
+
         }
 
 
         const newNotification = {
 
           id:
-            `live-${Date.now()}`,
+            `live-${Date.now()}-${Math.random()}`,
 
           title:
             notification.title ||
@@ -1359,31 +1619,38 @@ function MemberDashboard() {
             notification.message ||
             "You have a new notification.",
 
-          read: false
+          read:
+            false
 
         };
 
 
+        // Add ONE new popup.
+
         setNotificationSlides(
-          (current) => {
+          current => [
 
-            return [
-              newNotification,
-              ...current
-            ].slice(0, 5);
+            newNotification,
 
-          }
+            ...current
+
+          ].slice(0, 3)
         );
 
 
+        // Increase unread badge.
+
         setUnreadNotifications(
-          (current) =>
+          current =>
             current + 1
         );
 
 
+        // Update dashboard statistic.
+
         setStats(
-          (current) => ({
+          current => ({
+
             ...current,
 
             notifications:
@@ -1393,16 +1660,15 @@ function MemberDashboard() {
         );
 
 
-        // Automatically remove live slide
-        // after 7 seconds.
+        // Remove only the popup after 7 seconds.
 
-        setTimeout(
+        window.setTimeout(
           () => {
 
             setNotificationSlides(
-              (current) =>
+              current =>
                 current.filter(
-                  (item) =>
+                  item =>
                     item.id !==
                     newNotification.id
                 )
@@ -1468,8 +1734,6 @@ function MemberDashboard() {
           ] =
             await Promise.all([
 
-              /* Total published content */
-
               window.db
                 .collection("content")
                 .where(
@@ -1480,8 +1744,6 @@ function MemberDashboard() {
                 .get(),
 
 
-              /* Published courses */
-
               window.db
                 .collection("courses")
                 .where(
@@ -1491,8 +1753,6 @@ function MemberDashboard() {
                 )
                 .get(),
 
-
-              /* Published Weekly Roundups */
 
               window.db
                 .collection("content")
@@ -1509,8 +1769,6 @@ function MemberDashboard() {
                 .get(),
 
 
-              /* Current member purchases */
-
               window.db
                 .collection("coursePurchases")
                 .where(
@@ -1524,12 +1782,14 @@ function MemberDashboard() {
 
 
           if (cancelled) {
+
             return;
+
           }
 
 
           setStats(
-            (current) => ({
+            current => ({
 
               totalContent:
                 contentSnapshot.size,
@@ -1558,28 +1818,6 @@ function MemberDashboard() {
           );
 
 
-          if (!cancelled) {
-
-            setStats(
-              (current) => ({
-
-                totalContent: 0,
-
-                courses: 0,
-
-                marketReports: 0,
-
-                purchases: 0,
-
-                notifications:
-                  current.notifications
-
-              })
-            );
-
-          }
-
-
         } finally {
 
           if (!cancelled) {
@@ -1603,7 +1841,6 @@ function MemberDashboard() {
       cancelled = true;
 
     };
-
 
   }, [member]);
 
@@ -1633,7 +1870,7 @@ function MemberDashboard() {
     () => {
 
       setTheme(
-        (current) =>
+        current =>
           current === "dark"
             ? "light"
             : "dark"
@@ -1649,7 +1886,9 @@ function MemberDashboard() {
   const openPage =
     (page) => {
 
-      setActivePage(page);
+      setActivePage(
+        page
+      );
 
 
       sessionStorage.setItem(
@@ -1658,37 +1897,9 @@ function MemberDashboard() {
       );
 
 
-      setMobileDrawerOpen(false);
-
-    };
-
-
-  /* =======================================================
-     NAVIGATE EXTERNAL MEMBER PAGE
-  ======================================================= */
-
-  const openRoute =
-    (path) => {
-
       setMobileDrawerOpen(
         false
       );
-
-
-      if (
-        window.membersNavigate
-      ) {
-
-        window.membersNavigate(
-          path
-        );
-
-      } else {
-
-        window.location.href =
-          path;
-
-      }
 
     };
 
@@ -1710,9 +1921,14 @@ function MemberDashboard() {
       );
 
 
-      setNotificationSlides([]);
+      setNotificationSlides(
+        []
+      );
 
-      setUnreadNotifications(0);
+
+      setUnreadNotifications(
+        0
+      );
 
 
       if (
@@ -1745,12 +1961,16 @@ function MemberDashboard() {
 
 
       if (hour < 12) {
+
         return "Good morning";
+
       }
 
 
       if (hour < 17) {
+
         return "Good afternoon";
+
       }
 
 
@@ -1813,8 +2033,9 @@ function MemberDashboard() {
       }
     >
 
+
       {/* ===================================================
-          NOTIFICATION SLIDES
+          NEW NOTIFICATION SLIDES ONLY
       =================================================== */}
 
       {notificationSlides.length > 0 && (
@@ -1822,7 +2043,7 @@ function MemberDashboard() {
         <div className="member-notification-stack">
 
           {notificationSlides.map(
-            (notification) => (
+            notification => (
 
               <div
                 key={notification.id}
@@ -1854,9 +2075,9 @@ function MemberDashboard() {
                   onClick={() => {
 
                     setNotificationSlides(
-                      (current) =>
+                      current =>
                         current.filter(
-                          (item) =>
+                          item =>
                             item.id !==
                             notification.id
                         )
@@ -1925,8 +2146,6 @@ function MemberDashboard() {
 
           </div>
 
-
-          {/* MOBILE CLOSE */}
 
           <button
             type="button"
@@ -2112,6 +2331,8 @@ function MemberDashboard() {
           </div>
 
 
+          {/* PURCHASES */}
+
           <button
             type="button"
             className={
@@ -2164,7 +2385,6 @@ function MemberDashboard() {
               ♢
             </span>
 
-
             <b>
               Notifications
             </b>
@@ -2211,6 +2431,7 @@ function MemberDashboard() {
 
         </div>
 
+
       </aside>
 
 
@@ -2231,14 +2452,13 @@ function MemberDashboard() {
           <div className="wd-header-left">
 
 
-            {/* DESKTOP SIDEBAR TOGGLE */}
-
             <button
               type="button"
               className="wd-sidebar-toggle"
               onClick={() =>
                 setSidebarOpen(
-                  (value) => !value
+                  value =>
+                    !value
                 )
               }
               aria-label="Toggle sidebar"
@@ -2246,8 +2466,6 @@ function MemberDashboard() {
               ☰
             </button>
 
-
-            {/* MOBILE DRAWER */}
 
             <button
               type="button"
@@ -2315,170 +2533,18 @@ function MemberDashboard() {
             </button>
 
 
-            {/* NOTIFICATIONS */}
+            {/* HEADER NOTIFICATIONS */}
 
             <button
-              className="member-header-button"
               type="button"
-              onClick={async () => {
-
-                console.log(
-                  "🔔 Notification button clicked"
-                );
-
-
-                try {
-
-                  const loadScript =
-                    (src) => {
-
-                      return new Promise(
-                        (
-                          resolve,
-                          reject
-                        ) => {
-
-                          const existing =
-                            document.querySelector(
-                              `script[src="${src}"]`
-                            );
-
-
-                          if (existing) {
-
-                            console.log(
-                              "✅ Script already exists:",
-                              src
-                            );
-
-                            resolve();
-
-                            return;
-
-                          }
-
-
-                          const script =
-                            document.createElement(
-                              "script"
-                            );
-
-
-                          script.src =
-                            src;
-
-
-                          script.onload =
-                            () => {
-
-                              console.log(
-                                "✅ Script loaded:",
-                                src
-                              );
-
-                              resolve();
-
-                            };
-
-
-                          script.onerror =
-                            (error) => {
-
-                              console.error(
-                                "❌ Script failed to load:",
-                                src,
-                                error
-                              );
-
-                              reject(
-                                new Error(
-                                  "Failed to load: " +
-                                  src
-                                )
-                              );
-
-                            };
-
-
-                          document.head.appendChild(
-                            script
-                          );
-
-                        }
-                      );
-
-                    };
-
-
-                  if (!window.firebase) {
-
-                    alert(
-                      "Firebase is not loaded."
-                    );
-
-                    return;
-
-                  }
-
-
-                  console.log(
-                    "🔥 Firebase:",
-                    firebase.SDK_VERSION
-                  );
-
-
-                  if (
-                    typeof firebase.messaging !==
-                    "function"
-                  ) {
-
-                    await loadScript(
-                      "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
-                    );
-
-                  }
-
-
-                  if (
-                    typeof window.enableMemberNotifications !==
-                    "function"
-                  ) {
-
-                    await loadScript(
-                      "/firebase/notifications.js?v=22"
-                    );
-
-                  }
-
-
-                  if (
-                    typeof window.enableMemberNotifications ===
-                    "function"
-                  ) {
-
-                    await window.enableMemberNotifications();
-
-                  }
-
-                } catch (error) {
-
-                  console.error(
-                    "❌ Notification loading error:",
-                    error
-                  );
-
-
-                  alert(
-                    "Unable to load notification system:\n" +
-                    error.message
-                  );
-
-                }
-
-              }}
+              className="member-header-button"
+              onClick={() =>
+                openPage("notifications")
+              }
             >
 
               🔔 Notifications
+
 
               {unreadNotifications > 0 && (
 
@@ -2629,6 +2695,7 @@ function MemberDashboard() {
 
             <section className="wd-panel">
 
+
               <div className="wd-panel-head">
 
                 <div>
@@ -2657,36 +2724,34 @@ function MemberDashboard() {
               </div>
 
 
-              {notificationSlides.length === 0 ? (
+              <MemberNotificationsPage
+                member={member}
+                onNotificationsRead={() => {
 
-                <div className="wd-empty">
-                  No unread notifications.
-                </div>
+                  setUnreadNotifications(
+                    0
+                  );
 
-              ) : (
 
-                notificationSlides.map(
-                  (notification) => (
+                  setNotificationSlides(
+                    []
+                  );
 
-                    <div
-                      key={notification.id}
-                      className="member-notification-page-item"
-                    >
 
-                      <strong>
-                        {notification.title}
-                      </strong>
+                  setStats(
+                    current => ({
 
-                      <p>
-                        {notification.message}
-                      </p>
+                      ...current,
 
-                    </div>
+                      notifications:
+                        0
 
-                  )
-                )
+                    })
+                  );
 
-              )}
+                }}
+              />
+
 
             </section>
 
@@ -2694,6 +2759,7 @@ function MemberDashboard() {
           ) : activePage === "charts" ? (
 
             <section className="wd-chart-page">
+
 
               <div className="wd-chart-head">
 
@@ -2737,12 +2803,14 @@ function MemberDashboard() {
 
               </div>
 
+
             </section>
 
 
           ) : activePage === "calculator" ? (
 
             <section className="wd-calculator-page">
+
 
               <button
                 type="button"
@@ -2762,6 +2830,7 @@ function MemberDashboard() {
                 allow="fullscreen"
               />
 
+
             </section>
 
 
@@ -2774,6 +2843,7 @@ function MemberDashboard() {
 
             <>
 
+
               {/* WELCOME */}
 
               <section className="wd-welcome">
@@ -2782,9 +2852,11 @@ function MemberDashboard() {
                   WELCOME BACK
                 </span>
 
+
                 <h2>
                   {getGreeting()}, {name} 👋
                 </h2>
+
 
                 <p>
                   Stay informed, keep learning,
@@ -2806,17 +2878,20 @@ function MemberDashboard() {
                     ◈
                   </div>
 
+
                   <div>
 
                     <span>
                       Total Content
                     </span>
 
+
                     <strong>
                       {statsLoading
                         ? "—"
                         : stats.totalContent}
                     </strong>
+
 
                     <small>
                       Published resources
@@ -2833,17 +2908,20 @@ function MemberDashboard() {
                     ▶
                   </div>
 
+
                   <div>
 
                     <span>
                       Courses
                     </span>
 
+
                     <strong>
                       {statsLoading
                         ? "—"
                         : stats.courses}
                     </strong>
+
 
                     <small>
                       Published courses
@@ -2860,17 +2938,20 @@ function MemberDashboard() {
                     ◒
                   </div>
 
+
                   <div>
 
                     <span>
                       Market Reports
                     </span>
 
+
                     <strong>
                       {statsLoading
                         ? "—"
                         : stats.marketReports}
                     </strong>
+
 
                     <small>
                       Weekly Roundups
@@ -2887,17 +2968,20 @@ function MemberDashboard() {
                     ♢
                   </div>
 
+
                   <div>
 
                     <span>
                       Notifications
                     </span>
 
+
                     <strong>
                       {statsLoading
                         ? "—"
                         : unreadNotifications}
                     </strong>
+
 
                     <small>
                       Unread notifications
@@ -2914,6 +2998,7 @@ function MemberDashboard() {
               {/* LATEST CONTENT */}
 
               <section className="wd-feature-grid">
+
 
                 {DashboardNewsletter && (
 
@@ -2936,6 +3021,7 @@ function MemberDashboard() {
 
                 )}
 
+
               </section>
 
 
@@ -2948,6 +3034,7 @@ function MemberDashboard() {
 
                 <section className="wd-panel">
 
+
                   <div className="wd-panel-head">
 
                     <div>
@@ -2955,6 +3042,7 @@ function MemberDashboard() {
                       <span className="wd-panel-label">
                         LEARNING
                       </span>
+
 
                       <h3>
                         Continue Learning
@@ -2988,11 +3076,13 @@ function MemberDashboard() {
                       ▶
                     </div>
 
+
                     <div>
 
                       <strong>
                         Explore Courses
                       </strong>
+
 
                       <span>
                         {stats.courses} published
@@ -3001,11 +3091,13 @@ function MemberDashboard() {
 
                     </div>
 
+
                     <b>
                       →
                     </b>
 
                   </button>
+
 
                 </section>
 
@@ -3014,6 +3106,7 @@ function MemberDashboard() {
 
                 <section className="wd-panel">
 
+
                   <div className="wd-panel-head">
 
                     <div>
@@ -3021,6 +3114,7 @@ function MemberDashboard() {
                       <span className="wd-panel-label">
                         ACCOUNT
                       </span>
+
 
                       <h3>
                         Purchase History
@@ -3054,11 +3148,13 @@ function MemberDashboard() {
                       ₹
                     </div>
 
+
                     <div>
 
                       <strong>
                         Your Purchases
                       </strong>
+
 
                       <span>
                         {stats.purchases} course
@@ -3069,11 +3165,13 @@ function MemberDashboard() {
 
                     </div>
 
+
                     <b>
                       →
                     </b>
 
                   </button>
+
 
                 </section>
 
@@ -3085,6 +3183,7 @@ function MemberDashboard() {
 
               <section className="wd-panel">
 
+
                 <div className="wd-panel-head">
 
                   <div>
@@ -3092,6 +3191,7 @@ function MemberDashboard() {
                     <span className="wd-panel-label">
                       QUICK ACCESS
                     </span>
+
 
                     <h3>
                       Explore Wealthoria
@@ -3116,17 +3216,20 @@ function MemberDashboard() {
                       ✉
                     </span>
 
+
                     <div>
 
                       <strong>
                         Newsletter
                       </strong>
 
+
                       <small>
                         Latest insights
                       </small>
 
                     </div>
+
 
                     <b>
                       →
@@ -3146,17 +3249,20 @@ function MemberDashboard() {
                       ↗
                     </span>
 
+
                     <div>
 
                       <strong>
                         Weekly Roundup
                       </strong>
 
+
                       <small>
                         Market reports
                       </small>
 
                     </div>
+
 
                     <b>
                       →
@@ -3176,17 +3282,20 @@ function MemberDashboard() {
                       ▶
                     </span>
 
+
                     <div>
 
                       <strong>
                         Courses
                       </strong>
 
+
                       <small>
                         Learn & grow
                       </small>
 
                     </div>
+
 
                     <b>
                       →
@@ -3206,17 +3315,20 @@ function MemberDashboard() {
                       ▣
                     </span>
 
+
                     <div>
 
                       <strong>
                         Purchases
                       </strong>
 
+
                       <small>
                         Payment history
                       </small>
 
                     </div>
+
 
                     <b>
                       →
@@ -3227,7 +3339,9 @@ function MemberDashboard() {
 
                 </div>
 
+
               </section>
+
 
             </>
 
@@ -3235,7 +3349,9 @@ function MemberDashboard() {
 
         </div>
 
+
       </main>
+
 
     </div>
 

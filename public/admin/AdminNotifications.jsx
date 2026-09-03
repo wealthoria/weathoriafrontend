@@ -8,7 +8,7 @@ const {
 function AdminNotifications() {
 
   const API_BASE_URL =
-    "http://localhost:10000";
+    "https://webinar-registration-backend.onrender.com/api/members/notifications";
 
   const [members, setMembers] =
     useState([]);

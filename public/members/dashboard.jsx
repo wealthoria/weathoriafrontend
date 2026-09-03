@@ -740,7 +740,6 @@ window.DashboardWeeklyRoundup =
 /* =========================================================
    MEMBER DASHBOARD
 ========================================================= */
-
 function MemberDashboard() {
 
   const CourseVideos =
@@ -772,27 +771,43 @@ function MemberDashboard() {
   const [member, setMember] =
     useState(null);
 
+
   const [authChecking, setAuthChecking] =
     useState(true);
+
+
+  /* =======================================================
+     NOTIFICATIONS
+  ======================================================= */
+
+  const [notificationSlides, setNotificationSlides] =
+    useState([]);
+
+
+  const [unreadNotifications, setUnreadNotifications] =
+    useState(0);
 
 
   /* =======================================================
      ACTIVE PAGE
   ======================================================= */
 
-const [activePage, setActivePage] =
-  useState(
-    () =>
-      sessionStorage.getItem(
-        "wealthoria-active-page"
-      ) || "dashboard"
-  );
+  const [activePage, setActivePage] =
+    useState(
+      () =>
+        sessionStorage.getItem(
+          "wealthoria-active-page"
+        ) || "dashboard"
+    );
+
+
   /* =======================================================
      SIDEBAR
   ======================================================= */
 
   const [sidebarOpen, setSidebarOpen] =
     useState(true);
+
 
   const [mobileDrawerOpen, setMobileDrawerOpen] =
     useState(false);
@@ -858,7 +873,9 @@ const [activePage, setActivePage] =
           if (!saved) {
 
             setMember(null);
+
             setAuthChecking(false);
+
 
             if (
               window.membersNavigate
@@ -876,11 +893,11 @@ const [activePage, setActivePage] =
             }
 
             return;
-
           }
 
 
           let parsedMember;
+
 
           try {
 
@@ -898,10 +915,10 @@ const [activePage, setActivePage] =
             );
 
             setMember(null);
+
             setAuthChecking(false);
 
             return;
-
           }
 
 
@@ -911,10 +928,10 @@ const [activePage, setActivePage] =
           ) {
 
             setMember(null);
+
             setAuthChecking(false);
 
             return;
-
           }
 
 
@@ -988,6 +1005,7 @@ const [activePage, setActivePage] =
 
             localStorage.setItem(
               "wealthoria-member",
+
               JSON.stringify(
                 updatedSession
               )
@@ -1004,6 +1022,7 @@ const [activePage, setActivePage] =
 
             sessionStorage.setItem(
               "wealthoria-member",
+
               JSON.stringify(
                 updatedSession
               )
@@ -1016,6 +1035,7 @@ const [activePage, setActivePage] =
             updatedSession
           );
 
+
           setAuthChecking(false);
 
 
@@ -1026,15 +1046,19 @@ const [activePage, setActivePage] =
             error
           );
 
+
           localStorage.removeItem(
             "wealthoria-member"
           );
+
 
           sessionStorage.removeItem(
             "wealthoria-member"
           );
 
+
           setMember(null);
+
           setAuthChecking(false);
 
 
@@ -1054,6 +1078,357 @@ const [activePage, setActivePage] =
 
 
     checkMemberSession();
+
+  }, []);
+
+
+  /* =======================================================
+     LOAD NOTIFICATIONS AFTER LOGIN
+  ======================================================= */
+
+  useEffect(() => {
+
+    if (
+      !member ||
+      !member.token
+    ) {
+      return;
+    }
+
+
+    let cancelled = false;
+
+
+    const loadNotifications =
+      async () => {
+
+        try {
+
+          const response =
+            await fetch(
+              `${DASHBOARD_API}/api/members/notifications`,
+              {
+                method: "GET",
+
+                headers: {
+
+                  Authorization:
+                    `Bearer ${member.token}`
+
+                }
+
+              }
+            );
+
+
+          const data =
+            await response.json();
+
+
+          if (
+            !response.ok ||
+            !data?.success
+          ) {
+
+            console.error(
+              "Notification API error:",
+              data
+            );
+
+            return;
+          }
+
+
+          if (cancelled) {
+            return;
+          }
+
+
+          const notifications =
+            Array.isArray(
+              data.notifications
+            )
+              ? data.notifications
+              : [];
+
+
+          const unread =
+            notifications.filter(
+              (notification) =>
+                notification.read !== true
+            );
+
+
+          setUnreadNotifications(
+            Number(
+              data.unreadCount ||
+              unread.length ||
+              0
+            )
+          );
+
+
+          // Show only the latest unread
+          // notifications as dashboard slides.
+
+          setNotificationSlides(
+            unread.slice(0, 5)
+          );
+
+
+          // Keep dashboard stats notification
+          // count synchronized.
+
+          setStats(
+            (current) => ({
+              ...current,
+
+              notifications:
+                Number(
+                  data.unreadCount ||
+                  unread.length ||
+                  0
+                )
+
+            })
+          );
+
+
+        } catch (error) {
+
+          console.error(
+            "Notification loading error:",
+            error
+          );
+
+        }
+
+      };
+
+
+    loadNotifications();
+
+
+    return () => {
+
+      cancelled = true;
+
+    };
+
+
+  }, [member]);
+
+
+  /* =======================================================
+     LOAD FIREBASE NOTIFICATION LISTENER
+     AUTOMATICALLY AFTER LOGIN
+  ======================================================= */
+
+  useEffect(() => {
+
+    if (
+      !member ||
+      !member.uid
+    ) {
+      return;
+    }
+
+
+    const loadNotificationSystem =
+      async () => {
+
+        try {
+
+          // ------------------------------------------------
+          // Load notifications.js if not already loaded
+          // ------------------------------------------------
+
+          const existingScript =
+            document.querySelector(
+              'script[data-wealthoria-notifications="true"]'
+            );
+
+
+          if (
+            !existingScript &&
+            typeof window.initializeMemberForegroundNotifications !==
+              "function"
+          ) {
+
+            const script =
+              document.createElement(
+                "script"
+              );
+
+
+            script.src =
+              "/firebase/notifications.js?v=22";
+
+
+            script.async = true;
+
+
+            script.setAttribute(
+              "data-wealthoria-notifications",
+              "true"
+            );
+
+
+            await new Promise(
+              (resolve, reject) => {
+
+                script.onload =
+                  resolve;
+
+                script.onerror =
+                  reject;
+
+                document.head.appendChild(
+                  script
+                );
+
+              }
+            );
+
+
+            console.log(
+              "✅ notifications.js automatically loaded after member login."
+            );
+
+          }
+
+
+          // ------------------------------------------------
+          // Start foreground listener
+          // ------------------------------------------------
+
+          if (
+            typeof window.initializeMemberForegroundNotifications ===
+            "function"
+          ) {
+
+            await window.initializeMemberForegroundNotifications();
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            "❌ Automatic notification listener error:",
+            error
+          );
+
+        }
+
+      };
+
+
+    loadNotificationSystem();
+
+  }, [member]);
+
+
+  /* =======================================================
+     LIVE NOTIFICATION SLIDE
+  ======================================================= */
+
+  useEffect(() => {
+
+    const handleNotification =
+      (event) => {
+
+        const notification =
+          event.detail;
+
+
+        if (!notification) {
+          return;
+        }
+
+
+        const newNotification = {
+
+          id:
+            `live-${Date.now()}`,
+
+          title:
+            notification.title ||
+            "Wealthoria",
+
+          message:
+            notification.message ||
+            "You have a new notification.",
+
+          read: false
+
+        };
+
+
+        setNotificationSlides(
+          (current) => {
+
+            return [
+              newNotification,
+              ...current
+            ].slice(0, 5);
+
+          }
+        );
+
+
+        setUnreadNotifications(
+          (current) =>
+            current + 1
+        );
+
+
+        setStats(
+          (current) => ({
+            ...current,
+
+            notifications:
+              current.notifications + 1
+
+          })
+        );
+
+
+        // Automatically remove live slide
+        // after 7 seconds.
+
+        setTimeout(
+          () => {
+
+            setNotificationSlides(
+              (current) =>
+                current.filter(
+                  (item) =>
+                    item.id !==
+                    newNotification.id
+                )
+            );
+
+          },
+          7000
+        );
+
+      };
+
+
+    window.addEventListener(
+      "wealthoria:notification",
+      handleNotification
+    );
+
+
+    return () => {
+
+      window.removeEventListener(
+        "wealthoria:notification",
+        handleNotification
+      );
+
+    };
 
   }, []);
 
@@ -1089,8 +1464,7 @@ const [activePage, setActivePage] =
             contentSnapshot,
             courseSnapshot,
             reportSnapshot,
-            purchaseSnapshot,
-            notificationSnapshot
+            purchaseSnapshot
           ] =
             await Promise.all([
 
@@ -1144,18 +1518,6 @@ const [activePage, setActivePage] =
                   "==",
                   member.uid
                 )
-                .get(),
-
-
-              /* Current member notifications */
-
-              window.db
-                .collection("notifications")
-                .where(
-                  "userId",
-                  "==",
-                  member.uid
-                )
                 .get()
 
             ]);
@@ -1166,24 +1528,26 @@ const [activePage, setActivePage] =
           }
 
 
-          setStats({
+          setStats(
+            (current) => ({
 
-            totalContent:
-              contentSnapshot.size,
+              totalContent:
+                contentSnapshot.size,
 
-            courses:
-              courseSnapshot.size,
+              courses:
+                courseSnapshot.size,
 
-            marketReports:
-              reportSnapshot.size,
+              marketReports:
+                reportSnapshot.size,
 
-            purchases:
-              purchaseSnapshot.size,
+              purchases:
+                purchaseSnapshot.size,
 
-            notifications:
-              notificationSnapshot.size
+              notifications:
+                current.notifications
 
-          });
+            })
+          );
 
 
         } catch (error) {
@@ -1196,15 +1560,25 @@ const [activePage, setActivePage] =
 
           if (!cancelled) {
 
-            setStats({
-              totalContent: 0,
-              courses: 0,
-              marketReports: 0,
-              purchases: 0,
-              notifications: 0
-            });
+            setStats(
+              (current) => ({
+
+                totalContent: 0,
+
+                courses: 0,
+
+                marketReports: 0,
+
+                purchases: 0,
+
+                notifications:
+                  current.notifications
+
+              })
+            );
 
           }
+
 
         } finally {
 
@@ -1230,6 +1604,7 @@ const [activePage, setActivePage] =
 
     };
 
+
   }, [member]);
 
 
@@ -1244,10 +1619,12 @@ const [activePage, setActivePage] =
       theme
     );
 
+
     localStorage.setItem(
       "wl-theme",
       theme
     );
+
 
   }, [theme]);
 
@@ -1268,19 +1645,23 @@ const [activePage, setActivePage] =
   /* =======================================================
      OPEN PAGE
   ======================================================= */
-const openPage =
-  (page) => {
 
-    setActivePage(page);
+  const openPage =
+    (page) => {
 
-    sessionStorage.setItem(
-      "wealthoria-active-page",
-      page
-    );
+      setActivePage(page);
 
-    setMobileDrawerOpen(false);
 
-  };
+      sessionStorage.setItem(
+        "wealthoria-active-page",
+        page
+      );
+
+
+      setMobileDrawerOpen(false);
+
+    };
+
 
   /* =======================================================
      NAVIGATE EXTERNAL MEMBER PAGE
@@ -1292,6 +1673,7 @@ const openPage =
       setMobileDrawerOpen(
         false
       );
+
 
       if (
         window.membersNavigate
@@ -1322,9 +1704,15 @@ const openPage =
         "wealthoria-member"
       );
 
+
       sessionStorage.removeItem(
         "wealthoria-member"
       );
+
+
+      setNotificationSlides([]);
+
+      setUnreadNotifications(0);
 
 
       if (
@@ -1379,6 +1767,7 @@ const openPage =
     member?.name ||
     "Member";
 
+
   const role =
     member?.role ||
     "Member";
@@ -1391,9 +1780,13 @@ const openPage =
   if (authChecking) {
 
     return (
+
       <div className="wd-auth-loading">
+
         Checking login...
+
       </div>
+
     );
 
   }
@@ -1419,6 +1812,69 @@ const openPage =
           : "wd-app wd-sidebar-collapsed"
       }
     >
+
+      {/* ===================================================
+          NOTIFICATION SLIDES
+      =================================================== */}
+
+      {notificationSlides.length > 0 && (
+
+        <div className="member-notification-stack">
+
+          {notificationSlides.map(
+            (notification) => (
+
+              <div
+                key={notification.id}
+                className="member-notification-slide"
+              >
+
+                <div className="member-notification-slide-icon">
+                  🔔
+                </div>
+
+
+                <div className="member-notification-slide-content">
+
+                  <strong>
+                    {notification.title}
+                  </strong>
+
+
+                  <p>
+                    {notification.message}
+                  </p>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="member-notification-slide-close"
+                  onClick={() => {
+
+                    setNotificationSlides(
+                      (current) =>
+                        current.filter(
+                          (item) =>
+                            item.id !==
+                            notification.id
+                        )
+                    );
+
+                  }}
+                >
+                  ×
+                </button>
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+      )}
 
 
       {/* ===================================================
@@ -1598,8 +2054,6 @@ const openPage =
           </button>
 
 
-
-
           <div className="wd-nav-title">
             DATA & RESEARCH
           </div>
@@ -1679,6 +2133,7 @@ const openPage =
               Purchase History
             </b>
 
+
             {stats.purchases > 0 && (
 
               <em>
@@ -1690,26 +2145,35 @@ const openPage =
           </button>
 
 
+          {/* NOTIFICATIONS */}
+
           <button
             type="button"
-            className="wd-nav-item"
-           onClick={() =>
-  openPage("purchase")
-}
+            className={
+              activePage ===
+              "notifications"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() =>
+              openPage("notifications")
+            }
           >
 
             <span>
               ♢
             </span>
 
+
             <b>
               Notifications
             </b>
 
-            {stats.notifications > 0 && (
+
+            {unreadNotifications > 0 && (
 
               <em>
-                {stats.notifications}
+                {unreadNotifications}
               </em>
 
             )}
@@ -1805,6 +2269,7 @@ const openPage =
                 MEMBER PORTAL
               </span>
 
+
               <h1>
 
                 {activePage === "dashboard"
@@ -1817,6 +2282,8 @@ const openPage =
                   ? "Weekly Roundup"
                   : activePage === "purchase"
                   ? "Purchase History"
+                  : activePage === "notifications"
+                  ? "Notifications"
                   : activePage === "charts"
                   ? "Market Charts"
                   : activePage === "calculator"
@@ -1840,141 +2307,188 @@ const openPage =
               className="wd-header-button"
               onClick={toggleTheme}
             >
+
               {theme === "dark"
                 ? "☀ Light"
                 : "☾ Dark"}
+
             </button>
 
 
-{/* NOTIFICATIONS */}
-<button
-  className="member-header-button"
-  type="button"
-  onClick={async () => {
-    console.log("🔔 Notification button clicked");
+            {/* NOTIFICATIONS */}
 
-    try {
-      // Load a script dynamically
-      const loadScript = (src) => {
-        return new Promise((resolve, reject) => {
-          // Prevent loading the same script twice
-          const existing = document.querySelector(
-            `script[src="${src}"]`
-          );
+            <button
+              className="member-header-button"
+              type="button"
+              onClick={async () => {
 
-          if (existing) {
-            console.log("✅ Script already exists:", src);
-            resolve();
-            return;
-          }
+                console.log(
+                  "🔔 Notification button clicked"
+                );
 
-          const script = document.createElement("script");
-          script.src = src;
 
-          script.onload = () => {
-            console.log("✅ Script loaded:", src);
-            resolve();
-          };
+                try {
 
-          script.onerror = (error) => {
-            console.error("❌ Script failed to load:", src, error);
-            reject(new Error("Failed to load: " + src));
-          };
+                  const loadScript =
+                    (src) => {
 
-          document.head.appendChild(script);
-        });
-      };
+                      return new Promise(
+                        (
+                          resolve,
+                          reject
+                        ) => {
 
-      // --------------------------------------------------
-      // 1. Check Firebase
-      // --------------------------------------------------
+                          const existing =
+                            document.querySelector(
+                              `script[src="${src}"]`
+                            );
 
-      if (!window.firebase) {
-        alert("Firebase is not loaded.");
-        return;
-      }
 
-      console.log("🔥 Firebase:", firebase.SDK_VERSION);
+                          if (existing) {
 
-      // --------------------------------------------------
-      // 2. Load Firebase Messaging SDK
-      // --------------------------------------------------
+                            console.log(
+                              "✅ Script already exists:",
+                              src
+                            );
 
-      if (typeof firebase.messaging !== "function") {
-        console.log("📥 Firebase Messaging SDK not available.");
-        console.log("📥 Loading Firebase Messaging SDK...");
+                            resolve();
 
-        await loadScript(
-          "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
-        );
+                            return;
 
-        console.log(
-          "🔥 Firebase Messaging after loading:",
-          typeof firebase.messaging
-        );
-      }
+                          }
 
-      // --------------------------------------------------
-      // 3. Make sure Messaging is available
-      // --------------------------------------------------
 
-      if (typeof firebase.messaging !== "function") {
-        console.error("❌ Firebase Messaging still unavailable.");
-        alert("Firebase Messaging SDK could not be loaded.");
-        return;
-      }
+                          const script =
+                            document.createElement(
+                              "script"
+                            );
 
-      console.log("✅ Firebase Messaging SDK is ready.");
 
-      // --------------------------------------------------
-      // 4. Load notifications.js
-      // --------------------------------------------------
+                          script.src =
+                            src;
 
-      if (typeof window.enableMemberNotifications !== "function") {
-        console.log("📥 Loading notifications.js...");
 
-        await loadScript(
-          "/firebase/notifications.js?v=21"
-        );
+                          script.onload =
+                            () => {
 
-        console.log("✅ notifications.js loaded");
-      }
+                              console.log(
+                                "✅ Script loaded:",
+                                src
+                              );
 
-      // --------------------------------------------------
-      // 5. Start notification setup
-      // --------------------------------------------------
+                              resolve();
 
-      if (
-        typeof window.enableMemberNotifications ===
-        "function"
-      ) {
-        console.log("✅ Notification function available");
+                            };
 
-        window.enableMemberNotifications();
-      } else {
-        console.error(
-          "❌ notifications.js loaded but function is missing"
-        );
 
-        alert(
-          "Notification system could not be initialized."
-        );
-      }
-    } catch (error) {
-      console.error(
-        "❌ Notification loading error:",
-        error
-      );
+                          script.onerror =
+                            (error) => {
 
-      alert(
-        "Unable to load notification system:\n" +
-          error.message
-      );
-    }
-  }}
->
-  🔔 Notifications
-</button>
+                              console.error(
+                                "❌ Script failed to load:",
+                                src,
+                                error
+                              );
+
+                              reject(
+                                new Error(
+                                  "Failed to load: " +
+                                  src
+                                )
+                              );
+
+                            };
+
+
+                          document.head.appendChild(
+                            script
+                          );
+
+                        }
+                      );
+
+                    };
+
+
+                  if (!window.firebase) {
+
+                    alert(
+                      "Firebase is not loaded."
+                    );
+
+                    return;
+
+                  }
+
+
+                  console.log(
+                    "🔥 Firebase:",
+                    firebase.SDK_VERSION
+                  );
+
+
+                  if (
+                    typeof firebase.messaging !==
+                    "function"
+                  ) {
+
+                    await loadScript(
+                      "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
+                    );
+
+                  }
+
+
+                  if (
+                    typeof window.enableMemberNotifications !==
+                    "function"
+                  ) {
+
+                    await loadScript(
+                      "/firebase/notifications.js?v=22"
+                    );
+
+                  }
+
+
+                  if (
+                    typeof window.enableMemberNotifications ===
+                    "function"
+                  ) {
+
+                    await window.enableMemberNotifications();
+
+                  }
+
+                } catch (error) {
+
+                  console.error(
+                    "❌ Notification loading error:",
+                    error
+                  );
+
+
+                  alert(
+                    "Unable to load notification system:\n" +
+                    error.message
+                  );
+
+                }
+
+              }}
+            >
+
+              🔔 Notifications
+
+              {unreadNotifications > 0 && (
+
+                <span className="member-header-notification-badge">
+                  {unreadNotifications}
+                </span>
+
+              )}
+
+            </button>
 
 
             <button
@@ -1991,10 +2505,13 @@ const openPage =
             <div className="wd-profile">
 
               <div className="wd-user-avatar">
+
                 {name
                   .charAt(0)
                   .toUpperCase()}
+
               </div>
+
 
               <div className="wd-profile-text">
 
@@ -2036,56 +2553,142 @@ const openPage =
           {activePage === "settings" ? (
 
             MemberSettings ? (
+
               <MemberSettings />
+
             ) : (
+
               <div className="wd-page-state">
                 Settings is loading...
               </div>
+
             )
 
 
           ) : activePage === "courses" ? (
 
             CourseVideos ? (
+
               <CourseVideos />
+
             ) : (
+
               <div className="wd-page-state">
                 Courses are loading...
               </div>
+
             )
 
 
           ) : activePage === "newsletter" ? (
 
             Newsletter ? (
+
               <Newsletter />
+
             ) : (
+
               <div className="wd-page-state">
                 Newsletter is loading...
               </div>
+
             )
 
 
           ) : activePage === "weekly" ? (
 
             WeeklyRoundup ? (
+
               <WeeklyRoundup />
+
             ) : (
+
               <div className="wd-page-state">
                 Weekly Roundup is loading...
               </div>
+
             )
 
 
           ) : activePage === "purchase" ? (
 
             PurchaseHistory ? (
+
               <PurchaseHistory />
+
             ) : (
+
               <div className="wd-page-state">
                 Purchase History is loading...
               </div>
+
             )
+
+
+          ) : activePage === "notifications" ? (
+
+            <section className="wd-panel">
+
+              <div className="wd-panel-head">
+
+                <div>
+
+                  <span className="wd-panel-label">
+                    ACCOUNT
+                  </span>
+
+                  <h3>
+                    Notifications
+                  </h3>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="wd-view-button"
+                  onClick={() =>
+                    openPage("dashboard")
+                  }
+                >
+                  ← Dashboard
+                </button>
+
+              </div>
+
+
+              {notificationSlides.length === 0 ? (
+
+                <div className="wd-empty">
+                  No unread notifications.
+                </div>
+
+              ) : (
+
+                notificationSlides.map(
+                  (notification) => (
+
+                    <div
+                      key={notification.id}
+                      className="member-notification-page-item"
+                    >
+
+                      <strong>
+                        {notification.title}
+                      </strong>
+
+                      <p>
+                        {notification.message}
+                      </p>
+
+                    </div>
+
+                  )
+                )
+
+              )}
+
+            </section>
 
 
           ) : activePage === "charts" ? (
@@ -2150,6 +2753,7 @@ const openPage =
               >
                 ×
               </button>
+
 
               <iframe
                 src="/Fundamental_Analysis_Lab.html"
@@ -2292,11 +2896,11 @@ const openPage =
                     <strong>
                       {statsLoading
                         ? "—"
-                        : stats.notifications}
+                        : unreadNotifications}
                     </strong>
 
                     <small>
-                      Your notifications
+                      Unread notifications
                     </small>
 
                   </div>
@@ -2311,17 +2915,26 @@ const openPage =
 
               <section className="wd-feature-grid">
 
-              {DashboardNewsletter && (
-  <DashboardNewsletter
-    onOpen={() => openPage("newsletter")}
-  />
-)}
+                {DashboardNewsletter && (
 
-{DashboardWeeklyRoundup && (
-  <DashboardWeeklyRoundup
-    onOpen={() => openPage("weekly")}
-  />
-)}
+                  <DashboardNewsletter
+                    onOpen={() =>
+                      openPage("newsletter")
+                    }
+                  />
+
+                )}
+
+
+                {DashboardWeeklyRoundup && (
+
+                  <DashboardWeeklyRoundup
+                    onOpen={() =>
+                      openPage("weekly")
+                    }
+                  />
+
+                )}
 
               </section>
 

@@ -37,6 +37,8 @@ const {
   CourseBuilder,
 
   UsersScreen,
+  AdminNotifications,
+
 
   AdminYouTube,
 
@@ -427,6 +429,14 @@ function resolve(path) {
 
 }
 
+if (
+  path === "/admin/notifications"
+) {
+  return {
+    name: "notifications"
+  };
+}
+
 
   if (
     path === "/admin/users"
@@ -737,6 +747,32 @@ function ProtectedRoute({
         );
 
       }
+
+
+
+      case "notifications":
+
+  return (
+    <AdminShell title="Notifications">
+
+      {AdminNotifications ? (
+        <AdminNotifications />
+      ) : (
+        <div className="page">
+
+          <h1>
+            Notifications
+          </h1>
+
+          <p>
+            Admin notification component is not loaded.
+          </p>
+
+        </div>
+      )}
+
+    </AdminShell>
+  );
 
 
       return (

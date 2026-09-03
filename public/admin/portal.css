@@ -1945,3 +1945,202 @@ table.dt { width: 100%; border-collapse: collapse; min-width: 720px; }
   background:
     #202329;
 }
+
+
+/* =========================================================
+   ADMIN NOTIFICATIONS
+========================================================= */
+
+.admin-notifications-page {
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.admin-notifications-card {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 16px;
+  padding: 28px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.admin-notifications-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.admin-notifications-header span {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--muted, #6b7280);
+}
+
+.admin-notifications-header h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  color: var(--text, #111827);
+}
+
+.admin-notifications-header p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted, #6b7280);
+}
+
+/* =========================================================
+   MESSAGES
+========================================================= */
+
+.admin-notifications-error,
+.admin-notifications-success {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-notifications-error {
+  background: #fff1f1;
+  border: 1px solid #f2c2c2;
+  color: #b42318;
+}
+
+.admin-notifications-success {
+  background: #eefaf1;
+  border: 1px solid #b7e0c0;
+  color: #176b3a;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.admin-notifications-field {
+  margin-bottom: 20px;
+}
+
+.admin-notifications-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #111827);
+}
+
+.admin-notifications-field input,
+.admin-notifications-field select,
+.admin-notifications-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  background: var(--input-bg, #ffffff);
+  color: var(--text, #111827);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-notifications-field input,
+.admin-notifications-field select {
+  height: 48px;
+  padding: 0 13px;
+}
+
+.admin-notifications-field textarea {
+  min-height: 140px;
+  padding: 13px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.admin-notifications-field input:focus,
+.admin-notifications-field select:focus,
+.admin-notifications-field textarea:focus {
+  border-color: var(--accent, #e8473f);
+  box-shadow:
+    0 0 0 3px
+    rgba(232, 71, 63, 0.10);
+}
+
+.admin-notifications-field input:disabled,
+.admin-notifications-field select:disabled,
+.admin-notifications-field textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   SEND BUTTON
+========================================================= */
+
+.admin-notifications-send {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: var(--accent, #e8473f);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-notifications-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 16px
+    rgba(0, 0, 0, 0.10);
+}
+
+.admin-notifications-send:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.admin-notifications-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  .admin-notifications-page {
+    padding: 16px;
+  }
+
+  .admin-notifications-card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .admin-notifications-header h2 {
+    font-size: 23px;
+  }
+
+}

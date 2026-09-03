@@ -5023,3 +5023,194 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
 
 /*member login css */
+
+
+/* =========================================================
+   MEMBER NOTIFICATION SLIDES
+========================================================= */
+
+.member-notification-stack {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 99999;
+
+  width: 390px;
+  max-width: calc(100vw - 32px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  pointer-events: none;
+}
+
+.member-notification-slide {
+  pointer-events: auto;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 16px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 18px 40px
+    rgba(0, 0, 0, 0.16);
+
+  animation:
+    wealthoriaNotificationSlideIn
+    0.45s ease-out;
+}
+
+.member-notification-slide-icon {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #f3f4f6;
+
+  font-size: 18px;
+}
+
+.member-notification-slide-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-notification-slide-content strong {
+  display: block;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  color: #111827;
+}
+
+.member-notification-slide-content p {
+  margin: 5px 0 0;
+
+  font-size: 13px;
+  line-height: 1.45;
+
+  color: #6b7280;
+
+  word-break: break-word;
+}
+
+.member-notification-slide-close {
+  border: 0;
+
+  background: transparent;
+
+  padding: 0;
+
+  color: #6b7280;
+
+  font-size: 20px;
+
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.member-notification-slide-close:hover {
+  color: #111827;
+}
+
+.member-header-button {
+  position: relative;
+}
+
+.member-header-notification-badge {
+  position: absolute;
+
+  top: -7px;
+  right: -7px;
+
+  min-width: 19px;
+  height: 19px;
+
+  padding: 0 5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: #e8473f;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1;
+}
+
+.member-notification-page-item {
+  padding: 16px;
+
+  margin-bottom: 10px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+}
+
+.member-notification-page-item strong {
+  display: block;
+
+  font-size: 14px;
+}
+
+.member-notification-page-item p {
+  margin: 6px 0 0;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@keyframes wealthoriaNotificationSlideIn {
+
+  from {
+    opacity: 0;
+    transform: translateX(120%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .member-notification-stack {
+    top: 12px;
+    right: 12px;
+
+    width: calc(100vw - 24px);
+  }
+
+}

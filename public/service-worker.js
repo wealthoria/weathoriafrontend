@@ -53,13 +53,13 @@ messaging.setBackgroundMessageHandler(function(payload) {
 });
 
 
-const CACHE_VERSION = "wealthoria-v3";
+const CACHE_VERSION = "wealthoria-v4";
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 /* keep this list short + certain — anything else is cached at runtime */
 const PRECACHE_URLS = [
-  "Wealthoria.html",
+  "index.html",
   "offline.html",
   "manifest.webmanifest",
   "assets/colors_and_type.css",
@@ -147,7 +147,7 @@ if (req.mode === "navigate") {
 
             if (hit) return hit;
 
-            return caches.match("Wealthoria.html")
+            return caches.match("index.html")
               .then((shell) => {
 
                 if (shell) return shell;

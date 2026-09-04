@@ -11,7 +11,11 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
   },
-  server: { host: true, port: 5173, open: "/Wealthoria.html" },
+server: {
+  host: true,
+  port: 5173,
+  open: "/"
+},
   preview: { host: true, port: 4173 },
 });
 

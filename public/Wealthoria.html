@@ -10,7 +10,9 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <title>Wealthoria - Learning is the first investment</title>
+  <title>
+    Wealthoria - Learning is the first investment
+  </title>
 
   <meta
     name="description"
@@ -48,29 +50,9 @@
     href="/icons/apple-touch-icon.png"
   >
 
-  <meta
-    name="apple-mobile-web-app-capable"
-    content="yes"
-  >
-
-  <meta
-    name="apple-mobile-web-app-status-bar-style"
-    content="default"
-  >
-
-  <meta
-    name="apple-mobile-web-app-title"
-    content="Wealthoria"
-  >
-
-  <meta
-    name="mobile-web-app-capable"
-    content="yes"
-  >
-
 
   <!-- =====================================================
-       GOOGLE FONT
+       FONT
        ===================================================== -->
 
   <link
@@ -91,7 +73,7 @@
 
 
   <!-- =====================================================
-       WEBSITE CSS
+       PUBLIC CSS
        ===================================================== -->
 
   <link
@@ -101,37 +83,17 @@
 
   <link
     rel="stylesheet"
-    href="/app/site.css?v=4"
+    href="/app/site.css?v=5"
   >
 
   <link
     rel="stylesheet"
-    href="/app/premium.css?v=4"
+    href="/app/premium.css?v=5"
   >
 
   <link
     rel="stylesheet"
-    href="/app/calc.css?v=4"
-  >
-
-
-  <!-- =====================================================
-       OPEN GRAPH
-       ===================================================== -->
-
-  <meta
-    property="og:title"
-    content="Wealthoria - Learning is the first investment"
-  >
-
-  <meta
-    property="og:description"
-    content="Financial education for first-time investors across Karnataka. In Kannada and English."
-  >
-
-  <meta
-    property="og:type"
-    content="website"
+    href="/app/calc.css?v=5"
   >
 
 
@@ -160,85 +122,11 @@
     crossorigin="anonymous">
   </script>
 
-
-  <!-- =====================================================
-       FIREBASE
-       ===================================================== -->
-
-  <script
-    src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
-  </script>
-
-  <script
-    src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
-  </script>
-
-
-  <!-- =====================================================
-       FIREBASE CONFIG
-       ===================================================== -->
-
-  <script>
-
-    const firebaseConfig = {
-
-      apiKey:
-        "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
-
-      authDomain:
-        "wealthoria-6fc11.firebaseapp.com",
-
-      projectId:
-        "wealthoria-6fc11",
-
-      storageBucket:
-        "wealthoria-6fc11.firebasestorage.app",
-
-      messagingSenderId:
-        "141910518023",
-
-      appId:
-        "1:141910518023:web:7198ed847f459cb71ebda2",
-
-      measurementId:
-        "G-Q9955KR0G6"
-
-    };
-
-
-    if (
-      window.firebase &&
-      !firebase.apps.length
-    ) {
-
-      firebase.initializeApp(
-        firebaseConfig
-      );
-
-    }
-
-
-    if (window.firebase) {
-
-      window.firebase =
-        firebase;
-
-      window.db =
-        firebase.firestore();
-
-      console.log(
-        "[Wealthoria] Firebase initialized successfully"
-      );
-
-    }
-
-  </script>
-
-
 </head>
 
 
 <body>
+
 
   <!-- =====================================================
        ROOT
@@ -246,8 +134,13 @@
 
   <div id="root">
 
+    <!--
+      Very small fallback only.
+      It disappears as soon as React mounts.
+    -->
+
     <div
-      id="wealthoria-loading"
+      id="wealthoria-startup"
       style="
         min-height:100vh;
         display:flex;
@@ -260,33 +153,14 @@
 
       <div
         style="
-          text-align:center;
-          padding:30px;
+          width:28px;
+          height:28px;
+          border:3px solid #eee;
+          border-top-color:#e8473f;
+          border-radius:50%;
+          animation:wealthoriaSpin .7s linear infinite;
         "
-      >
-
-        <div
-          style="
-            width:40px;
-            height:40px;
-            border:3px solid #eeeeee;
-            border-top-color:#e8473f;
-            border-radius:50%;
-            animation:wealthoriaSpin .8s linear infinite;
-            margin:0 auto 15px;
-          "
-        ></div>
-
-        <div
-          style="
-            font-size:14px;
-            color:#666;
-          "
-        >
-          Loading Wealthoria...
-        </div>
-
-      </div>
+      ></div>
 
     </div>
 
@@ -307,7 +181,7 @@
 
 
   <!-- =====================================================
-       APPLICATION BOOTSTRAP
+       APP LOADER
        ===================================================== -->
 
   <script>
@@ -317,306 +191,113 @@
       "use strict";
 
 
-      const currentPath =
+      const path =
         window.location.pathname || "/";
 
 
       console.log(
         "[Wealthoria] Route:",
-        currentPath
+        path
       );
 
 
-      /*
-       * -----------------------------------------------------
-       * LOAD JAVASCRIPT / JSX FILE
-       * -----------------------------------------------------
-       *
-       * We cannot dynamically create:
-       *
-       * <script type="text/babel">
-       *
-       * because Babel Standalone does not reliably process
-       * dynamically inserted JSX script tags.
-       *
-       * Instead:
-       *
-       * 1. fetch the JSX file
-       * 2. Babel transforms it
-       * 3. transformed JavaScript is executed
-       */
+      /* =====================================================
+         SCRIPT CACHE
+         ===================================================== */
 
-      async function loadJSXFile(src) {
-
-        console.log(
-          "[Wealthoria] Loading:",
-          src
-        );
+      const scriptCache =
+        new Map();
 
 
-        const response =
-          await fetch(src, {
-            cache: "no-cache"
-          });
+      /* =====================================================
+         LOAD NORMAL SCRIPT
+         ===================================================== */
 
+      function loadScript(src) {
 
-        if (!response.ok) {
+        if (scriptCache.has(src)) {
 
-          throw new Error(
-            "Unable to load " +
-            src +
-            " (" +
-            response.status +
-            ")"
-          );
+          return scriptCache.get(src);
 
         }
 
 
-        const source =
-          await response.text();
+        const promise =
+          new Promise(
+            function (resolve, reject) {
 
-
-        const transformed =
-          Babel.transform(
-            source,
-            {
-              presets: [
-                "react",
-                "env"
-              ]
-            }
-          ).code;
-
-
-        const script =
-          document.createElement("script");
-
-
-        script.type =
-          "text/javascript";
-
-
-        script.text =
-          transformed;
-
-
-        document.body.appendChild(
-          script
-        );
-
-
-        console.log(
-          "[Wealthoria] Loaded:",
-          src
-        );
-
-      }
-
-
-      /*
-       * -----------------------------------------------------
-       * PUBLIC WEBSITE
-       * -----------------------------------------------------
-       */
-
-      async function loadPublicWebsite() {
-
-        await loadJSXFile(
-          "/app/content.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/ui.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/sections-a.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/sections-b.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/calculators.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/sections-c.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/sections-d.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/app/anim.jsx?v=4"
-        );
-
-        /*
-         * GSAP is required by the public animation code.
-         * Load it only for the public website.
-         */
-
-        await loadNormalScript(
-          "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
-        );
-
-        await loadNormalScript(
-          "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
-        );
-
-
-        await loadJSXFile(
-          "/app/app.jsx?v=4"
-        );
-
-      }
-
-
-      /*
-       * -----------------------------------------------------
-       * MEMBER PORTAL
-       * -----------------------------------------------------
-       */
-
-      async function loadMembersPortal() {
-
-        /*
-         * Members CSS is loaded only here.
-         */
-
-        loadStylesheet(
-          "/members/portal.css?v=4"
-        );
-
-
-        await loadJSXFile(
-          "/app/content.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/login.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/ForgotPassword.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/CourseVideos.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/Newsletter.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/MemberHistoryPurchase.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/SeminarRegistrations.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/WeeklyRoundup.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/dashboard.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/settings.jsx?v=4"
-        );
-
-        await loadJSXFile(
-          "/members/subscription.jsx?v=4"
-        );
-
-        /*
-         * Router must always be last.
-         */
-
-        await loadJSXFile(
-          "/members/members-router.jsx?v=4"
-        );
-
-      }
-
-
-      /*
-       * -----------------------------------------------------
-       * NORMAL SCRIPT LOADER
-       * -----------------------------------------------------
-       */
-
-      function loadNormalScript(src) {
-
-        return new Promise(
-          function (resolve, reject) {
-
-            const script =
-              document.createElement("script");
-
-
-            script.src =
-              src;
-
-
-            script.onload =
-              function () {
-
-                console.log(
-                  "[Wealthoria] Loaded:",
-                  src
+              const script =
+                document.createElement(
+                  "script"
                 );
 
-                resolve();
 
-              };
+              script.src =
+                src;
 
 
-            script.onerror =
-              function () {
+              script.async =
+                true;
 
-                reject(
-                  new Error(
-                    "Unable to load " +
+
+              script.onload =
+                function () {
+
+                  console.log(
+                    "[Wealthoria] Loaded:",
                     src
-                  )
-                );
+                  );
 
-              };
+                  resolve();
 
-
-            document.head.appendChild(
-              script
-            );
-
-          }
-        );
-
-      }
+                };
 
 
-      /*
-       * -----------------------------------------------------
-       * DYNAMIC CSS
-       * -----------------------------------------------------
-       */
+              script.onerror =
+                function () {
 
-      function loadStylesheet(href) {
+                  reject(
+                    new Error(
+                      "Failed to load " +
+                      src
+                    )
+                  );
 
-        const existing =
-          document.querySelector(
-            'link[href="' + href + '"]'
+                };
+
+
+              document.head.appendChild(
+                script
+              );
+
+            }
           );
 
 
-        if (existing) {
+        scriptCache.set(
+          src,
+          promise
+        );
+
+
+        return promise;
+
+      }
+
+
+      /* =====================================================
+         LOAD CSS
+         ===================================================== */
+
+      function loadCSS(href) {
+
+        if (
+          document.querySelector(
+            'link[href="' +
+            href +
+            '"]'
+          )
+        ) {
 
           return;
 
@@ -624,7 +305,9 @@
 
 
         const link =
-          document.createElement("link");
+          document.createElement(
+            "link"
+          );
 
 
         link.rel =
@@ -642,13 +325,721 @@
       }
 
 
-      /*
-       * -----------------------------------------------------
-       * ERROR SCREEN
-       * -----------------------------------------------------
-       */
+      /* =====================================================
+         FETCH + TRANSFORM JSX
+         ===================================================== */
 
-      function showBootError(error) {
+      async function fetchAndTransform(
+        src
+      ) {
+
+        console.log(
+          "[Wealthoria] Fetching:",
+          src
+        );
+
+
+        const response =
+          await fetch(
+            src,
+            {
+              cache: "no-cache"
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "Failed to fetch " +
+            src +
+            " (" +
+            response.status +
+            ")"
+          );
+
+        }
+
+
+        const source =
+          await response.text();
+
+
+        const result =
+          Babel.transform(
+            source,
+            {
+              presets: [
+                "react",
+                "env"
+              ]
+            }
+          );
+
+
+        return {
+          src,
+          code: result.code
+        };
+
+      }
+
+
+      /* =====================================================
+         LOAD JSX FILES IN PARALLEL
+         THEN EXECUTE IN CORRECT ORDER
+         ===================================================== */
+
+      async function loadJSXFiles(
+        sources
+      ) {
+
+        /*
+         * All network requests happen together.
+         * This is considerably faster than:
+         *
+         * await file1
+         * await file2
+         * await file3
+         *
+         */
+
+        const compiled =
+          await Promise.all(
+            sources.map(
+              fetchAndTransform
+            )
+          );
+
+
+        /*
+         * Execute in the order requested.
+         */
+
+        for (
+          const item of compiled
+        ) {
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+
+          script.type =
+            "text/javascript";
+
+
+          script.text =
+            item.code;
+
+
+          document.body.appendChild(
+            script
+          );
+
+
+          console.log(
+            "[Wealthoria] Executed:",
+            item.src
+          );
+
+        }
+
+      }
+
+
+      /* =====================================================
+         FIREBASE CORE
+         ===================================================== */
+
+      async function loadFirebase(
+        withAuth
+      ) {
+
+        await loadScript(
+          "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"
+        );
+
+
+        await loadScript(
+          "https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"
+        );
+
+
+        if (withAuth) {
+
+          await loadScript(
+            "https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"
+          );
+
+        }
+
+
+        if (
+          !window.firebase
+        ) {
+
+          throw new Error(
+            "Firebase failed to load."
+          );
+
+        }
+
+
+        const config = {
+
+          apiKey:
+            "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
+
+          authDomain:
+            "wealthoria-6fc11.firebaseapp.com",
+
+          projectId:
+            "wealthoria-6fc11",
+
+          storageBucket:
+            "wealthoria-6fc11.firebasestorage.app",
+
+          messagingSenderId:
+            "141910518023",
+
+          appId:
+            "1:141910518023:web:7198ed847f459cb71ebda2",
+
+          measurementId:
+            "G-Q9955KR0G6"
+
+        };
+
+
+        if (
+          !firebase.apps.length
+        ) {
+
+          firebase.initializeApp(
+            config
+          );
+
+        }
+
+
+        window.firebase =
+          firebase;
+
+
+        window.db =
+          firebase.firestore();
+
+
+        if (withAuth) {
+
+          window.auth =
+            firebase.auth();
+
+        }
+
+
+        console.log(
+          "[Wealthoria] Firebase ready"
+        );
+
+      }
+
+
+      /* =====================================================
+         PUBLIC WEBSITE
+         ===================================================== */
+
+      async function loadPublic() {
+
+        /*
+         * Public site needs Firestore because
+         * some sections use published data.
+         */
+
+        await loadFirebase(
+          false
+        );
+
+
+        /*
+         * Load GSAP together with the JSX
+         * rather than waiting before everything.
+         */
+
+        const gsapPromise =
+          Promise.all([
+
+            loadScript(
+              "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+            ),
+
+            loadScript(
+              "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
+            )
+
+          ]);
+
+
+        await Promise.all([
+
+          loadJSXFiles([
+
+            "/app/content.jsx?v=5",
+
+            "/app/ui.jsx?v=5",
+
+            "/app/sections-a.jsx?v=5",
+
+            "/app/sections-b.jsx?v=5",
+
+            "/app/calculators.jsx?v=5",
+
+            "/app/sections-c.jsx?v=5",
+
+            "/app/sections-d.jsx?v=5",
+
+            "/app/anim.jsx?v=5",
+
+            "/app/EnquiryForm.jsx?v=5"
+
+          ]),
+
+          gsapPromise
+
+        ]);
+
+
+        /*
+         * App must execute LAST.
+         */
+
+        await loadJSXFiles([
+
+          "/app/app.jsx?v=5"
+
+        ]);
+
+      }
+
+
+      /* =====================================================
+         MEMBER BASE COMPONENTS
+         ===================================================== */
+
+      const MEMBER_FILES = {
+
+        login:
+          "/members/login.jsx?v=5",
+
+        forgot:
+          "/members/ForgotPassword.jsx?v=5",
+
+        dashboard:
+          "/members/dashboard.jsx?v=5",
+
+        courses:
+          "/members/CourseVideos.jsx?v=5",
+
+        newsletter:
+          "/members/Newsletter.jsx?v=5",
+
+        purchase:
+          "/members/MemberHistoryPurchase.jsx?v=5",
+
+        seminar:
+          "/members/SeminarRegistrations.jsx?v=5",
+
+        weekly:
+          "/members/WeeklyRoundup.jsx?v=5",
+
+        settings:
+          "/members/settings.jsx?v=5",
+
+        subscription:
+          "/members/subscription.jsx?v=5",
+
+        router:
+          "/members/app.jsx?v=5"
+
+      };
+
+
+      /* =====================================================
+         DETERMINE INITIAL MEMBER FILES
+         ===================================================== */
+
+      function getInitialMemberFiles() {
+
+        if (
+          path === "/members/login" ||
+          path === "/members/" ||
+          path === "/members"
+        ) {
+
+          return [
+
+            MEMBER_FILES.login,
+
+            MEMBER_FILES.forgot
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/forgot-password"
+        ) {
+
+          return [
+
+            MEMBER_FILES.login,
+
+            MEMBER_FILES.forgot
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/dashboard"
+        ) {
+
+          return [
+
+            MEMBER_FILES.dashboard
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/course-videos"
+        ) {
+
+          return [
+
+            MEMBER_FILES.courses
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/newsletter"
+        ) {
+
+          return [
+
+            MEMBER_FILES.newsletter
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/purchase-history"
+        ) {
+
+          return [
+
+            MEMBER_FILES.purchase
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/weekly-roundup" ||
+          path === "/members/market-roundup"
+        ) {
+
+          return [
+
+            MEMBER_FILES.weekly
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/seminar-registrations"
+        ) {
+
+          return [
+
+            MEMBER_FILES.seminar
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/settings"
+        ) {
+
+          return [
+
+            MEMBER_FILES.settings
+
+          ];
+
+        }
+
+
+        if (
+          path === "/members/subscription"
+        ) {
+
+          return [
+
+            MEMBER_FILES.subscription
+
+          ];
+
+        }
+
+
+        return [
+
+          MEMBER_FILES.login,
+
+          MEMBER_FILES.forgot
+
+        ];
+
+      }
+
+
+      /* =====================================================
+         PRELOAD MEMBER FILES
+         ===================================================== */
+
+      async function preloadMemberFiles(
+        initialFiles
+      ) {
+
+        const remaining =
+          Object.values(
+            MEMBER_FILES
+          )
+          .filter(
+            file =>
+              !initialFiles.includes(
+                file
+              ) &&
+              file !== MEMBER_FILES.router
+          );
+
+
+        /*
+         * Background preload.
+         *
+         * It DOES NOT block the current
+         * page from being displayed.
+         */
+
+        Promise
+          .resolve()
+          .then(
+            async function () {
+
+              try {
+
+                await loadJSXFiles(
+                  remaining
+                );
+
+
+                console.log(
+                  "[Wealthoria] Member modules preloaded"
+                );
+
+              }
+              catch (error) {
+
+                console.warn(
+                  "[Wealthoria] Background member preload failed:",
+                  error
+                );
+
+              }
+
+            }
+          );
+
+      }
+
+
+      /* =====================================================
+         MEMBER PORTAL
+         ===================================================== */
+
+      async function loadMembers() {
+
+        /*
+         * Member CSS only.
+         */
+
+        loadCSS(
+          "/members/portal.css?v=5"
+        );
+
+
+        /*
+         * Member pages use Firestore once
+         * authenticated dashboard features
+         * are opened.
+         *
+         * Login itself does NOT need Firebase.
+         */
+
+        const initialFiles =
+          getInitialMemberFiles();
+
+
+        const needsFirebase =
+          !(
+            path === "/members/login" ||
+            path === "/members/" ||
+            path === "/members" ||
+            path === "/members/forgot-password"
+          );
+
+
+        if (needsFirebase) {
+
+          await loadFirebase(
+            false
+          );
+
+        }
+
+
+        /*
+         * Load the initial page only.
+         */
+
+        await loadJSXFiles(
+          initialFiles
+        );
+
+
+        /*
+         * Router is required for all member
+         * routes.
+         */
+
+        await loadJSXFiles([
+
+          MEMBER_FILES.router
+
+        ]);
+
+
+        /*
+         * Ensure router exists.
+         */
+
+        if (
+          typeof window.MembersRouter !==
+          "function"
+        ) {
+
+          throw new Error(
+            "MembersRouter failed to load."
+          );
+
+        }
+
+
+        /*
+         * Mount Members Router.
+         */
+
+        const rootElement =
+          document.getElementById(
+            "root"
+          );
+
+
+        if (!rootElement) {
+
+          throw new Error(
+            "Root element not found."
+          );
+
+        }
+
+
+        const root =
+          ReactDOM.createRoot(
+            rootElement
+          );
+
+
+        root.render(
+          React.createElement(
+            window.MembersRouter
+          )
+        );
+
+
+        console.log(
+          "[Wealthoria] Members Portal mounted"
+        );
+
+
+        /*
+         * Load other member pages in the
+         * background after the current page
+         * is already visible.
+         */
+
+        preloadMemberFiles(
+          initialFiles
+        );
+
+      }
+
+
+      /* =====================================================
+         REMOVE STARTUP SCREEN
+         ===================================================== */
+
+      function removeStartup() {
+
+        const startup =
+          document.getElementById(
+            "wealthoria-startup"
+          );
+
+
+        if (startup) {
+
+          startup.remove();
+
+        }
+
+      }
+
+
+      /* =====================================================
+         ERROR SCREEN
+         ===================================================== */
+
+      function showError(
+        error
+      ) {
 
         console.error(
           "[Wealthoria] Startup error:",
@@ -657,7 +1048,9 @@
 
 
         const root =
-          document.getElementById("root");
+          document.getElementById(
+            "root"
+          );
 
 
         if (!root) {
@@ -676,46 +1069,35 @@
               align-items:center;
               justify-content:center;
               padding:30px;
-              background:#fff;
               font-family:Arial,sans-serif;
               text-align:center;
             "
           >
 
-            <div
-              style="
-                max-width:500px;
-              "
-            >
+            <div>
 
-              <h2
-                style="
-                  margin-bottom:10px;
-                "
-              >
+              <h2>
                 Wealthoria could not load
               </h2>
 
               <p
                 style="
                   color:#666;
-                  line-height:1.6;
                 "
               >
-                Something went wrong while loading
-                the application. Please refresh the page.
+                Please refresh the page and try again.
               </p>
 
               <button
+                type="button"
                 onclick="location.reload()"
                 style="
                   border:0;
                   border-radius:8px;
-                  padding:12px 22px;
+                  padding:12px 20px;
                   background:#e8473f;
                   color:#fff;
                   cursor:pointer;
-                  font-size:14px;
                 "
               >
                 Refresh
@@ -730,36 +1112,11 @@
       }
 
 
-      /*
-       * -----------------------------------------------------
-       * REMOVE LOADING SCREEN
-       * -----------------------------------------------------
-       */
+      /* =====================================================
+         START
+         ===================================================== */
 
-      function removeLoadingScreen() {
-
-        const loader =
-          document.getElementById(
-            "wealthoria-loading"
-          );
-
-
-        if (loader) {
-
-          loader.remove();
-
-        }
-
-      }
-
-
-      /*
-       * -----------------------------------------------------
-       * START APPLICATION
-       * -----------------------------------------------------
-       */
-
-      async function startApplication() {
+      async function start() {
 
         try {
 
@@ -768,18 +1125,12 @@
            */
 
           if (
-            currentPath === "/admin" ||
-            currentPath.startsWith("/admin/")
+            path === "/admin" ||
+            path.startsWith("/admin/")
           ) {
-
-            console.log(
-              "[Wealthoria] Opening Admin Portal"
-            );
-
 
             window.location.href =
               "/Admin%20Portal.html#/admin/login";
-
 
             return;
 
@@ -791,20 +1142,13 @@
            */
 
           if (
-            currentPath === "/members" ||
-            currentPath.startsWith("/members/")
+            path === "/members" ||
+            path.startsWith("/members/")
           ) {
 
-            console.log(
-              "[Wealthoria] Opening Members Portal"
-            );
+            await loadMembers();
 
-
-            await loadMembersPortal();
-
-
-            removeLoadingScreen();
-
+            removeStartup();
 
             return;
 
@@ -812,62 +1156,53 @@
 
 
           /*
-           * PUBLIC WEBSITE
+           * PUBLIC
            */
 
-          console.log(
-            "[Wealthoria] Opening Public Website"
-          );
+          await loadPublic();
 
-
-          await loadPublicWebsite();
-
-
-          removeLoadingScreen();
+          removeStartup();
 
         }
         catch (error) {
 
-          showBootError(error);
+          showError(
+            error
+          );
 
         }
 
       }
 
 
-      /*
-       * -----------------------------------------------------
-       * WAIT FOR REQUIRED RUNTIME
-       * -----------------------------------------------------
-       */
+      /* =====================================================
+         WAIT FOR RUNTIME
+         ===================================================== */
 
       function waitForRuntime() {
 
         if (
           window.React &&
           window.ReactDOM &&
-          window.Babel &&
-          window.firebase
+          window.Babel
         ) {
 
-          startApplication();
-
+          start();
 
           return;
 
         }
 
 
-        setTimeout(
+        window.setTimeout(
           waitForRuntime,
-          25
+          20
         );
 
       }
 
 
       waitForRuntime();
-
 
     })();
 
@@ -889,7 +1224,7 @@
        ===================================================== -->
 
   <script
-    src="/app/cursor.js?v=4"
+    src="/app/cursor.js?v=5"
     defer>
   </script>
 

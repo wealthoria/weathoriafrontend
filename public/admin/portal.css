@@ -2143,4 +2143,496 @@ table.dt { width: 100%; border-collapse: collapse; min-width: 720px; }
     font-size: 23px;
   }
 
+}/* =========================================================
+   FINAL ADMIN PAGE SCROLL
+   ========================================================= */
+
+/* Do NOT let body/root create a second scroll */
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+#root {
+  width: 100% !important;
+  height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Admin shell */
+.mportal {
+  width: 100% !important;
+  height: 100vh !important;
+  min-height: 0 !important;
+
+  display: flex !important;
+
+  overflow: hidden !important;
+}
+
+/* Sidebar stays fixed */
+.sidebar {
+  width: 248px !important;
+  min-width: 248px !important;
+  height: 100vh !important;
+
+  flex: 0 0 248px !important;
+
+  overflow: hidden !important;
+}
+
+/* Main column */
+.mmain {
+  width: calc(100% - 248px) !important;
+  height: 100vh !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  flex: 1 1 auto !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  overflow: hidden !important;
+}
+
+/* Top bar does NOT scroll */
+.topbar {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+
+  position: relative !important;
+  top: auto !important;
+}
+
+/* =========================================================
+   THIS IS THE ONLY PAGE SCROLLER
+   ========================================================= */
+
+.mcontent {
+  width: 100% !important;
+
+  /*
+     Critical flexbox rule.
+     Allows the content area to become smaller than
+     its children and therefore create a scrollbar.
+  */
+  height: 0 !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+
+  flex: 1 1 auto !important;
+
+  box-sizing: border-box !important;
+
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+
+  padding: 28px !important;
+
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Make sure page content can grow beyond viewport */
+.mcontent > * {
+  min-height: 0;
+}
+
+/* =========================================================
+   TAGS
+   ========================================================= */
+
+.asset-tags-wrap {
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+}
+
+.asset-tags-wrap .atags {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: 5px;
+
+  overflow: hidden;
+}
+
+.asset-tags-wrap .badge-soft {
+  flex: 0 0 auto;
+
+  max-width: 120px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asset-tags-wrap .asset-inline-toggle {
+  flex: 0 0 auto;
+
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Expanded tags */
+.asset-tags-wrap .asset-tags-expanded {
+  display: flex;
+  flex-wrap: wrap;
+
+  width: 100%;
+
+  gap: 5px;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .mportal {
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar {
+    position: fixed !important;
+
+    left: 0 !important;
+    top: 0 !important;
+
+    width: 248px !important;
+    min-width: 248px !important;
+
+    height: 100vh !important;
+
+    z-index: 100 !important;
+  }
+
+  .mmain {
+    width: 100% !important;
+    height: 100vh !important;
+
+    min-height: 0 !important;
+
+    overflow: hidden !important;
+  }
+
+  .mcontent {
+    height: 0 !important;
+    min-height: 0 !important;
+
+    flex: 1 1 auto !important;
+
+    padding: 20px !important;
+
+    overflow-x: hidden !important;
+    overflow-y: scroll !important;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .mcontent {
+    padding: 16px !important;
+  }
+}
+
+/* =========================================================
+   UPLOAD ASSET CARD - TAGS + ACTIONS
+   ========================================================= */
+
+.asset-tags-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 8px !important;
+  overflow: hidden !important;
+}
+
+/* Collapsed tags: ONLY one controlled row */
+.asset-tags-wrap > .atags:not(.asset-tags-expanded) {
+  display: flex !important;
+  align-items: center !important;
+
+  width: 100% !important;
+  max-width: 100% !important;
+
+  min-width: 0 !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 5px !important;
+
+  overflow: hidden !important;
+}
+
+/* Individual tag */
+.asset-tags-wrap .badge-soft {
+  display: inline-flex !important;
+  align-items: center !important;
+
+  flex: 0 1 auto !important;
+
+  min-width: 0 !important;
+  max-width: 105px !important;
+
+  padding: 4px 7px !important;
+
+  white-space: nowrap !important;
+
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+
+  box-sizing: border-box !important;
+}
+
+/* ... button */
+.asset-tags-wrap .asset-tags-more {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-width: 24px !important;
+
+  cursor: pointer !important;
+
+  font-weight: 700 !important;
+
+  white-space: nowrap !important;
+}
+
+/* Expanded state */
+.asset-tags-wrap .asset-tags-expanded {
+  display: flex !important;
+
+  width: 100% !important;
+
+  flex-wrap: wrap !important;
+
+  gap: 5px !important;
+
+  overflow: visible !important;
+}
+
+.asset-tags-wrap .asset-tags-expanded .badge-soft {
+  max-width: 100% !important;
+  flex: 0 0 auto !important;
+}
+
+/* =========================================================
+   ASSET ACTIONS
+   ========================================================= */
+
+.asset > div[style*="marginTop"] {
+  width: 100% !important;
+  max-width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  gap: 6px !important;
+
+  overflow: visible !important;
+
+  box-sizing: border-box !important;
+}
+
+/* Edit button */
+.asset .row-act {
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Edit button specifically */
+.asset .row-act[title="Edit"] {
+  flex: 1 1 auto !important;
+
+  min-width: 0 !important;
+
+  height: 34px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 5px !important;
+
+  overflow: visible !important;
+}
+
+/* Eye */
+.asset .row-act[title="Open PDF"] {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+}
+
+/* Delete */
+.asset .row-act[title="Delete"] {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+}
+
+/* =========================================================
+   CARD BODY
+   ========================================================= */
+
+.asset {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.asset > * {
+  min-width: 0 !important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .asset-tags-wrap .badge-soft {
+    max-width: 90px !important;
+    font-size: 10px !important;
+  }
+
+  .asset .row-act[title="Edit"] {
+    font-size: 12px !important;
+  }
+}
+
+/* =========================================================
+   FINAL ADMIN PAGE SCROLL FIX
+   ========================================================= */
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  height: auto !important;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.mportal {
+  width: 100%;
+  min-height: 100vh;
+  height: auto !important;
+  display: flex;
+  overflow: visible !important;
+}
+
+/* Admin shell must grow with page content */
+.admin-shell {
+  width: 100%;
+  min-height: 100vh;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Main admin layout */
+.admin-layout {
+  min-height: 100vh;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Admin content area */
+.admin-main {
+  min-width: 0;
+  min-height: 100vh;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Actual page */
+.admin-content,
+.admin-page,
+.page {
+  min-height: 0;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Dashboard / uploads / courses etc. */
+.reveal-fade {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+/* Do NOT trap the page inside a 100vh scrolling container */
+.admin-main,
+.admin-content {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+/* Keep sidebar independently usable */
+.sidebar {
+  max-height: 100vh;
+}
+
+.sb-nav {
+  min-height: 0;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  html,
+  body {
+    overflow-y: auto !important;
+  }
+
+  #root,
+  .mportal,
+  .admin-shell,
+  .admin-layout,
+  .admin-main,
+  .admin-content,
+  .admin-page,
+  .page {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+  }
+
+  .sidebar {
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  .sb-nav {
+    overflow-y: auto !important;
+  }
 }

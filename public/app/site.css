@@ -1051,6 +1051,8 @@ a { color: inherit; }
     padding: 7px 11px;
     display: inline-flex;
     align-items: center;
+    height: 36px!important;
+    border-radius: 20px!important;
     justify-content: center;
     gap: 8px;
     transition: filter .15s var(--ease), background .15s var(--ease), transform .12s var(--ease), box-shadow .15s var(--ease);

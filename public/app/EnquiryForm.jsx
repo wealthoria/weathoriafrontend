@@ -1,70 +1,63 @@
 /* global React, window */
 
-const { useState } = React;
-const { AppCtx } = window;
+/* global React, window */
 
-/*
- * Wealthoria Enquiry Form
- * Replaces the existing <Consultation /> component.
- * Uses the existing Wealthoria consultation content and class names
- * so the existing consultation design can be reused.
- */
+const { useState } = React;
+const { useApp, Icon, Reveal } = window;
 
 function EnquiryForm() {
-  const { t } = React.useContext(AppCtx);
-  const form = t.consult.form;
+  const { t } = useApp();
+  const c = t.consult;
+  const F = c.form;
 
-  const [formData, setFormData] = useState({
+  const [vals, setVals] = useState({
     name: "",
     email: "",
     phone: "",
     city: "",
-    interest: "",
-    message: "",
+    interest: F.interestOpts[0] || "",
+    message: ""
   });
 
-  const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [errs, setErrs] = useState({});
+  const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
+  const set = (key) => (e) => {
+    setVals((prev) => ({
       ...prev,
-      [name]: value,
+      [key]: e.target.value
     }));
 
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
+    if (errs[key]) {
+      setErrs((prev) => ({
+        ...prev,
+        [key]: false
+      }));
+    }
   };
 
   const validate = () => {
-    const nextErrors = {};
+    const errors = {};
 
-    if (!formData.name.trim()) {
-      nextErrors.name = form.errName;
+    if (!vals.name.trim()) {
+      errors.name = true;
     }
 
-    if (!formData.email.trim()) {
-      nextErrors.email = form.errEmail;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      nextErrors.email = form.errEmail;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vals.email.trim())) {
+      errors.email = true;
     }
 
-    if (!formData.phone.trim()) {
-      nextErrors.phone = form.errPhone;
-    } else if (!/^[0-9+\-\s]{10,15}$/.test(formData.phone.trim())) {
-      nextErrors.phone = form.errPhone;
+    if (vals.phone.replace(/\D/g, "").length < 10) {
+      errors.phone = true;
     }
 
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    setErrs(errors);
+
+    return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
 
     if (!validate()) return;
@@ -73,25 +66,10 @@ function EnquiryForm() {
 
     try {
       /*
-       * Add your enquiry API here when the backend endpoint is ready.
-       *
-       * Example:
-       *
-       * const response = await fetch(
-       *   "YOUR_BACKEND_URL/api/enquiry",
-       *   {
-       *     method: "POST",
-       *     headers: {
-       *       "Content-Type": "application/json",
-       *     },
-       *     body: JSON.stringify(formData),
-       *   }
-       * );
-       *
-       * if (!response.ok) throw new Error("Failed to submit enquiry");
+       * Keep the backend/API here when ready.
        */
 
-      setSubmitted(true);
+      setDone(true);
     } catch (error) {
       console.error("Enquiry submission failed:", error);
     } finally {
@@ -99,198 +77,334 @@ function EnquiryForm() {
     }
   };
 
+  const resetForm = () => {
+    setDone(false);
+
+    setVals({
+      name: "",
+      email: "",
+      phone: "",
+      city: "",
+      interest: F.interestOpts[0] || "",
+      message: ""
+    });
+
+    setErrs({});
+  };
+
   return (
-    <section id="consult" className="consult-section">
-      <div className="consult-inner">
+    <section className="band band-soft" id="consult">
 
-        {/* LEFT SIDE */}
-        <div className="consult-content">
-          <div className="section-eyebrow">
-            {t.consult.eyebrow}
-          </div>
+      <div className="wrap consult-grid">
 
-          <h2>{t.consult.title}</h2>
+        {/* =========================================================
+            LEFT SIDE
+            ========================================================= */}
 
-          <p className="consult-sub">
-            {t.consult.sub}
+        <Reveal className="consult">
+
+          <span className="eyebrow">
+            {c.eyebrow}
+          </span>
+
+          <h2
+            className="h2"
+            style={{ lineHeight: "1" }}
+          >
+            {c.title}
+          </h2>
+
+          <p className="sub">
+            {c.sub}
           </p>
 
-          <div className="consult-points">
-            {t.consult.points.map((item, index) => (
-              <div className="consult-point" key={index}>
-                <div className="consult-point-icon">
-                  {item.ic}
+          <div className="pts">
+
+            {c.points.map((item, index) => (
+              <div className="pt" key={index}>
+
+                <div className="iconwrap">
+                  <Icon
+                    name={item.ic}
+                    size={20}
+                  />
                 </div>
 
                 <div>
                   <h4>{item.t}</h4>
                   <p>{item.d}</p>
                 </div>
+
               </div>
             ))}
+
           </div>
 
-          <div className="consult-contacts">
-            {t.consult.contacts.map((contact, index) => (
+          <div className="contacts">
+
+            {c.contacts.map((contact, index) => (
               <a
                 key={index}
                 href={contact.href}
-                className="consult-contact"
               >
-                <span>{contact.ic}</span>
-                <span>{contact.v}</span>
+                <Icon
+                  name={contact.ic}
+                  size={18}
+                />
+
+                {contact.v}
               </a>
             ))}
+
           </div>
-        </div>
 
-        {/* RIGHT SIDE - NEW ENQUIRY FORM */}
-        <div className="consult-form-wrap">
-          {submitted ? (
-            <div className="consult-success">
-              <div className="consult-success-icon">✓</div>
+        </Reveal>
 
-              <h3>{form.successTitle}</h3>
 
-              <p>{form.successMsg}</p>
-            </div>
-          ) : (
-            <form
-              className="consult-form"
-              onSubmit={handleSubmit}
-              noValidate
-            >
-              <div className="consult-form-row">
-                <div className="consult-field">
-                  <label htmlFor="enquiry-name">
-                    {form.name}
-                  </label>
+        {/* =========================================================
+            RIGHT SIDE
+            ========================================================= */}
 
-                  <input
-                    id="enquiry-name"
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder={form.placeholderName}
-                  />
+        <Reveal delay={100}>
 
-                  {errors.name && (
-                    <span className="consult-error">
-                      {errors.name}
-                    </span>
-                  )}
-                </div>
+          <div className="formcard">
 
-                <div className="consult-field">
-                  <label htmlFor="enquiry-email">
-                    {form.email}
-                  </label>
+            {done ? (
 
-                  <input
-                    id="enquiry-email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder={form.placeholderEmail}
-                  />
+              <div className="form-success">
 
-                  {errors.email && (
-                    <span className="consult-error">
-                      {errors.email}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="consult-form-row">
-                <div className="consult-field">
-                  <label htmlFor="enquiry-phone">
-                    {form.phone}
-                  </label>
-
-                  <input
-                    id="enquiry-phone"
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder={form.placeholderPhone}
-                  />
-
-                  {errors.phone && (
-                    <span className="consult-error">
-                      {errors.phone}
-                    </span>
-                  )}
-                </div>
-
-                <div className="consult-field">
-                  <label htmlFor="enquiry-city">
-                    {form.city}
-                  </label>
-
-                  <input
-                    id="enquiry-city"
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder={form.placeholderCity}
+                <div className="ok">
+                  <Icon
+                    name="check"
+                    size={30}
+                    stroke={3}
                   />
                 </div>
-              </div>
 
-              <div className="consult-field">
-                <label htmlFor="enquiry-interest">
-                  {form.interest}
-                </label>
+                <h3>
+                  {F.successTitle}
+                </h3>
 
-                <select
-                  id="enquiry-interest"
-                  name="interest"
-                  value={formData.interest}
-                  onChange={handleChange}
+                <p>
+                  {F.successMsg}
+                </p>
+
+                <button
+                  className="btn btn-ghost"
+                  style={{ marginTop: 22 }}
+                  onClick={resetForm}
                 >
-                  <option value="">
-                    {form.interest}
-                  </option>
+                  <Icon
+                    name="arrow"
+                    size={16}
+                    style={{
+                      transform: "rotate(180deg)"
+                    }}
+                  />
 
-                  {form.interestOpts.map((option, index) => (
-                    <option value={option} key={index}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  Back
+                </button>
+
               </div>
 
-              <div className="consult-field">
-                <label htmlFor="enquiry-message">
-                  {form.message}
-                </label>
+            ) : (
 
-                <textarea
-                  id="enquiry-message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder={form.placeholderMsg}
-                  rows="5"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="consult-submit"
-                disabled={loading}
+              <form
+                onSubmit={submit}
+                noValidate
               >
-                {loading ? "Sending..." : form.submit}
-              </button>
-            </form>
-          )}
-        </div>
+
+                {/* NAME */}
+
+                <div
+                  className={`field ${
+                    errs.name ? "invalid" : ""
+                  }`}
+                >
+
+                  <label>
+                    {F.name}
+
+                    <span className="req">
+                      *
+                    </span>
+                  </label>
+
+                  <input
+                    className="input"
+                    value={vals.name}
+                    onChange={set("name")}
+                    placeholder={F.placeholderName}
+                  />
+
+                  <div className="err">
+                    {F.errName}
+                  </div>
+
+                </div>
+
+
+                {/* EMAIL + PHONE */}
+
+                <div className="field row2">
+
+                  <div
+                    className={
+                      errs.email
+                        ? "invalid field"
+                        : "field"
+                    }
+                    style={{ margin: 0 }}
+                  >
+
+                    <label>
+                      {F.email}
+
+                      <span className="req">
+                        *
+                      </span>
+                    </label>
+
+                    <input
+                      className="input"
+                      value={vals.email}
+                      onChange={set("email")}
+                      placeholder={F.placeholderEmail}
+                      inputMode="email"
+                    />
+
+                    <div className="err">
+                      {F.errEmail}
+                    </div>
+
+                  </div>
+
+
+                  <div
+                    className={
+                      errs.phone
+                        ? "invalid field"
+                        : "field"
+                    }
+                    style={{ margin: 0 }}
+                  >
+
+                    <label>
+                      {F.phone}
+
+                      <span className="req">
+                        *
+                      </span>
+                    </label>
+
+                    <input
+                      className="input"
+                      value={vals.phone}
+                      onChange={set("phone")}
+                      placeholder={F.placeholderPhone}
+                      inputMode="tel"
+                    />
+
+                    <div className="err">
+                      {F.errPhone}
+                    </div>
+
+                  </div>
+
+                </div>
+
+
+                {/* CITY */}
+
+                <div className="field">
+
+                  <label>
+                    {F.city}
+                  </label>
+
+                  <input
+                    className="input"
+                    value={vals.city}
+                    onChange={set("city")}
+                    placeholder={F.placeholderCity}
+                  />
+
+                </div>
+
+
+                {/* INTEREST */}
+
+                <div className="field">
+
+                  <label>
+                    {F.interest}
+                  </label>
+
+                  <select
+                    className="select"
+                    value={vals.interest}
+                    onChange={set("interest")}
+                  >
+
+                    {F.interestOpts.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                      >
+                        {option}
+                      </option>
+                    ))}
+
+                  </select>
+
+                </div>
+
+
+                {/* MESSAGE */}
+
+                <div className="field">
+
+                  <label>
+                    {F.message}
+                  </label>
+
+                  <textarea
+                    className="textarea"
+                    value={vals.message}
+                    onChange={set("message")}
+                    placeholder={F.placeholderMsg}
+                  />
+
+                </div>
+
+
+                {/* SUBMIT */}
+
+                <button
+                  className="btn btn-green btn-block"
+                  type="submit"
+                  disabled={loading}
+                >
+
+                  {loading ? "Sending..." : F.submit}
+
+                  <Icon
+                    name="arrow"
+                    size={18}
+                  />
+
+                </button>
+
+              </form>
+
+            )}
+
+          </div>
+
+        </Reveal>
+
       </div>
+
     </section>
   );
 }

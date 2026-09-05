@@ -416,7 +416,7 @@
 
   padding: 0 11px;
 
-  border: 1px solid var(--wd-border);
+  border: 0px;
   border-radius: 8px;
 
   background: var(--wd-card);
@@ -606,8 +606,7 @@
 .wd-feature-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+ 
 
   gap: 18px;
 
@@ -1428,4 +1427,316 @@
 
 .wd-app button {
   font-family: inherit;
+}
+
+
+/* =========================================================
+   DASHBOARD OVERVIEW CHARTS
+   ========================================================= */
+
+.wd-overview-chart-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+
+/* DONUT */
+
+.wd-overview-donut {
+  width: 170px;
+  height: 170px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  position: relative;
+}
+
+.wd-overview-donut::before {
+  content: "";
+
+  position: absolute;
+  inset: 12px;
+
+  border-radius: 50%;
+
+  background: var(--wd-card);
+}
+
+.wd-overview-donut-inner {
+  position: relative;
+  z-index: 2;
+
+  text-align: center;
+}
+
+.wd-overview-donut-inner strong,
+.wd-overview-donut-inner span {
+  display: block;
+}
+
+.wd-overview-donut-inner strong {
+  color: var(--wd-text);
+
+  font-size: 29px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.wd-overview-donut-inner span {
+  margin-top: 5px;
+
+  color: var(--wd-muted);
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: .12em;
+}
+
+/* LEGEND */
+
+.wd-overview-legend {
+  display: grid;
+  gap: 11px;
+}
+
+.wd-overview-legend > div {
+  display: grid;
+
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.wd-overview-legend i {
+  width: 8px;
+  height: 8px;
+
+  display: block;
+
+  border-radius: 50%;
+}
+
+.wd-overview-legend span {
+  min-width: 0;
+
+  color: var(--wd-muted);
+
+  font-size: 10px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wd-overview-legend b {
+  color: var(--wd-text);
+
+  font-size: 11px;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   ACTIVITY BARS
+   ========================================================= */
+
+.wd-overview-bars {
+  display: grid;
+  gap: 15px;
+}
+
+.wd-overview-bar-row {
+  min-width: 0;
+}
+
+.wd-overview-bar-meta {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 6px;
+}
+
+.wd-overview-bar-meta span {
+  color: var(--wd-muted);
+
+  font-size: 10px;
+}
+
+.wd-overview-bar-meta b {
+  color: var(--wd-text);
+
+  font-size: 10px;
+
+  font-weight: 800;
+}
+
+.wd-overview-bar-track {
+  width: 100%;
+  height: 8px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: var(--wd-soft);
+}
+
+.wd-overview-bar-fill {
+  height: 100%;
+
+  min-width: 0;
+
+  border-radius: inherit;
+
+  background: #e8473f;
+
+  transition: width .35s ease;
+}
+
+/* Different bar colors */
+
+.wd-overview-bar-row:nth-child(2)
+.wd-overview-bar-fill {
+  background: #f39a3d;
+}
+
+.wd-overview-bar-row:nth-child(3)
+.wd-overview-bar-fill {
+  background: #5878d6;
+}
+
+.wd-overview-bar-row:nth-child(4)
+.wd-overview-bar-fill {
+  background: #7a63c7;
+}
+
+.wd-overview-bar-row:nth-child(5)
+.wd-overview-bar-fill {
+  background: #2c9b72;
+}
+
+.wd-overview-bar-row:nth-child(6)
+.wd-overview-bar-fill {
+  background: #555b66;
+}
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+.wd-overview-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 20px;
+  padding-top: 16px;
+
+  border-top: 1px solid var(--wd-border);
+}
+
+.wd-overview-summary > div {
+  padding: 11px 12px;
+
+  border-radius: 11px;
+
+  background: var(--wd-soft);
+}
+
+.wd-overview-summary span,
+.wd-overview-summary strong {
+  display: block;
+}
+
+.wd-overview-summary span {
+  color: var(--wd-muted);
+
+  font-size: 9px;
+}
+
+.wd-overview-summary strong {
+  margin-top: 4px;
+
+  color: var(--wd-text);
+
+  font-size: 19px;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1050px) {
+  .wd-overview-chart-row {
+    grid-template-columns: 170px minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 820px) {
+  .wd-overview-chart-row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .wd-overview-legend {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .wd-overview-donut {
+    width: 145px;
+    height: 145px;
+  }
+
+  .wd-overview-donut-inner strong {
+    font-size: 25px;
+  }
+
+  .wd-overview-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 450px) {
+  .wd-overview-chart-row {
+    gap: 16px;
+  }
+
+  .wd-overview-bars {
+    gap: 12px;
+  }
+}
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .wd-overview-donut::before {
+  background: var(--wd-card);
+}
+
+[data-theme="dark"] .wd-overview-bar-track {
+  background: #24272d;
+}
+
+[data-theme="dark"] .wd-overview-summary > div {
+  background: #202329;
 }

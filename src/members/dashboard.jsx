@@ -735,6 +735,493 @@ window.DashboardWeeklyRoundup =
   DashboardWeeklyRoundup;
 
 
+
+/* =========================================================
+   DASHBOARD OVERVIEW CHARTS
+   Uses existing wd-* classes only.
+========================================================= */
+
+function DashboardOverviewCharts({ stats }) {
+  const courses = Number(stats?.courses || 0);
+  const weeklyRoundups = Number(stats?.marketReports || 0);
+  const purchases = Number(stats?.purchases || 0);
+
+  const [contentMix, setContentMix] = React.useState({
+    articles: 0,
+    videos: 0,
+    newsletters: 0
+  });
+
+  React.useEffect(() => {
+    if (!window.db) return;
+
+    let cancelled = false;
+
+    Promise.all([
+      window.db.collection("content")
+        .where("category", "==", "Articles & Reports")
+        .where("status", "==", "published")
+        .get(),
+
+      window.db.collection("content")
+        .where("category", "==", "Vedios")
+        .where("status", "==", "published")
+        .get(),
+
+      window.db.collection("content")
+        .where("category", "==", "Newsletter")
+        .where("status", "==", "published")
+        .get()
+    ])
+      .then(([articles, videos, newsletters]) => {
+        if (cancelled) return;
+
+        setContentMix({
+          articles: articles.size,
+          videos: videos.size,
+          newsletters: newsletters.size
+        });
+      })
+      .catch((error) => {
+        console.error("Dashboard overview chart error:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const total =
+    contentMix.articles +
+    contentMix.videos +
+    contentMix.newsletters +
+    weeklyRoundups +
+    courses;
+
+  const maxValue = Math.max(
+    courses,
+    contentMix.videos,
+    contentMix.articles,
+    weeklyRoundups,
+    contentMix.newsletters,
+    purchases,
+    1
+  );
+
+  const bars = [
+    { label: "Courses", value: courses },
+    { label: "Videos", value: contentMix.videos },
+    { label: "Articles", value: contentMix.articles },
+    { label: "Weekly Reports", value: weeklyRoundups },
+    { label: "Newsletters", value: contentMix.newsletters },
+    { label: "My Purchases", value: purchases }
+  ];
+
+  const p1 = total ? (contentMix.articles / total) * 100 : 0;
+  const p2 = p1 + (total ? (contentMix.videos / total) * 100 : 0);
+  const p3 = p2 + (total ? (contentMix.newsletters / total) * 100 : 0);
+  const p4 = p3 + (total ? (weeklyRoundups / total) * 100 : 0);
+
+  return (
+    <section className="wd-two-column">
+      <section className="wd-panel">
+        <div className="wd-panel-head">
+          <div>
+            <span className="wd-panel-label">CONTENT OVERVIEW</span>
+            <h3>Published Content</h3>
+          </div>
+        </div>
+
+        <div className="wd-overview-chart-row">
+          <div
+            className="wd-overview-donut"
+            style={{
+              background: total
+                ? `conic-gradient(
+                    #e8473f 0 ${p1}%,
+                    #f39a3d ${p1}% ${p2}%,
+                    #5878d6 ${p2}% ${p3}%,
+                    #7a63c7 ${p3}% ${p4}%,
+                    #2c9b72 ${p4}% 100%
+                  )`
+                : "#e9ebee"
+            }}
+          >
+            <div className="wd-overview-donut-inner">
+              <strong>{total}</strong>
+              <span>TOTAL</span>
+            </div>
+          </div>
+
+          <div className="wd-overview-legend">
+            {[
+              ["#e8473f", "Articles & Reports", contentMix.articles],
+              ["#f39a3d", "Videos", contentMix.videos],
+              ["#5878d6", "Newsletters", contentMix.newsletters],
+              ["#7a63c7", "Weekly Reports", weeklyRoundups],
+              ["#2c9b72", "Courses", courses]
+            ].map(([color, label, value]) => (
+              <div key={label}>
+                <i style={{ background: color }} />
+                <span>{label}</span>
+                <b>{value}</b>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="wd-panel">
+        <div className="wd-panel-head">
+          <div>
+            <span className="wd-panel-label">ACTIVITY</span>
+            <h3>Learning & Content</h3>
+          </div>
+        </div>
+
+        <div className="wd-overview-bars">
+          {bars.map((bar) => (
+            <div className="wd-overview-bar-row" key={bar.label}>
+              <div className="wd-overview-bar-meta">
+                <span>{bar.label}</span>
+                <b>{bar.value}</b>
+              </div>
+
+              <div className="wd-overview-bar-track">
+                <div
+                  className="wd-overview-bar-fill"
+                  style={{
+                    width: bar.value
+                      ? `${Math.max((bar.value / maxValue) * 100, 8)}%`
+                      : "0%"
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="wd-overview-summary">
+          <div>
+            <span>My Purchases</span>
+            <strong>{purchases}</strong>
+          </div>
+          <div>
+            <span>Published Courses</span>
+            <strong>{courses}</strong>
+          </div>
+        </div>
+      </section>
+    </section>
+  );
+}
+
+window.DashboardOverviewCharts = DashboardOverviewCharts;
+
+
+/* =========================================================
+   DASHBOARD CONTENT
+   LATEST PUBLISHED ITEM FROM EACH CATEGORY
+   Uses the existing wd-* CSS classes only.
+========================================================= */
+
+function DashboardLatestContent({ onOpen }) {
+
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+
+    if (!window.db) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const configs = [
+      {
+        type: "Newsletter",
+        collection: "content",
+        category: "Newsletter"
+      },
+      {
+        type: "Weekly Roundup",
+        collection: "content",
+        category: "Weekly Roundup"
+      },
+      {
+        type: "Articles & Reports",
+        collection: "content",
+        category: "Articles & Reports"
+      },
+      {
+        type: "Videos",
+        collection: "content",
+        category: "Vedios"
+      },
+      {
+        type: "Courses",
+        collection: "courses"
+      }
+    ];
+
+    const loadLatest = async () => {
+
+      try {
+
+        const snapshots = await Promise.all(
+          configs.map(config => {
+
+            let query = window.db
+              .collection(config.collection)
+              .where("status", "==", "published");
+
+            if (config.category) {
+              query = query.where(
+                "category",
+                "==",
+                config.category
+              );
+            }
+
+            return query.get();
+
+          })
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        const latest = snapshots
+          .map((snapshot, index) => {
+
+            const config = configs[index];
+
+            const rows = snapshot.docs.map(doc => {
+
+              const data = doc.data() || {};
+
+              const publishedAt =
+                data.publishedAt ||
+                data.createdAt ||
+                "";
+
+              return {
+                id: doc.id,
+                type: config.type,
+                category:
+                  config.category ||
+                  "Courses",
+
+                title:
+                  data.title ||
+                  data.name ||
+                  data.pdfName ||
+                  config.type,
+
+                description:
+                  data.description ||
+                  data.shortDescription ||
+                  "",
+
+                thumbnailUrl:
+                  data.thumbnailUrl ||
+                  data.imageUrl ||
+                  data.thumbnail ||
+                  "",
+
+                publishedAt,
+
+                _time:
+                  getDashboardTime(
+                    publishedAt
+                  )
+
+              };
+
+            });
+
+            rows.sort(
+              (a, b) =>
+                b._time - a._time
+            );
+
+            return rows[0] || null;
+
+          })
+          .filter(Boolean);
+
+        setItems(latest);
+
+      } catch (error) {
+
+        console.error(
+          "Dashboard latest content error:",
+          error
+        );
+
+        setItems([]);
+
+      } finally {
+
+        if (!cancelled) {
+          setLoading(false);
+        }
+
+      }
+
+    };
+
+    loadLatest();
+
+    return () => {
+      cancelled = true;
+    };
+
+  }, []);
+
+  if (loading) {
+
+    return (
+      <section className="wd-panel">
+
+        <div className="wd-panel-loading">
+          Loading Latest Content...
+        </div>
+
+      </section>
+    );
+
+  }
+
+  return (
+    <section className="wd-panel">
+
+      <div className="wd-panel-head">
+
+        <div>
+
+          <span className="wd-panel-label">
+            LATEST CONTENT
+          </span>
+
+          <h3>
+            Latest Content
+          </h3>
+
+        </div>
+
+      </div>
+
+      {items.length === 0 ? (
+
+        <div className="wd-empty">
+          No published content available.
+        </div>
+
+      ) : (
+
+        <div className="wd-feature-grid">
+
+          {items.map(item => {
+
+            const isVideo =
+              item.type === "Videos";
+
+            const actionLabel =
+              item.type === "Articles & Reports"
+                ? "Read Article →"
+                : item.type === "Weekly Roundup"
+                ? "Read Report →"
+                : item.type === "Newsletter"
+                ? "Read Newsletter →"
+                : item.type === "Courses"
+                ? "View Course →"
+                : "Watch Video →";
+
+            return (
+              <button
+                key={`${item.type}-${item.id}`}
+                type="button"
+                className="wd-feature"
+                onClick={() => {
+
+                  if (
+                    typeof onOpen === "function"
+                  ) {
+                    onOpen(item.category);
+                  }
+
+                }}
+              >
+
+                <div className="wd-feature-image">
+
+                  {item.thumbnailUrl ? (
+
+                    <img
+                      src={getDashboardFileUrl(
+                        item.thumbnailUrl
+                      )}
+                      alt={item.title}
+                    />
+
+                  ) : (
+
+                    <span>
+                      {isVideo ? "▶" : "PDF"}
+                    </span>
+
+                  )}
+
+                </div>
+
+                <div className="wd-feature-text">
+
+                  <span className="wd-feature-type">
+                    {item.type.toUpperCase()}
+                  </span>
+
+                  <h4>
+                    {item.title}
+                  </h4>
+
+                  <p>
+                    {item.description}
+                  </p>
+
+                  <span className="wd-feature-date">
+                    {getDashboardDate(
+                      item.publishedAt
+                    )}
+                  </span>
+
+                  <span className="wd-feature-link">
+                    {actionLabel}
+                  </span>
+
+                </div>
+
+              </button>
+            );
+
+          })}
+
+        </div>
+
+      )}
+
+    </section>
+  );
+
+}
+
+window.DashboardLatestContent =
+  DashboardLatestContent;
+
+
 /* =========================================================
    MEMBER DASHBOARD
 ========================================================= */
@@ -1022,6 +1509,12 @@ function MemberDashboard() {
 
   const DashboardWeeklyRoundup =
     window.DashboardWeeklyRoundup;
+
+  const DashboardLatestContent =
+    window.DashboardLatestContent;
+
+  const DashboardOverviewCharts =
+    window.DashboardOverviewCharts;
 
 
   /* =======================================================
@@ -2949,32 +3442,67 @@ function MemberDashboard() {
               </section>
 
 
+              {/* OVERVIEW CHARTS */}
+              {DashboardOverviewCharts && (
+                <DashboardOverviewCharts stats={stats} />
+              )}
+
               {/* LATEST CONTENT */}
 
               <section className="wd-feature-grid">
 
+                {DashboardLatestContent && (
 
-                {DashboardNewsletter && (
+                  <DashboardLatestContent
+                    onOpen={(category) => {
 
-                  <DashboardNewsletter
-                    onOpen={() =>
-                      openPage("newsletter")
-                    }
+                      if (
+                        category ===
+                        "Articles & Reports"
+                      ) {
+
+                        openPage(
+                          "articles"
+                        );
+
+                      } else if (
+                        category === "Vedios"
+                      ) {
+
+                        openPage(
+                          "videos"
+                        );
+
+                      } else if (
+                        category === "Newsletter"
+                      ) {
+
+                        openPage(
+                          "newsletter"
+                        );
+
+                      } else if (
+                        category === "Weekly Roundup"
+                      ) {
+
+                        openPage(
+                          "weekly"
+                        );
+
+                      } else if (
+                        category === "Courses"
+                      ) {
+
+                        openPage(
+                          "courses"
+                        );
+
+                      }
+
+                    }}
                   />
 
                 )}
-
-
-                {DashboardWeeklyRoundup && (
-
-                  <DashboardWeeklyRoundup
-                    onOpen={() =>
-                      openPage("weekly")
-                    }
-                  />
-
-                )}
-
 
               </section>
 
@@ -3213,6 +3741,72 @@ function MemberDashboard() {
 
                       <small>
                         Market reports
+                      </small>
+
+                    </div>
+
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPage("videos")
+                    }
+                  >
+
+                    <span>
+                      ▶
+                    </span>
+
+
+                    <div>
+
+                      <strong>
+                        Videos
+                      </strong>
+
+
+                      <small>
+                        Watch & learn
+                      </small>
+
+                    </div>
+
+
+                    <b>
+                      →
+                    </b>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPage("articles")
+                    }
+                  >
+
+                    <span>
+                      ◈
+                    </span>
+
+
+                    <div>
+
+                      <strong>
+                        Articles & Reports
+                      </strong>
+
+
+                      <small>
+                        Research & insights
                       </small>
 
                     </div>

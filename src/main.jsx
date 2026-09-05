@@ -39,6 +39,8 @@ import "./members/login.jsx";
 import "./members/ForgotPassword.jsx";
 import "./members/CourseVideos.jsx";
 import "./members/Video.jsx";
+import "./members/MemberArticles.jsx";
+
 
 import "./members/Newsletter.jsx";
 import "./members/MemberHistoryPurchase.jsx";

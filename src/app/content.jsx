@@ -18,6 +18,8 @@ const CONTENT = {
       /*  { id: "seminars", label: "Seminars" },*/
       /*  { id: "resources", label: "Resources" },*/
         { id: "about", label: "About" },
+            { id: "Disclosure", label: "Disclosure" },
+
          
 
       ],
@@ -241,12 +243,14 @@ const CONTENT = {
     dir: "ltr",
     nav: {
       links: [
-        { id: "why", label: "ನಾವು ಏಕೆ?" },
+        { id: "Why", label: "ನಾವು ಏಕೆ?" },
       /*  { id: "programs", label: "ಕಾರ್ಯಕ್ರಮಗಳು" },*/
-        { id: "process", label: "ಕೆಲಸ ಹೇಗೆ" },
+        { id: "Process", label: "ಕೆಲಸ ಹೇಗೆ" },
     /*    { id: "seminars", label: "ಸೆಮಿನಾರ್" },*/
        /* { id: "resources", label: "ಸಂಪನ್ಮೂಲಗಳು" },*/
-        { id: "about", label: "ನಮ್ಮ ಬಗ್ಗೆ" },
+        { id: "About", label: "ನಮ್ಮ ಬಗ್ಗೆ" },
+         { id: "Disclosure", label: "ಬಹಿರಂಗೀಕರಣ" },
+
       ],
       cta: "ಸಮಾಲೋಚನೆ ಕಾಯ್ದಿರಿಸಿ",
     },

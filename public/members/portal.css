@@ -4188,104 +4188,49 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   font-size: 9px;
 }
 
-
 /* =========================================================
-   FEATURE GRID
-========================================================= */
+   LATEST CONTENT
+   2 CARDS PER ROW
+   EACH CARD = FLEX / IMAGE + CONTENT
+   ========================================================= */
 
 .wd-feature-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 18px;
-
-  margin-bottom: 18px;
-}
-
-
-.wd-panel {
-  min-width: 0;
-
-  padding: 20px;
-
-  background: var(--wd-card);
-
-  border: 1px solid var(--wd-border);
-
-  border-radius: 17px;
-}
-
-
-.wd-panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-
-  gap: 12px;
-
-  margin-bottom: 16px;
-}
-
-
-.wd-panel-label {
-  display: block;
-
-  margin-bottom: 5px;
-
-  color: var(--wd-muted);
-
-  font-size: 9px;
-  font-weight: 800;
-
-  letter-spacing: .13em;
-}
-
-
-.wd-panel-head h3 {
-  margin: 0;
-
-  font-size: 17px;
-}
-
-
-.wd-view-button {
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-
-  color: var(--wd-text);
-
-  cursor: pointer;
-
-  font-size: 11px;
-  font-weight: 800;
-
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   FEATURED CONTENT
-========================================================= */
-
-.wd-feature {
   width: 100%;
+  display: block;
+  margin: 0 0 20px;
+}
+
+.wd-feature-grid > .wd-panel {
+  width: 100%;
+}
+
+/* Latest content cards */
+.wd-panel > .wd-feature-grid {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 22px 24px;
+
+  margin: 0;
+}
+
+/* Card itself */
+.wd-panel > .wd-feature-grid .wd-feature {
+  width: 100%;
+  min-width: 0;
 
   display: flex;
   align-items: center;
 
-  gap: 15px;
+  gap: 16px;
 
   padding: 0;
 
   border: 0;
 
   background: transparent;
-
   color: inherit;
 
   text-align: left;
@@ -4293,12 +4238,12 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   cursor: pointer;
 }
 
+/* Image */
+.wd-panel > .wd-feature-grid .wd-feature-image {
+  width: 185px;
+  height: 125px;
 
-.wd-feature-image {
-  width: 132px;
-  height: 105px;
-
-  flex: 0 0 132px;
+  flex: 0 0 185px;
 
   overflow: hidden;
 
@@ -4306,112 +4251,187 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   align-items: center;
   justify-content: center;
 
-  border-radius: 12px;
+  border-radius: 13px;
 
-  background: #f1f2f4;
+  background: #eef0f2;
+  border: 1px solid #e5e7ea;
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease;
 }
 
+.wd-panel > .wd-feature-grid .wd-feature:hover
+.wd-feature-image {
+  transform: translateY(-2px);
 
-.wd-feature-image img {
+  box-shadow:
+    0 8px 20px rgba(18,24,33,.08);
+}
+
+.wd-panel > .wd-feature-grid .wd-feature-image img {
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
-
   display: block;
+
+  object-fit: cover;
 }
 
+.wd-panel > .wd-feature-grid .wd-feature-image span {
+  color: #92979f;
 
-.wd-feature-image span {
-  color: var(--wd-muted);
-
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
 }
 
-
-.wd-feature-text {
+/* Text */
+.wd-panel > .wd-feature-grid .wd-feature-text {
+  flex: 1;
   min-width: 0;
 }
 
-
-.wd-feature-type {
+/* Category */
+.wd-panel > .wd-feature-grid .wd-feature-type {
   display: block;
 
-  color: var(--wd-muted);
+  margin-bottom: 6px;
+
+  color: var(--wd-accent);
 
   font-size: 8px;
   font-weight: 800;
 
-  letter-spacing: .12em;
-}
-
-
-.wd-feature-text h4 {
-  margin: 5px 0 5px;
-
-  font-size: 16px;
-  line-height: 1.3;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
+  letter-spacing: .13em;
 
   white-space: nowrap;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-
-.wd-feature-text p {
-  max-width: 100%;
-
+/* Title */
+.wd-panel > .wd-feature-grid .wd-feature-text h4 {
   margin: 0 0 7px;
 
-  color: var(--wd-muted);
+  color: #1b1e23;
 
-  font-size: 11px;
-  line-height: 1.45;
+  font-size: 16px;
+
+  line-height: 1.25;
+
+  font-weight: 760;
 
   display: -webkit-box;
 
   -webkit-line-clamp: 2;
-
   -webkit-box-orient: vertical;
 
   overflow: hidden;
 }
 
+/* Description */
+.wd-panel > .wd-feature-grid .wd-feature-text p {
+  margin: 0 0 8px;
 
-.wd-feature-date {
+  color: #767c85;
+
+  font-size: 11px;
+
+  line-height: 1.45;
+
+  display: -webkit-box;
+
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+/* Date */
+.wd-panel > .wd-feature-grid .wd-feature-date {
   display: block;
 
   margin-bottom: 7px;
 
-  color: var(--wd-muted);
+  color: #a0a5ad;
 
   font-size: 9px;
 }
 
-
-.wd-feature-link {
+/* Action */
+.wd-panel > .wd-feature-grid .wd-feature-link {
   display: inline-block;
 
+  color: #1d2025;
+
   font-size: 10px;
+
   font-weight: 800;
 }
 
+/* =========================================================
+   TABLET
+   ========================================================= */
 
-.wd-empty,
-.wd-panel-loading {
-  padding: 25px 10px;
+@media (max-width: 1050px) {
+  .wd-panel > .wd-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
 
-  color: var(--wd-muted);
-
-  text-align: center;
-
-  font-size: 11px;
+  .wd-panel > .wd-feature-grid .wd-feature-image {
+    width: 180px;
+    flex-basis: 180px;
+  }
 }
 
+/* =========================================================
+   MOBILE
+   ========================================================= */
 
+@media (max-width: 600px) {
+  .wd-panel > .wd-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .wd-panel > .wd-feature-grid .wd-feature {
+    gap: 12px;
+  }
+
+  .wd-panel > .wd-feature-grid .wd-feature-image {
+    width: 115px;
+    height: 88px;
+    flex: 0 0 115px;
+
+    border-radius: 10px;
+  }
+
+  .wd-panel > .wd-feature-grid .wd-feature-text h4 {
+    font-size: 13px;
+  }
+
+  .wd-panel > .wd-feature-grid .wd-feature-text p {
+    font-size: 9px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .wd-panel > .wd-feature-grid .wd-feature-image {
+    width: 95px;
+    height: 76px;
+    flex-basis: 95px;
+  }
+
+  .wd-panel > .wd-feature-grid .wd-feature-text h4 {
+    font-size: 12px;
+  }
+}
 /* =========================================================
    TWO COLUMN
 ========================================================= */

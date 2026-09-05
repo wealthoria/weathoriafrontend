@@ -8,6 +8,10 @@ const {
 } = React;
 
 
+/* =========================================================
+   MEMBER LOGIN
+========================================================= */
+
 function MemberLogin() {
 
   const [email, setEmail] =
@@ -31,10 +35,10 @@ function MemberLogin() {
   const [checkingSession, setCheckingSession] =
     useState(true);
 
-  /* ---------------------------------------------------------
-     Prevent browser password manager from immediately
-     filling the login fields.
-  --------------------------------------------------------- */
+
+  /* =========================================================
+     PREVENT PASSWORD MANAGER AUTOFILL
+  ========================================================= */
 
   const [emailEditable, setEmailEditable] =
     useState(false);
@@ -89,10 +93,12 @@ function MemberLogin() {
         );
 
       if (localSession) {
+
         return {
           value: localSession,
           type: "local"
         };
+
       }
 
 
@@ -102,10 +108,12 @@ function MemberLogin() {
         );
 
       if (sessionOnly) {
+
         return {
           value: sessionOnly,
           type: "session"
         };
+
       }
 
 
@@ -182,6 +190,140 @@ function MemberLogin() {
 
 
   /* =========================================================
+     RECORD LOGIN
+     
+     ONLY:
+       uid
+       name
+       email
+       loginTime
+       status
+  ========================================================= */
+
+  const recordMemberLogin = async ({
+    uid,
+    email,
+    name,
+    token
+  }) => {
+
+    try {
+
+      const loginTime =
+        new Date().toISOString();
+
+
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/members/login-status`,
+          {
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`
+
+            },
+
+            body:
+              JSON.stringify({
+
+                uid:
+                  uid,
+
+                name:
+                  name || "",
+
+                email:
+                  email,
+
+                loginTime:
+                  loginTime,
+
+                status:
+                  "online"
+
+              })
+
+          }
+        );
+
+
+      let data = null;
+
+
+      try {
+
+        data =
+          await response.json();
+
+      } catch (jsonError) {
+
+        console.warn(
+          "Could not parse login-status response:",
+          jsonError
+        );
+
+      }
+
+
+      if (!response.ok) {
+
+        console.warn(
+          "Member login record was not saved:",
+          data?.message ||
+          response.status
+        );
+
+        return false;
+
+      }
+
+
+      console.log(
+        "Member login record saved successfully:",
+        {
+          uid:
+            uid,
+
+          email:
+            email,
+
+          loginTime:
+            loginTime,
+
+          status:
+            "online"
+        }
+      );
+
+
+      return true;
+
+    } catch (error) {
+
+      /*
+       * Login tracking should NEVER prevent
+       * a valid member from entering the portal.
+       */
+
+      console.warn(
+        "Could not record member login:",
+        error
+      );
+
+      return false;
+
+    }
+
+  };
+
+
+  /* =========================================================
      CHECK EXISTING MEMBER SESSION
   ========================================================= */
 
@@ -206,10 +348,15 @@ function MemberLogin() {
           if (!saved) {
 
             if (!cancelled) {
-              setCheckingSession(false);
+
+              setCheckingSession(
+                false
+              );
+
             }
 
             return;
+
           }
 
 
@@ -218,6 +365,7 @@ function MemberLogin() {
           ----------------------------------------------- */
 
           let session;
+
 
           try {
 
@@ -236,10 +384,15 @@ function MemberLogin() {
             clearMemberSession();
 
             if (!cancelled) {
-              setCheckingSession(false);
+
+              setCheckingSession(
+                false
+              );
+
             }
 
             return;
+
           }
 
 
@@ -259,10 +412,15 @@ function MemberLogin() {
             clearMemberSession();
 
             if (!cancelled) {
-              setCheckingSession(false);
+
+              setCheckingSession(
+                false
+              );
+
             }
 
             return;
+
           }
 
 
@@ -277,12 +435,15 @@ function MemberLogin() {
                 method: "GET",
 
                 headers: {
+
                   Authorization:
                     `Bearer ${session.token}`,
 
                   "Content-Type":
                     "application/json"
+
                 }
+
               }
             );
 
@@ -342,7 +503,7 @@ function MemberLogin() {
 
 
             /* ---------------------------------------------
-               UPDATE THE SAME STORAGE TYPE
+               UPDATE SAME STORAGE TYPE
             --------------------------------------------- */
 
             if (
@@ -378,11 +539,13 @@ function MemberLogin() {
             /*
              * IMPORTANT:
              *
-             * replace() means the Login page does not
-             * remain in browser history.
+             * This is an already-existing login.
              *
-             * So opening the login URL while already logged
-             * in will send the member to Dashboard.
+             * We DO NOT create another login record here.
+             *
+             * A login record is created only when the
+             * member actually submits the login form
+             * successfully.
              */
 
             if (!cancelled) {
@@ -394,6 +557,7 @@ function MemberLogin() {
             }
 
             return;
+
           }
 
 
@@ -410,7 +574,11 @@ function MemberLogin() {
 
 
           if (!cancelled) {
-            setCheckingSession(false);
+
+            setCheckingSession(
+              false
+            );
+
           }
 
 
@@ -426,7 +594,11 @@ function MemberLogin() {
 
 
           if (!cancelled) {
-            setCheckingSession(false);
+
+            setCheckingSession(
+              false
+            );
+
           }
 
         }
@@ -475,6 +647,7 @@ function MemberLogin() {
         );
 
         return;
+
       }
 
 
@@ -489,6 +662,7 @@ function MemberLogin() {
         );
 
         return;
+
       }
 
 
@@ -499,6 +673,7 @@ function MemberLogin() {
         );
 
         return;
+
       }
 
 
@@ -511,6 +686,7 @@ function MemberLogin() {
         );
 
         return;
+
       }
 
 
@@ -537,8 +713,10 @@ function MemberLogin() {
               method: "POST",
 
               headers: {
+
                 "Content-Type":
                   "application/json"
+
               },
 
               body:
@@ -698,10 +876,30 @@ function MemberLogin() {
 
 
         /* =================================================
-           GO TO DASHBOARD
+           CREATE LOGIN RECORD
            
-           replace() is important because Login should
-           not remain in browser history.
+           ONLY AFTER SUCCESSFUL LOGIN
+        ================================================= */
+
+        await recordMemberLogin({
+
+          uid:
+            session.uid,
+
+          email:
+            session.email,
+
+          name:
+            session.name,
+
+          token:
+            session.token
+
+        });
+
+
+        /* =================================================
+           GO TO DASHBOARD
         ================================================= */
 
         window.location.replace(
@@ -1141,6 +1339,7 @@ function MemberLogin() {
 
             <button
               type="button"
+
               className="members-link"
 
               onClick={() => {
@@ -1199,6 +1398,7 @@ function MemberLogin() {
     </div>
 
   );
+
 }
 
 

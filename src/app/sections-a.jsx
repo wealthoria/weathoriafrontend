@@ -19,13 +19,19 @@ function NavBar({ onNav }) {
           <BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} />
           <nav className="nav-links">
             {t.nav.links.map((l) =>
-            <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>
-            
-            )}
-            {/*
-             <a href="seminar.html" class="seminar-link">
-   Seminar
-  </a>*/}
+  <a
+    key={l.id}
+    onClick={() => {
+      if (l.id === "Disclosure") {
+        window.location.href = "/wealthoria-disclosure.html";
+      } else {
+        go(l.id);
+      }
+    }}
+  >
+    {l.label}
+  </a>
+)}
           </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">

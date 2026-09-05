@@ -2400,48 +2400,86 @@ function MemberDashboard() {
   /* =======================================================
      LOGOUT
   ======================================================= */
+const logout =
+  async () => {
 
-  const logout =
-    () => {
+  try {
 
-      localStorage.removeItem(
+    const saved =
+      localStorage.getItem(
+        "wealthoria-member"
+      ) ||
+      sessionStorage.getItem(
         "wealthoria-member"
       );
 
+    if (saved) {
 
-      sessionStorage.removeItem(
-        "wealthoria-member"
-      );
+      const session =
+        JSON.parse(saved);
 
+      if (session?.token) {
 
-      setNotificationSlides(
-        []
-      );
+        await fetch(
+          `${DASHBOARD_API}/api/members/logout`,
+          {
+            method: "POST",
 
+            headers: {
+              "Content-Type":
+                "application/json",
 
-      setUnreadNotifications(
-        0
-      );
-
-
-      if (
-        window.membersNavigate
-      ) {
-
-        window.membersNavigate(
-          "/members/login"
+              Authorization:
+                `Bearer ${session.token}`
+            }
+          }
         );
-
-      } else {
-
-        window.location.href =
-          "/members/login";
 
       }
 
-    };
+    }
 
+  } catch (error) {
 
+    console.warn(
+      "Could not record member logout:",
+      error
+    );
+
+  }
+
+  localStorage.removeItem(
+    "wealthoria-member"
+  );
+
+  sessionStorage.removeItem(
+    "wealthoria-member"
+  );
+
+  setNotificationSlides(
+    []
+  );
+
+  setUnreadNotifications(
+    0
+  );
+
+  if (
+    window.membersNavigate
+  ) {
+
+    window.membersNavigate(
+      "/members/login"
+    );
+
+  } else {
+
+    window.location.href =
+      "/members/login";
+
+  }
+
+};
   /* =======================================================
      GREETING
   ======================================================= */

@@ -174,6 +174,14 @@ const NAV = [
   },
 
   {
+  to: "/admin/reports",
+  label: "Reports",
+  icon: "reports"
+},{ to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
+
+
+
+  {
     to: "/admin/notifications",
     label: "Send Push Notification",
     icon: "send"
@@ -378,71 +386,29 @@ function Shell({
 
 
         {/* USER FOOTER */}
+{/* USER FOOTER */}
+<div className="sb-foot">
+  <div className="sb-user">
+    <div className="meta">
+      <div className="n">Admin</div>
 
-        <div className="sb-foot">
+      <div className="r">
+        {user?.email || ""}
+      </div>
+    </div>
 
-          <div className="sb-user">
-
-            <span
-              className="avatar sm"
-              style={{
-                width: 36,
-                height: 36,
-                fontSize: 15
-              }}
-            >
-              {initial}
-            </span>
-
-            <div className="meta">
-
-              <div className="n">
-                {user?.name}
-              </div>
-
-              <div className="r">
-
-                <span
-                  className={
-                    `role-badge ${
-                      isAdmin
-                        ? "admin"
-                        : "editor"
-                    }`
-                  }
-                >
-                  {user?.role}
-                </span>
-
-              </div>
-
-            </div>
-
-            <button
-              className="row-act"
-              type="button"
-              title="Log out"
-              onClick={() => {
-
-                logout();
-
-                navigate(
-                  "/admin/login"
-                );
-
-              }}
-            >
-
-              <MIcon
-                name="logout"
-                size={18}
-              />
-
-            </button>
-
-          </div>
-
-        </div>
+    <button
+      className="row-act"
+      title="Log out"
+      onClick={() => {
+        logout();
+        navigate("/admin/login");
+      }}
+    >
+      <MIcon name="logout" size={18} />
+    </button>
+  </div>
+</div>
 
       </aside>
 

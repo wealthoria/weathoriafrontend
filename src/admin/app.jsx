@@ -384,6 +384,16 @@ function resolve(path) {
     };
   }
 
+  if (
+  path === "/admin/reports"
+) {
+  return {
+    name: "reports"
+  };
+}
+if (path === "/admin/enquiries") {
+  return { name: "enquiries" };
+}
 
   if (
     path === "/admin/notifications"
@@ -734,6 +744,60 @@ function ProtectedRoute({
       );
     }
 
+
+
+    /* ---------------------------------------------------------------------
+   REPORTS
+   --------------------------------------------------------------------- */
+
+case "reports": {
+
+  const AdminReports =
+    getAdmin("AdminReports");
+
+  return (
+    <AdminShell title="Reports">
+
+      {AdminReports ? (
+
+        <AdminReports />
+
+      ) : (
+
+        <div className="page">
+
+          <h1>
+            Reports
+          </h1>
+
+          <p>
+            Admin reports component is not loaded.
+          </p>
+
+        </div>
+
+      )}
+
+    </AdminShell>
+  );
+}
+
+
+case "enquiries": {
+  const AdminEnquiries = getAdmin("AdminEnquiries");
+
+  return (
+    <AdminShell title="Enquiries">
+      {AdminEnquiries ? (
+        <AdminEnquiries />
+      ) : (
+        <div style={{ padding: 24 }}>
+          Enquiries page is not loaded.
+        </div>
+      )}
+    </AdminShell>
+  );
+}
 
     /* ---------------------------------------------------------------------
        NOTIFICATIONS

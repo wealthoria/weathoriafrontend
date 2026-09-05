@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import * as XLSX from "xlsx";
 
 /* global window */
 
@@ -214,7 +215,7 @@ function BackendAreaChart({ data }) {
   const areaPoints = `${pad.l},${H - pad.b} ${linePoints} ${W - pad.r},${H - pad.b}`;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="220" role="img" aria-label="New students per day">
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="220" role="img" aria-label="New Member per day">
       {[0, 1, 2, 3].map((i) => {
         const y = pad.t + (i / 3) * (H - pad.t - pad.b);
         return <line key={i} x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="currentColor" opacity=".08" />;
@@ -305,44 +306,214 @@ function BackendStatusChart({ data }) {
       {!data.length ? <div className="muted">No payment records available.</div> : null}
     </div>
   );
+
 }
 
-function BackendDashboardActivity({ activity }) {
+function BackendDashboardActivity({ members }) {
   const MIcon = getAdmin("MIcon");
-  const faClass = {
-    purchase: "fa-purchase",
-    publish: "fa-publish",
-    enroll: "fa-enroll",
-    update: "fa-comment"
+
+  const recentMembers = [...(members || [])]
+    .map((member) => ({
+      ...member,
+      lastActive: safeTimestamp(
+        member.lastSeenAt ||
+        member.lastLoginAt ||
+        member.updatedAt
+      )
+    }))
+    .filter((member) => member.lastActive > 0)
+    .sort((a, b) => b.lastActive - a.lastActive)
+    .slice(0, 8);
+
+  const formatActiveTime = (value) => {
+    const t = safeTimestamp(value);
+
+    if (!t) return "—";
+
+    return new Date(t).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
   };
 
   return (
-    <aside className="feed-card">
+    <aside
+      className="feed-card"
+      style={{
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        overflow: "hidden"
+      }}
+    >
       <div className="feed-head">
-        <h3>Recent activity</h3>
-        <span className="live"><span className="pulse" /> Live</span>
+        <h3>Recently active members</h3>
+
+        <span className="live">
+          <span className="pulse" />
+          Live
+        </span>
       </div>
-      <div className="feed-list">
-        {activity.slice(0, 8).map((it) => (
-          <div className="feed-item" key={it.id}>
-            <div>
-              <span className={`feed-ava ${faClass[it.type] || ""}`}>{it.name.charAt(0).toUpperCase()}</span>
-              <span className="feed-ic">
-                {MIcon ? <MIcon name={it.icon || "eye"} size={11} /> : null}
-              </span>
+
+      <div
+        className="feed-list"
+        style={{
+          overflowY: "auto",
+          maxHeight: 560,
+          paddingRight: 4
+        }}
+      >
+        {recentMembers.map((member) => {
+          const name =
+            member.name ||
+            member.fullName ||
+            member.email ||
+            "Member";
+
+          const initial = String(name)
+            .charAt(0)
+            .toUpperCase();
+
+          const isOnline =
+            String(member.lastLoginStatus || "").toLowerCase() ===
+            "online";
+
+          return (
+            <div
+              className="feed-item"
+              key={member.id || member.uid || member.email}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "46px minmax(0,1fr)",
+                alignItems: "start",
+                columnGap: 12,
+                width: "100%",
+                minWidth: 0,
+                padding: "12px 0"
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  width: 42,
+                  height: 42,
+                  flexShrink: 0
+                }}
+              >
+                <span
+                  className="feed-ava"
+                  style={{
+                    width: 42,
+                    height: 42,
+                    minWidth: 42,
+                    minHeight: 42,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    fontSize: 18,
+                    fontWeight: 700
+                  }}
+                >
+                  {initial}
+                </span>
+
+                {/* ONLINE / OFFLINE DOT */}
+                <span
+                  title={isOnline ? "Online" : "Offline"}
+                  style={{
+                    position: "absolute",
+                    right: -2,
+                    bottom: -2,
+                    width: 13,
+                    height: 13,
+                    borderRadius: "50%",
+                    background: isOnline
+                      ? "#2ead4b"
+                      : "#9aa0a6",
+                    border: "2px solid var(--canvas, #fff)",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              <div
+                className="feed-body"
+                style={{
+                  minWidth: 0,
+                  width: "100%"
+                }}
+              >
+                <div
+                  className="feed-text"
+                  style={{
+                    minWidth: 0,
+                    width: "100%",
+                    lineHeight: 1.35,
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word"
+                  }}
+                >
+                  <b>{name}</b>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    flexWrap: "wrap",
+                    fontSize: 12
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      color: isOnline
+                        ? "#2ead4b"
+                        : "var(--mute, #777)"
+                    }}
+                  >
+                    {isOnline ? "Online" : "Offline"}
+                  </span>
+
+                  <span
+                    style={{
+                      opacity: 0.65
+                    }}
+                  >
+                    ·
+                  </span>
+
+                  <span className="feed-time">
+                    Last active ·{" "}
+                    {formatActiveTime(
+                      member.lastSeenAt ||
+                      member.lastLoginAt ||
+                      member.updatedAt
+                    )}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="feed-body">
-              <div className="feed-text"><b>{it.name}</b>{it.text}</div>
-              <div className="feed-time">{it.time}</div>
-            </div>
+          );
+        })}
+
+        {!recentMembers.length ? (
+          <div
+            className="muted"
+            style={{ padding: 16 }}
+          >
+            No recent member activity yet.
           </div>
-        ))}
-        {!activity.length ? <div className="muted" style={{ padding: 16 }}>No recent activity.</div> : null}
+        ) : null}
       </div>
     </aside>
   );
 }
-
 function useBackendDashboard(days) {
   const [state, setState] = useState({
     loading: true,
@@ -536,21 +707,119 @@ function ControlPanel() {
   }, [allPeople]);
 
   const activity = useMemo(() => {
-    const rows = [];
-    publishedContent.forEach((item) => {
-      const t = safeTimestamp(item.publishedAt || item.createdAt || item.updatedAt);
-      rows.push({ id: `content-${item.id}`, t, type: "publish", icon: "eye", name: String(item.title || item.name || "Content"), text: " was published", time: displayDate(item.publishedAt || item.createdAt) });
+  const rows = [];
+
+  publishedContent.forEach((item) => {
+    const t = safeTimestamp(
+      item.publishedAt ||
+      item.createdAt ||
+      item.updatedAt
+    );
+
+    rows.push({
+      id: `content-${item.id}`,
+      t,
+      type: "publish",
+      icon: "eye",
+      name: String(
+        item.title ||
+        item.name ||
+        "Content"
+      ),
+      text: " was published",
+      time: displayDate(
+        item.publishedAt ||
+        item.createdAt
+      )
     });
-    paidPurchases.forEach((item) => {
-      const t = safeTimestamp(item.paidAt || item.createdAt);
-      rows.push({ id: `purchase-${item.id}`, t, type: "purchase", icon: "rupee", name: String(item.userName || item.courseTitle || "Purchase"), text: item.courseTitle ? ` purchased ${item.courseTitle}` : " completed a purchase", time: displayDate(item.paidAt || item.createdAt) });
+  });
+
+  paidPurchases.forEach((item) => {
+    const t = safeTimestamp(
+      item.paidAt ||
+      item.createdAt
+    );
+
+    rows.push({
+      id: `purchase-${item.id}`,
+      t,
+      type: "purchase",
+      icon: "rupee",
+      name: String(
+        item.userName ||
+        item.courseTitle ||
+        "Purchase"
+      ),
+      text: item.courseTitle
+        ? ` purchased ${item.courseTitle}`
+        : " completed a purchase",
+      time: displayDate(
+        item.paidAt ||
+        item.createdAt
+      )
     });
-    allPeople.forEach((item) => {
-      const t = safeTimestamp(getCreatedValue(item));
-      rows.push({ id: `member-${item.id}`, t, type: "enroll", icon: "users", name: String(item.name || item.fullName || item.email || "Student"), text: " joined", time: displayDate(getCreatedValue(item)) });
-    });
-    return rows.sort((a, b) => b.t - a.t);
-  }, [publishedContent, paidPurchases, allPeople]);
+  });
+
+  /* ================================
+     MEMBER LOGIN / LOGOUT ACTIVITY
+     ONLY FROM MEMBERS COLLECTION
+  ================================= */
+
+  members.forEach((member) => {
+    const name = String(
+      member.name ||
+      member.fullName ||
+      member.email ||
+      "Member"
+    );
+
+    const loginTime =
+      safeTimestamp(
+        member.lastLoginAt
+      );
+
+    const logoutTime =
+      safeTimestamp(
+        member.lastLogoutAt
+      );
+
+    if (loginTime) {
+      rows.push({
+        id: `member-login-${member.id}`,
+        t: loginTime,
+        type: "enroll",
+        icon: "users",
+        name,
+        text: " logged in",
+        time: displayDate(
+          member.lastLoginAt
+        )
+      });
+    }
+
+    if (logoutTime) {
+      rows.push({
+        id: `member-logout-${member.id}`,
+        t: logoutTime,
+        type: "update",
+        icon: "users",
+        name,
+        text: " logged out",
+        time: displayDate(
+          member.lastLogoutAt
+        )
+      });
+    }
+  });
+
+  return rows
+    .filter((item) => item.t > 0)
+    .sort((a, b) => b.t - a.t);
+}, [
+  publishedContent,
+  paidPurchases,
+  members
+]);
 
   const studentSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
   const revenueSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
@@ -576,7 +845,7 @@ function ControlPanel() {
   return (
     <Shell
       title="Control panel"
-      subtitle={`Signed in as ${role} · ${memberCount.toLocaleString("en-IN")} students`}
+      subtitle={`Signed in as ${role} · ${memberCount.toLocaleString("en-IN")} members`}
       actions={
         <button className="btn btn-green btn-sm" onClick={() => navigate("/admin/courses/new")}>
           {MIcon ? <MIcon name="plus" size={16} /> : null}
@@ -598,7 +867,22 @@ function ControlPanel() {
           <div className="cp-actions">
             <QuickAction icon="send" label="Send Push Notification" onClick={() => navigate("/admin/notifications")} />
             <QuickAction icon="eye" label="Review content" onClick={() => navigate("/admin/content")} />
-            <QuickAction icon="download" label="Export CSV" onClick={() => exportCsv(allPeople, push)} />
+            <QuickAction
+              icon="download"
+              label="Export Excel"
+              onClick={() =>
+                exportExcel(
+                  {
+                    people: allPeople,
+                    content,
+                    courses,
+                    purchases,
+                    notifications
+                  },
+                  push
+                )
+              }
+            />
             <QuickAction icon="plus" label="Add course" onClick={() => navigate("/admin/courses/new")} />
           </div>
         </div>
@@ -618,7 +902,7 @@ function ControlPanel() {
         <div className="cp-layout" style={{ marginTop: 18 }}>
           <div style={{ minWidth: 0 }}>
             <div className="metric-grid">
-              <MetricCard icon="users" label="Students / members" value={loading ? "—" : memberCount.toLocaleString("en-IN")} spark={studentSpark} sparkKey="signups" sparkColor="#2ead4b" />
+              <MetricCard icon="users" label="Members" value={loading ? "—" : memberCount.toLocaleString("en-IN")} spark={studentSpark} sparkKey="signups" sparkColor="#2ead4b" />
               <MetricCard icon="rupee" label="Total revenue" value={loading ? "—" : fmtINR0(revenue)} delta={revenueDelta} spark={revenueSpark.map((d) => ({ ...d, gross: d.revenue }))} sparkKey="gross" sparkColor="#e8473f" />
               <MetricCard icon="courses" label="Active courses" value={loading ? "—" : publishedCourses.length.toLocaleString("en-IN")} />
               <MetricCard icon="upload" label="Published content" value={loading ? "—" : contentCount.toLocaleString("en-IN")} delta={contentDelta} />
@@ -669,23 +953,72 @@ function ControlPanel() {
 
             <div className="chart-grid two">
               <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>New students per day</h3><span className="ch-sub">Last {Math.min(days, 60)} days</span></div></div>
+                <div className="chart-head"><div className="ch-title"><h3>New Member per day</h3><span className="ch-sub">Last {Math.min(days, 60)} days</span></div></div>
                 <BackendAreaChart data={dateSeries} />
               </div>
               <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>Data summary</h3><span className="ch-sub">Current Firestore records</span></div></div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
-                  <div className="qa-card"><b>{publishedContent.length}</b><span>Published content</span></div>
-                  <div className="qa-card"><b>{publishedCourses.length}</b><span>Published courses</span></div>
-                  <div className="qa-card"><b>{paidPurchases.length}</b><span>Paid purchases</span></div>
-                  <div className="qa-card"><b>{notifications.length}</b><span>Notifications</span></div>
+                <div className="chart-head">
+                  <div className="ch-title">
+                    <h3>Data summary</h3>
+                    <span className="ch-sub">Live records currently available in Firestore</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
+                  {[
+                    { icon: "upload", label: "Published content", value: publishedContent.length, meta: "Published", tone: "#2ead4b" },
+                    { icon: "courses", label: "Published courses", value: publishedCourses.length, meta: "Live courses", tone: "#3977ff" },
+                    { icon: "rupee", label: "Paid purchases", value: paidPurchases.length, meta: "Successful payments", tone: "#e8473f" },
+                    { icon: "send", label: "Notifications", value: notifications.length, meta: "Created / sent", tone: "#8b5cf6" }
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "12px 13px",
+                        border: "1px solid var(--line, #e8e8e8)",
+                        borderRadius: 10,
+                        background: "var(--surface-2, #fafafa)"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+                        <span
+                          style={{
+                            width: 34,
+                            height: 34,
+                            minWidth: 34,
+                            borderRadius: 9,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: item.tone,
+                            background: `${item.tone}14`,
+                            border: `1px solid ${item.tone}2b`
+                          }}
+                        >
+                          {MIcon ? <MIcon name={item.icon} size={16} /> : null}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>{item.label}</div>
+                          <div style={{ marginTop: 3, fontSize: 11, opacity: 0.62 }}>{item.meta}</div>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{item.value.toLocaleString("en-IN")}</div>
+                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: item.tone }}>FIRESTORE</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
-          <BackendDashboardActivity activity={activity} />
-        </div>
+<BackendDashboardActivity members={members} />        </div>
       </div>
     </Shell>
   );
@@ -731,93 +1064,248 @@ function QuickAction({
 
 
 /* =========================================================================
-   CSV EXPORT
+   EXCEL EXPORT
    ========================================================================= */
 
-function exportCsv(
-  students,
-  push
-) {
+function excelValue(value) {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value;
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch (e) {
+      return String(value);
+    }
+  }
+  return value;
+}
 
-  const rows = [
-    [
-      "Name",
-      "Email",
-      "Enrolled",
-      "Joined",
-      "Status"
-    ],
-    ...students.map(
-      (s) => [
-        s.name,
-        s.email,
-        s.enrolled,
-        s.joined,
-        s.status
-      ]
-    )
-  ];
+function makeSheet(rows, widths = []) {
+  const safeRows = rows.map((row) => row.map(excelValue));
+  const sheet = XLSX.utils.aoa_to_sheet(safeRows);
 
+  if (widths.length) {
+    sheet["!cols"] = widths.map((wch) => ({ wch }));
+  }
 
-  const csv =
-    rows
-      .map((r) =>
-        r
-          .map(
-            (c) =>
-              `"${c}"`
-          )
-          .join(",")
-      )
-      .join("\n");
+  if (safeRows.length) {
+    const lastCol = XLSX.utils.encode_col(Math.max(0, safeRows[0].length - 1));
+    const lastRow = safeRows.length;
+    sheet["!autofilter"] = { ref: `A1:${lastCol}${lastRow}` };
+  }
 
+  return sheet;
+}
 
+function exportExcel(dataSets, push) {
   try {
+    const workbook = XLSX.utils.book_new();
 
-    const blob =
-      new Blob(
-        [csv],
-        {
-          type:
-            "text/csv"
-        }
-      );
+    /* ---------------------------------------------------------------------
+       Dashboard summary
+       --------------------------------------------------------------------- */
+    const summaryRows = [
+      ["Wealthoria Admin Dashboard Export"],
+      ["Generated On", new Date()],
+      [],
+      ["Dataset", "Record Count"],
+      ["People", (dataSets.people || []).length],
+      ["Content", (dataSets.content || []).length],
+      ["Courses", (dataSets.courses || []).length],
+      ["Purchases", (dataSets.purchases || []).length],
+      ["Notifications", (dataSets.notifications || []).length]
+    ];
 
+    const summarySheet = makeSheet(summaryRows, [32, 20]);
+    summarySheet["A1"].s = { font: { bold: true, sz: 16 } };
+    summarySheet["A2"].z = "yyyy-mm-dd hh:mm:ss";
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Dashboard Summary");
 
-    const url =
-      URL.createObjectURL(
-        blob
-      );
+    const peopleRows = [[
+      "ID", "Name", "Email", "Role", "Status", "Joined", "Source", "City", "State", "Country"
+    ]];
 
+    (dataSets.people || []).forEach((item) => {
+      peopleRows.push([
+        item?.id || "",
+        item?.name || item?.fullName || item?.displayName || item?.username || "",
+        item?.email || item?.emailAddress || "",
+        item?.role || "",
+        item?.status || (item?.active === false ? "inactive" : "active"),
+        displayDate(getCreatedValue(item)),
+        item?.source || item?.referralSource || item?.utmSource || item?.signupSource || "",
+        item?.city || "",
+        item?.state || "",
+        item?.country || ""
+      ]);
+    });
+    XLSX.utils.book_append_sheet(workbook, makeSheet(peopleRows, [28, 28, 34, 16, 14, 16, 22, 18, 18, 18]), "People");
 
-    const a =
-      document.createElement(
-        "a"
-      );
+    const contentRows = [[
+      "ID", "Title", "Status", "Category", "Date", "Type", "Description"
+    ]];
 
-    a.href = url;
+    (dataSets.content || []).forEach((item) => {
+      contentRows.push([
+        item?.id || "",
+        item?.title || item?.name || "",
+        item?.status || "",
+        getContentCategory(item),
+        displayDate(item?.publishedAt || item?.createdAt || item?.updatedAt),
+        item?.type || "",
+        item?.description || ""
+      ]);
+    });
+    XLSX.utils.book_append_sheet(workbook, makeSheet(contentRows, [28, 36, 16, 18, 16, 16, 60]), "Content");
 
-    a.download =
-      "wealthoria-students.csv";
+    const courseRows = [[
+      "ID", "Course", "Status", "Price", "Date", "Description"
+    ]];
 
-    a.click();
+    (dataSets.courses || []).forEach((item) => {
+      courseRows.push([
+        item?.id || "",
+        item?.title || item?.name || "",
+        item?.status || "",
+        firstNumber(item?.price, item?.amount),
+        displayDate(item?.createdAt || item?.updatedAt || item?.publishedAt),
+        item?.description || ""
+      ]);
+    });
+    const courseSheet = makeSheet(courseRows, [28, 36, 16, 14, 16, 60]);
+    if (courseRows.length > 1) courseSheet["D2"] && (courseSheet["D2"].z = '₹#,##0.00');
+    XLSX.utils.book_append_sheet(workbook, courseSheet, "Courses");
 
+    const purchaseRows = [[
+      "ID", "Customer", "Email", "Status", "Course", "Amount", "Payment ID", "Order ID", "Paid Date"
+    ]];
 
-    URL.revokeObjectURL(
-      url
-    );
+    (dataSets.purchases || []).forEach((item) => {
+      purchaseRows.push([
+        item?.id || "",
+        item?.userName || item?.userEmail || "",
+        item?.userEmail || item?.email || "",
+        item?.status || "",
+        item?.courseTitle || item?.courseName || item?.courseId || "",
+        firstNumber(item?.amount, item?.totalAmount, item?.price),
+        item?.razorpayPaymentId || item?.paymentId || "",
+        item?.razorpayOrderId || item?.orderId || "",
+        displayDate(item?.paidAt || item?.createdAt)
+      ]);
+    });
+    const purchaseSheet = makeSheet(purchaseRows, [28, 28, 34, 16, 36, 16, 32, 32, 18]);
+    XLSX.utils.book_append_sheet(workbook, purchaseSheet, "Purchases");
 
+    const notificationRows = [[
+      "ID", "Title", "Status", "Created/Sent Date", "Message"
+    ]];
 
-    push(
-      "Exported student CSV"
-    );
+    (dataSets.notifications || []).forEach((item) => {
+      notificationRows.push([
+        item?.id || "",
+        item?.title || item?.name || "Notification",
+        item?.status || "",
+        displayDate(item?.createdAt || item?.sentAt || item?.updatedAt),
+        item?.message || item?.body || item?.description || ""
+      ]);
+    });
+    XLSX.utils.book_append_sheet(workbook, makeSheet(notificationRows, [28, 38, 16, 20, 80]), "Notifications");
 
-  } catch (e) {
+    /* Keep a single, aligned master sheet for quick filtering/exporting. */
+    const masterRows = [[
+      "Dataset", "ID", "Name / Title", "Email", "Role", "Status", "Category", "Course", "Amount", "Payment ID", "Date", "Source", "Details"
+    ]];
 
-    push(
-      "Export ready (stubbed)"
-    );
+    const addMasterRow = (dataset, item, values) => {
+      masterRows.push([
+        dataset,
+        item?.id || "",
+        values.nameOrTitle || "",
+        values.email || "",
+        values.role || "",
+        values.status || "",
+        values.category || "",
+        values.course || "",
+        values.amount ?? "",
+        values.paymentId || "",
+        values.date || "",
+        values.source || "",
+        values.details || ""
+      ]);
+    };
 
+    (dataSets.people || []).forEach((item) => addMasterRow("People", item, {
+      nameOrTitle: item?.name || item?.fullName || item?.displayName || item?.username || "",
+      email: item?.email || item?.emailAddress || "",
+      role: item?.role || "",
+      status: item?.status || (item?.active === false ? "inactive" : "active"),
+      date: displayDate(getCreatedValue(item)),
+      source: item?.source || item?.referralSource || item?.utmSource || item?.signupSource || "",
+      details: [item?.city, item?.state, item?.country].filter(Boolean).join(", ")
+    }));
+
+    (dataSets.content || []).forEach((item) => addMasterRow("Content", item, {
+      nameOrTitle: item?.title || item?.name || "",
+      status: item?.status || "",
+      category: getContentCategory(item),
+      date: displayDate(item?.publishedAt || item?.createdAt || item?.updatedAt),
+      details: item?.description || item?.type || ""
+    }));
+
+    (dataSets.courses || []).forEach((item) => addMasterRow("Courses", item, {
+      nameOrTitle: item?.title || item?.name || "",
+      status: item?.status || "",
+      amount: firstNumber(item?.price, item?.amount),
+      date: displayDate(item?.createdAt || item?.updatedAt || item?.publishedAt),
+      details: item?.description || ""
+    }));
+
+    (dataSets.purchases || []).forEach((item) => addMasterRow("Purchases", item, {
+      nameOrTitle: item?.userName || item?.userEmail || "",
+      email: item?.userEmail || item?.email || "",
+      status: item?.status || "",
+      course: item?.courseTitle || item?.courseName || item?.courseId || "",
+      amount: firstNumber(item?.amount, item?.totalAmount, item?.price),
+      paymentId: item?.razorpayPaymentId || item?.paymentId || "",
+      date: displayDate(item?.paidAt || item?.createdAt),
+      details: item?.razorpayOrderId || item?.orderId || ""
+    }));
+
+    (dataSets.notifications || []).forEach((item) => addMasterRow("Notifications", item, {
+      nameOrTitle: item?.title || item?.name || "Notification",
+      status: item?.status || "",
+      date: displayDate(item?.createdAt || item?.sentAt || item?.updatedAt),
+      details: item?.message || item?.body || item?.description || ""
+    }));
+
+    if (masterRows.length > 1) {
+      const masterSheet = makeSheet(masterRows, [18, 28, 34, 34, 16, 16, 18, 36, 16, 34, 18, 22, 70]);
+      for (let row = 2; row <= masterRows.length; row += 1) {
+        const amountCell = masterSheet[`I${row}`];
+        if (amountCell && typeof amountCell.v === "number") amountCell.z = '₹#,##0.00';
+      }
+      XLSX.utils.book_append_sheet(workbook, masterSheet, "All Data");
+    }
+
+    const now = new Date();
+    const filename = `wealthoria-dashboard-${now.toISOString().slice(0, 10)}.xlsx`;
+
+    XLSX.writeFile(workbook, filename, {
+      bookType: "xlsx",
+      compression: true
+    });
+
+    const totalRecords =
+      (dataSets.people || []).length +
+      (dataSets.content || []).length +
+      (dataSets.courses || []).length +
+      (dataSets.purchases || []).length +
+      (dataSets.notifications || []).length;
+
+    push(`Exported ${totalRecords} records to Excel`);
+  } catch (error) {
+    console.error("Dashboard Excel export error:", error);
+    push("Unable to export dashboard Excel file.");
   }
 }
 

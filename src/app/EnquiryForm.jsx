@@ -58,24 +58,42 @@ function EnquiryForm() {
   };
 
   const submit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!validate()) return;
+  if (!validate()) return;
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      /*
-       * Keep the backend/API here when ready.
-       */
-
-      setDone(true);
-    } catch (error) {
-      console.error("Enquiry submission failed:", error);
-    } finally {
-      setLoading(false);
+  try {
+    if (!window.db || typeof window.db.collection !== "function") {
+      throw new Error("Firestore database is not available.");
     }
-  };
+
+    await window.db.collection("enquiries").add({
+      name: vals.name.trim(),
+      email: vals.email.trim(),
+      phone: vals.phone.trim(),
+      city: vals.city.trim(),
+      interest: vals.interest,
+      message: vals.message.trim(),
+      status: "new",
+      createdAt:
+        window.firebase?.firestore?.FieldValue?.serverTimestamp
+          ? window.firebase.firestore.FieldValue.serverTimestamp()
+          : new Date()
+    });
+
+    console.log("Enquiry saved successfully");
+
+    setDone(true);
+  } catch (error) {
+    console.error("Enquiry submission failed:", error);
+
+    alert("Unable to submit your enquiry. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const resetForm = () => {
     setDone(false);

@@ -15,6 +15,34 @@ const M_ICONS = {
   courses: <><path d="M4 5h16v14H4z" /><path d="M4 9h16" /><path d="M8 13h8M8 16h5" /></>,
   users: <><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 6a3 3 0 0 1 0 6M21 20a6 6 0 0 0-3-5.2" /></>,
   video: <><rect x="3" y="6" width="13" height="12" rx="2" /><path d="M16 10l5-3v10l-5-3z" /></>,
+youtube: (
+  <>
+    <path
+      d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8Z"
+    />
+    <path
+      d="m10 8 6 4-6 4V8Z"
+      fill="currentColor"
+      stroke="none"
+    />
+  </>
+),
+
+reports: (
+  <>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M7 16v-5" />
+    <path d="M12 16V8" />
+    <path d="M17 16v-7" />
+  </>
+),
+enquiries: (
+  <>
+    <path d="M4 5h16v11H8l-4 4V5z" />
+    <path d="M8 9h8M8 12h5" />
+  </>
+),
+
   pdf: <><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6" /><path d="M8 14h1.5a1.5 1.5 0 0 1 0 3H8zM8 14v6" /></>,
   quiz: <><path d="M9 11l3 3 8-8" /><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" /></>,
   trash: <><path d="M4 7h16" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /><path d="M10 11v6M14 11v6" /></>,

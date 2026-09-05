@@ -1516,6 +1516,8 @@ function MemberDashboard() {
   const DashboardOverviewCharts =
     window.DashboardOverviewCharts;
 
+    const MemberArticles =
+  window.MemberArticles;
 
   /* =======================================================
      MEMBER
@@ -2826,6 +2828,29 @@ const logout =
           </button>
 
 
+          <button
+  type="button"
+  className={
+    activePage === "articles"
+      ? "wd-nav-item active"
+      : "wd-nav-item"
+  }
+  onClick={() =>
+    openPage("articles")
+  }
+>
+
+  <span>
+    ◈
+  </span>
+
+  <b>
+    Articles & Reports
+  </b>
+
+</button>
+
+
           <div className="wd-nav-title">
             DATA & RESEARCH
           </div>
@@ -3030,6 +3055,9 @@ const logout =
                   ? "Newsletter"
                   : activePage === "weekly"
                   ? "Weekly Roundup"
+
+                  : activePage === "articles"
+                  ? "Articles & Reports"
                   : activePage === "purchase"
                   ? "Purchase History"
                   : activePage === "notifications"
@@ -3221,7 +3249,22 @@ const logout =
             )
 
 
-          ) : activePage === "purchase" ? (
+          ) 
+           : activePage === "articles" ? (
+
+  MemberArticles ? (
+
+    <MemberArticles />
+
+  ) : (
+
+    <div className="wd-page-state">
+      Articles & Reports are loading...
+    </div>
+
+  )
+
+) : activePage === "purchase" ? (
 
             PurchaseHistory ? (
 
@@ -3789,6 +3832,31 @@ const logout =
                     </b>
 
                   </button>
+
+
+
+
+                  <button
+  type="button"
+  className={
+    activePage === "articles"
+      ? "wd-nav-item active"
+      : "wd-nav-item"
+  }
+  onClick={() =>
+    openPage("articles")
+  }
+>
+
+  <span>
+    ◈
+  </span>
+
+  <b>
+    Articles & Reports
+  </b>
+
+</button>
 
 
                   <button

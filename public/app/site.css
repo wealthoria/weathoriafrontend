@@ -211,50 +211,6 @@ a { color: inherit; }
 .nav-links a:hover { color: var(--ink-deep); }
 [data-theme="dark"] .nav-links a:hover { color: var(--primary); }
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-
-@media (max-width: 979px) {
-  .mobile-logo-only .brand-text { display: none; }
-  .mobile-logo-only .brand { gap: 0; }
-  .mobile-logo-only .brand-mark { height: 32px; }
-
-  .nav .nav-inner {
-    height: 60px;
-    padding-left: 16px;
-    padding-right: 12px;
-    gap: 10px;
-  }
-
-  .nav-right {
-    gap: 6px;
-  }
-
-  /* Keep language + theme on the mobile top bar. */
-  .nav-right .lang-toggle,
-  .nav-right .theme-toggle {
-    display: inline-flex;
-  }
-
-  /* Keep the account buttons out of the mobile top bar. */
-  .nav-right .member-login-button,
-  .nav-right .nav-login {
-    display: none;
-  }
-
-  .nav-right .lang-toggle span {
-    padding: 5px 8px;
-  }
-
-  .nav-right .theme-toggle {
-    width: 38px;
-    height: 38px;
-  }
-
-  .hamburger {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--rounded-md);
-  }
-}
 .nav-cta-desktop { display: none; }
 @media (min-width: 980px) { .nav-cta-desktop { display: inline-flex; } }
 .nav-login { display: inline-flex; white-space: nowrap; font: var(--body-sm-strong); color: var(--ink); text-decoration: none; align-items: center; gap: 6px; padding: 9px 12px; border-radius: var(--rounded-pill); transition: color .15s, background .15s; box-shadow: inset 0 0 0 1px var(--hair); }
@@ -295,7 +251,6 @@ a { color: inherit; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .drawer a { font: var(--display-xs); font-size: 20px; color: var(--ink); text-decoration: none; padding: 12px 0; box-shadow: inset 0 -1px 0 var(--hair); }
 .drawer .drawer-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
-.drawer-member-login { margin-top: 18px; }
 
 /* =========================================================================
    HERO
@@ -496,20 +451,50 @@ a { color: inherit; }
 /* =========================================================================
    YOUTUBE / CONTENT HUB
    ========================================================================= */
-.yt-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 40px; }
-@media (min-width: 700px) { .yt-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1000px) { .yt-grid { grid-template-columns: 1.4fr 1fr 1fr; } }
-.yt { border-radius: var(--rounded-xl); overflow: hidden; background: var(--canvas); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; transition: transform .2s var(--ease); }
+.yt-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 40px; align-items: stretch; }
+@media (min-width: 700px) { .yt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .yt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.yt { border-radius: var(--rounded-xl); overflow: hidden; background: var(--canvas); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; transition: transform .2s var(--ease); min-width: 0; width: 100%; display: flex; flex-direction: column; }
 .yt:hover { transform: translateY(-3px); }
 .yt:hover .play { transform: scale(1.08); background: var(--primary-active); }
-.yt .thumb { aspect-ratio: 16/9; position: relative; }
-.yt.feat-yt .thumb { aspect-ratio: 16/10; }
+.yt .thumb, .yt.feat-yt .thumb { aspect-ratio: 16 / 9 !important; position: relative; width: 100%; height: auto; flex: 0 0 auto; }
 .yt .play { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 56px; height: 56px; border-radius: var(--rounded-full); background: var(--primary); color: var(--on-primary); display: grid; place-items: center; transition: all .2s var(--ease); }
 .yt .dur { position: absolute; right: 10px; bottom: 10px; background: rgba(8,10,7,.82); color: #fff; font: var(--caption); font-weight: 600; padding: 3px 8px; border-radius: var(--rounded-sm); }
-.yt .meta { padding: 18px; }
+.yt .meta { padding: 18px; min-width: 0; width: 100%; flex: 1 1 auto; }
 .yt .meta h3 { font: var(--body-md-strong); color: var(--ink); margin: 0; }
 .yt.feat-yt .meta h3 { font: var(--display-xs); font-size: 20px; }
 .yt .meta .sub2 { font: var(--caption); color: var(--mute); margin-top: 8px; display: flex; gap: 12px; }
+.yt-description {
+  margin: 6px 0 6px;
+  color: var(--body);
+  font: var(--body-sm);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  max-height: 6em;
+  overflow: hidden;
+}
+.yt-description.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  max-height: none;
+  overflow: visible;
+}
+.yt-description-toggle {
+  display: inline-flex;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-deep);
+  font: var(--caption);
+  font-weight: 700;
+  cursor: pointer;
+}
+[data-theme="dark"] .yt-description-toggle { color: var(--primary); }
+.yt-description-toggle:hover { text-decoration: underline; }
+
 
 /* =========================================================================
    SEMINARS
@@ -1074,10 +1059,16 @@ a { color: inherit; }
 ===================================================== */
 
 @media (max-width: 600px) {
+
+  .statband {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr)!important;}
   .register-main {
     padding: 70px 16px 30px !important;
   }
-
+.band {
+    padding: 0px 0!important;
+}
   .register-experience-list {
     grid-template-columns: 1fr;
   }

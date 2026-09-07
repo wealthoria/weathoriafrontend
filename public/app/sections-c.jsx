@@ -264,6 +264,9 @@ function YouTube() {
   const [previewVideo, setPreviewVideo] =
     useState(null);
 
+  const [expandedDescriptions, setExpandedDescriptions] =
+    useState({});
+
 
   /* =========================================================
      LOAD VIDEOS FROM FIRESTORE
@@ -690,23 +693,40 @@ useEffect(() => {
                   </h3>
 
 
-                  {/* DESCRIPTION */}
-
+                  {/* DESCRIPTION — 4 lines by default, click Expand for full text */}
                   {v.description && (
+                    <>
+                      <p
+                        className="yt-description"
+                        style={{
+                          marginTop: 6,
+                          marginBottom: 8,
+                          lineHeight: 1.5,
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: expandedDescriptions[v.id] ? "unset" : 4,
+                          overflow: expandedDescriptions[v.id] ? "visible" : "hidden"
+                        }}
+                      >
+                        {v.description}
+                      </p>
 
-                    <p
-                      style={{
-                        marginTop: 6,
-                        marginBottom: 8
-                      }}
-                    >
-
-                      {v.description}
-
-                    </p>
-
+                      <button
+                        type="button"
+                        className="yt-description-toggle"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedDescriptions((prev) => ({
+                            ...prev,
+                            [v.id]: !prev[v.id]
+                          }));
+                        }}
+                        aria-expanded={!!expandedDescriptions[v.id]}
+                      >
+                        {expandedDescriptions[v.id] ? "Show less" : "Expand"}
+                      </button>
+                    </>
                   )}
-
 
                   {/* CATEGORY */}
 

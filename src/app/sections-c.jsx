@@ -1,6 +1,5 @@
-﻿import React from "react";
-
-/* global React, window */
+﻿/* global React, window */
+import React from "react";
 
 const { useState, useEffect } = React;
 const {
@@ -265,6 +264,9 @@ function YouTube() {
 
   const [previewVideo, setPreviewVideo] =
     useState(null);
+
+  const [expandedDescriptions, setExpandedDescriptions] =
+    useState({});
 
 
   /* =========================================================
@@ -692,23 +694,31 @@ useEffect(() => {
                   </h3>
 
 
-                  {/* DESCRIPTION */}
-
+                  {/* DESCRIPTION — 4 lines by default, click Expand for full text */}
                   {v.description && (
+                    <>
+                      <p
+                        className={`yt-description${expandedDescriptions[v.id] ? " expanded" : ""}`}
+                      >
+                        {v.description}
+                      </p>
 
-                    <p
-                      style={{
-                        marginTop: 6,
-                        marginBottom: 8
-                      }}
-                    >
-
-                      {v.description}
-
-                    </p>
-
+                      <button
+                        type="button"
+                        className="yt-description-toggle"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedDescriptions((prev) => ({
+                            ...prev,
+                            [v.id]: !prev[v.id]
+                          }));
+                        }}
+                        aria-expanded={!!expandedDescriptions[v.id]}
+                      >
+                        {expandedDescriptions[v.id] ? "Show less" : "Expand"}
+                      </button>
+                    </>
                   )}
-
 
                   {/* CATEGORY */}
 
@@ -1061,7 +1071,7 @@ function Seminars({ onNav }) {
                       <Icon
                         name={
                           ev.mode === "Online" ||
-                          ev.mode === "à²†à²¨à³â€Œà²²à³ˆà²¨à³"
+                          ev.mode === "ಆನ್‌ಲೈನ್"
                             ? "monitor"
                             : "pin"
                         }
@@ -1238,7 +1248,7 @@ function Library() {
                     it.tag ===
                       "Calculator" ||
                     it.tag ===
-                      "à²•à³à²¯à²¾à²²à³à²•à³à²²à³‡à²Ÿà²°à³"
+                      "ಕ್ಯಾಲ್ಕುಲೇಟರ್"
                       ? "Open"
                       : "Read"
                   }

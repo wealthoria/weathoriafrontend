@@ -61,18 +61,32 @@ function NavBar({ onNav }) {
 </a>
           {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
-            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" size={20} /></button>
+            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} aria-controls="mobile-navigation"><Icon name="menu" size={20} /></button>
           </div>
         </div>
       </header>
 
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
-      <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
+      <aside id="mobile-navigation" className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
           <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
-        {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
+        {t.nav.links.map((l) => (
+          <a
+            key={l.id}
+            onClick={() => {
+              if (l.id === "Disclosure") {
+                setOpen(false);
+                window.location.href = "/wealthoria-disclosure.html";
+              } else {
+                go(l.id);
+              }
+            }}
+          >
+            {l.label}
+          </a>
+        ))}
         <a href="seminar.html" onClick={() => setOpen(false)}>
   Seminar
 </a>

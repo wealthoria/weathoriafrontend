@@ -1,4 +1,6 @@
 /* global React, window */
+import React from "react";
+
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
 
@@ -17,13 +19,19 @@ function NavBar({ onNav }) {
           <BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} />
           <nav className="nav-links">
             {t.nav.links.map((l) =>
-            <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>
-            
-            )}
-            {/*
-             <a href="seminar.html" class="seminar-link">
-   Seminar
-  </a>*/}
+  <a
+    key={l.id}
+    onClick={() => {
+      if (l.id === "Disclosure") {
+        window.location.href = "/wealthoria-disclosure.html";
+      } else {
+        go(l.id);
+      }
+    }}
+  >
+    {l.label}
+  </a>
+)}
           </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">
@@ -53,18 +61,32 @@ function NavBar({ onNav }) {
 </a>
           {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
-            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" size={20} /></button>
+            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} aria-controls="mobile-navigation"><Icon name="menu" size={20} /></button>
           </div>
         </div>
       </header>
 
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
-      <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
+      <aside id="mobile-navigation" className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
           <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
-        {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
+        {t.nav.links.map((l) => (
+          <a
+            key={l.id}
+            onClick={() => {
+              if (l.id === "Disclosure") {
+                setOpen(false);
+                window.location.href = "/wealthoria-disclosure.html";
+              } else {
+                go(l.id);
+              }
+            }}
+          >
+            {l.label}
+          </a>
+        ))}
         <a href="seminar.html" onClick={() => setOpen(false)}>
   Seminar
 </a>
@@ -100,18 +122,29 @@ function Hero({ onNav }) {
   return (
     <section className="hero" id="top">
       <div className="hero-video" aria-hidden="true">
-       <video
+      
+      <video
   autoPlay
   loop
   muted
   playsInline
   preload="metadata"
+  poster="/assets/hero-bg.png"
+  ref={(el) => {
+    if (
+      el &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      el.removeAttribute("autoplay");
+      el.pause();
+    }
+  }}
 >
-          poster="assets/hero-bg.png"
-          ref={(el) => {if (el && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {el.removeAttribute("autoplay");el.pause();}}}>
-          
-          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4" type="video/mp4" />
-        </video>
+  <source
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4"
+    type="video/mp4"
+  />
+</video>
       </div>
       <div className="hero-blob" aria-hidden="true"></div>
       <div className="wrap hero-grid">

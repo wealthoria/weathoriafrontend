@@ -8,7 +8,7 @@
     "BEoUv-g5znqXgkiql7pW95Ucw67PDIgJWNGYLkFVo4vu8ZxZEp0DSk0ggnl1piEktPvsBfJKqATvsAJO-GUFvpc";
 
   const BACKEND_URL =
-    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
+    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 
   // =========================================================

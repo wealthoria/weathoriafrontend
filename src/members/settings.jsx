@@ -51,7 +51,7 @@ function MemberSettings() {
   /* =========================================================
      LOCAL BACKEND
   ========================================================= */
-const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
+const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
   /* =========================================================
      GET MEMBER SESSION

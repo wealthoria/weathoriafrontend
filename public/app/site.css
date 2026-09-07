@@ -451,51 +451,179 @@ a { color: inherit; }
 /* =========================================================================
    YOUTUBE / CONTENT HUB
    ========================================================================= */
-.yt-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 40px; align-items: stretch; }
-@media (min-width: 700px) { .yt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1000px) { .yt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.yt { border-radius: var(--rounded-xl); overflow: hidden; background: var(--canvas); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; transition: transform .2s var(--ease); min-width: 0; width: 100%; display: flex; flex-direction: column; }
-.yt:hover { transform: translateY(-3px); }
-.yt:hover .play { transform: scale(1.08); background: var(--primary-active); }
-.yt .thumb, .yt.feat-yt .thumb { aspect-ratio: 16 / 9 !important; position: relative; width: 100%; height: auto; flex: 0 0 auto; }
-.yt .play { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 56px; height: 56px; border-radius: var(--rounded-full); background: var(--primary); color: var(--on-primary); display: grid; place-items: center; transition: all .2s var(--ease); }
-.yt .dur { position: absolute; right: 10px; bottom: 10px; background: rgba(8,10,7,.82); color: #fff; font: var(--caption); font-weight: 600; padding: 3px 8px; border-radius: var(--rounded-sm); }
-.yt .meta { padding: 18px; min-width: 0; width: 100%; flex: 1 1 auto; }
-.yt .meta h3 { font: var(--body-md-strong); color: var(--ink); margin: 0; }
-.yt.feat-yt .meta h3 { font: var(--display-xs); font-size: 20px; }
-.yt .meta .sub2 { font: var(--caption); color: var(--mute); margin-top: 8px; display: flex; gap: 12px; }
-.yt-description {
-  margin: 6px 0 6px;
-  color: var(--body);
-  font: var(--body-sm);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  max-height: 6em;
+
+.yt-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-top: 40px;
+  align-items: stretch;
+}
+
+@media (min-width: 700px) {
+  .yt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) {
+  .yt-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Every YouTube card uses the same width and thumbnail ratio. */
+.yt {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--rounded-xl);
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  cursor: pointer;
+  transition: transform .2s var(--ease);
+}
+
+.yt:hover {
+  transform: translateY(-3px);
+}
+
+.yt:hover .play {
+  transform: scale(1.08);
+  background: var(--primary-active);
+}
+
+/* Force ALL thumbnails, including featured uploads, to exactly 16:9. */
+.yt .thumb,
+.yt.feat-yt .thumb {
+  position: relative;
+  width: 100%;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  flex: 0 0 auto;
   overflow: hidden;
 }
-.yt-description.expanded {
+
+/* Keep the uploaded thumbnail itself fitted to the same frame. */
+.yt .thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
   display: block;
-  -webkit-line-clamp: unset;
-  max-height: none;
-  overflow: visible;
 }
-.yt-description-toggle {
-  display: inline-flex;
-  margin: 0 0 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink-deep);
+
+.yt .play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--rounded-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  display: grid;
+  place-items: center;
+  transition: all .2s var(--ease);
+}
+
+.yt .dur {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background: rgba(8,10,7,.82);
+  color: #fff;
   font: var(--caption);
-  font-weight: 700;
-  cursor: pointer;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--rounded-sm);
 }
-[data-theme="dark"] .yt-description-toggle { color: var(--primary); }
-.yt-description-toggle:hover { text-decoration: underline; }
 
+.yt .meta {
+  padding: 18px;
+  min-width: 0;
+  width: 100%;
+  flex: 1 1 auto;
+}
 
+.yt .meta h3 {
+  font: var(--body-md-strong);
+  color: var(--ink);
+  margin: 0;
+}
+
+.yt.feat-yt .meta h3 {
+  font: var(--body-md-strong);
+  font-size: 19px;
+}
+
+.yt .meta .sub2 {
+  font: var(--caption);
+  color: var(--mute);
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+}
+
+/* DESCRIPTION: show four lines, then Expand. */
+.yt .meta .yt-description {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 4 !important;
+  overflow: hidden !important;
+
+  margin: 6px 0 6px !important;
+  padding: 0 !important;
+
+  color: var(--body) !important;
+  font: var(--body-sm) !important;
+  line-height: 1.5 !important;
+  max-height: 6em !important;
+}
+
+.yt .meta .yt-description.expanded {
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.yt .meta .yt-description-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  padding: 0 !important;
+  margin: 0 0 8px !important;
+
+  border: 0 !important;
+  background: transparent !important;
+
+  color: var(--ink-deep) !important;
+  font: var(--caption) !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.yt .meta .yt-description-toggle:hover {
+  text-decoration: underline !important;
+}
+
+[data-theme="dark"] .yt .meta .yt-description-toggle {
+  color: var(--primary) !important;
+}
+
+/* Keep the same four-line limit on small screens. */
+@media (max-width: 699px) {
+  .yt .meta .yt-description {
+    -webkit-line-clamp: 4 !important;
+    max-height: 6em !important;
+  }
+}
 /* =========================================================================
    SEMINARS
    ========================================================================= */

@@ -284,10 +284,10 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
         }
 
 
-        setSuccess(
-          data.message ||
-          "Notification sent successfully."
-        );
+      setSuccess(
+  `Email sent to ${data.emailSentCount || 0} member(s). ` +
+  `Push notification sent to ${data.sentCount || 0} member(s).`
+);
 
 
         setTitle("");
@@ -345,8 +345,9 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
             </h2>
 
             <p>
-              Send a push notification
-              to your members.
+               Send a push notification and email
+  to your members.
+
             </p>
 
           </div>

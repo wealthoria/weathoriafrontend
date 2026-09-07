@@ -16,7 +16,7 @@ function NavBar({ onNav }) {
     <React.Fragment>
       <header className="nav">
         <div className="wrap nav-inner">
-          <BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} />
+          <span className="mobile-logo-only"><BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} /></span>
           <nav className="nav-links">
             {t.nav.links.map((l) =>
   <a
@@ -61,7 +61,7 @@ function NavBar({ onNav }) {
 </a>
           {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
-            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" size={20} /></button>
+            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" type="button"><Icon name="menu" size={20} /></button>
           </div>
         </div>
       </header>

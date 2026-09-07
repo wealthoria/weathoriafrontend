@@ -213,6 +213,10 @@ a { color: inherit; }
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
 @media (max-width: 979px) {
+  .mobile-logo-only .brand-text { display: none; }
+  .mobile-logo-only .brand { gap: 0; }
+  .mobile-logo-only .brand-mark { height: 32px; }
+
   .nav .nav-inner {
     height: 60px;
     padding-left: 16px;

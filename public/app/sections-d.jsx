@@ -541,10 +541,7 @@ function Footer() {
         Contact Us
       </a>
 
-      <a href="seminar.html">
-         Seminar
-      </a>
-
+      
     </div>
 
 

@@ -21,8 +21,7 @@ function MemberArticles() {
   const [expandedTagsId, setExpandedTagsId] =
     useState(null);
 
-  const API_BASE_URL =
-    "https://webinar-registration-backend.onrender.com";
+const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
 
   /* =========================================================
      FILE URL

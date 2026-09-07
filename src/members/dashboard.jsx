@@ -12,7 +12,7 @@ const {
 ========================================================= */
 
 const DASHBOARD_API =
-  "https://webinar-registration-backend.onrender.com";
+  "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
 
 
 /* =========================================================

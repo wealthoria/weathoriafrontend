@@ -591,7 +591,7 @@ if (!memberSession?.token) {
     ===================================================== */
 
     const response = await fetch(
-   "https://webinar-registration-backend.onrender.com/api/payment/create-course-order",
+   "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/payment/create-course-order",
       {
         method: "POST",
 
@@ -666,7 +666,7 @@ if (!memberSession?.token) {
 
 const verifyResponse =
   await fetch(
-    "https://webinar-registration-backend.onrender.com/api/payment/verify-course-payment",
+    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/payment/verify-course-payment",
     {
       method: "POST",
 

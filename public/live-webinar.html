@@ -242,7 +242,7 @@ async function joinWebinar() {
     try {
 
         const response = await fetch(
-            `https://webinar-registration-backend.onrender.com/api/live/token?email=${encodeURIComponent(email)}`
+            `https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/live/token?email=${encodeURIComponent(email)}`
         );
 
         const data = await response.json();
@@ -315,7 +315,7 @@ window.onload = async function () {
     if (adminToken) {
 
         const response = await fetch(
-            `https://webinar-registration-backend.onrender.com/api/live/token?adminToken=${encodeURIComponent(adminToken)}`
+            `https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/live/token?adminToken=${encodeURIComponent(adminToken)}`
         );
 
         const data = await response.json();

@@ -80,7 +80,7 @@ function MemberSubscription() {
        */
 
       const response = await fetch(
-        "https://webinar-registration-backend.onrender.com/api/subscription/create",
+        "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/subscription/create",
         {
           method: "POST",
           headers: {
@@ -190,7 +190,7 @@ function MemberSubscription() {
 
             const completeResponse =
               await fetch(
-                "https://webinar-registration-backend.onrender.com/api/subscription/complete",
+                "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/subscription/complete",
                 {
                   method: "POST",
 

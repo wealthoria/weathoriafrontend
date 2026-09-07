@@ -1060,7 +1060,7 @@ function CourseForm({
 
         const response =
           await fetch(
-            "https://webinar-registration-backend.onrender.com/api/upload-course-thumbnail",
+            "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/upload-course-thumbnail",
             {
               method: "POST",
               body: formData

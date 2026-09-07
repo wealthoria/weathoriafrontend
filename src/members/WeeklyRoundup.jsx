@@ -15,7 +15,7 @@ function WeeklyRoundup() {
 
 
   const API_BASE_URL =
-    "https://webinar-registration-backend.onrender.com";
+    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
 
 
   const getFileUrl = (fileUrl) => {

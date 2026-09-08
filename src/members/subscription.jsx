@@ -30,6 +30,7 @@ const [errors, setErrors] = useState({});
   };
 
  const subscribeNow = async () => {
+  console.log("SUBSCRIBE BUTTON CLICKED");
   const cleanName = name.trim();
   const cleanEmail = email.trim().toLowerCase();
   const cleanPhone = phone.trim();
@@ -82,7 +83,10 @@ if (password !== confirmPassword) {
   return;
 }
      
+      console.log("RAZORPAY:", typeof window.Razorpay);
+
     if (typeof window.Razorpay !== "function") {
+
        setErrors("Razorpay is not loaded.");
 return;
     

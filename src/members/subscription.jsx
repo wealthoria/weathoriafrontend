@@ -11,7 +11,7 @@ function MemberSubscription() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
+const [errors, setErrors] = useState({});
   const goToLogin = () => {
     if (typeof window.membersNavigate === "function") {
       window.membersNavigate("/members/login");
@@ -29,45 +29,63 @@ function MemberSubscription() {
     );
   };
 
-  const subscribeNow = async () => {
-    const cleanName = name.trim();
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
+ const subscribeNow = async () => {
+  const cleanName = name.trim();
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPhone = phone.trim();
 
-    if (
-      !cleanName ||
-      !cleanEmail ||
-      !cleanPhone ||
-      !password ||
-      !confirmPassword
-    ) {
-      alert("Please fill all fields.");
-      return;
-    }
+  setErrors({});
 
-    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
-      alert("Please enter a valid email address.");
-      return;
-    }
+   
+     if (!cleanName) {
+  setErrors({ name: "Please enter your full name." });
+  return;
+}
 
-    if (!/^[0-9]{10}$/.test(cleanPhone)) {
-      alert("Please enter a valid 10 digit phone number.");
-      return;
-    }
+if (!cleanEmail) {
+  setErrors({ email: "Please enter your email address." });
+  return;
+}
 
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters.");
-      return;
-    }
+if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+  setErrors({ email: "Please enter a valid email address." });
+  return;
+}
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match.");
-      return;
-    }
+if (!cleanPhone) {
+  setErrors({ phone: "Please enter your phone number." });
+  return;
+}
 
+if (!/^[0-9]{10}$/.test(cleanPhone)) {
+  setErrors({ phone: "Please enter a valid 10 digit phone number." });
+  return;
+}
+
+if (!password) {
+  setErrors({ password: "Please create a password." });
+  return;
+}
+
+if (password.length < 6) {
+  setErrors({ password: "Password must be at least 6 characters." });
+  return;
+}
+
+if (!confirmPassword) {
+  setErrors({ confirmPassword: "Please confirm your password." });
+  return;
+}
+
+if (password !== confirmPassword) {
+  setErrors({ confirmPassword: "Passwords do not match." });
+  return;
+}
+     
     if (typeof window.Razorpay !== "function") {
-      alert("Razorpay is not loaded.");
-      return;
+       setErrors("Razorpay is not loaded.");
+return;
+    
     }
 
     try {
@@ -307,17 +325,7 @@ function MemberSubscription() {
     <>
       <style>{`
 
-        * {
-          box-sizing: border-box;
-        }
-
-        html,
-        body {
-          margin: 0;
-          padding: 0;
-          min-height: 100%;
-        }
-
+       
         body {
           min-height: 100vh;
 
@@ -343,6 +351,14 @@ function MemberSubscription() {
             30px 20px;
         }
 
+
+        .members-field-error {
+  margin-top: 6px;
+  color: #e8473f;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
         .subscription-page {
           width: 100%;
 
@@ -374,6 +390,14 @@ function MemberSubscription() {
           margin-bottom: 25px;
         }
 
+
+        .members-form-error {
+  margin: 0 0 14px;
+  color: #e8473f;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
         .brand-name {
           color: #ff6b35;
 
@@ -483,66 +507,7 @@ function MemberSubscription() {
           font-weight: 600;
         }
 
-        .input-group input {
-          width: 100%;
 
-          height: 58px;
-
-          padding: 0 16px;
-
-          border:
-            1px solid #dddddd;
-
-          border-radius: 14px;
-
-          background: #fafafa;
-
-          color: #222;
-
-          font-family:
-            "Poppins",
-            sans-serif;
-
-          font-size: 15px;
-
-          outline: none;
-
-          transition:
-            border-color .2s ease,
-            box-shadow .2s ease,
-            background .2s ease;
-        }
-
-        .input-group input:focus {
-          background: #ffffff;
-
-          border-color: #ff843f;
-
-          box-shadow:
-            0 0 0 4px
-            rgba(255, 132, 63, 0.12);
-        }
-
-        .pay-box {
-          display: flex;
-
-          align-items: center;
-
-          justify-content: space-between;
-
-          gap: 15px;
-
-          margin: 25px 0;
-
-          padding: 19px 20px;
-
-          background: #fff5f3;
-
-          border:
-            1px solid #ffd7cf;
-
-          border-radius: 16px;
-        }
 
         .pay-box h3 {
           margin: 0 0 5px;
@@ -562,48 +527,7 @@ function MemberSubscription() {
           font-size: 13px;
         }
 
-        .amount {
-          color: #ff6b35;
 
-          font-size: 32px;
-
-          font-weight: 800;
-
-          white-space: nowrap;
-        }
-
-        .subscribe-button {
-          width: 100%;
-
-          height: 58px;
-
-          border: none;
-
-          border-radius: 14px;
-
-          background:
-            linear-gradient(
-              135deg,
-              #ff6b35,
-              #ff8c42
-            );
-
-          color: #ffffff;
-
-          font-family:
-            "Poppins",
-            sans-serif;
-
-          font-size: 16px;
-
-          font-weight: 700;
-
-          cursor: pointer;
-
-          box-shadow:
-            0 12px 28px
-            rgba(255, 107, 53, 0.30);
-        }
 
         .subscribe-button:disabled {
           opacity: .6;
@@ -709,11 +633,15 @@ function MemberSubscription() {
 
           </div>
 
-          <div className="input-group">
+         
+ <div className="members-field">
 
+
+ 
             <label htmlFor="subscription-name">
               Full Name
             </label>
+            
 
             <input
               id="subscription-name"
@@ -728,10 +656,16 @@ function MemberSubscription() {
                 )
               }
             />
+            {errors.name && (
+  <div className="members-field-error">
+    {errors.name}
+  </div>
+)}
 
-          </div>
-
-          <div className="input-group">
+        
+</div>
+        
+         <div className="members-field">
 
             <label htmlFor="subscription-email">
               Email Address
@@ -750,10 +684,21 @@ function MemberSubscription() {
                 )
               }
             />
+            {errors.email && (
+  <div className="members-field-error">
+    {errors.email}
+  </div>
+)}
 
-          </div>
+        
+        </div>
 
-          <div className="input-group">
+
+ <div className="members-field">
+
+
+
+ 
 
             <label htmlFor="subscription-phone">
               Phone Number
@@ -776,10 +721,17 @@ function MemberSubscription() {
                 )
               }
             />
+{errors.phone && (
+  <div className="members-field-error">
+    {errors.phone}
+  </div>
+)}
 
-          </div>
+</div>
 
-          <div className="input-group">
+
+ <div className="members-field">
+
 
             <label htmlFor="subscription-password">
               Create Password
@@ -798,10 +750,18 @@ function MemberSubscription() {
                 )
               }
             />
+            {errors.password && (
+  <div className="members-field-error">
+    {errors.password}
+  </div>
+)}
 
-          </div>
+         
+</div>
+        
 
-          <div className="input-group">
+         <div className="members-field">
+
 
             <label htmlFor="subscription-confirm-password">
               Confirm Password
@@ -821,29 +781,23 @@ function MemberSubscription() {
               }
             />
 
-          </div>
+            {errors.confirmPassword && (
+  <div className="members-field-error">
+    {errors.confirmPassword}
+  </div>
+)}
 
-          <div className="pay-box">
 
-            <div>
-              <h3>
-                Wealthoria Premium
-              </h3>
+</div>
+         
 
-              <p>
-                1 Year Membership
-              </p>
-            </div>
 
-            <div className="amount">
-              ₹999
-            </div>
 
-          </div>
+       
 
           <button
-            type="button"
-            className="subscribe-button"
+            className="members-login-button"
+            type="submit"
             onClick={subscribeNow}
             disabled={loading}
           >
@@ -852,12 +806,15 @@ function MemberSubscription() {
               : "Subscribe Now"}
           </button>
 
-          <div className="existing-member">
+          <div className="members-login-subscribe">
 
-            Already a subscriber?{" "}
+            
+            <span>Already a subscriber?{" "}</span>
 
             <button
-              type="button"
+            type="button"
+            className="members-link"
+   
               onClick={goToLogin}
             >
               Login here
@@ -866,7 +823,7 @@ function MemberSubscription() {
           </div>
 
           <div className="secure">
-            ðŸ”’ Secure payment powered by Razorpay
+           Secure payment powered by Razorpay
           </div>
 
           <div className="form-note">

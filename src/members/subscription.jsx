@@ -291,22 +291,21 @@ return;
       const razorpay =
         new window.Razorpay(options);
 
-      razorpay.on(
-        "payment.failed",
-        function (paymentResponse) {
-          console.error(
-            "Payment failed:",
-            paymentResponse?.error
-          );
+    razorpay.on(
+  "payment.failed",
+  function (paymentResponse) {
+    console.error(
+      "Payment failed:",
+      paymentResponse?.error
+    );
 
-          alert(
-            paymentResponse?.error?.description ||
-            "Subscription payment failed."
-          );
+    window.location.reload();
+  }
+);
 
-          setLoading(false);
-        }
-      );
+razorpay.on("modal.close", function () {
+  window.location.reload();
+});
 
       razorpay.open();
 

@@ -1390,6 +1390,26 @@ function MemberLogin() {
           </button>
 
 
+
+                <div className="members-login-subscribe">
+  <span>Not a member yet?</span>
+
+  <button
+    type="button"
+    className="members-link"
+    onClick={() => {
+      if (window.membersNavigate) {
+        window.membersNavigate("/members/subscription");
+      } else {
+        window.location.href = "/members/subscription";
+      }
+    }}
+    disabled={loading}
+  >
+    Subscribe now
+  </button>
+</div>
+
         </form>
 
       </div>

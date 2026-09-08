@@ -51,14 +51,14 @@ function NavBar({ onNav }) {
   <Icon name="user" size={17} />
   <span >Member</span>
 </a>
- <a
+ {/*<a
   className="nav-login"
   href="/Student%20Portal.html#/student/register"
   aria-label="Student Register"
 >
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Student</span>
-</a>
+</a>*/}
           {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" type="button"><Icon name="menu" size={20} /></button>

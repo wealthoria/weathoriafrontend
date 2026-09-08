@@ -5938,3 +5938,15 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
     padding: 14px;
   }
 }
+
+
+
+.members-login-subscribe {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.members-login-subscribe span {
+  margin-right: 6px;
+}

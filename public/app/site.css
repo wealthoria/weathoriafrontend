@@ -6,6 +6,12 @@
    24px radius, hairline borders (no shadow system), restrained motion.
    ========================================================================= */
 
+
+
+
+
+
+   
 :root {
   --maxw: 1200px;
   --hair: rgba(14, 15, 12, .10);          /* hairline border (light)        */
@@ -1188,6 +1194,10 @@ a { color: inherit; }
 
 @media (max-width: 600px) {
 
+  .member-login-button{
+    display: none!important;
+  }
+
   .statband {
     display: grid;
     grid-template-columns: repeat(1, 1fr)!important;}
@@ -1515,5 +1525,91 @@ a { color: inherit; }
 
   .consult-sub {
     font-size: 17px;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   MOBILE NAVIGATION
+   ========================================================= */
+
+/* Mobile: show only the logo mark */
+.mobile-logo-only {
+  display: none;
+}
+
+@media (max-width: 979px) {
+  .mobile-logo-only {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Hide Wealthoria wordmark/text beside the logo */
+  .mobile-logo-only .brand-text {
+    display: none !important;
+  }
+
+  .mobile-logo-only .brand {
+    gap: 0;
+  }
+
+  /* Keep only logo + hamburger in top bar */
+  .nav .nav-right {
+    margin-left: auto;
+  }
+
+  /* Mobile menu drawer */
+  .drawer {
+    width: min(88vw, 360px);
+    padding: 20px;
+  }
+
+  .drawer-links {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .drawer-links a {
+    display: block;
+    width: 100%;
+  }
+
+  /* Language + theme together */
+  .drawer-controls {
+    margin-top: auto;
+    padding-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .drawer-settings {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .drawer-settings .lang-toggle {
+    flex: 1;
+  }
+
+  .drawer-settings .theme-toggle {
+    flex: 0 0 40px;
+  }
+
+  .drawer-member-login {
+    width: 100%;
+  }
+}
+
+/* Desktop: normal full logo/navigation */
+@media (min-width: 980px) {
+  .mobile-logo-only {
+    display: none;
   }
 }

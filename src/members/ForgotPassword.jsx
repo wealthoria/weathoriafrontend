@@ -56,18 +56,18 @@ function ForgotPassword() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${API_BASE}/members/forgot-password/send-code`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: cleanEmail,
-          }),
-        }
-      );
+  const response = await fetch(
+  `${API_BASE}/members/forgot-password/send-code`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email.trim().toLowerCase(),
+    }),
+  }
+);
 
       const data = await response.json();
 

@@ -394,6 +394,9 @@ function resolve(path) {
 if (path === "/admin/enquiries") {
   return { name: "enquiries" };
 }
+if (path === "/admin/prebook-orders") {
+  return { name: "prebook-orders" };
+}
 
   if (
     path === "/admin/notifications"
@@ -795,6 +798,29 @@ case "enquiries": {
           Enquiries page is not loaded.
         </div>
       )}
+    </AdminShell>
+  );
+}
+
+
+case "prebook-orders": {
+  const AdminPrebookOrders =
+    getAdmin("AdminPrebookOrders");
+
+  return (
+    <AdminShell title="Pre-book Orders">
+
+      {AdminPrebookOrders ? (
+        <AdminPrebookOrders />
+      ) : (
+        <div className="page">
+          <h1>Pre-book Orders</h1>
+          <p>
+            Pre-book Orders page is not loaded.
+          </p>
+        </div>
+      )}
+
     </AdminShell>
   );
 }

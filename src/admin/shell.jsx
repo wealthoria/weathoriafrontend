@@ -177,9 +177,15 @@ const NAV = [
   to: "/admin/reports",
   label: "Reports",
   icon: "reports"
-},{ to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
+},
 
+{ to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
 
+  {
+  to: "/admin/prebook-orders",
+  label: "Pre-book Orders",
+  icon: "courses"
+},
 
   {
     to: "/admin/notifications",
@@ -191,7 +197,9 @@ const NAV = [
     to: "/admin/users",
     label: "Members",
     icon: "users"
-  }
+  },
+
+
 
 ];
 

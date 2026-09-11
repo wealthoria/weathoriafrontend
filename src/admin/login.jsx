@@ -438,9 +438,7 @@ function AdminLogin() {
                 }
               >
 
-                {showPassword
-                  ? "â—‰"
-                  : "â—Œ"}
+              {showPassword ? "👁️" : "👁️‍🗨️"}
 
               </button>
 

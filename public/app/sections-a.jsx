@@ -17,22 +17,44 @@ function NavBar({ onNav }) {
       <header className="nav">
         <div className="wrap nav-inner">
           <BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} />
-          <nav className="nav-links">
-            {t.nav.links.map((l) =>
-  <a
-    key={l.id}
-    onClick={() => {
-      if (l.id === "Disclosure") {
-        window.location.href = "/wealthoria-disclosure.html";
-      } else {
-        go(l.id);
-      }
-    }}
-  >
-    {l.label}
-  </a>
-)}
-          </nav>
+       <nav className="nav-links">
+  {t.nav.links.map((l) =>
+    <a
+      key={l.id}
+      onClick={() => {
+        if (l.id === "Disclosure") {
+          window.location.href = "/wealthoria-disclosure.html";
+        } else {
+          go(l.id);
+        }
+      }}
+    >
+      {l.label}
+    </a>
+  )}
+
+  {/* PRODUCTS */}
+  <div className="products-nav">
+    <button
+      type="button"
+      className="products-nav-btn"
+      aria-haspopup="true"
+    >
+      {lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products"}
+      <span className="products-arrow">⌄</span>
+    </button>
+
+    <div className="products-dropdown">
+      <a href="/hoodikeya-vijnana.html">
+        <span className="product-icon">📖</span>
+        <span>
+          <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
+          <small>₹999 · Pre-book now</small>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">
               <span className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</span>
@@ -72,24 +94,29 @@ function NavBar({ onNav }) {
           <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
-        {t.nav.links.map((l) => (
-          <a
-            key={l.id}
-            onClick={() => {
-              if (l.id === "Disclosure") {
-                setOpen(false);
-                window.location.href = "/wealthoria-disclosure.html";
-              } else {
-                go(l.id);
-              }
-            }}
-          >
-            {l.label}
-          </a>
-        ))}
-        <a href="seminar.html" onClick={() => setOpen(false)}>
-  Seminar
+      {t.nav.links.map((l) => (
+  <a
+    key={l.id}
+    onClick={() => {
+      if (l.id === "Disclosure") {
+        setOpen(false);
+        window.location.href = "/wealthoria-disclosure.html";
+      } else {
+        go(l.id);
+      }
+    }}
+  >
+    {l.label}
+  </a>
+))}
+
+<a
+  href="/hoodikeya-vijnana.html"
+  onClick={() => setOpen(false)}
+>
+  📖 {lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ · ₹999"}
 </a>
+       
         <div className="drawer-foot">
           <a className="btn btn-outline btn-block" href="/students/login"><Icon name="user" size={17} />Student login</a>
           <a className="btn btn-outline btn-block" href="/members/login"><Icon name="lock" size={16} />Member login</a>

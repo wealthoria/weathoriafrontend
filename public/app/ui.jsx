@@ -106,7 +106,7 @@ function ImagePlaceholder({ label, icon = "spark", style, className = "" }) {
 function BrandLockup({ markHeight = 34, showSub = false, onClick, href = "#top" }) {
   return (
     <a className="brand" href={href} onClick={onClick}>
-      <img className="brand-mark" src="assets/logo-mark.png" alt="Wealthoria" style={{ height: markHeight }} />
+      <img className="brand-mark" src="/assets/logo-mark.png" alt="Wealthoria" style={{ height: markHeight }} />
       <span className="brand-text">
         <span className="brand-word">Wealthoria</span>
         {showSub && <span className="brand-sub">Education Private Limited</span>}

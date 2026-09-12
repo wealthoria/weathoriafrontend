@@ -799,18 +799,8 @@ const loadJsPDF = () => {
 };
 
 
-/* =========================================================
-   GENERATE SHIPPING LABEL PDF
-
-   COMPACT SHIPPING LABEL
-   4 COLUMNS × 7 ROWS
-   28 LABELS PER A4 PAGE
-
-   VERY MINIMAL SPACE BELOW PIN
-   ========================================================= */
 const generateShippingLabelsPDF = async () => {
   try {
-
     /* =====================================================
        CHECK ORDERS
        ===================================================== */
@@ -848,31 +838,44 @@ const generateShippingLabelsPDF = async () => {
 
 
     /* =====================================================
-       GRID
+       STICKER GRID
 
-       4 COLUMNS × 7 ROWS
-       28 LABEL POSITIONS / PAGE
+       5 COLUMNS
+       3 ROWS
+       15 STICKERS PER PAGE
+
+       NO SPACE BETWEEN BOXES
        ===================================================== */
 
-    const columns = 4;
-    const rows = 7;
+    const columns = 5;
+    const rows = 3;
 
-    const labelsPerPage = columns * rows;
+    const labelsPerPage =
+      columns * rows;
 
 
     /* =====================================================
-       GRID SPACING
+       NO OUTER MARGIN
        ===================================================== */
 
-    const marginX = 2;
-    const marginY = 2;
-
-    const gapX = 1;
-    const gapY = 2;
+    const marginX = 0;
+    const marginY = 0;
 
 
     /* =====================================================
-       LABEL WIDTH
+       NO GAP BETWEEN BOXES
+       ===================================================== */
+
+    const gapX = 0;
+    const gapY = 0;
+
+
+    /* =====================================================
+       EQUAL STICKER WIDTH
+
+       A4 WIDTH = 210mm
+
+       210 / 5 = 42mm
        ===================================================== */
 
     const labelWidth =
@@ -884,466 +887,495 @@ const generateShippingLabelsPDF = async () => {
 
 
     /* =====================================================
-       GRID ROW HEIGHT
+       EQUAL STICKER HEIGHT
 
-       This controls only where the next label starts.
+       A4 HEIGHT = 297mm
 
-       THE BORDER WILL NOT USE THIS HEIGHT.
+       297 / 3 = 99mm
        ===================================================== */
 
-    const rowHeight = 40;
+    const labelHeight =
+      (
+        pageHeight -
+        marginY * 2 -
+        gapY * (rows - 1)
+      ) / rows;
 
 
     /* =====================================================
-       LOOP ORDERS
+       PROCESS ORDERS
        ===================================================== */
 
-    filteredOrders.forEach((order, index) => {
+    filteredOrders.forEach(
+      (order, index) => {
 
-      /* -----------------------------------------------------
-         POSITION
-         ----------------------------------------------------- */
+        /* =================================================
+           POSITION ON CURRENT PAGE
+           ================================================= */
 
-      const position =
-        index % labelsPerPage;
+        const position =
+          index % labelsPerPage;
 
 
-      /* -----------------------------------------------------
-         NEW PAGE
-         ----------------------------------------------------- */
+        /* =================================================
+           NEW PAGE AFTER 15 STICKERS
+           ================================================= */
 
-      if (
-        index > 0 &&
-        position === 0
-      ) {
-        pdf.addPage();
+        if (
+          index > 0 &&
+          position === 0
+        ) {
+          pdf.addPage();
+        }
+
+
+        /* =================================================
+           COLUMN
+
+           0 1 2 3 4
+        ================================================= */
+
+        const column =
+          position % columns;
+
+
+        /* =================================================
+           ROW
+
+           0 1 2
+        ================================================= */
+
+        const row =
+          Math.floor(
+            position / columns
+          );
+
+
+        /* =================================================
+           X POSITION
+
+           NO GAP
+        ================================================= */
+
+        const x =
+          marginX +
+          column *
+            (
+              labelWidth +
+              gapX
+            );
+
+
+        /* =================================================
+           Y POSITION
+
+           NO GAP
+        ================================================= */
+
+        const y =
+          marginY +
+          row *
+            (
+              labelHeight +
+              gapY
+            );
+
+
+        /* =================================================
+           CUSTOMER DATA
+        ================================================= */
+
+        const customer =
+          order.customer || {};
+
+
+        const address =
+          order.shippingAddress || {};
+
+
+        /* =================================================
+           CUSTOMER NAME
+        ================================================= */
+
+        const name =
+          customer.name ||
+          address.name ||
+          "—";
+
+
+        /* =================================================
+           PHONE
+        ================================================= */
+
+        const phone =
+          customer.phone ||
+          address.phone ||
+          "—";
+
+
+        /* =================================================
+           ADDRESS
+        ================================================= */
+
+        const completeAddress = [
+          address.address,
+          address.landmark,
+          address.city
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+
+        /* =================================================
+           STATE
+        ================================================= */
+
+        const state =
+          address.state ||
+          "—";
+
+
+        /* =================================================
+           PINCODE
+        ================================================= */
+
+        const pincode =
+          address.pincode ||
+          "—";
+
+
+        /* =================================================
+           INNER CONTENT PADDING
+
+           VERY SMALL
+        ================================================= */
+
+        const paddingX = 2.5;
+
+
+        const left =
+          x + paddingX;
+
+
+        const right =
+          x +
+          labelWidth -
+          paddingX;
+
+
+        const contentWidth =
+          labelWidth -
+          paddingX * 2;
+
+
+        /* =================================================
+           STICKER BORDER
+
+           DOTTED CUTTING LINE
+        ================================================= */
+
+        pdf.setDrawColor(
+          170,
+          170,
+          170
+        );
+
+
+        pdf.setLineWidth(
+          0.2
+        );
+
+
+        pdf.setLineDashPattern(
+          [1, 1],
+          0
+        );
+
+
+        pdf.rect(
+          x,
+          y,
+          labelWidth,
+          labelHeight
+        );
+
+
+        /* Reset line style */
+
+        pdf.setLineDashPattern(
+          [],
+          0
+        );
+
+
+        /* =================================================
+           COMPANY NAME
+        ================================================= */
+
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+
+        pdf.setFontSize(
+          4.2
+        );
+
+
+        pdf.text(
+          "WEALTHORIA EDUCATION PRIVATE LIMITED",
+          left,
+          y + 5,
+          {
+            maxWidth:
+              contentWidth
+          }
+        );
+
+
+        /* =================================================
+           DIVIDER
+        ================================================= */
+
+        pdf.setDrawColor(
+          100,
+          100,
+          100
+        );
+
+
+        pdf.setLineWidth(
+          0.18
+        );
+
+
+        pdf.line(
+          left,
+          y + 6.5,
+          right,
+          y + 6.5
+        );
+
+
+        /* =================================================
+           DELIVER TO
+        ================================================= */
+
+        pdf.setFont(
+          "helvetica",
+          "normal"
+        );
+
+
+        pdf.setFontSize(
+          4.2
+        );
+
+
+        pdf.text(
+          "DELIVER TO",
+          left,
+          y + 9.5
+        );
+
+
+        /* =================================================
+           CUSTOMER NAME
+        ================================================= */
+
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+
+        pdf.setFontSize(
+          6.5
+        );
+
+
+        const nameLines =
+          pdf.splitTextToSize(
+            String(name),
+            contentWidth
+          );
+
+
+        /* Maximum 2 lines */
+
+        const safeNameLines =
+          nameLines.slice(
+            0,
+            2
+          );
+
+
+        pdf.text(
+          safeNameLines,
+          left,
+          y + 14
+        );
+
+
+        /* =================================================
+           PHONE
+        ================================================= */
+
+        let currentY =
+          y +
+          14 +
+          safeNameLines.length *
+            2.7;
+
+
+        pdf.setFont(
+          "helvetica",
+          "normal"
+        );
+
+
+        pdf.setFontSize(
+          4.3
+        );
+
+
+        pdf.text(
+          `Ph: ${phone}`,
+          left,
+          currentY
+        );
+
+
+        /* =================================================
+           SMALL GAP AFTER PHONE
+        ================================================= */
+
+        currentY += 2.7;
+
+
+        /* =================================================
+           ADDRESS
+        ================================================= */
+
+        pdf.setFontSize(
+          4.5
+        );
+
+
+        const addressLines =
+          pdf.splitTextToSize(
+            completeAddress ||
+              "Address not available",
+            contentWidth
+          );
+
+
+        /* Maximum 4 lines */
+
+        const safeAddressLines =
+          addressLines.slice(
+            0,
+            4
+          );
+
+
+        pdf.text(
+          safeAddressLines,
+          left,
+          currentY
+        );
+
+
+        /* =================================================
+           STATE
+
+           VERY SMALL GAP
+        ================================================= */
+
+        currentY +=
+          safeAddressLines.length *
+            2.5 +
+          1.5;
+
+
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+
+        pdf.setFontSize(
+          4.5
+        );
+
+
+        pdf.text(
+          `State: ${state}`,
+          left,
+          currentY,
+          {
+            maxWidth:
+              contentWidth
+          }
+        );
+
+
+        /* =================================================
+           PIN
+
+           ONLY 1MM BELOW STATE
+        ================================================= */
+
+        currentY += 1;
+
+
+        const pinHeight = 5.5;
+
+
+        pdf.setFillColor(
+          235,
+          235,
+          235
+        );
+
+
+        pdf.rect(
+          left,
+          currentY,
+          contentWidth,
+          pinHeight,
+          "F"
+        );
+
+
+        /* =================================================
+           PIN TEXT
+        ================================================= */
+
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+
+        pdf.setFontSize(
+          5.5
+        );
+
+
+        pdf.text(
+          `PIN: ${pincode}`,
+          left + 2,
+          currentY + 3.8
+        );
+
       }
-
-
-      /* -----------------------------------------------------
-         COLUMN
-         ----------------------------------------------------- */
-
-      const column =
-        position % columns;
-
-
-      /* -----------------------------------------------------
-         ROW
-         ----------------------------------------------------- */
-
-      const row =
-        Math.floor(
-          position / columns
-        );
-
-
-      /* -----------------------------------------------------
-         X
-         ----------------------------------------------------- */
-
-      const x =
-        marginX +
-        column *
-          (
-            labelWidth +
-            gapX
-          );
-
-
-      /* -----------------------------------------------------
-         Y
-         ----------------------------------------------------- */
-
-      const y =
-        marginY +
-        row *
-          (
-            rowHeight +
-            gapY
-          );
-
-
-      /* =====================================================
-         DATA
-         ===================================================== */
-
-      const customer =
-        order.customer || {};
-
-
-      const address =
-        order.shippingAddress || {};
-
-
-      /* -----------------------------------------------------
-         NAME
-         ----------------------------------------------------- */
-
-      const name =
-        customer.name ||
-        address.name ||
-        "—";
-
-
-      /* -----------------------------------------------------
-         PHONE
-         ----------------------------------------------------- */
-
-      const phone =
-        customer.phone ||
-        address.phone ||
-        "—";
-
-
-      /* -----------------------------------------------------
-         ADDRESS
-         ----------------------------------------------------- */
-
-      const completeAddress = [
-        address.address,
-        address.landmark,
-        address.city
-      ]
-        .filter(Boolean)
-        .join(", ");
-
-
-      /* -----------------------------------------------------
-         STATE
-         ----------------------------------------------------- */
-
-      const state =
-        address.state ||
-        "—";
-
-
-      /* -----------------------------------------------------
-         PINCODE
-         ----------------------------------------------------- */
-
-      const pincode =
-        address.pincode ||
-        "—";
-
-
-      /* =====================================================
-         CONTENT AREA
-         ===================================================== */
-
-      const left =
-        x + 3;
-
-      const right =
-        x +
-        labelWidth -
-        3;
-
-      const contentWidth =
-        labelWidth - 6;
-
-
-      /* =====================================================
-         COMPANY NAME
-         ===================================================== */
-
-      pdf.setFont(
-        "helvetica",
-        "bold"
-      );
-
-      pdf.setFontSize(
-        4.5
-      );
-
-      pdf.text(
-        "WEALTHORIA EDUCATION PRIVATE LIMITED",
-        left,
-        y + 4.5,
-        {
-          maxWidth:
-            contentWidth
-        }
-      );
-
-
-      /* =====================================================
-         DIVIDER
-         ===================================================== */
-
-      pdf.setDrawColor(
-        100,
-        100,
-        100
-      );
-
-      pdf.setLineWidth(
-        0.2
-      );
-
-      pdf.line(
-        left,
-        y + 6,
-        right,
-        y + 6
-      );
-
-
-      /* =====================================================
-         DELIVER TO
-         ===================================================== */
-
-      pdf.setFont(
-        "helvetica",
-        "normal"
-      );
-
-      pdf.setFontSize(
-        4.4
-      );
-
-      pdf.text(
-        "DELIVER TO",
-        left,
-        y + 9
-      );
-
-
-      /* =====================================================
-         CUSTOMER NAME
-         ===================================================== */
-
-      pdf.setFont(
-        "helvetica",
-        "bold"
-      );
-
-      pdf.setFontSize(
-        7
-      );
-
-
-      const nameLines =
-        pdf.splitTextToSize(
-          String(name),
-          contentWidth
-        );
-
-
-      const safeNameLines =
-        nameLines.slice(
-          0,
-          2
-        );
-
-
-      pdf.text(
-        safeNameLines,
-        left,
-        y + 14
-      );
-
-
-      /* =====================================================
-         PHONE
-         ===================================================== */
-
-      let currentY =
-        y +
-        14 +
-        safeNameLines.length * 3;
-
-
-      pdf.setFont(
-        "helvetica",
-        "normal"
-      );
-
-      pdf.setFontSize(
-        4.8
-      );
-
-      pdf.text(
-        `Ph: ${phone}`,
-        left,
-        currentY
-      );
-
-
-      currentY += 3.2;
-
-
-      /* =====================================================
-         ADDRESS
-         ===================================================== */
-
-      pdf.setFont(
-        "helvetica",
-        "normal"
-      );
-
-      pdf.setFontSize(
-        5.2
-      );
-
-
-      const addressLines =
-        pdf.splitTextToSize(
-          completeAddress ||
-            "Address not available",
-          contentWidth
-        );
-
-
-      const safeAddressLines =
-        addressLines.slice(
-          0,
-          3
-        );
-
-
-      pdf.text(
-        safeAddressLines,
-        left,
-        currentY
-      );
-
-
-      currentY +=
-        safeAddressLines.length *
-          2.7 +
-        2;
-
-
-      /* =====================================================
-         STATE
-         ===================================================== */
-
-      pdf.setFont(
-        "helvetica",
-        "bold"
-      );
-
-      pdf.setFontSize(
-        5.2
-      );
-
-
-      pdf.text(
-        `State: ${state}`,
-        left,
-        currentY,
-        {
-          maxWidth:
-            contentWidth
-        }
-      );
-
-
-      /* =====================================================
-         PIN BOX
-         ===================================================== */
-
-      currentY += 2.2;
-
-
-      const pinY =
-        currentY;
-
-
-      pdf.setFillColor(
-        235,
-        235,
-        235
-      );
-
-
-      pdf.rect(
-        left,
-        pinY,
-        contentWidth,
-        5.5,
-        "F"
-      );
-
-
-      /* =====================================================
-         PIN TEXT
-         ===================================================== */
-
-      pdf.setFont(
-        "helvetica",
-        "bold"
-      );
-
-      pdf.setFontSize(
-        6
-      );
-
-      pdf.text(
-        `PIN: ${pincode}`,
-        left + 2,
-        pinY + 3.8
-      );
-
-
-      /* =====================================================
-         DOTTED BORDER
-
-         IMPORTANT:
-         BORDER ENDS JUST AFTER PIN.
-
-         NO EMPTY SPACE BELOW PIN.
-         ===================================================== */
-
-      const actualLabelHeight =
-        (
-          pinY +
-          5.5 +
-          0.8
-        ) -
-        y;
-
-
-      pdf.setDrawColor(
-        190,
-        190,
-        190
-      );
-
-      pdf.setLineWidth(
-        0.25
-      );
-
-
-      /* DOTTED BORDER */
-
-      pdf.setLineDashPattern(
-        [1, 1],
-        0
-      );
-
-
-      pdf.rect(
-        x,
-        y,
-        labelWidth,
-        actualLabelHeight
-      );
-
-
-      /* Reset line style */
-
-      pdf.setLineDashPattern(
-        [],
-        0
-      );
-
-    });
+    );
 
 
     /* =====================================================
-       FILE NAME
+       SAVE PDF
        ===================================================== */
 
     const today =
@@ -1354,10 +1386,6 @@ const generateShippingLabelsPDF = async () => {
           10
         );
 
-
-    /* =====================================================
-       SAVE PDF
-       ===================================================== */
 
     pdf.save(
       `wealthoria-shipping-labels-${today}.pdf`
@@ -1375,11 +1403,8 @@ const generateShippingLabelsPDF = async () => {
     alert(
       "Unable to generate the PDF. Please try again."
     );
-
   }
 };
-
-
   /* =======================================================
      RENDER
   ======================================================= */

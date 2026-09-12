@@ -1433,6 +1433,10 @@ const generateShippingLabelsPDF = async () => {
           </div>
 
 
+
+        </div>
+
+        
           <button
   type="button"
   onClick={generateShippingLabelsPDF}
@@ -1443,7 +1447,7 @@ const generateShippingLabelsPDF = async () => {
     border: "none",
     borderRadius: 10,
     background: filteredOrders.length
-      ? "#c0392b"
+      ? "rgb(232 95 78)"
       : "#d0d5dd",
     color: "#fff",
     fontSize: 13,
@@ -1456,8 +1460,6 @@ const generateShippingLabelsPDF = async () => {
 >
   Generate PDF
 </button>
-
-        </div>
       </div>
 
 

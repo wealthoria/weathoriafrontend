@@ -1,170 +1,217 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Thank You | Wealthoria</title>
+  <title>Pre-booking Successful | Wealthoria</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #11201f;
+      --cream: #f7f8f3;
+      --white: #ffffff;
+      --coral: #e8473f;
+      --orange: #f4823c;
+      --line: #e2e6df;
+      --muted: #68736f;
+    }
 
-<style>
+    * {
+      box-sizing: border-box;
+    }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
-}
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
 
-body{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:#f5f7fb;
-    padding:20px;
-}
+    body {
+      min-height: 100vh;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: Arial, "Nirmala UI", sans-serif;
+    }
 
-.container{
-    width:100%;
-    max-width:550px;
-    background:#fff;
-    border-radius:20px;
-    padding:50px 35px;
-    text-align:center;
-    box-shadow:0 20px 50px rgba(0,0,0,.10);
-}
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+    }
 
-.logo{
-    width:180px;
-    margin-bottom:25px;
-}
+    .card {
+      width: 100%;
+      max-width: 650px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 55px 45px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(17, 32, 31, .08);
+    }
 
-.success-img{
-    width:180px;
-    margin-bottom:25px;
-}
+    .check {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 25px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(120deg, var(--coral), var(--orange));
+      color: white;
+      font-size: 40px;
+      font-weight: 700;
+    }
 
-h1{
-    color:#16a34a;
-    font-size:34px;
-    margin-bottom:18px;
-}
+    .brand {
+      font-size: 13px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
 
-p{
-    color:#555;
-    font-size:17px;
-    line-height:1.8;
-    margin-bottom:30px;
-}
+    h1 {
+      margin: 0 0 14px;
+      font-size: 32px;
+      line-height: 1.25;
+    }
 
-.note{
-    background:#f8fafc;
-    border-left:5px solid #16a34a;
-    padding:18px;
-    border-radius:10px;
-    text-align:left;
-    color:#444;
-    margin-bottom:30px;
-    font-size:15px;
-    line-height:1.7;
-}
+    .message {
+      margin: 0 auto;
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
 
-.btn{
-    display:inline-block;
-    padding:15px 35px;
-    text-decoration:none;
-    color:#fff;
-    font-size:17px;
-    font-weight:600;
-    border-radius:10px;
-    background:
-    linear-gradient(
-        180deg,
-        rgba(255,255,255,.22),
-        rgba(255,255,255,0) 46%
-    ),
-    linear-gradient(
-        120deg,
-        #e8473f,
-        #f4823c
-    );
-    transition:.3s;
-}
+    .order-box {
+      margin: 30px 0;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f4f6f1;
+      border: 1px solid var(--line);
+    }
 
-.btn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 25px rgba(232,71,63,.35);
-}
+    .order-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
 
-.footer{
-    margin-top:35px;
-    color:#888;
-    font-size:14px;
-}
+    .order-id {
+      font-size: 15px;
+      font-weight: 700;
+      word-break: break-all;
+    }
 
-@media(max-width:600px){
+    .info {
+      margin-top: 25px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
 
-.container{
-    padding:35px 22px;
-}
+    .home-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 190px;
+      height: 52px;
+      margin-top: 25px;
+      padding: 0 25px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: white;
+      background: linear-gradient(120deg, var(--coral), var(--orange));
+      font-size: 15px;
+      font-weight: 700;
+    }
 
-.logo{
-    width:150px;
-}
+    @media (max-width: 600px) {
+      .page {
+        padding: 12px;
+      }
 
-.success-img{
-    width:140px;
-}
+      .card {
+        padding: 40px 22px;
+        border-radius: 18px;
+      }
 
-h1{
-    font-size:28px;
-}
-
-p{
-    font-size:16px;
-}
-
-.note{
-    font-size:14px;
-}
-
-}
-
-</style>
-
+      h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
+  <div class="page">
 
-   
+    <div class="card">
 
-    <h1>Thank You!</h1>
+      <div class="check">✓</div>
 
-    <p>
-        Your payment has been received successfully and your seat has been confirmed for the
-        <strong>Wealthoria Live Webinar.</strong>
-    </p>
+      <div class="brand">
+        Wealthoria · Pre-booking
+      </div>
 
-    <div class="note">
-        ✅ Your registration is complete.<br><br>
-        📧 The webinar access link has been sent to your registered email address.<br><br>
-        📅 Please join the webinar using the link shared in your email before the session begins.
+      <h1>
+        Pre-booking Successful!
+      </h1>
+
+      <p class="message">
+        ಧನ್ಯವಾದಗಳು! ನಿಮ್ಮ <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
+        ಪುಸ್ತಕದ pre-booking ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ.
+      </p>
+
+      <div class="order-box" id="orderBox" style="display:none;">
+        <div class="order-label">
+          Order ID
+        </div>
+
+        <div class="order-id" id="orderId"></div>
+      </div>
+
+      <div class="info">
+        ನಿಮ್ಮ payment ಮತ್ತು pre-booking ವಿವರಗಳನ್ನು
+        ನಾವು ಸ್ವೀಕರಿಸಿದ್ದೇವೆ.<br>
+        Dispatch ಮತ್ತು delivery ಕುರಿತು ಅಗತ್ಯವಾದ
+        ಮಾಹಿತಿಯನ್ನು ನಿಮ್ಮ email ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.
+      </div>
+
+      <a href="/" class="home-btn">
+        Back to Wealthoria
+      </a>
+
     </div>
 
-    <a href="https://wealthoria.in/live-webinar.html" class="btn">
-        Join Webinar
-    </a>
+  </div>
 
-    <div class="footer">
-        © 2026 Wealthoria. All Rights Reserved.
-    </div>
+  <script>
 
-</div>
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const orderId = params.get("o");
+
+    if (orderId) {
+
+      document.getElementById("orderId").textContent =
+        orderId;
+
+      document.getElementById("orderBox").style.display =
+        "block";
+
+    }
+
+  </script>
 
 </body>
 </html>

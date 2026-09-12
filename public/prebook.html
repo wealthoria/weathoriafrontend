@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Pre-book | ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ | Wealthoria</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <style>
+    :root {
+      --ink: #11201f;
+      --ink-soft: #1a2b29;
+      --cream: #f7f8f3;
+      --white: #ffffff;
+      --coral: #e8473f;
+      --orange: #f4823c;
+      --line: #e2e6df;
+      --muted: #68736f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: "Noto Sans Kannada", "Nirmala UI", Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 45px 20px 60px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .form-card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(17, 32, 31, 0.08);
+    }
+
+    .form-head {
+      background: var(--ink);
+      color: white;
+      padding: 34px 42px;
+    }
+
+    .brand {
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 10px;
+    }
+
+    .form-head h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .form-head p {
+      margin: 0;
+      color: rgba(255,255,255,.75);
+      font-size: 15px;
+    }
+
+    .form-body {
+      padding: 42px;
+    }
+
+    .section-title {
+      margin: 28px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .section-title:first-child {
+      margin-top: 0;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .field input,
+    .field textarea {
+      display: block;
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #d8ded8;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .field input {
+      height: 52px;
+    }
+
+    .field textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(232, 71, 63, .08);
+    }
+
+    .field input[readonly] {
+      background: #f4f5f1;
+      font-weight: 600;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .same-billing {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .same-billing input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--coral);
+    }
+
+    .error {
+      display: none;
+      margin-top: 18px;
+      padding: 13px 15px;
+      border-radius: 8px;
+      background: #fff1ed;
+      color: #c24f1e;
+      border: 1px solid #f2c2b0;
+      font-size: 14px;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .pay-btn {
+      width: 100%;
+      height: 56px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(120deg, var(--coral), var(--orange));
+      color: white;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .pay-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .pay-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .note {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 12px 8px 30px;
+      }
+
+      .form-card {
+        border-radius: 18px;
+      }
+
+      .form-head {
+        padding: 28px 22px;
+      }
+
+      .form-head h1 {
+        font-size: 25px;
+      }
+
+      .form-body {
+        padding: 28px 22px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="form-card">
+
+    <div class="form-head">
+      <div class="brand">Wealthoria · Pre-booking</div>
+
+      <h1>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h1>
+
+      <p>
+        Pre-book ಮಾಡಲು ನಿಮ್ಮ ವಿವರಗಳು ಮತ್ತು delivery address ಅನ್ನು ನಮೂದಿಸಿ.
+      </p>
+    </div>
+
+    <div class="form-body">
+
+      <!-- CUSTOMER -->
+      <div class="section-title">
+        Customer Details
+      </div>
+
+      <div class="field">
+        <label for="bookName">Name *</label>
+        <input type="text" id="bookName">
+      </div>
+
+      <div class="field">
+        <label for="bookEmail">Email *</label>
+        <input type="email" id="bookEmail">
+      </div>
+
+      <div class="field">
+        <label for="bookPhone">Phone *</label>
+        <input
+          type="tel"
+          id="bookPhone"
+          maxlength="10"
+          inputmode="numeric"
+        >
+      </div>
+
+
+      <!-- DELIVERY -->
+      <div class="section-title">
+        Delivery Address
+      </div>
+
+      <div class="field">
+        <label for="bookDeliveryName">Full Name *</label>
+        <input type="text" id="bookDeliveryName">
+      </div>
+
+      <div class="field">
+        <label for="bookDeliveryPhone">Phone *</label>
+        <input
+          type="tel"
+          id="bookDeliveryPhone"
+          maxlength="10"
+          inputmode="numeric"
+        >
+      </div>
+
+      <div class="field">
+        <label for="bookAddress">Address *</label>
+        <textarea id="bookAddress"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="bookLandmark">Landmark</label>
+        <input type="text" id="bookLandmark">
+      </div>
+
+      <div class="row">
+
+        <div class="field">
+          <label for="bookCity">City *</label>
+          <input type="text" id="bookCity">
+        </div>
+
+        <div class="field">
+          <label for="bookState">State *</label>
+          <input type="text" id="bookState">
+        </div>
+
+      </div>
+
+      <div class="row">
+
+        <div class="field">
+          <label for="bookPincode">Pincode *</label>
+          <input
+            type="text"
+            id="bookPincode"
+            maxlength="6"
+            inputmode="numeric"
+          >
+        </div>
+
+        <div class="field">
+          <label>Country</label>
+          <input type="text" value="India" readonly>
+        </div>
+
+      </div>
+
+
+      <!-- BILLING -->
+      <label class="same-billing">
+        <input
+          type="checkbox"
+          id="billingSameAsDelivery"
+          checked
+        >
+        <span>Billing address is same as delivery address</span>
+      </label>
+
+      <div id="billingAddressSection" style="display:none;">
+
+        <div class="section-title">
+          Billing Address
+        </div>
+
+        <div class="field">
+          <label for="bookBillingName">Full Name *</label>
+          <input type="text" id="bookBillingName">
+        </div>
+
+        <div class="field">
+          <label for="bookBillingPhone">Phone *</label>
+          <input
+            type="tel"
+            id="bookBillingPhone"
+            maxlength="10"
+            inputmode="numeric"
+          >
+        </div>
+
+        <div class="field">
+          <label for="bookBillingAddress">Address *</label>
+          <textarea id="bookBillingAddress"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="bookBillingLandmark">Landmark</label>
+          <input type="text" id="bookBillingLandmark">
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="bookBillingCity">City *</label>
+            <input type="text" id="bookBillingCity">
+          </div>
+
+          <div class="field">
+            <label for="bookBillingState">State *</label>
+            <input type="text" id="bookBillingState">
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="bookBillingPincode">Pincode *</label>
+            <input
+              type="text"
+              id="bookBillingPincode"
+              maxlength="6"
+              inputmode="numeric"
+            >
+          </div>
+
+          <div class="field">
+            <label>Country</label>
+            <input type="text" value="India" readonly>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div id="errorBox" class="error"></div>
+
+      <button
+        type="button"
+        class="pay-btn"
+        id="payButton"
+        onclick="handlePay()"
+      >
+        Pay & Pre-book
+      </button>
+
+      <div class="note">
+        Secure payment powered by Razorpay
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const API_BASE =
+  "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
+
+
+/* BILLING TOGGLE */
+
+document
+  .getElementById("billingSameAsDelivery")
+  .addEventListener("change", function () {
+
+    document.getElementById("billingAddressSection").style.display =
+      this.checked ? "none" : "block";
+
+  });
+
+
+/* ERROR */
+
+function showError(message) {
+
+  const box = document.getElementById("errorBox");
+
+  box.textContent = message;
+  box.classList.add("show");
+
+}
+
+function clearError() {
+
+  const box = document.getElementById("errorBox");
+
+  box.textContent = "";
+  box.classList.remove("show");
+
+}
+
+
+/* GET VALUE */
+
+function value(id) {
+
+  return document.getElementById(id)?.value.trim() || "";
+
+}
+
+
+/* PAYMENT */
+
+async function handlePay() {
+
+  clearError();
+
+  const button = document.getElementById("payButton");
+
+  const name = value("bookName");
+  const email = value("bookEmail");
+  const phone = value("bookPhone");
+
+  const deliveryName = value("bookDeliveryName");
+  const deliveryPhone = value("bookDeliveryPhone");
+
+  const address = value("bookAddress");
+  const landmark = value("bookLandmark");
+  const city = value("bookCity");
+  const state = value("bookState");
+  const pincode = value("bookPincode");
+
+  if (!name) {
+    showError("Please enter your name.");
+    return;
+  }
+
+  if (
+    !email ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    showError("Please enter a valid email address.");
+    return;
+  }
+
+  if (!phone || !/^\d{10}$/.test(phone)) {
+    showError("Please enter a valid 10-digit phone number.");
+    return;
+  }
+
+  if (!deliveryName) {
+    showError("Please enter the delivery name.");
+    return;
+  }
+
+  if (
+    !deliveryPhone ||
+    !/^\d{10}$/.test(deliveryPhone)
+  ) {
+    showError("Please enter a valid delivery phone number.");
+    return;
+  }
+
+  if (!address) {
+    showError("Please enter the delivery address.");
+    return;
+  }
+
+  if (!city) {
+    showError("Please enter the delivery city.");
+    return;
+  }
+
+  if (!state) {
+    showError("Please enter the delivery state.");
+    return;
+  }
+
+  if (!pincode || !/^\d{6}$/.test(pincode)) {
+    showError("Please enter a valid 6-digit pincode.");
+    return;
+  }
+
+
+  /* BILLING */
+
+  const sameBilling =
+    document.getElementById("billingSameAsDelivery").checked;
+
+  let billingAddress;
+
+
+  if (sameBilling) {
+
+    billingAddress = {
+
+      sameAsDelivery: true,
+
+      name: deliveryName,
+      phone: deliveryPhone,
+
+      address: address,
+      landmark: landmark,
+
+      city: city,
+      state: state,
+      pincode: pincode,
+
+      country: "India"
+
+    };
+
+  } else {
+
+    const billingName =
+      value("bookBillingName");
+
+    const billingPhone =
+      value("bookBillingPhone");
+
+    const billingAddressText =
+      value("bookBillingAddress");
+
+    const billingLandmark =
+      value("bookBillingLandmark");
+
+    const billingCity =
+      value("bookBillingCity");
+
+    const billingState =
+      value("bookBillingState");
+
+    const billingPincode =
+      value("bookBillingPincode");
+
+
+    if (!billingName) {
+      showError("Please enter the billing name.");
+      return;
+    }
+
+    if (
+      !billingPhone ||
+      !/^\d{10}$/.test(billingPhone)
+    ) {
+      showError("Please enter a valid billing phone number.");
+      return;
+    }
+
+    if (!billingAddressText) {
+      showError("Please enter the billing address.");
+      return;
+    }
+
+    if (!billingCity) {
+      showError("Please enter the billing city.");
+      return;
+    }
+
+    if (!billingState) {
+      showError("Please enter the billing state.");
+      return;
+    }
+
+    if (
+      !billingPincode ||
+      !/^\d{6}$/.test(billingPincode)
+    ) {
+      showError("Please enter a valid billing pincode.");
+      return;
+    }
+
+
+    billingAddress = {
+
+      sameAsDelivery: false,
+
+      name: billingName,
+      phone: billingPhone,
+
+      address: billingAddressText,
+      landmark: billingLandmark,
+
+      city: billingCity,
+      state: billingState,
+      pincode: billingPincode,
+
+      country: "India"
+
+    };
+
+  }
+
+
+  button.disabled = true;
+  button.textContent = "Processing...";
+
+
+  try {
+
+    /* CREATE ORDER */
+
+    const createResponse = await fetch(
+      `${API_BASE}/prebook/create-order`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          source: "website"
+        })
+      }
+    );
+
+
+    const createData =
+      await createResponse.json();
+
+
+    if (
+      !createResponse.ok ||
+      !createData.success
+    ) {
+
+      throw new Error(
+        createData.message ||
+        "Unable to create payment order."
+      );
+
+    }
+
+
+    /* RAZORPAY */
+
+    const options = {
+
+      key: createData.keyId,
+
+      amount: createData.amount,
+
+      currency:
+        createData.currency || "INR",
+
+      order_id:
+        createData.orderId,
+
+      name: "Wealthoria",
+
+      description:
+        "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ — Pre-booking",
+
+      prefill: {
+
+        name: name,
+
+        email: email,
+
+        contact: phone
+
+      },
+
+      notes: {
+
+        product: "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ"
+
+      },
+
+      theme: {
+
+        color: "#e8473f"
+
+      },
+
+
+      handler: async function(response) {
+
+        try {
+
+          clearError();
+
+
+          /* VERIFY PAYMENT */
+
+          const verifyResponse =
+            await fetch(
+              `${API_BASE}/prebook/verify-payment`,
+              {
+
+                method: "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+
+                  razorpay_order_id:
+                    response.razorpay_order_id,
+
+                  razorpay_payment_id:
+                    response.razorpay_payment_id,
+
+                  razorpay_signature:
+                    response.razorpay_signature,
+
+                  customer: {
+
+                    name: name,
+                    email: email,
+                    phone: phone
+
+                  },
+
+                  shippingAddress: {
+
+                    name: deliveryName,
+                    phone: deliveryPhone,
+
+                    address: address,
+                    landmark: landmark,
+
+                    city: city,
+                    state: state,
+                    pincode: pincode,
+
+                    country: "India"
+
+                  },
+
+                  billingAddress:
+                    billingAddress,
+
+                  source: "website"
+
+                })
+
+              }
+            );
+
+
+          const verifyData =
+            await verifyResponse.json();
+
+
+          if (
+            !verifyResponse.ok ||
+            !verifyData.success
+          ) {
+
+            throw new Error(
+              verifyData.message ||
+              "Payment verification failed."
+            );
+
+          }
+
+
+          /* SUCCESS */
+
+         window.location.href =
+  "/thankyou.html?o=" +
+  encodeURIComponent(
+    response.razorpay_order_id
+  );
+
+        } catch (error) {
+
+          console.error(
+            "Payment verification error:",
+            error
+          );
+
+          button.disabled = false;
+          button.textContent =
+            "Pay & Pre-book";
+
+          showError(
+            error.message ||
+            "Payment was successful, but verification failed. Please contact support."
+          );
+
+        }
+
+      },
+
+
+     modal: {
+
+  ondismiss: async function() {
+
+    button.disabled = false;
+
+    button.textContent =
+      "Pay & Pre-book";
+
+    try {
+
+      await fetch(
+        `${API_BASE}/prebook/payment-attempt`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            status: "cancelled",
+
+            razorpay_order_id:
+              createData.orderId,
+
+            customer: {
+              name: name,
+              email: email,
+              phone: phone
+            },
+
+            reason:
+              "Customer closed or cancelled the Razorpay payment window.",
+
+            source: "website"
+          })
+        }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Unable to record cancelled payment:",
+        error
+      );
+
+    }
+
+    showError(
+      "Payment window was closed. No payment was completed."
+    );
+
+  }
+
+}
+
+    };
+
+
+    const razorpay =
+      new window.Razorpay(options);
+
+razorpay.on(
+  "payment.failed",
+  async function(response) {
+
+    console.error(
+      "Razorpay payment failed:",
+      response
+    );
+
+    const failureReason =
+      response?.error?.description ||
+      response?.error?.reason ||
+      "Payment failed.";
+
+    try {
+
+      await fetch(
+        `${API_BASE}/prebook/payment-attempt`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            status: "failed",
+
+            razorpay_order_id:
+              response?.error?.metadata?.order_id ||
+              createData.orderId,
+
+            customer: {
+              name: name,
+              email: email,
+              phone: phone
+            },
+
+            reason: failureReason,
+
+            source: "website"
+          })
+        }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Unable to record failed payment:",
+        error
+      );
+
+    }
+
+    button.disabled = false;
+
+    button.textContent =
+      "Pay & Pre-book";
+
+    showError(
+      failureReason ||
+      "Payment failed. Please try again."
+    );
+
+  }
+);
+
+    razorpay.open();
+
+
+  } catch (error) {
+
+    console.error(
+      "Pre-book payment error:",
+      error
+    );
+
+    button.disabled = false;
+
+    button.textContent =
+      "Pay & Pre-book";
+
+    showError(
+      error.message ||
+      "Unable to start payment. Please try again."
+    );
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

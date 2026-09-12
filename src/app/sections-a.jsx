@@ -46,12 +46,7 @@ function NavBar({ onNav }) {
   <div className="products-dropdown">
 
     <a
-      href="#"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        window.openBookPrebookPopup?.();
-      }}
+      href="hoodikeya-vijnana.html"
     >
       📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
     </a>
@@ -69,7 +64,8 @@ function NavBar({ onNav }) {
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
         
-        
+
+    {/*
    <a
   className="btn btn-green member-login-button"
   href="/members/login"
@@ -78,6 +74,8 @@ function NavBar({ onNav }) {
   <Icon name="user" size={17} />
   <span >Member</span>
 </a>
+*/}
+
  {/*<a
   className="nav-login"
   href="/Student%20Portal.html#/student/register"
@@ -86,6 +84,18 @@ function NavBar({ onNav }) {
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Student</span>
 </a>*/}
+
+ <a
+  className="btn btn-green member-login-button"
+  href="comingbacksoon.html"
+  aria-label="Member Login"
+>
+  <Icon name="user" size={17} />
+  <span >Member</span>
+</a>
+
+
+
           {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" type="button"><Icon name="menu" size={20} /></button>
@@ -115,12 +125,8 @@ function NavBar({ onNav }) {
   <div className="products-dropdown">
 
     <a
-      href="#"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        window.openBookPrebookPopup?.();
-      }}
+      href="hoodikeya-vijnana.html"
+      
     >
       📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
     </a>
@@ -191,7 +197,7 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} style={{ fontSize: "58px" }}></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => {window.open("subscription.html", "_self");
+            <button className="btn btn-green" onClick={() => {window.open("comingbacksoon.html", "_self");
 }}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
 
 {h.ctaSecondary && (
@@ -318,658 +324,14 @@ function Why() {
     </section>);
 
 }
-function BookPrebookPopup() {
-  const [open, setOpen] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    window.openBookPrebookPopup = () => {
-      setOpen(true);
-      setError("");
-    };
 
-    window.closeBookPrebookPopup = () => setOpen(false);
 
-    return () => {
-      delete window.openBookPrebookPopup;
-      delete window.closeBookPrebookPopup;
-    };
-  }, []);
-
-  React.useEffect(() => {
-    if (!open) return;
-
-    const checkbox = document.getElementById("billingSameAsDelivery");
-    const billingSection = document.getElementById("billingAddressSection");
-
-    if (!checkbox || !billingSection) return;
-
-    const updateBillingVisibility = () => {
-      billingSection.style.display = checkbox.checked ? "none" : "block";
-    };
-
-    checkbox.addEventListener("change", updateBillingVisibility);
-    updateBillingVisibility();
-
-    return () => {
-      checkbox.removeEventListener("change", updateBillingVisibility);
-    };
-  }, [open]);
-
-  const loadRazorpay = () => {
-    return new Promise((resolve, reject) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () =>
-        reject(new Error("Unable to load Razorpay checkout."));
-      document.body.appendChild(script);
-    });
-  };
-
-  const handlePay = async () => {
-    setError("");
-
-    const name =
-      document.getElementById("bookName")?.value.trim();
-
-    const email =
-      document.getElementById("bookEmail")?.value.trim();
-
-    const phone =
-      document.getElementById("bookPhone")?.value.trim();
-
-    const deliveryName =
-      document.getElementById("bookDeliveryName")?.value.trim();
-
-    const deliveryPhone =
-      document.getElementById("bookDeliveryPhone")?.value.trim();
-
-    const address =
-      document.getElementById("bookAddress")?.value.trim();
-
-    const landmark =
-      document.getElementById("bookLandmark")?.value.trim();
-
-    const city =
-      document.getElementById("bookCity")?.value.trim();
-
-    const state =
-      document.getElementById("bookState")?.value.trim();
-
-    const pincode =
-      document.getElementById("bookPincode")?.value.trim();
-
-    if (!name) {
-      setError("Please enter your name.");
-      return;
-    }
-
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (!phone || !/^\d{10}$/.test(phone)) {
-      setError("Please enter a valid 10-digit phone number.");
-      return;
-    }
-
-    if (!deliveryName) {
-      setError("Please enter the delivery name.");
-      return;
-    }
-
-    if (!deliveryPhone || !/^\d{10}$/.test(deliveryPhone)) {
-      setError("Please enter a valid delivery phone number.");
-      return;
-    }
-
-    if (!address) {
-      setError("Please enter the delivery address.");
-      return;
-    }
-
-    if (!city) {
-      setError("Please enter the delivery city.");
-      return;
-    }
-
-    if (!state) {
-      setError("Please enter the delivery state.");
-      return;
-    }
-
-    if (!pincode || !/^\d{6}$/.test(pincode)) {
-      setError("Please enter a valid 6-digit pincode.");
-      return;
-    }
-
-    const sameBilling =
-      document.getElementById("billingSameAsDelivery")?.checked;
-
-    let billingAddress;
-
-    if (sameBilling) {
-      billingAddress = {
-        sameAsDelivery: true,
-        name: deliveryName,
-        phone: deliveryPhone,
-        address,
-        landmark,
-        city,
-        state,
-        pincode,
-        country: "India",
-      };
-    } else {
-      const billingName =
-        document.getElementById("bookBillingName")?.value.trim();
-
-      const billingPhone =
-        document.getElementById("bookBillingPhone")?.value.trim();
-
-      const billingAddressText =
-        document.getElementById("bookBillingAddress")?.value.trim();
-
-      const billingLandmark =
-        document.getElementById("bookBillingLandmark")?.value.trim();
-
-      const billingCity =
-        document.getElementById("bookBillingCity")?.value.trim();
-
-      const billingState =
-        document.getElementById("bookBillingState")?.value.trim();
-
-      const billingPincode =
-        document.getElementById("bookBillingPincode")?.value.trim();
-
-      if (!billingName) {
-        setError("Please enter the billing name.");
-        return;
-      }
-
-      if (!billingPhone || !/^\d{10}$/.test(billingPhone)) {
-        setError("Please enter a valid billing phone number.");
-        return;
-      }
-
-      if (!billingAddressText) {
-        setError("Please enter the billing address.");
-        return;
-      }
-
-      if (!billingCity) {
-        setError("Please enter the billing city.");
-        return;
-      }
-
-      if (!billingState) {
-        setError("Please enter the billing state.");
-        return;
-      }
-
-      if (
-        !billingPincode ||
-        !/^\d{6}$/.test(billingPincode)
-      ) {
-        setError("Please enter a valid billing pincode.");
-        return;
-      }
-
-      billingAddress = {
-        sameAsDelivery: false,
-        name: billingName,
-        phone: billingPhone,
-        address: billingAddressText,
-        landmark: billingLandmark,
-        city: billingCity,
-        state: billingState,
-        pincode: billingPincode,
-        country: "India",
-      };
-    }
-
-    setLoading(true);
-
-    try {
-      // -------------------------------------------------------
-      // Load Razorpay
-      // -------------------------------------------------------
-
-      await loadRazorpay();
-
-      // -------------------------------------------------------
-      // Create order on backend
-      // -------------------------------------------------------
-const API_BASE =
-  "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
-
-const createResponse = await fetch(
-  `${API_BASE}/prebook/create-order`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      source: "website",
-    }),
-  }
-);
-      const createData = await createResponse.json();
-
-      if (!createResponse.ok || !createData.success) {
-        throw new Error(
-          createData.message ||
-          "Unable to create payment order."
-        );
-      }
-
-      // -------------------------------------------------------
-      // Open Razorpay
-      // -------------------------------------------------------
-
-      const options = {
-        key: createData.keyId,
-
-        amount: createData.amount,
-
-        currency: createData.currency || "INR",
-
-        order_id: createData.orderId,
-
-        name: "Wealthoria",
-
-        description:
-          "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ — Pre-booking",
-
-        prefill: {
-          name,
-          email,
-          contact: phone,
-        },
-
-        notes: {
-          product: "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ",
-        },
-
-        theme: {
-          color: "#E1622B",
-        },
-
-        handler: async function (response) {
-          try {
-            setError("");
-
-            // -------------------------------------------------
-            // Verify payment + save order + send email
-            // -------------------------------------------------
-
-           const verifyResponse = await fetch(
-  `${API_BASE}/prebook/verify-payment`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  razorpay_order_id:
-                    response.razorpay_order_id,
-
-                  razorpay_payment_id:
-                    response.razorpay_payment_id,
-
-                  razorpay_signature:
-                    response.razorpay_signature,
-
-                  customer: {
-                    name,
-                    email,
-                    phone,
-                  },
-
-                  shippingAddress: {
-                    name: deliveryName,
-                    phone: deliveryPhone,
-                    address,
-                    landmark,
-                    city,
-                    state,
-                    pincode,
-                    country: "India",
-                  },
-
-                  billingAddress,
-
-                  source: "website",
-                }),
-              }
-            );
-
-            const verifyData =
-              await verifyResponse.json();
-
-            if (
-              !verifyResponse.ok ||
-              !verifyData.success
-            ) {
-              throw new Error(
-                verifyData.message ||
-                "Payment verification failed."
-              );
-            }
-
-            // -------------------------------------------------
-            // SUCCESS
-            // -------------------------------------------------
-
-            setLoading(false);
-
-            window.location.href =
-              "/thank-you?o=" +
-              encodeURIComponent(
-                response.razorpay_order_id
-              );
-          } catch (verifyError) {
-            console.error(
-              "Payment verification error:",
-              verifyError
-            );
-
-            setLoading(false);
-
-            setError(
-              verifyError.message ||
-              "Payment was successful, but verification failed. Please contact support."
-            );
-          }
-        },
-
-        modal: {
-          ondismiss: function () {
-            setLoading(false);
-            setError(
-              "Payment window was closed. No payment was completed."
-            );
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-
-      razorpay.on(
-        "payment.failed",
-        function (response) {
-          console.error(
-            "Razorpay payment failed:",
-            response
-          );
-
-          setLoading(false);
-
-          setError(
-            response?.error?.description ||
-            "Payment failed. Please try again."
-          );
-        }
-      );
-
-      razorpay.open();
-
-    } catch (paymentError) {
-      console.error(
-        "Pre-book payment error:",
-        paymentError
-      );
-
-      setLoading(false);
-
-      setError(
-        paymentError.message ||
-        "Unable to start payment. Please try again."
-      );
-    }
-  };
-
-  if (!open) return null;
-
-  return (
-    <div
-      className="book-popup-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setOpen(false);
-        }
-      }}
-    >
-      <div className="book-popup">
-
-        <button
-          type="button"
-          className="book-popup-close"
-          onClick={() => setOpen(false)}
-        >
-          ×
-        </button>
-
-        <div className="book-popup-left">
-          <iframe
-            src="/hoodikeya-vijnana.html?embedded=1"
-            title="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ"
-          />
-        </div>
-
-        <div className="book-popup-right">
-
-          <h2>Pre-book ಮಾಡಿ</h2>
-
-          <p>
-            ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಮತ್ತು delivery address ಅನ್ನು ನಮೂದಿಸಿ.
-          </p>
-
-          <h3>Customer Details</h3>
-
-          <label>Name *</label>
-          <input
-            type="text"
-            id="bookName"
-          />
-
-          <label>Email *</label>
-          <input
-            type="email"
-            id="bookEmail"
-          />
-
-          <label>Phone *</label>
-          <input
-            type="tel"
-            id="bookPhone"
-            maxLength="10"
-            inputMode="numeric"
-          />
-
-          <h3>Delivery Address</h3>
-
-          <label>Full Name *</label>
-          <input
-            type="text"
-            id="bookDeliveryName"
-          />
-
-          <label>Phone *</label>
-          <input
-            type="tel"
-            id="bookDeliveryPhone"
-            maxLength="10"
-            inputMode="numeric"
-          />
-
-          <label>Address *</label>
-          <textarea id="bookAddress" />
-
-          <label>Landmark</label>
-          <input
-            type="text"
-            id="bookLandmark"
-          />
-
-          <label>City *</label>
-          <input
-            type="text"
-            id="bookCity"
-          />
-
-          <label>State *</label>
-          <input
-            type="text"
-            id="bookState"
-          />
-
-          <label>Pincode *</label>
-          <input
-            type="text"
-            id="bookPincode"
-            maxLength="6"
-            inputMode="numeric"
-          />
-
-          <label>Country</label>
-          <input
-            type="text"
-            value="India"
-            readOnly
-          />
-
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              cursor: "pointer",
-              marginTop: "18px",
-              width: "100%",
-            }}
-          >
-            <input
-              type="checkbox"
-              id="billingSameAsDelivery"
-              defaultChecked
-              style={{
-                width: "18px",
-                height: "18px",
-                margin: 0,
-                flex: "0 0 auto",
-              }}
-            />
-
-            <span style={{ margin: 0 }}>
-              Billing address is same as delivery address
-            </span>
-          </label>
-
-          <div
-            id="billingAddressSection"
-            style={{ display: "none" }}
-          >
-            <h3>Billing Address</h3>
-
-            <label>Full Name *</label>
-            <input
-              type="text"
-              id="bookBillingName"
-            />
-
-            <label>Phone *</label>
-            <input
-              type="tel"
-              id="bookBillingPhone"
-              maxLength="10"
-              inputMode="numeric"
-            />
-
-            <label>Address *</label>
-            <textarea
-              id="bookBillingAddress"
-            />
-
-            <label>Landmark</label>
-            <input
-              type="text"
-              id="bookBillingLandmark"
-            />
-
-            <label>City *</label>
-            <input
-              type="text"
-              id="bookBillingCity"
-            />
-
-            <label>State *</label>
-            <input
-              type="text"
-              id="bookBillingState"
-            />
-
-            <label>Pincode *</label>
-            <input
-              type="text"
-              id="bookBillingPincode"
-              maxLength="6"
-              inputMode="numeric"
-            />
-
-            <label>Country</label>
-            <input
-              type="text"
-              value="India"
-              readOnly
-            />
-          </div>
-
-          {error && (
-            <div
-              style={{
-                marginTop: "16px",
-                padding: "12px 14px",
-                borderRadius: "7px",
-                background: "#fff1ed",
-                color: "#c24f1e",
-                border: "1px solid #f2c2b0",
-                fontSize: "14px",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <button
-            type="button"
-            className="book-popup-pay"
-            onClick={handlePay}
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Pay ₹1"}
-          </button>
-
-        </div>
-      </div>
-    </div>
-  );
-}
 Object.assign(window, {
   NavBar,
   Hero,
   Ticker,
   Narrative,
   Metrics,
-  Why,
-  BookPrebookPopup
+  Why
 });

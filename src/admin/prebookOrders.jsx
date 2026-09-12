@@ -714,6 +714,672 @@ function PrebookOrders() {
   };
 
 
+/* =======================================================
+   GENERATE SHIPPING LABEL PDF
+   2 COLUMNS × 3 ROWS PER A4 PAGE
+======================================================= */
+
+/* =========================================================
+   LOAD jsPDF
+   ========================================================= */
+/* =========================================================
+   LOAD jsPDF
+   ========================================================= */
+
+const loadJsPDF = () => {
+  return new Promise((resolve, reject) => {
+
+    /* Already loaded */
+    if (window.jspdf?.jsPDF) {
+      resolve(window.jspdf.jsPDF);
+      return;
+    }
+
+    /* Already loading */
+    const existingScript = document.querySelector(
+      'script[data-wealthoria-jspdf="true"]'
+    );
+
+    if (existingScript) {
+
+      existingScript.addEventListener("load", () => {
+        if (window.jspdf?.jsPDF) {
+          resolve(window.jspdf.jsPDF);
+        } else {
+          reject(
+            new Error(
+              "jsPDF loaded but was not available."
+            )
+          );
+        }
+      });
+
+      existingScript.addEventListener("error", () => {
+        reject(
+          new Error("Unable to load jsPDF.")
+        );
+      });
+
+      return;
+    }
+
+    /* Load jsPDF */
+    const script =
+      document.createElement("script");
+
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+
+    script.async = true;
+
+    script.dataset.wealthoriaJspdf = "true";
+
+    script.onload = () => {
+
+      if (window.jspdf?.jsPDF) {
+        resolve(window.jspdf.jsPDF);
+      } else {
+        reject(
+          new Error(
+            "jsPDF loaded but was not available."
+          )
+        );
+      }
+
+    };
+
+    script.onerror = () => {
+      reject(
+        new Error("Unable to load jsPDF.")
+      );
+    };
+
+    document.head.appendChild(script);
+  });
+};
+
+
+/* =========================================================
+   GENERATE SHIPPING LABEL PDF
+
+   COMPACT SHIPPING LABEL
+   4 COLUMNS × 7 ROWS
+   28 LABELS PER A4 PAGE
+
+   VERY MINIMAL SPACE BELOW PIN
+   ========================================================= */
+const generateShippingLabelsPDF = async () => {
+  try {
+
+    /* =====================================================
+       CHECK ORDERS
+       ===================================================== */
+
+    if (!filteredOrders.length) {
+      alert("No orders available to generate PDF.");
+      return;
+    }
+
+
+    /* =====================================================
+       LOAD jsPDF
+       ===================================================== */
+
+    const jsPDF = await loadJsPDF();
+
+
+    /* =====================================================
+       CREATE A4 PDF
+       ===================================================== */
+
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+
+    /* =====================================================
+       A4 SIZE
+       ===================================================== */
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+
+
+    /* =====================================================
+       GRID
+
+       4 COLUMNS × 7 ROWS
+       28 LABEL POSITIONS / PAGE
+       ===================================================== */
+
+    const columns = 4;
+    const rows = 7;
+
+    const labelsPerPage = columns * rows;
+
+
+    /* =====================================================
+       GRID SPACING
+       ===================================================== */
+
+    const marginX = 2;
+    const marginY = 2;
+
+    const gapX = 1;
+    const gapY = 2;
+
+
+    /* =====================================================
+       LABEL WIDTH
+       ===================================================== */
+
+    const labelWidth =
+      (
+        pageWidth -
+        marginX * 2 -
+        gapX * (columns - 1)
+      ) / columns;
+
+
+    /* =====================================================
+       GRID ROW HEIGHT
+
+       This controls only where the next label starts.
+
+       THE BORDER WILL NOT USE THIS HEIGHT.
+       ===================================================== */
+
+    const rowHeight = 40;
+
+
+    /* =====================================================
+       LOOP ORDERS
+       ===================================================== */
+
+    filteredOrders.forEach((order, index) => {
+
+      /* -----------------------------------------------------
+         POSITION
+         ----------------------------------------------------- */
+
+      const position =
+        index % labelsPerPage;
+
+
+      /* -----------------------------------------------------
+         NEW PAGE
+         ----------------------------------------------------- */
+
+      if (
+        index > 0 &&
+        position === 0
+      ) {
+        pdf.addPage();
+      }
+
+
+      /* -----------------------------------------------------
+         COLUMN
+         ----------------------------------------------------- */
+
+      const column =
+        position % columns;
+
+
+      /* -----------------------------------------------------
+         ROW
+         ----------------------------------------------------- */
+
+      const row =
+        Math.floor(
+          position / columns
+        );
+
+
+      /* -----------------------------------------------------
+         X
+         ----------------------------------------------------- */
+
+      const x =
+        marginX +
+        column *
+          (
+            labelWidth +
+            gapX
+          );
+
+
+      /* -----------------------------------------------------
+         Y
+         ----------------------------------------------------- */
+
+      const y =
+        marginY +
+        row *
+          (
+            rowHeight +
+            gapY
+          );
+
+
+      /* =====================================================
+         DATA
+         ===================================================== */
+
+      const customer =
+        order.customer || {};
+
+
+      const address =
+        order.shippingAddress || {};
+
+
+      /* -----------------------------------------------------
+         NAME
+         ----------------------------------------------------- */
+
+      const name =
+        customer.name ||
+        address.name ||
+        "—";
+
+
+      /* -----------------------------------------------------
+         PHONE
+         ----------------------------------------------------- */
+
+      const phone =
+        customer.phone ||
+        address.phone ||
+        "—";
+
+
+      /* -----------------------------------------------------
+         ADDRESS
+         ----------------------------------------------------- */
+
+      const completeAddress = [
+        address.address,
+        address.landmark,
+        address.city
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+
+      /* -----------------------------------------------------
+         STATE
+         ----------------------------------------------------- */
+
+      const state =
+        address.state ||
+        "—";
+
+
+      /* -----------------------------------------------------
+         PINCODE
+         ----------------------------------------------------- */
+
+      const pincode =
+        address.pincode ||
+        "—";
+
+
+      /* =====================================================
+         CONTENT AREA
+         ===================================================== */
+
+      const left =
+        x + 3;
+
+      const right =
+        x +
+        labelWidth -
+        3;
+
+      const contentWidth =
+        labelWidth - 6;
+
+
+      /* =====================================================
+         COMPANY NAME
+         ===================================================== */
+
+      pdf.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      pdf.setFontSize(
+        4.5
+      );
+
+      pdf.text(
+        "WEALTHORIA EDUCATION PRIVATE LIMITED",
+        left,
+        y + 4.5,
+        {
+          maxWidth:
+            contentWidth
+        }
+      );
+
+
+      /* =====================================================
+         DIVIDER
+         ===================================================== */
+
+      pdf.setDrawColor(
+        100,
+        100,
+        100
+      );
+
+      pdf.setLineWidth(
+        0.2
+      );
+
+      pdf.line(
+        left,
+        y + 6,
+        right,
+        y + 6
+      );
+
+
+      /* =====================================================
+         DELIVER TO
+         ===================================================== */
+
+      pdf.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      pdf.setFontSize(
+        4.4
+      );
+
+      pdf.text(
+        "DELIVER TO",
+        left,
+        y + 9
+      );
+
+
+      /* =====================================================
+         CUSTOMER NAME
+         ===================================================== */
+
+      pdf.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      pdf.setFontSize(
+        7
+      );
+
+
+      const nameLines =
+        pdf.splitTextToSize(
+          String(name),
+          contentWidth
+        );
+
+
+      const safeNameLines =
+        nameLines.slice(
+          0,
+          2
+        );
+
+
+      pdf.text(
+        safeNameLines,
+        left,
+        y + 14
+      );
+
+
+      /* =====================================================
+         PHONE
+         ===================================================== */
+
+      let currentY =
+        y +
+        14 +
+        safeNameLines.length * 3;
+
+
+      pdf.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      pdf.setFontSize(
+        4.8
+      );
+
+      pdf.text(
+        `Ph: ${phone}`,
+        left,
+        currentY
+      );
+
+
+      currentY += 3.2;
+
+
+      /* =====================================================
+         ADDRESS
+         ===================================================== */
+
+      pdf.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      pdf.setFontSize(
+        5.2
+      );
+
+
+      const addressLines =
+        pdf.splitTextToSize(
+          completeAddress ||
+            "Address not available",
+          contentWidth
+        );
+
+
+      const safeAddressLines =
+        addressLines.slice(
+          0,
+          3
+        );
+
+
+      pdf.text(
+        safeAddressLines,
+        left,
+        currentY
+      );
+
+
+      currentY +=
+        safeAddressLines.length *
+          2.7 +
+        2;
+
+
+      /* =====================================================
+         STATE
+         ===================================================== */
+
+      pdf.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      pdf.setFontSize(
+        5.2
+      );
+
+
+      pdf.text(
+        `State: ${state}`,
+        left,
+        currentY,
+        {
+          maxWidth:
+            contentWidth
+        }
+      );
+
+
+      /* =====================================================
+         PIN BOX
+         ===================================================== */
+
+      currentY += 2.2;
+
+
+      const pinY =
+        currentY;
+
+
+      pdf.setFillColor(
+        235,
+        235,
+        235
+      );
+
+
+      pdf.rect(
+        left,
+        pinY,
+        contentWidth,
+        5.5,
+        "F"
+      );
+
+
+      /* =====================================================
+         PIN TEXT
+         ===================================================== */
+
+      pdf.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      pdf.setFontSize(
+        6
+      );
+
+      pdf.text(
+        `PIN: ${pincode}`,
+        left + 2,
+        pinY + 3.8
+      );
+
+
+      /* =====================================================
+         DOTTED BORDER
+
+         IMPORTANT:
+         BORDER ENDS JUST AFTER PIN.
+
+         NO EMPTY SPACE BELOW PIN.
+         ===================================================== */
+
+      const actualLabelHeight =
+        (
+          pinY +
+          5.5 +
+          0.8
+        ) -
+        y;
+
+
+      pdf.setDrawColor(
+        190,
+        190,
+        190
+      );
+
+      pdf.setLineWidth(
+        0.25
+      );
+
+
+      /* DOTTED BORDER */
+
+      pdf.setLineDashPattern(
+        [1, 1],
+        0
+      );
+
+
+      pdf.rect(
+        x,
+        y,
+        labelWidth,
+        actualLabelHeight
+      );
+
+
+      /* Reset line style */
+
+      pdf.setLineDashPattern(
+        [],
+        0
+      );
+
+    });
+
+
+    /* =====================================================
+       FILE NAME
+       ===================================================== */
+
+    const today =
+      new Date()
+        .toISOString()
+        .slice(
+          0,
+          10
+        );
+
+
+    /* =====================================================
+       SAVE PDF
+       ===================================================== */
+
+    pdf.save(
+      `wealthoria-shipping-labels-${today}.pdf`
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Shipping label PDF error:",
+      error
+    );
+
+
+    alert(
+      "Unable to generate the PDF. Please try again."
+    );
+
+  }
+};
+
+
   /* =======================================================
      RENDER
   ======================================================= */
@@ -727,6 +1393,8 @@ function PrebookOrders() {
         paddingBottom: 32
       }}
     >
+
+
 
       {/* ===================================================
           HEADER
@@ -763,6 +1431,31 @@ function PrebookOrders() {
               Pre-book Orders
             </h2>
           </div>
+
+
+          <button
+  type="button"
+  onClick={generateShippingLabelsPDF}
+  disabled={!filteredOrders.length}
+  style={{
+    height: 42,
+    padding: "0 16px",
+    border: "none",
+    borderRadius: 10,
+    background: filteredOrders.length
+      ? "#c0392b"
+      : "#d0d5dd",
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: 750,
+    cursor: filteredOrders.length
+      ? "pointer"
+      : "not-allowed",
+    whiteSpace: "nowrap"
+  }}
+>
+  Generate PDF
+</button>
 
         </div>
       </div>

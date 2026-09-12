@@ -837,7 +837,7 @@ h2{font-family:var(--kn);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-h
     <div class="who yes">
       <h3>ನಿಮಗೆ ಸರಿಹೊಂದುತ್ತದೆ</h3>
       <ul>
-        <li>Market ಬಗ್ಗೆ ಏನೂ ಗೊತ್ತಿಲ್ಲ, ಮೊದಲಿನಿಂದ ಕಲಿಯಬೇಕು ಅನ್ನಿಸುವವರಿಗೆ</li>
+        <li>Market ಬಗ್ಗೆ ಏನೂ ಗೊತ್ತಿಲ್ಲ, ಮೊದಲಿನಿಂದ ಕಲಿಯಬೇಕು ಅನ್ನಿಸುತ್ತಿದೆ</li>
         <li>ಎರಡು ವರ್ಷದಿಂದ trade ಮಾಡುತ್ತಿದ್ದೀರಿ, ಆದರೆ ಯಾಕೆ ಎಂದು ಗೊತ್ತಿಲ್ಲ</li>
         <li>ಇಂಗ್ಲಿಷ್ ಪುಸ್ತಕ ಶುರು ಮಾಡಿ ಅರ್ಧಕ್ಕೆ ಬಿಟ್ಟಿದ್ದೀರಿ</li>
         <li>Annual report ಓದಲು ಕಲಿಯಬೇಕು ಎಂದಿದ್ದೀರಿ</li>
@@ -860,7 +860,7 @@ h2{font-family:var(--kn);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-h
 <!-- ============ editors ============ -->
 <section id="editors"><div class="narrow">
   <p class="sec-k">ಸಂಪಾದಕರು</p>
-  <h2>ಈ ಪುಸ್ತಕಕ್ಕಾಗಿ ಶ್ರಮಿಸಿದವರು</h2>
+  <h2>ಈ ಪುಸ್ತಕ ಬರೆದವರು</h2>
   <div class="eds">
     <div class="ed">
       <h3>Manjunath K. S.</h3>
@@ -1000,19 +1000,9 @@ h2{font-family:var(--kn);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-h
    ===================================================================== */
 function startPrebook(source){
   // analytics hook
-  if (window.gtag) {
-    gtag('event', 'begin_checkout', {
-      value: 999,
-      currency: 'INR',
-      source: source
-    });
-  }
-
-  window.location.href =
-    '/prebook.html?source=' +
-    encodeURIComponent(source || 'book');
+  if (window.gtag) gtag('event','begin_checkout',{value:999,currency:'INR',source:source});
+  document.getElementById('mod').classList.add('on');   // <-- remove when live
 }
-
 function closeMod(){ document.getElementById('mod').classList.remove('on'); }
 
 /* ---------- countdown to 30 Sep 2026, 23:59:59 IST ---------- */

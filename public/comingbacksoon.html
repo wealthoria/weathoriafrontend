@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0e120c">
+  <title>Coming Soon | Wealthoria</title>
+
+  <style>
+    /* Wealthoria design tokens taken from the supplied homepage theme:
+       coral/orange brand gradient, warm canvas, deep teal ink,
+       hairline borders, 24px radius and restrained motion. */
+    :root{
+      --canvas:#ffffff;
+      --canvas-soft:#f7f8f4;
+      --ink:#11201f;
+      --body:#5f6865;
+      --mute:#858d89;
+      --hair:rgba(14,15,12,.10);
+      --hair-strong:rgba(14,15,12,.16);
+      --surface-ink:#11201f;
+      --on-ink:#f3f5ef;
+      --brand-coral:#e8473f;
+      --brand-orange:#f4823c;
+      --brand-grad:linear-gradient(120deg,#e8473f 0%,#f4823c 100%);
+      --primary:#e8473f;
+      --primary-active:#f0654d;
+      --primary-pale:#fde7e1;
+      --ink-deep:#bf392e;
+      --radius:24px;
+      --ease:cubic-bezier(.22,.61,.36,1);
+    }
+
+    [data-theme="dark"]{
+      --canvas:#181c14;
+      --canvas-soft:#0e120c;
+      --ink:#eef1ea;
+      --body:#b4b9ad;
+      --mute:#828877;
+      --hair:rgba(255,255,255,.12);
+      --hair-strong:rgba(255,255,255,.20);
+      --surface-ink:#0c1817;
+      --on-ink:#f3f5ef;
+      --primary-pale:#3a201c;
+      --ink-deep:#f0654d;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif}
+    body{
+      min-height:100vh;
+      background:var(--canvas-soft);
+      color:var(--ink);
+      overflow:hidden;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    .page{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+      isolation:isolate;
+    }
+
+    /* Soft Wealthoria surface rhythm */
+    .top-line{
+      height:3px;
+      width:100%;
+      background:var(--brand-grad);
+      transform-origin:left;
+      animation:lineIn 1s var(--ease) both;
+    }
+
+    .nav{
+      height:68px;
+      display:flex;
+      align-items:center;
+      padding:0 32px;
+      background:color-mix(in srgb,var(--canvas) 90%,transparent);
+      backdrop-filter:saturate(140%) blur(8px);
+      box-shadow:inset 0 -1px 0 var(--hair);
+      position:relative;
+      z-index:5;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:9px;
+      color:var(--ink);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:700;
+      letter-spacing:.01em;
+      transition:transform .2s var(--ease), color .2s var(--ease);
+    }
+
+    .back-link:hover{
+      color:var(--ink-deep);
+      transform:translateX(-2px);
+    }
+
+    .back-arrow{
+      font-size:20px;
+      line-height:1;
+    }
+
+
+    .content{
+      flex:1;
+      display:grid;
+      place-items:center;
+      position:relative;
+      overflow:hidden;
+      padding:50px 24px 70px;
+    }
+
+    /* restrained ambient brand motion */
+    .ambient{
+      position:absolute;
+      width:560px;
+      height:560px;
+      border-radius:50%;
+      background:radial-gradient(circle,
+        rgba(232,71,63,.12) 0%,
+        rgba(244,130,60,.06) 38%,
+        transparent 70%);
+      filter:blur(2px);
+      animation:ambient 8s ease-in-out infinite;
+      z-index:-1;
+    }
+
+    .ambient.a{left:-290px;top:-220px}
+    .ambient.b{right:-300px;bottom:-250px;animation-delay:-4s}
+
+    .rings{
+      position:absolute;
+      width:700px;
+      height:700px;
+      border:1px solid var(--hair);
+      border-radius:50%;
+      animation:slowSpin 28s linear infinite;
+      z-index:-1;
+    }
+
+    .rings:before,
+    .rings:after{
+      content:"";
+      position:absolute;
+      border-radius:50%;
+      border:1px solid var(--hair);
+    }
+
+    .rings:before{inset:65px}
+    .rings:after{inset:130px}
+
+    .hero{
+      width:min(100%,850px);
+      text-align:center;
+      position:relative;
+      z-index:2;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:var(--ink-deep);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      animation:fadeUp .65s .05s var(--ease) both;
+    }
+
+    .eyebrow:before{
+      content:"";
+      width:22px;
+      height:2px;
+      border-radius:2px;
+      background:var(--primary);
+    }
+
+    .eyebrow:after{
+      content:"";
+      width:22px;
+      height:2px;
+      border-radius:2px;
+      background:var(--primary);
+    }
+
+    h1{
+      margin:18px 0 0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(54px,9vw,94px);
+      line-height:.98;
+      font-weight:500;
+      letter-spacing:-2.5px;
+      color:var(--ink);
+      animation:fadeUp .8s .15s var(--ease) both;
+    }
+
+    h1 .accent{
+      display:block;
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      animation:accentPulse 4s ease-in-out infinite;
+    }
+
+    .rule{
+      width:72px;
+      height:2px;
+      margin:25px auto 22px;
+      border-radius:99px;
+      background:var(--brand-grad);
+      animation:expand .8s .35s var(--ease) both;
+    }
+
+    .lead{
+      max-width:600px;
+      margin:0 auto;
+      color:var(--body);
+      font-size:16px;
+      line-height:1.8;
+      animation:fadeUp .8s .4s var(--ease) both;
+    }
+
+    .status-card{
+      max-width:570px;
+      margin:34px auto 0;
+      padding:25px 26px;
+      background:var(--canvas);
+      border-radius:var(--radius);
+      box-shadow:inset 0 0 0 1px var(--hair);
+      text-align:left;
+      animation:cardIn .8s .55s var(--ease) both;
+    }
+
+    .status-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+      margin-bottom:15px;
+    }
+
+    .status-title{
+      color:var(--ink);
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .badge{
+      padding:6px 11px;
+      border-radius:999px;
+      background:var(--primary-pale);
+      color:var(--ink-deep);
+      font-size:11px;
+      font-weight:800;
+    }
+
+    .progress{
+      height:7px;
+      border-radius:999px;
+      background:var(--canvas-soft);
+      overflow:hidden;
+    }
+
+    .progress i{
+      display:block;
+      width:72%;
+      height:100%;
+      border-radius:999px;
+      background:var(--brand-grad);
+      transform-origin:left;
+      animation:progress 2.4s var(--ease) infinite alternate;
+    }
+
+    .status-text{
+      margin-top:12px;
+      color:var(--mute);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .footer{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:22px;
+      text-align:center;
+      color:var(--mute);
+      font-size:12px;
+      letter-spacing:.06em;
+      animation:fadeUp .8s .8s var(--ease) both;
+    }
+
+    .spark{
+      position:absolute;
+      width:5px;
+      height:5px;
+      border-radius:50%;
+      background:var(--brand-orange);
+      box-shadow:0 0 14px rgba(244,130,60,.45);
+      animation:float 7s linear infinite;
+      opacity:0;
+    }
+
+    .s1{left:12%;bottom:-10px;animation-delay:0s}
+    .s2{left:25%;bottom:-10px;animation-delay:2s}
+    .s3{left:48%;bottom:-10px;animation-delay:4s}
+    .s4{left:71%;bottom:-10px;animation-delay:1s}
+    .s5{left:87%;bottom:-10px;animation-delay:3s}
+
+    @keyframes fadeUp{
+      from{opacity:0;transform:translateY(18px)}
+      to{opacity:1;transform:none}
+    }
+    @keyframes cardIn{
+      from{opacity:0;transform:translateY(25px) scale(.985)}
+      to{opacity:1;transform:none}
+    }
+    @keyframes lineIn{
+      from{transform:scaleX(0)}
+      to{transform:scaleX(1)}
+    }
+    @keyframes expand{
+      from{width:0;opacity:0}
+      to{width:72px;opacity:1}
+    }
+    @keyframes progress{
+      from{width:65%}
+      to{width:82%}
+    }
+    @keyframes accentPulse{
+      50%{filter:saturate(1.12) brightness(1.04)}
+    }
+    @keyframes ambient{
+      0%,100%{transform:scale(1);opacity:.75}
+      50%{transform:scale(1.12);opacity:1}
+    }
+    @keyframes slowSpin{
+      to{transform:rotate(360deg)}
+    }
+    @keyframes float{
+      0%{transform:translateY(0) scale(.5);opacity:0}
+      15%{opacity:.65}
+      80%{opacity:.3}
+      100%{transform:translateY(-105vh) scale(1);opacity:0}
+    }
+
+    @media(max-width:600px){
+      .nav{padding:0 18px;height:62px}
+      .content{padding:35px 18px 65px}
+      h1{font-size:clamp(48px,15vw,68px);letter-spacing:-1.5px}
+      .lead{font-size:14px;line-height:1.7}
+      .status-card{padding:20px;margin-top:28px}
+      .rings{width:480px;height:480px}
+      .footer{bottom:16px;font-size:11px}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      *,*:before,*:after{animation:none!important;transition:none!important}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="top-line"></div>
+
+    <header class="nav">
+      <a class="back-link" href="https://www.wealthoria.in" aria-label="Back to website">
+        <span class="back-arrow">←</span>
+        <span>Back to website</span>
+      </a>
+    </header>
+
+    <main class="content">
+      <div class="ambient a"></div>
+      <div class="ambient b"></div>
+      <div class="rings"></div>
+
+      <span class="spark s1"></span>
+      <span class="spark s2"></span>
+      <span class="spark s3"></span>
+      <span class="spark s4"></span>
+      <span class="spark s5"></span>
+
+      <section class="hero">
+        <div class="eyebrow">A new Wealthoria experience</div>
+
+        <h1>
+          Something great<br>
+          <span class="accent">is coming soon.</span>
+        </h1>
+
+        <div class="rule"></div>
+
+        <p class="lead">
+          We are carefully building the next chapter of Wealthoria —
+          designed to make your journey towards smarter investing
+          simpler, clearer and more meaningful.
+        </p>
+
+        <div class="status-card">
+          <div class="status-head">
+            <div class="status-title">Building something special</div>
+            <div class="badge">Coming Soon</div>
+          </div>
+
+          <div class="progress">
+            <i></i>
+          </div>
+
+          <div class="status-text">
+            We’re putting the finishing touches in place. Stay tuned.
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">
+        © Wealthoria &nbsp;•&nbsp; Learn. Invest. Grow.
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -810,13 +810,11 @@ const generateShippingLabelsPDF = async () => {
       return;
     }
 
-
     /* =====================================================
        LOAD jsPDF
        ===================================================== */
 
     const jsPDF = await loadJsPDF();
-
 
     /* =====================================================
        CREATE A4 PDF
@@ -828,7 +826,6 @@ const generateShippingLabelsPDF = async () => {
       format: "a4"
     });
 
-
     /* =====================================================
        A4 SIZE
        ===================================================== */
@@ -836,46 +833,36 @@ const generateShippingLabelsPDF = async () => {
     const pageWidth = 210;
     const pageHeight = 297;
 
-
     /* =====================================================
-       STICKER GRID
+       GRID
 
-       5 COLUMNS
-       3 ROWS
-       15 STICKERS PER PAGE
-
-       NO SPACE BETWEEN BOXES
+       3 COLUMNS × 6 ROWS
+       18 LABELS PER PAGE
        ===================================================== */
 
-    const columns = 5;
-    const rows = 3;
+    const columns = 3;
+    const rows = 6;
 
     const labelsPerPage =
       columns * rows;
 
-
     /* =====================================================
-       NO OUTER MARGIN
+       OUTER MARGIN
        ===================================================== */
 
-    const marginX = 0;
-    const marginY = 0;
-
+    const marginX = 2;
+    const marginY = 2;
 
     /* =====================================================
-       NO GAP BETWEEN BOXES
+       HORIZONTAL GAP
        ===================================================== */
 
-    const gapX = 0;
-    const gapY = 0;
-
+    const gapX = 2;
 
     /* =====================================================
-       EQUAL STICKER WIDTH
+       LABEL WIDTH
 
-       A4 WIDTH = 210mm
-
-       210 / 5 = 42mm
+       210 - margins - gaps
        ===================================================== */
 
     const labelWidth =
@@ -885,22 +872,31 @@ const generateShippingLabelsPDF = async () => {
         gapX * (columns - 1)
       ) / columns;
 
-
     /* =====================================================
-       EQUAL STICKER HEIGHT
+       LABEL HEIGHT
 
-       A4 HEIGHT = 297mm
-
-       297 / 3 = 99mm
+       Content box is intentionally shorter so
+       there is NO large empty space below PIN.
        ===================================================== */
 
-    const labelHeight =
-      (
-        pageHeight -
-        marginY * 2 -
-        gapY * (rows - 1)
-      ) / rows;
+    const labelHeight = 43;
 
+    /* =====================================================
+       VERTICAL GAP
+
+       Remaining A4 height is distributed between
+       the 6 rows.
+       ===================================================== */
+
+    const availableHeight =
+      pageHeight -
+      marginY * 2;
+
+    const gapY =
+      (
+        availableHeight -
+        labelHeight * rows
+      ) / (rows - 1);
 
     /* =====================================================
        PROCESS ORDERS
@@ -910,15 +906,14 @@ const generateShippingLabelsPDF = async () => {
       (order, index) => {
 
         /* =================================================
-           POSITION ON CURRENT PAGE
+           POSITION
            ================================================= */
 
         const position =
           index % labelsPerPage;
 
-
         /* =================================================
-           NEW PAGE AFTER 15 STICKERS
+           NEW PAGE AFTER 18 LABELS
            ================================================= */
 
         if (
@@ -928,34 +923,25 @@ const generateShippingLabelsPDF = async () => {
           pdf.addPage();
         }
 
-
         /* =================================================
            COLUMN
-
-           0 1 2 3 4
-        ================================================= */
+           ================================================= */
 
         const column =
           position % columns;
 
-
         /* =================================================
            ROW
-
-           0 1 2
-        ================================================= */
+           ================================================= */
 
         const row =
           Math.floor(
             position / columns
           );
 
-
         /* =================================================
-           X POSITION
-
-           NO GAP
-        ================================================= */
+           BOX POSITION
+           ================================================= */
 
         const x =
           marginX +
@@ -965,13 +951,6 @@ const generateShippingLabelsPDF = async () => {
               gapX
             );
 
-
-        /* =================================================
-           Y POSITION
-
-           NO GAP
-        ================================================= */
-
         const y =
           marginY +
           row *
@@ -980,42 +959,37 @@ const generateShippingLabelsPDF = async () => {
               gapY
             );
 
-
         /* =================================================
            CUSTOMER DATA
-        ================================================= */
+           ================================================= */
 
         const customer =
           order.customer || {};
 
-
         const address =
           order.shippingAddress || {};
 
-
         /* =================================================
            CUSTOMER NAME
-        ================================================= */
+           ================================================= */
 
         const name =
           customer.name ||
           address.name ||
           "—";
 
-
         /* =================================================
            PHONE
-        ================================================= */
+           ================================================= */
 
         const phone =
           customer.phone ||
           address.phone ||
           "—";
 
-
         /* =================================================
            ADDRESS
-        ================================================= */
+           ================================================= */
 
         const completeAddress = [
           address.address,
@@ -1025,72 +999,58 @@ const generateShippingLabelsPDF = async () => {
           .filter(Boolean)
           .join(", ");
 
-
         /* =================================================
            STATE
-        ================================================= */
+           ================================================= */
 
         const state =
           address.state ||
           "—";
 
-
         /* =================================================
            PINCODE
-        ================================================= */
+           ================================================= */
 
         const pincode =
           address.pincode ||
           "—";
 
-
         /* =================================================
-           INNER CONTENT PADDING
+           SMALL INTERNAL PADDING
+           ================================================= */
 
-           VERY SMALL
-        ================================================= */
-
-        const paddingX = 2.5;
-
+        const paddingX = 2;
 
         const left =
           x + paddingX;
-
 
         const right =
           x +
           labelWidth -
           paddingX;
 
-
         const contentWidth =
           labelWidth -
           paddingX * 2;
 
-
         /* =================================================
-           STICKER BORDER
-
-           DOTTED CUTTING LINE
-        ================================================= */
+           DASHED BORDER
+           ================================================= */
 
         pdf.setDrawColor(
-          170,
-          170,
-          170
+          140,
+          140,
+          140
         );
-
 
         pdf.setLineWidth(
-          0.2
+          0.25
         );
-
 
         pdf.setLineDashPattern(
-          [1, 1],
+          [1.2, 1.2],
           0
         );
-
 
         pdf.rect(
           x,
@@ -1099,44 +1059,38 @@ const generateShippingLabelsPDF = async () => {
           labelHeight
         );
 
-
-        /* Reset line style */
-
+        /* Reset dash */
         pdf.setLineDashPattern(
           [],
           0
         );
 
-
         /* =================================================
            COMPANY NAME
-        ================================================= */
+           ================================================= */
 
         pdf.setFont(
           "helvetica",
           "bold"
         );
 
-
         pdf.setFontSize(
-          4.2
+          6
         );
-
 
         pdf.text(
           "WEALTHORIA EDUCATION PRIVATE LIMITED",
           left,
-          y + 5,
+          y + 4.2,
           {
             maxWidth:
               contentWidth
           }
         );
 
-
         /* =================================================
            DIVIDER
-        ================================================= */
+           ================================================= */
 
         pdf.setDrawColor(
           100,
@@ -1144,56 +1098,50 @@ const generateShippingLabelsPDF = async () => {
           100
         );
 
-
         pdf.setLineWidth(
-          0.18
+          0.15
         );
-
 
         pdf.line(
           left,
-          y + 6.5,
+          y + 5.8,
           right,
-          y + 6.5
+          y + 5.8
         );
-
 
         /* =================================================
            DELIVER TO
-        ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "normal"
-        );
-
-
-        pdf.setFontSize(
-          4.2
-        );
-
-
-        pdf.text(
-          "DELIVER TO",
-          left,
-          y + 9.5
-        );
-
-
-        /* =================================================
-           CUSTOMER NAME
-        ================================================= */
+           ================================================= */
 
         pdf.setFont(
           "helvetica",
           "bold"
         );
 
-
         pdf.setFontSize(
-          6.5
+          5.5
         );
 
+        pdf.text(
+          "DELIVER TO",
+          left,
+          y + 8.5
+        );
+
+        /* =================================================
+           CUSTOMER NAME
+
+           SMALL SPACE AFTER DELIVER TO
+           ================================================= */
+
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        pdf.setFontSize(
+          9
+        );
 
         const nameLines =
           pdf.splitTextToSize(
@@ -1201,67 +1149,49 @@ const generateShippingLabelsPDF = async () => {
             contentWidth
           );
 
-
-        /* Maximum 2 lines */
-
         const safeNameLines =
           nameLines.slice(
             0,
             2
           );
 
-
         pdf.text(
           safeNameLines,
           left,
-          y + 14
+          y + 12.5
         );
-
 
         /* =================================================
            PHONE
-        ================================================= */
-
-        let currentY =
-          y +
-          14 +
-          safeNameLines.length *
-            2.7;
-
+           ================================================= */
 
         pdf.setFont(
           "helvetica",
           "normal"
         );
 
-
         pdf.setFontSize(
-          4.3
+          6.5
         );
-
 
         pdf.text(
           `Ph: ${phone}`,
           left,
-          currentY
+          y + 18.5
         );
-
-
-        /* =================================================
-           SMALL GAP AFTER PHONE
-        ================================================= */
-
-        currentY += 2.7;
-
 
         /* =================================================
            ADDRESS
-        ================================================= */
+           ================================================= */
 
-        pdf.setFontSize(
-          4.5
+        pdf.setFont(
+          "helvetica",
+          "normal"
         );
 
+        pdf.setFontSize(
+          6.5
+        );
 
         const addressLines =
           pdf.splitTextToSize(
@@ -1270,68 +1200,59 @@ const generateShippingLabelsPDF = async () => {
             contentWidth
           );
 
-
-        /* Maximum 4 lines */
-
+        /* Maximum 3 lines */
         const safeAddressLines =
           addressLines.slice(
             0,
-            4
+            3
           );
-
 
         pdf.text(
           safeAddressLines,
           left,
-          currentY
+          y + 22.5
         );
-
 
         /* =================================================
            STATE
 
-           VERY SMALL GAP
-        ================================================= */
-
-        currentY +=
-          safeAddressLines.length *
-            2.5 +
-          1.5;
-
+           SMALL SPACE AFTER ADDRESS
+           ================================================= */
 
         pdf.setFont(
           "helvetica",
           "bold"
         );
 
-
         pdf.setFontSize(
-          4.5
+          6.5
         );
-
 
         pdf.text(
           `State: ${state}`,
           left,
-          currentY,
+          y + 32.5,
           {
             maxWidth:
               contentWidth
           }
         );
 
-
         /* =================================================
            PIN
 
-           ONLY 1MM BELOW STATE
-        ================================================= */
+           VERY SMALL GAP AFTER STATE
+           ================================================= */
 
-        currentY += 1;
+        const pinY =
+          y + 34;
 
+        const pinHeight =
+          6;
 
-        const pinHeight = 5.5;
-
+        /* =================================================
+           PIN BACKGROUND
+           ================================================= */
 
         pdf.setFillColor(
           235,
@@ -1339,40 +1260,48 @@ const generateShippingLabelsPDF = async () => {
           235
         );
 
-
         pdf.rect(
           left,
-          currentY,
+          pinY,
           contentWidth,
           pinHeight,
           "F"
         );
 
-
         /* =================================================
            PIN TEXT
-        ================================================= */
+           ================================================= */
 
         pdf.setFont(
           "helvetica",
           "bold"
         );
 
-
         pdf.setFontSize(
-          5.5
+          8
         );
-
 
         pdf.text(
           `PIN: ${pincode}`,
           left + 2,
-          currentY + 3.8
+          pinY + 4
         );
 
+        /*
+         * PIN ends at:
+         *
+         * y + 34 + 6
+         * = y + 40
+         *
+         * Box ends at:
+         *
+         * y + 43
+         *
+         * Therefore only 3mm padding
+         * remains below the PIN.
+         */
       }
     );
-
 
     /* =====================================================
        SAVE PDF
@@ -1386,11 +1315,9 @@ const generateShippingLabelsPDF = async () => {
           10
         );
 
-
     pdf.save(
       `wealthoria-shipping-labels-${today}.pdf`
     );
-
 
   } catch (error) {
 
@@ -1398,7 +1325,6 @@ const generateShippingLabelsPDF = async () => {
       "Shipping label PDF error:",
       error
     );
-
 
     alert(
       "Unable to generate the PDF. Please try again."

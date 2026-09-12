@@ -2802,70 +2802,10 @@ const generateShippingLabelsPDF = async () => {
                 }}
               >
 
-                <h3
-                  style={{
-                    margin:
-                      "12px 0 4px",
-                    fontSize: 15
-                  }}
-                >
-                  Shipping / Shiprocket
-                </h3>
+              
 
-                <DetailField label="Shiprocket Order ID">
-                  {
-                    selected.shiprocketOrderId
-                  }
-                </DetailField>
 
-                <DetailField label="Shiprocket Shipment ID">
-                  {
-                    selected.shiprocketShipmentId
-                  }
-                </DetailField>
-
-                <DetailField label="AWB">
-                  {
-                    selected.awbCode
-                  }
-                </DetailField>
-
-                <DetailField label="Courier">
-                  {
-                    selected.courierName
-                  }
-                </DetailField>
-
-                <DetailField label="Tracking URL">
-                  {selected.trackingUrl ? (
-                    <a
-                      href={
-                        selected.trackingUrl
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color:
-                          "#246bce"
-                      }}
-                    >
-                      {
-                        selected.trackingUrl
-                      }
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                </DetailField>
-
-                <DetailField label="Shipping Status">
-                  <StatusBadge
-                    type="shipping"
-                    value={
-                      selected.shippingStatus
-                    }
-                  />
-                </DetailField>
+                
 
               </div>
 

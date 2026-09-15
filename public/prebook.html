@@ -965,22 +965,37 @@ razorpay.on(
             "Content-Type": "application/json"
           },
 
-          body: JSON.stringify({
-            status: "failed",
+       body: JSON.stringify({
+  status: "failed",
 
-            razorpay_order_id:
-              response?.error?.metadata?.order_id ||
-              createData.orderId,
+  razorpay_order_id:
+    response?.error?.metadata?.order_id ||
+    createData.orderId,
 
-            customer: {
-              name: name,
-              email: email,
-              phone: phone
-            },
+  razorpay_payment_id:
+    response?.error?.metadata?.payment_id || null,
 
-            reason: failureReason,
+  customer: {
+    name: name,
+    email: email,
+    phone: phone
+  },
 
-            source: "website"
+  reason: failureReason,
+
+  errorCode:
+    response?.error?.code || null,
+
+  errorSource:
+    response?.error?.source || null,
+
+  errorStep:
+    response?.error?.step || null,
+
+  errorReason:
+    response?.error?.reason || null,
+
+source: "website"
           })
         }
       );

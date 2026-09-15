@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Customer Details | Wealthoria</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f3ed;
+      color: #222;
+    }
+
+    .header {
+      background: #241c15;
+      color: white;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 14px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .description {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 19px;
+      font-weight: bold;
+      margin: 25px 0 18px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #e1622b;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .save-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      background: #e1622b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .save-btn:hover {
+      background: #c9511e;
+    }
+
+    .save-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 7px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .success {
+      display: block;
+      background: #e8f6ee;
+      color: #1d7045;
+    }
+
+    .error {
+      display: block;
+      background: #fff0eb;
+      color: #b33d19;
+    }
+
+    .note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #777;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px auto;
+      }
+
+      .card {
+        padding: 22px 18px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h2>Wealthoria</h2>
+  </div>
+
+  <div class="container">
+
+    <div class="card">
+
+      <h1>Customer Details</h1>
+
+      <p class="description">
+        Please enter your details and delivery address.
+      </p>
+
+      <form id="customerForm">
+
+        <!-- CUSTOMER DETAILS -->
+
+        <div class="section-title">
+          Customer Information
+        </div>
+
+        <div class="field">
+          <label for="name">
+            Full Name *
+          </label>
+
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter your full name"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="email">
+            Email *
+          </label>
+
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="phone">
+            Phone Number *
+          </label>
+
+          <input
+            type="tel"
+            id="phone"
+            placeholder="10 digit mobile number"
+            maxlength="10"
+            required
+          >
+        </div>
+
+
+        <!-- SHIPPING ADDRESS -->
+
+        <div class="section-title">
+          Delivery Address
+        </div>
+
+        <div class="field">
+          <label for="address">
+            Address *
+          </label>
+
+          <textarea
+            id="address"
+            placeholder="House number, street, area"
+            required
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="landmark">
+            Landmark
+          </label>
+
+          <input
+            type="text"
+            id="landmark"
+            placeholder="Nearby landmark"
+          >
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="city">
+              City *
+            </label>
+
+            <input
+              type="text"
+              id="city"
+              placeholder="City"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="state">
+              State *
+            </label>
+
+            <input
+              type="text"
+              id="state"
+              placeholder="State"
+              required
+            >
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="pincode">
+              Pincode *
+            </label>
+
+            <input
+              type="text"
+              id="pincode"
+              placeholder="6 digit pincode"
+              maxlength="6"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="country">
+              Country
+            </label>
+
+            <input
+              type="text"
+              id="country"
+              value="India"
+              readonly
+            >
+          </div>
+
+        </div>
+
+
+        <!-- SAVE -->
+
+        <button
+          type="submit"
+          id="saveButton"
+          class="save-btn"
+        >
+          Save Details
+        </button>
+
+        <div
+          id="message"
+          class="message"
+        ></div>
+
+        <p class="note">
+          No payment is processed on this page.
+        </p>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    const API_BASE =
+      "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
+
+
+    const form =
+      document.getElementById("customerForm");
+
+    const saveButton =
+      document.getElementById("saveButton");
+
+    const message =
+      document.getElementById("message");
+
+
+    function value(id) {
+      return document
+        .getElementById(id)
+        .value
+        .trim();
+    }
+
+
+    function showMessage(text, type) {
+
+      message.textContent = text;
+
+      message.className =
+        "message " + type;
+    }
+
+
+    form.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+
+        const name = value("name");
+        const email = value("email");
+        const phone = value("phone");
+
+        const address = value("address");
+        const landmark = value("landmark");
+        const city = value("city");
+        const state = value("state");
+        const pincode = value("pincode");
+
+
+        // -------------------------------
+        // VALIDATION
+        // -------------------------------
+
+        if (!/^[0-9]{10}$/.test(phone)) {
+
+          showMessage(
+            "Please enter a valid 10 digit phone number.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        if (!/^[0-9]{6}$/.test(pincode)) {
+
+          showMessage(
+            "Please enter a valid 6 digit pincode.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        // -------------------------------
+        // DISABLE BUTTON
+        // -------------------------------
+
+        saveButton.disabled = true;
+
+        saveButton.textContent =
+          "Saving...";
+
+
+        try {
+
+          const response = await fetch(
+            API_BASE +
+            "/prebook-customer/save",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+
+                name: name,
+
+                email: email,
+
+                phone: phone,
+
+                shippingAddress: {
+
+                  name: name,
+
+                  phone: phone,
+
+                  address: address,
+
+                  landmark: landmark,
+
+                  city: city,
+
+                  state: state,
+
+                  pincode: pincode,
+
+                  country: "India"
+
+                },
+
+                billingAddress: {
+
+                  sameAsDelivery: true
+
+                },
+
+                source:
+                  "customer-details-page"
+
+              })
+            }
+          );
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok ||
+              !data.success) {
+
+            throw new Error(
+              data.message ||
+              "Unable to save details."
+            );
+          }
+
+
+          // -------------------------------
+          // SAVE ORDER ID
+          // -------------------------------
+
+          if (data.orderId) {
+
+            localStorage.setItem(
+              "wealthoriaCustomerOrderId",
+              data.orderId
+            );
+
+          }
+
+
+          showMessage(
+            "Customer details saved successfully.",
+            "success"
+          );
+
+
+          saveButton.textContent =
+            "Details Saved";
+
+
+        } catch (error) {
+
+          console.error(
+            "Customer details error:",
+            error
+          );
+
+
+          showMessage(
+            error.message ||
+            "Unable to save details. Please try again.",
+            "error"
+          );
+
+
+          saveButton.disabled = false;
+
+          saveButton.textContent =
+            "Save Details";
+        }
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>

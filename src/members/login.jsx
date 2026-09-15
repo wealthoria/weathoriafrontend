@@ -9,7 +9,7 @@ const {
 
 
 /* =========================================================
-   MEMBER LOGIN
+   MEMBER / ADMIN LOGIN
 ========================================================= */
 
 function MemberLogin() {
@@ -190,14 +190,7 @@ function MemberLogin() {
 
 
   /* =========================================================
-     RECORD LOGIN
-     
-     ONLY:
-       uid
-       name
-       email
-       loginTime
-       status
+     RECORD MEMBER LOGIN
   ========================================================= */
 
   const recordMemberLogin = async ({
@@ -539,13 +532,9 @@ function MemberLogin() {
             /*
              * IMPORTANT:
              *
-             * This is an already-existing login.
+             * This is an already-existing member login.
              *
              * We DO NOT create another login record here.
-             *
-             * A login record is created only when the
-             * member actually submits the login form
-             * successfully.
              */
 
             if (!cancelled) {
@@ -620,6 +609,7 @@ function MemberLogin() {
 
   /* =========================================================
      LOGIN
+     MEMBER + ADMIN
   ========================================================= */
 
   const submitLogin =
@@ -695,9 +685,183 @@ function MemberLogin() {
 
       try {
 
+        /* =================================================
+           1. CHECK ADMIN LOGIN FIRST
+        ================================================= */
+
+        let adminLoginSuccessful =
+          false;
+
+
+        if (
+          window.auth &&
+          window.db
+        ) {
+
+          try {
+
+            const adminResult =
+              await window.auth
+                .signInWithEmailAndPassword(
+                  cleanEmail,
+                  password
+                );
+
+
+            const adminUser =
+              adminResult.user;
+
+
+            const adminDoc =
+              await window.db
+                .collection("admins")
+                .doc(adminUser.uid)
+                .get();
+
+
+            /*
+             * Only accounts that actually exist
+             * in the admins collection can enter
+             * the Admin Dashboard.
+             */
+
+            if (
+              adminDoc.exists
+            ) {
+
+              const admin =
+                adminDoc.data() || {};
+
+
+              const role =
+                String(
+                  admin.role ||
+                  "admin"
+                ).toLowerCase();
+
+
+              const status =
+                String(
+                  admin.status ||
+                  "active"
+                ).toLowerCase();
+
+
+              const isAdmin =
+                admin.isAdmin !== false &&
+                (
+                  role === "admin" ||
+                  role === "administrator" ||
+                  role === "superadmin" ||
+                  role === "super_admin"
+                );
+
+
+              const isActive =
+                status !== "disabled" &&
+                status !== "inactive" &&
+                status !== "blocked" &&
+                status !== "suspended";
+
+
+              if (
+                isAdmin &&
+                isActive
+              ) {
+
+                adminLoginSuccessful =
+                  true;
+
+
+                console.log(
+                  "Admin login successful:",
+                  cleanEmail
+                );
+
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * Use a REAL PATH here.
+                 * Do not use window.location.hash
+                 * because that would produce:
+                 *
+                 * /members/login#/admin/dashboard
+                 */
+
+                window.location.replace(
+                  "/admin/dashboard"
+                );
+
+
+                return;
+
+              }
+
+            }
+
+
+            /*
+             * Firebase authentication succeeded,
+             * but this is not an authorized admin.
+             *
+             * Sign out before trying the member API.
+             */
+
+            await window.auth.signOut();
+
+
+          } catch (adminError) {
+
+            /*
+             * Normal members will usually fail
+             * Firebase Admin authentication.
+             *
+             * Do NOT show that error.
+             * Continue with Member login.
+             */
+
+            console.log(
+              "Not an Admin account. Checking Member login..."
+            );
+
+
+            try {
+
+              if (
+                window.auth &&
+                window.auth.currentUser
+              ) {
+
+                await window.auth.signOut();
+
+              }
+
+            } catch (signOutError) {
+
+              console.warn(
+                "Admin authentication cleanup failed:",
+                signOutError
+              );
+
+            }
+
+          }
+
+        }
+
+
+        if (
+          adminLoginSuccessful
+        ) {
+
+          return;
+
+        }
+
 
         /* =================================================
-           SEND LOGIN TO BACKEND
+           2. MEMBER LOGIN
         ================================================= */
 
         console.log(
@@ -753,10 +917,12 @@ function MemberLogin() {
 
 
         /* =================================================
-           CHECK RESPONSE
+           CHECK MEMBER RESPONSE
         ================================================= */
 
-        if (!response.ok) {
+        if (
+          !response.ok
+        ) {
 
           throw {
 
@@ -791,7 +957,9 @@ function MemberLogin() {
         }
 
 
-        if (!data.uid) {
+        if (
+          !data.uid
+        ) {
 
           throw new Error(
             "Login succeeded but member ID was not received."
@@ -800,7 +968,9 @@ function MemberLogin() {
         }
 
 
-        if (!data.token) {
+        if (
+          !data.token
+        ) {
 
           throw new Error(
             "Login succeeded but authentication token was not received."
@@ -816,7 +986,7 @@ function MemberLogin() {
 
 
         /* =================================================
-           CREATE MEMBER SESSION
+           3. CREATE MEMBER SESSION
         ================================================= */
 
         const session = {
@@ -843,7 +1013,7 @@ function MemberLogin() {
 
 
         /* =================================================
-           SAVE SESSION
+           4. SAVE MEMBER SESSION
         ================================================= */
 
         saveMemberSession(
@@ -871,14 +1041,13 @@ function MemberLogin() {
               remember
                 ? "localStorage"
                 : "sessionStorage"
+
           }
         );
 
 
         /* =================================================
-           CREATE LOGIN RECORD
-           
-           ONLY AFTER SUCCESSFUL LOGIN
+           5. CREATE LOGIN RECORD
         ================================================= */
 
         await recordMemberLogin({
@@ -899,7 +1068,7 @@ function MemberLogin() {
 
 
         /* =================================================
-           GO TO DASHBOARD
+           6. MEMBER DASHBOARD
         ================================================= */
 
         window.location.replace(
@@ -910,7 +1079,7 @@ function MemberLogin() {
       } catch (err) {
 
         console.error(
-          "Member login error:",
+          "Login error:",
           err
         );
 
@@ -997,11 +1166,15 @@ function MemberLogin() {
      CHECKING SAVED SESSION
   ========================================================= */
 
-  if (checkingSession) {
+  if (
+    checkingSession
+  ) {
 
     return (
 
-      <div className="members-login-page">
+      <div
+        className="members-login-page"
+      >
 
         <div
           className="members-login-card"
@@ -1011,13 +1184,17 @@ function MemberLogin() {
           }}
         >
 
-          <span className="members-eyebrow">
+          <span
+            className="members-eyebrow"
+          >
             MEMBER PORTAL
           </span>
+
 
           <h1>
             Checking session...
           </h1>
+
 
           <p>
             Please wait.
@@ -1104,7 +1281,7 @@ function MemberLogin() {
 
 
           <h1>
-            Member sign in
+            Sign in
           </h1>
 
         </div>
@@ -1183,7 +1360,9 @@ function MemberLogin() {
                 );
 
 
-                if (error) {
+                if (
+                  error
+                ) {
 
                   setError("");
 
@@ -1191,7 +1370,7 @@ function MemberLogin() {
 
               }}
 
-              placeholder="you@wealthoria.in"
+              placeholder="example@gmail.com"
 
               autoComplete="new-password"
 
@@ -1199,7 +1378,9 @@ function MemberLogin() {
 
               data-1p-ignore="true"
 
-              disabled={loading}
+              disabled={
+                loading
+              }
 
             />
 
@@ -1259,7 +1440,9 @@ function MemberLogin() {
                   );
 
 
-                  if (error) {
+                  if (
+                    error
+                  ) {
 
                     setError("");
 
@@ -1275,7 +1458,9 @@ function MemberLogin() {
 
                 data-1p-ignore="true"
 
-                disabled={loading}
+                disabled={
+                  loading
+                }
 
               />
 
@@ -1290,12 +1475,16 @@ function MemberLogin() {
                   )
                 }
 
-                disabled={loading}
+                disabled={
+                  loading
+                }
               >
 
-                {showPassword
-                  ? "Hide"
-                  : "Show"}
+                {
+                  showPassword
+                    ? "Hide"
+                    : "Show"
+                }
 
               </button>
 
@@ -1327,7 +1516,9 @@ function MemberLogin() {
                   )
                 }
 
-                disabled={loading}
+                disabled={
+                  loading
+                }
               />
 
               <span>
@@ -1363,7 +1554,9 @@ function MemberLogin() {
 
               }}
 
-              disabled={loading}
+              disabled={
+                loading
+              }
             >
 
               Forgot password?
@@ -1380,37 +1573,72 @@ function MemberLogin() {
           <button
             className="members-login-button"
             type="submit"
-            disabled={loading}
+            disabled={
+              loading
+            }
           >
 
-            {loading
-              ? "Signing in..."
-              : "Continue →"}
+            {
+              loading
+                ? "Signing in..."
+                : "Continue →"
+            }
 
           </button>
 
 
+          {/* =================================================
+              SUBSCRIBE
+          ================================================= */}
 
-                <div className="members-login-subscribe">
-  <span>Not a member yet?</span>
+          <div
+            className="members-login-subscribe"
+          >
 
-  <button
-    type="button"
-    className="members-link"
-    onClick={() => {
-      if (window.membersNavigate) {
-        window.membersNavigate("/members/subscription");
-      } else {
-        window.location.href = "/members/subscription";
-      }
-    }}
-    disabled={loading}
-  >
-    Subscribe now
-  </button>
-</div>
+            <span>
+              Not a member yet?
+            </span>
+
+
+            <button
+              type="button"
+              className="members-link"
+
+              onClick={() => {
+
+                if (
+                  window.membersNavigate
+                ) {
+
+                  window.membersNavigate(
+                    "/members/subscription"
+                  );
+
+                }
+
+                else {
+
+                  window.location.href =
+                    "/members/subscription";
+
+                }
+
+              }}
+
+              disabled={
+                loading
+              }
+            >
+
+              Subscribe now
+
+            </button>
+
+          </div>
+
 
         </form>
+
 
       </div>
 

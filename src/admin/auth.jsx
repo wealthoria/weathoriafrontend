@@ -470,9 +470,7 @@ setState({
         });
 
 
-        window.location.hash =
-          "#/admin/login";
-
+window.location.replace("/members/login");
       },
       []
     );
@@ -631,7 +629,6 @@ function useRole() {
 /* =========================================================
    ADMIN GUARD
 ========================================================= */
-
 function AdminGuard({
   children
 }) {
@@ -681,16 +678,7 @@ function AdminGuard({
     !auth?.isAdmin
   ) {
 
-    if (
-      window.location.hash !==
-      "#/admin/login"
-    ) {
-
-      window.location.hash =
-        "#/admin/login";
-
-    }
-
+window.location.replace("/members/login");
     return null;
 
   }
@@ -699,8 +687,6 @@ function AdminGuard({
   return children;
 
 }
-
-
 /* =========================================================
    ACCESS DENIED
 ========================================================= */

@@ -96,9 +96,7 @@ function AdminLogin() {
         AdminAuthProvider updates
         authentication state.
       */
-
-      window.location.hash =
-        "#/admin/dashboard";
+window.location.replace("/admin/dashboard");
 
     }
 

@@ -110,29 +110,13 @@ import "./admin/login.jsx";
 // ROUTE DETECTION
 // ============================================================
 
+
+
 const pathname = window.location.pathname || "/";
-const hash = window.location.hash || "";
 
-const hashPath = hash.replace(/^#/, "") || "";
 
-console.log("[Wealthoria] Pathname:", pathname);
-console.log("[Wealthoria] Hash:", hash);
-console.log("[Wealthoria] Hash path:", hashPath);
-
-// ------------------------------------------------------------
-// Determine which application should be displayed
-// ------------------------------------------------------------
-
-const isAdminRoute =
-  pathname.startsWith("/admin") ||
-  hashPath.startsWith("/admin");
-
-const isMemberRoute =
-  pathname.startsWith("/members") ||
-  hashPath.startsWith("/members");
-
-console.log("[Wealthoria] isAdminRoute:", isAdminRoute);
-console.log("[Wealthoria] isMemberRoute:", isMemberRoute);
+const isAdminRoute = pathname.startsWith("/admin");
+const isMemberRoute = pathname.startsWith("/members");
 
 // ============================================================
 // ROOT ELEMENT

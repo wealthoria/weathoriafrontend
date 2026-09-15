@@ -188,105 +188,50 @@ function ThemeProvider({ children }) {
 /* =========================================================================
    ROUTER
    ========================================================================= */
-
-function getPath() {
-
-  const hash =
-    window.location.hash || "";
-
-  const path =
-    hash.replace(/^#/, "");
-
-  return path || "/admin/login";
-}
-
-
 function RouterProvider({ children }) {
+  const getPath = () => {
+    const pathname = window.location.pathname || "/";
 
-  const [path, setPath] =
-    useState(getPath);
+    return pathname.startsWith("/admin")
+      ? pathname
+      : "/admin/dashboard";
+  };
 
+  const [path, setPath] = useState(getPath);
 
   useEffect(() => {
-
-    function handleHashChange() {
+    const handlePopState = () => {
       setPath(getPath());
-    }
-
-
-    window.addEventListener(
-      "hashchange",
-      handleHashChange
-    );
-
-
-    if (!window.location.hash) {
-      window.location.hash =
-        "#/admin/login";
-    }
-
-
-    return () => {
-      window.removeEventListener(
-        "hashchange",
-        handleHashChange
-      );
     };
 
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
 
+  const navigate = useCallback((to) => {
+    const target = to.startsWith("/") ? to : `/${to}`;
 
-  const navigate = useCallback(
-    (to) => {
-
-      const target =
-        to.startsWith("/")
-          ? to
-          : "/" + to;
-
-
-      if (
-        window.location.hash !==
-        "#" + target
-      ) {
-
-        window.location.hash =
-          "#" + target;
-
-      }
-
-
-      setPath(target);
-
-
-      window.scrollTo(
-        0,
-        0
-      );
-
-    },
-    []
-  );
-
+    window.history.pushState({}, "", target);
+    setPath(target);
+  }, []);
 
   const value = useMemo(
     () => ({
       path,
-      navigate
+      navigate,
     }),
     [path, navigate]
   );
 
-
   return (
-    <MRouterContext.Provider
-      value={value}
-    >
+    <MRouterContext.Provider value={value}>
       {children}
     </MRouterContext.Provider>
   );
 }
-
 
 /* =========================================================================
    ROUTER HOOK

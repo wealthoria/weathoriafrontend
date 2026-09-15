@@ -46,7 +46,7 @@ function NavBar({ onNav }) {
   <div className="products-dropdown">
 
     <a
-      href="Book.html"
+      href="comingbacksoon.html"
     >
       📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
     </a>

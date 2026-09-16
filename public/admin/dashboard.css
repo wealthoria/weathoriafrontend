@@ -324,3 +324,11 @@ color: #ec5b3e;
   color: var(--mute);
   line-height: 1.3;
 }
+
+
+.sb-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}

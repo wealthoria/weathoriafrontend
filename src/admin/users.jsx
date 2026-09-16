@@ -23,6 +23,13 @@ const {
    HELPERS
    ========================================================================= */
 
+function normalizeValue(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+
 function displayValue(value) {
 
   if (
@@ -156,15 +163,19 @@ function downloadBlob(
    EXPORT CSV
    ========================================================================= */
 function exportMembersCSV(members) {
-
   const headers = [
     "Member Name",
     "Email",
     "Phone Number",
     "Member ID",
     "Role",
-    "Status",
-    "Notifications",
+    "Member Status",
+    "Subscription Status",
+    "Subscription Plan",
+    "Subscription Amount",
+    "Subscription Start",
+    "Next Billing Date",
+    "Razorpay Subscription ID",
     "Joined Date"
   ];
 
@@ -175,29 +186,27 @@ function exportMembersCSV(members) {
     member.uid,
     member.role,
     member.status,
-    member.notificationEnabled
-      ? "Enabled"
-      : "Not enabled",
+    member.subscriptionStatusDisplay,
+    member.subscriptionPlanDisplay,
+    member.subscriptionAmount !== null &&
+    member.subscriptionAmount !== undefined &&
+    member.subscriptionAmount !== ""
+      ? `${member.subscriptionCurrency === "INR" ? "₹" : ""}${member.subscriptionAmount}`
+      : "",
+    formatMemberDate(member.subscriptionStartDate),
+    formatMemberDate(member.nextBillingDate),
+    member.razorpaySubscriptionId,
     formatMemberDate(member.joinedAt)
   ]);
 
   const csv = [
     headers.map(csvCell).join(","),
-
-    ...rows.map((row) =>
-      row.map(csvCell).join(",")
-    )
-
+    ...rows.map((row) => row.map(csvCell).join(","))
   ].join("\r\n");
 
   const blob = new Blob(
-    [
-      "\uFEFF" + csv
-    ],
-    {
-      type:
-        "text/csv;charset=utf-8;"
-    }
+    ["\uFEFF" + csv],
+    { type: "text/csv;charset=utf-8;" }
   );
 
   downloadBlob(
@@ -210,204 +219,107 @@ function exportMembersCSV(members) {
    EXPORT EXCEL
    ========================================================================= */
 
-function exportMembersExcel(
-  members
-) {
-
-  /*
-     Creates an Excel-compatible .xls file.
-     It opens directly in Microsoft Excel
-     without requiring another npm package.
-  */
-
-  const rows =
-    members.map(
-      (member) => [
-
-        member.name,
-
-        member.email,
-
-        member.phone,
-
-        member.uid,
-
-        member.role,
-
-        member.status,
-
-
-        member.notificationEnabled
-          ? "Enabled"
-          : "Not enabled",
-
-        formatMemberDate(
-          member.joinedAt
-        )
-
-      ]
-    );
-
-
+function exportMembersExcel(members) {
   const headers = [
-
     "Member Name",
     "Email",
     "Phone Number",
     "Member ID",
     "Role",
-    "Status",
-    
-    "Notifications",
+    "Member Status",
+    "Subscription Status",
+    "Subscription Plan",
+    "Subscription Amount",
+    "Subscription Start",
+    "Next Billing Date",
+    "Razorpay Subscription ID",
     "Joined Date"
-
   ];
 
+  const rows = members.map((member) => [
+    member.name,
+    member.email,
+    member.phone,
+    member.uid,
+    member.role,
+    member.status,
+    member.subscriptionStatusDisplay,
+    member.subscriptionPlanDisplay,
+    member.subscriptionAmount !== null &&
+    member.subscriptionAmount !== undefined &&
+    member.subscriptionAmount !== ""
+      ? `${member.subscriptionCurrency === "INR" ? "₹" : ""}${member.subscriptionAmount}`
+      : "",
+    formatMemberDate(member.subscriptionStartDate),
+    formatMemberDate(member.nextBillingDate),
+    member.razorpaySubscriptionId,
+    formatMemberDate(member.joinedAt)
+  ]);
 
-  const escapeHtml =
-    (value) => {
+  const escapeHtml = (value) => {
+    return String(
+      value === null || value === undefined ? "" : value
+    )
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  };
 
-      return String(
-        value === null ||
-        value === undefined
-          ? ""
-          : value
-      )
-        .replace(
-          /&/g,
-          "&amp;"
-        )
-        .replace(
-          /</g,
-          "&lt;"
-        )
-        .replace(
-          />/g,
-          "&gt;"
-        )
-        .replace(
-          /"/g,
-          "&quot;"
-        )
-        .replace(
-          /'/g,
-          "&#39;"
-        );
+  const headerHtml = headers
+    .map((header) => `<th>${escapeHtml(header)}</th>`)
+    .join("");
 
-    };
-
-
-  const headerHtml =
-    headers
-      .map(
-        (header) =>
-          `<th>${escapeHtml(
-            header
-          )}</th>`
-      )
-      .join("");
-
-
-  const bodyHtml =
-    rows
-      .map(
-        (row) =>
-          `<tr>${row
-            .map(
-              (cell) =>
-                `<td>${escapeHtml(
-                  cell
-                )}</td>`
-            )
-            .join("")}</tr>`
-      )
-      .join("");
-
+  const bodyHtml = rows
+    .map(
+      (row) =>
+        `<tr>${row
+          .map((cell) => `<td>${escapeHtml(cell)}</td>`)
+          .join("")}</tr>`
+    )
+    .join("");
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
-
-  body {
-    font-family:
-      Arial,
-      sans-serif;
-  }
-
-  table {
-    border-collapse:
-      collapse;
-    width: 100%;
-  }
-
+  body { font-family: Arial, sans-serif; }
+  table { border-collapse: collapse; width: 100%; }
   th {
-    background:
-      #e8473f;
-    color:
-      #ffffff;
-    font-weight:
-      bold;
-    border:
-      1px solid #d9d9d9;
-    padding:
-      8px;
-    text-align:
-      left;
+    background: #e8473f;
+    color: #ffffff;
+    font-weight: bold;
+    border: 1px solid #d9d9d9;
+    padding: 8px;
+    text-align: left;
   }
-
   td {
-    border:
-      1px solid #d9d9d9;
-    padding:
-      8px;
-    vertical-align:
-      top;
+    border: 1px solid #d9d9d9;
+    padding: 8px;
+    vertical-align: top;
   }
-
 </style>
 </head>
 <body>
-
 <table>
-
-<thead>
-<tr>
-${headerHtml}
-</tr>
-</thead>
-
-<tbody>
-${bodyHtml}
-</tbody>
-
+<thead><tr>${headerHtml}</tr></thead>
+<tbody>${bodyHtml}</tbody>
 </table>
-
 </body>
 </html>`;
 
-
-  const blob =
-    new Blob(
-      [
-        "\uFEFF",
-        html
-      ],
-      {
-        type:
-          "application/vnd.ms-excel;charset=utf-8;"
-      }
-    );
-
+  const blob = new Blob(
+    ["\uFEFF", html],
+    { type: "application/vnd.ms-excel;charset=utf-8;" }
+  );
 
   downloadBlob(
     blob,
     "wealthoria-members.xls"
   );
-
 }
-
 
 /* =========================================================================
    MEMBERS SCREEN
@@ -426,6 +338,18 @@ function UsersScreen() {
 
   const [search, setSearch] =
     useState("");
+
+  const [memberStatusFilter, setMemberStatusFilter] =
+    useState("all");
+
+  const [subscriptionStatusFilter, setSubscriptionStatusFilter] =
+    useState("all");
+
+  const [subscriptionPlanFilter, setSubscriptionPlanFilter] =
+    useState("all");
+
+  const [subscriptions, setSubscriptions] =
+    useState([]);
 
   const [actionLoading, setActionLoading] =
     useState("");
@@ -446,25 +370,19 @@ function UsersScreen() {
         "Firebase Firestore is not available."
       );
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
       return;
     }
 
-
-    let unsubscribe =
-      null;
-
+    let unsubscribeMembers = null;
+    let unsubscribeSubscriptions = null;
 
     try {
 
-      unsubscribe =
+      unsubscribeMembers =
         window.db
-          .collection(
-            "members"
-          )
+          .collection("members")
           .onSnapshot(
 
             (snapshot) => {
@@ -474,9 +392,7 @@ function UsersScreen() {
                   (doc) => {
 
                     const data =
-                      doc.data() ||
-                      {};
-
+                      doc.data() || {};
 
                     return {
 
@@ -566,38 +482,23 @@ function UsersScreen() {
                   }
                 );
 
-
               rows.sort(
                 (a, b) => {
 
-                  return String(
-                    a.name
-                  )
+                  return String(a.name)
                     .toLowerCase()
                     .localeCompare(
-                      String(
-                        b.name
-                      )
-                        .toLowerCase()
+                      String(b.name).toLowerCase()
                     );
 
                 }
               );
 
-
-              setMembers(
-                rows
-              );
-
-
-              setLoading(
-                false
-              );
-
+              setMembers(rows);
+              setLoading(false);
               setError("");
 
             },
-
 
             (firebaseError) => {
 
@@ -606,15 +507,56 @@ function UsersScreen() {
                 firebaseError
               );
 
-
               setError(
                 firebaseError?.message ||
                 "Unable to load members."
               );
 
+              setLoading(false);
 
-              setLoading(
-                false
+            }
+
+          );
+
+      /*
+       * Load the complete subscriptions collection and join it
+       * with members in the browser. This allows cancelled,
+       * halted, paused, active and historical subscription records
+       * to remain visible without changing the subscription data.
+       */
+      unsubscribeSubscriptions =
+        window.db
+          .collection("subscriptions")
+          .onSnapshot(
+
+            (snapshot) => {
+
+              const subscriptionRows =
+                snapshot.docs.map(
+                  (doc) => ({
+                    id: doc.id,
+                    ...(doc.data() || {})
+                  })
+                );
+
+              setSubscriptions(
+                subscriptionRows
+              );
+
+            },
+
+            (firebaseError) => {
+
+              console.error(
+                "Subscriptions Firestore error:",
+                firebaseError
+              );
+
+              setSubscriptions([]);
+
+              setError(
+                firebaseError?.message ||
+                "Unable to load subscriptions."
               );
 
             }
@@ -628,29 +570,29 @@ function UsersScreen() {
         error
       );
 
-
       setError(
         error?.message ||
         "Unable to load members."
       );
 
-
-      setLoading(
-        false
-      );
+      setLoading(false);
 
     }
-
 
     return () => {
 
       if (
-        typeof unsubscribe ===
+        typeof unsubscribeMembers ===
         "function"
       ) {
+        unsubscribeMembers();
+      }
 
-        unsubscribe();
-
+      if (
+        typeof unsubscribeSubscriptions ===
+        "function"
+      ) {
+        unsubscribeSubscriptions();
       }
 
     };
@@ -662,6 +604,210 @@ function UsersScreen() {
      SEARCH
   ======================================================= */
 
+  const joinedMembers = useMemo(() => {
+
+    function toMillis(value) {
+      if (!value) return 0;
+
+      try {
+        if (typeof value.toDate === "function") {
+          return value.toDate().getTime();
+        }
+
+        const date = new Date(value);
+        const time = date.getTime();
+
+        return Number.isNaN(time)
+          ? 0
+          : time;
+      } catch {
+        return 0;
+      }
+    }
+
+    function subscriptionMatches(member, subscription) {
+      const memberUid = normalizeValue(member.uid);
+      const memberEmail = normalizeValue(member.email);
+
+      const subscriptionUid = normalizeValue(subscription.uid);
+
+      const subscriptionUserId = normalizeValue(subscription.userId);
+
+      const subscriptionMemberId = normalizeValue(subscription.memberId);
+
+      const subscriptionEmail = normalizeValue(subscription.email);
+
+      return Boolean(
+        (memberUid &&
+          (
+            subscriptionUid === memberUid ||
+            subscriptionUserId === memberUid ||
+            subscriptionMemberId === memberUid
+          )) ||
+        (
+          memberEmail &&
+          memberEmail !== "—" &&
+          subscriptionEmail === memberEmail
+        )
+      );
+    }
+
+    return members.map((member) => {
+
+      const memberSubscriptions =
+        subscriptions
+          .filter((subscription) =>
+            subscriptionMatches(
+              member,
+              subscription
+            )
+          )
+          .sort(
+            (a, b) =>
+              toMillis(
+                b.updatedAt ||
+                b.createdAt ||
+                b.subscriptionStartDate
+              ) -
+              toMillis(
+                a.updatedAt ||
+                a.createdAt ||
+                a.subscriptionStartDate
+              )
+          );
+
+      const statuses = [
+        ...new Set(
+          memberSubscriptions
+            .flatMap((subscription) => [
+              subscription.status,
+              subscription.razorpayStatus
+            ])
+            .map((value) =>
+              String(value || "")
+                .trim()
+                .toLowerCase()
+            )
+            .filter(Boolean)
+        )
+      ];
+
+      const plans = [
+        ...new Set(
+          memberSubscriptions
+            .map(
+              (subscription) =>
+                String(
+                  subscription.plan ||
+                  subscription.planName ||
+                  subscription.planId ||
+                  ""
+                ).trim()
+            )
+            .filter(Boolean)
+        )
+      ];
+
+      const latestSubscription =
+        memberSubscriptions[0] || null;
+
+      const statusLabels = statuses.map(
+        (status) =>
+          status.charAt(0).toUpperCase() +
+          status.slice(1)
+      );
+
+      const planLabels = plans.filter(Boolean);
+
+      return {
+        ...member,
+
+        subscriptions:
+          memberSubscriptions,
+
+        subscriptionStatuses:
+          statuses,
+
+        subscriptionPlans:
+          plans,
+
+        subscriptionStatusDisplay:
+          latestSubscription
+            ? String(
+                latestSubscription.status ||
+                latestSubscription.razorpayStatus ||
+                "unknown"
+              )
+                .trim()
+                .toLowerCase()
+                .replace(
+                  /^./,
+                  (char) => char.toUpperCase()
+                )
+            : "No subscription",
+
+        subscriptionPlanDisplay:
+          latestSubscription
+            ? String(
+                latestSubscription.plan ||
+                latestSubscription.planName ||
+                latestSubscription.planId ||
+                "—"
+              ).trim()
+            : "—",
+
+        subscriptionStatusPrimary:
+          statuses[0] || "none",
+
+        subscriptionPlanPrimary:
+          normalizeValue(
+            latestSubscription?.plan ||
+            latestSubscription?.planName ||
+            latestSubscription?.planId ||
+            ""
+          ),
+
+        subscriptionAmount:
+          latestSubscription?.amount ??
+          latestSubscription?.price ??
+          null,
+
+        subscriptionCurrency:
+          latestSubscription?.currency ||
+          "INR",
+
+        subscriptionStartDate:
+          latestSubscription?.subscriptionStartDate ||
+          latestSubscription?.startDate ||
+          latestSubscription?.createdAt ||
+          null,
+
+        nextBillingDate:
+          latestSubscription?.nextBillingDate ||
+          latestSubscription?.nextBilling ||
+          null,
+
+        razorpaySubscriptionId:
+          latestSubscription?.razorpaySubscriptionId ||
+          "",
+
+        razorpayPaymentId:
+          latestSubscription?.razorpayPaymentId ||
+          "",
+
+        subscriptionCount:
+          memberSubscriptions.length,
+
+      };
+
+    });
+
+  }, [
+    members,
+    subscriptions
+  ]);
+
+
   const filteredMembers =
     useMemo(() => {
 
@@ -670,15 +816,7 @@ function UsersScreen() {
           .trim()
           .toLowerCase();
 
-
-      if (!query) {
-
-        return members;
-
-      }
-
-
-      return members.filter(
+      return joinedMembers.filter(
         (member) => {
 
           const searchable =
@@ -708,32 +846,122 @@ function UsersScreen() {
 
               member.gender,
 
-              member.dateOfBirth
+              member.dateOfBirth,
+
+              member.subscriptionStatusDisplay,
+
+              member.subscriptionPlanDisplay,
+
+              member.subscriptionAmount,
+
+              member.razorpaySubscriptionId
 
             ]
               .map(
                 (value) =>
-                  String(
-                    value || ""
-                  )
+                  String(value || "")
                     .toLowerCase()
               );
 
+          const matchesSearch =
+            !query ||
+            searchable.some(
+              (value) =>
+                value.includes(query)
+            );
 
-          return searchable.some(
-            (value) =>
-              value.includes(
-                query
-              )
+          const normalizedMemberStatus = normalizeValue(member.status || "active");
+
+          const matchesMemberStatus =
+            memberStatusFilter === "all" ||
+            normalizedMemberStatus ===
+              memberStatusFilter;
+
+          const matchesSubscriptionStatus =
+            subscriptionStatusFilter === "all" ||
+            (
+              subscriptionStatusFilter === "none"
+                ? member.subscriptionStatuses.length === 0
+                : member.subscriptionStatuses.includes(
+                    subscriptionStatusFilter
+                  )
+            );
+
+          const matchesSubscriptionPlan =
+            subscriptionPlanFilter === "all" ||
+            member.subscriptionPlans.some(
+              (plan) =>
+                normalizeValue(plan) ===
+                subscriptionPlanFilter
+            );
+
+          return (
+            matchesSearch &&
+            matchesMemberStatus &&
+            matchesSubscriptionStatus &&
+            matchesSubscriptionPlan
           );
 
         }
       );
 
     }, [
-      members,
-      search
+      joinedMembers,
+      search,
+      memberStatusFilter,
+      subscriptionStatusFilter,
+      subscriptionPlanFilter
     ]);
+
+
+  const subscriptionStatusOptions =
+    useMemo(() => {
+
+      const values = new Set();
+
+      joinedMembers.forEach(
+        (member) => {
+          member.subscriptionStatuses.forEach(
+            (status) => values.add(status)
+          );
+        }
+      );
+
+      return Array.from(values).sort();
+
+    }, [joinedMembers]);
+
+
+  const subscriptionPlanOptions =
+    useMemo(() => {
+
+      const values = new Map();
+
+      joinedMembers.forEach(
+        (member) => {
+          member.subscriptionPlans.forEach(
+            (plan) => {
+              const key = normalizeValue(plan);
+
+              if (!values.has(key)) {
+                values.set(
+                  key,
+                  String(plan).trim()
+                );
+              }
+            }
+          );
+        }
+      );
+
+      return Array.from(
+        values.entries()
+      )
+        .sort((a, b) =>
+          a[1].localeCompare(b[1])
+        );
+
+    }, [joinedMembers]);
 
 
   /* =======================================================
@@ -1330,148 +1558,272 @@ function UsersScreen() {
 
 
         {/* =================================================
-            TOOLBAR
+            TOOLBAR + FILTERS
         ================================================= */}
 
         <div
           style={{
-            display:
-              "flex",
-
-            alignItems:
-              "center",
-
-            justifyContent:
-              "space-between",
-
-            gap:
-              14,
-
-            marginBottom:
-              16,
-
-            padding:
-              14,
-
-            background:
-              "var(--surface, #ffffff)",
-
-            border:
-              "1px solid var(--line, #e5e7eb)",
-
-            borderRadius:
-              12,
-
-            flexWrap:
-              "wrap"
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 14,
+            marginBottom: 16,
+            padding: 14,
+            background: "var(--surface, #ffffff)",
+            border: "1px solid var(--line, #e5e7eb)",
+            borderRadius: 12,
+            flexWrap: "wrap"
           }}
         >
 
-
-          {/* SEARCH */}
-
           <div
             style={{
-              position:
-                "relative",
-
-              width:
-                "min(520px, 100%)"
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              flex: "1 1 520px",
+              flexWrap: "wrap"
             }}
           >
 
-            <MIcon
-              name="search"
-              size={17}
+            {/* SEARCH */}
+
+            <div
               style={{
-                position:
-                  "absolute",
-
-                left:
-                  14,
-
-                top:
-                  "50%",
-
-                transform:
-                  "translateY(-50%)",
-
-                color:
-                  "#8a939e",
-
-                pointerEvents:
-                  "none"
+                position: "relative",
+                flex: "1 1 360px",
+                minWidth: 260
               }}
-            />
+            >
 
+              <MIcon
+                name="search"
+                size={17}
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#8a939e",
+                  pointerEvents: "none"
+                }}
+              />
 
-            <input
-              type="text"
-              value={
-                search
+              <input
+                type="text"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder={
+                  "Search name, email, phone number, member ID or subscription..."
+                }
+                aria-label="Search members"
+                style={{
+                  width: "100%",
+                  height: 44,
+                  padding: "0 42px",
+                  border: "1px solid #dfe3e8",
+                  borderRadius: 9,
+                  outline: "none",
+                  background: "#ffffff",
+                  color: "#202833",
+                  fontSize: 14
+                }}
+              />
+
+            </div>
+
+            {/* MEMBER STATUS */}
+
+            <select
+              value={memberStatusFilter}
+              onChange={(event) =>
+                setMemberStatusFilter(
+                  event.target.value
+                )
               }
-              onChange={
-                (event) =>
-                  setSearch(
-                    event.target.value
-                  )
-              }
-              placeholder={
-                "Search name, email, phone number or member ID..."
-              }
-              aria-label="Search members"
+              aria-label="Filter member status"
               style={{
-                width:
-                  "100%",
-
-                height:
-                  44,
-
-                padding:
-                  "0 42px",
-
-                border:
-                  "1px solid #dfe3e8",
-
-                borderRadius:
-                  9,
-
-                outline:
-                  "none",
-
-                background:
-                  "#ffffff",
-
-                color:
-                  "#202833",
-
-                fontSize:
-                  14
+                height: 44,
+                minWidth: 150,
+                padding: "0 12px",
+                border: "1px solid #dfe3e8",
+                borderRadius: 9,
+                background: "#ffffff",
+                color: "#202833",
+                fontSize: 13,
+                outline: "none"
               }}
-            />
+            >
+              <option value="all">
+                All member status
+              </option>
+              <option value="active">
+                Active
+              </option>
+              <option value="deactivated">
+                Deactivated
+              </option>
+              <option value="inactive">
+                Inactive
+              </option>
+              <option value="disabled">
+                Disabled
+              </option>
+              <option value="blocked">
+                Blocked
+              </option>
+              <option value="suspended">
+                Suspended
+              </option>
+            </select>
+
+            {/* SUBSCRIPTION STATUS */}
+
+            <select
+              value={subscriptionStatusFilter}
+              onChange={(event) =>
+                setSubscriptionStatusFilter(
+                  event.target.value
+                )
+              }
+              aria-label="Filter subscription status"
+              style={{
+                height: 44,
+                minWidth: 170,
+                padding: "0 12px",
+                border: "1px solid #dfe3e8",
+                borderRadius: 9,
+                background: "#ffffff",
+                color: "#202833",
+                fontSize: 13,
+                outline: "none"
+              }}
+            >
+              <option value="all">
+                All subscription status
+              </option>
+              <option value="none">
+                No subscription
+              </option>
+              {subscriptionStatusOptions.map(
+                (status) => (
+                  <option
+                    key={status}
+                    value={status}
+                  >
+                    {status.charAt(0).toUpperCase() +
+                      status.slice(1)}
+                  </option>
+                )
+              )}
+            </select>
+
+            {/* PLAN */}
+
+            <select
+              value={subscriptionPlanFilter}
+              onChange={(event) =>
+                setSubscriptionPlanFilter(
+                  event.target.value
+                )
+              }
+              aria-label="Filter subscription plan"
+              style={{
+                height: 44,
+                minWidth: 160,
+                padding: "0 12px",
+                border: "1px solid #dfe3e8",
+                borderRadius: 9,
+                background: "#ffffff",
+                color: "#202833",
+                fontSize: 13,
+                outline: "none"
+              }}
+            >
+              <option value="all">
+                All plans
+              </option>
+              {subscriptionPlanOptions.map(
+                ([value, label]) => (
+                  <option
+                    key={value}
+                    value={value}
+                  >
+                    {label}
+                  </option>
+                )
+              )}
+            </select>
+
 
           </div>
 
-
-          {/* SEARCH RESULT */}
-
           <div
             style={{
-              fontSize:
-                13,
-
-              color:
-                "var(--muted, #6b7280)",
-
-              whiteSpace:
-                "nowrap"
+              display: "flex",
+              alignItems: "center",
+              gap: 10
             }}
           >
 
-            {search
-              ? `${filteredMembers.length} result${filteredMembers.length === 1 ? "" : "s"}`
-              : `${members.length} members`
-            }
+            <div
+              style={{
+                fontSize: 13,
+                color: "var(--muted, #6b7280)",
+                whiteSpace: "nowrap"
+              }}
+            >
+              {search ||
+              memberStatusFilter !== "all" ||
+              subscriptionStatusFilter !== "all" ||
+              subscriptionPlanFilter !== "all"
+                ? `${filteredMembers.length} result${filteredMembers.length === 1 ? "" : "s"}`
+                : `${members.length} members`}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setMemberStatusFilter("all");
+                setSubscriptionStatusFilter("all");
+                setSubscriptionPlanFilter("all");
+              }}
+              disabled={
+                !search &&
+                memberStatusFilter === "all" &&
+                subscriptionStatusFilter === "all" &&
+                subscriptionPlanFilter === "all"
+              }
+              style={{
+                height: 38,
+                padding: "0 12px",
+                border: "1px solid #dfe3e8",
+                borderRadius: 8,
+                background: "#ffffff",
+                color: "#59636e",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor:
+                  !search &&
+                  memberStatusFilter === "all" &&
+                  subscriptionStatusFilter === "all" &&
+                  subscriptionPlanFilter === "all"
+                    ? "not-allowed"
+                    : "pointer",
+                opacity:
+                  !search &&
+                  memberStatusFilter === "all" &&
+                  subscriptionStatusFilter === "all" &&
+                  subscriptionPlanFilter === "all"
+                    ? 0.5
+                    : 1
+              }}
+            >
+              Clear filters
+            </button>
 
           </div>
 
@@ -1679,7 +2031,7 @@ function UsersScreen() {
                     "100%",
 
                   minWidth:
-                    1280,
+                    1750,
 
                   borderCollapse:
                     "collapse"
@@ -1708,11 +2060,14 @@ function UsersScreen() {
                       "MEMBER",
                       "EMAIL",
                       "PHONE",
-                      "MEMBER ID",
-                      "ROLE",
-                      "STATUS",
-                      
-                      "NOTIFICATIONS",
+                      "MEMBER ID",                      "ROLE",
+                      "MEMBER STATUS",
+                      "SUBSCRIPTION STATUS",
+                      "PLAN",
+                      "AMOUNT",
+                      "SUBSCRIPTION START",
+                      "NEXT BILLING",
+                      "RAZORPAY SUBSCRIPTION ID",
                       "JOINED",
                       "ACTIONS"
                     ].map(
@@ -2090,43 +2445,151 @@ function UsersScreen() {
                         </td>
 
 
-
-
-
-
-                        {/* NOTIFICATION */}
+                        {/* SUBSCRIPTION STATUS */}
 
                         <td
                           style={{
-                            padding:
-                              "15px 14px",
-
-                            whiteSpace:
-                              "nowrap"
+                            padding: "15px 14px",
+                            whiteSpace: "nowrap"
                           }}
                         >
-
                           <span
                             style={{
-                              fontSize:
-                                11,
-
-                              fontWeight:
-                                700,
-
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "5px 9px",
+                              borderRadius: 999,
+                              background:
+                                member.subscriptionStatusPrimary === "active"
+                                  ? "#eaf7ed"
+                                  : member.subscriptionStatusPrimary === "cancelled"
+                                    ? "#fff3f1"
+                                    : member.subscriptionStatusPrimary === "halted"
+                                      ? "#fff3f1"
+                                      : member.subscriptionStatusPrimary === "paused"
+                                        ? "#fff9e8"
+                                        : "#f1f3f5",
                               color:
-                                member.notificationEnabled
+                                member.subscriptionStatusPrimary === "active"
                                   ? "#217a36"
-                                  : "#7a838d"
+                                  : member.subscriptionStatusPrimary === "cancelled"
+                                    ? "#b42318"
+                                    : member.subscriptionStatusPrimary === "halted"
+                                      ? "#b42318"
+                                      : member.subscriptionStatusPrimary === "paused"
+                                        ? "#8a6410"
+                                        : "#69727c",
+                              fontSize: 11,
+                              fontWeight: 750
                             }}
                           >
+                            <span
+                              style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                background:
+                                  member.subscriptionStatusPrimary === "active"
+                                    ? "#2ead4b"
+                                    : member.subscriptionStatusPrimary === "cancelled"
+                                      ? "#d6453d"
+                                      : member.subscriptionStatusPrimary === "halted"
+                                        ? "#d6453d"
+                                        : member.subscriptionStatusPrimary === "paused"
+                                          ? "#d8a62a"
+                                          : "#9aa1a8"
+                              }}
+                            />
 
-                            {member.notificationEnabled
-                              ? "Enabled"
-                              : "Not enabled"}
-
+                            {member.subscriptionStatusDisplay}
                           </span>
+                        </td>
 
+
+                        {/* PLAN */}
+
+                        <td
+                          style={{
+                            padding: "15px 14px",
+                            fontSize: 12,
+                            color: "#4b5563",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {displayValue(
+                            member.subscriptionPlanDisplay
+                          )}
+                        </td>
+
+
+                        {/* AMOUNT */}
+
+                        <td
+                          style={{
+                            padding: "15px 14px",
+                            fontSize: 12,
+                            color: "#374151",
+                            fontWeight: 650,
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {member.subscriptionAmount !== null &&
+                          member.subscriptionAmount !== undefined &&
+                          member.subscriptionAmount !== ""
+                            ? `${member.subscriptionCurrency === "INR" ? "₹" : ""}${member.subscriptionAmount}`
+                            : "—"}
+                        </td>
+
+
+                        {/* SUBSCRIPTION START */}
+
+                        <td
+                          style={{
+                            padding: "15px 14px",
+                            fontSize: 12,
+                            color: "#66717d",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {formatMemberDate(
+                            member.subscriptionStartDate
+                          )}
+                        </td>
+
+
+                        {/* NEXT BILLING */}
+
+                        <td
+                          style={{
+                            padding: "15px 14px",
+                            fontSize: 12,
+                            color: "#66717d",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {formatMemberDate(
+                            member.nextBillingDate
+                          )}
+                        </td>
+
+
+                        {/* RAZORPAY SUBSCRIPTION ID */}
+
+                        <td
+                          style={{
+                            padding: "15px 14px",
+                            fontFamily:
+                              "ui-monospace, SFMono-Regular, Menlo, monospace",
+                            fontSize: 11,
+                            color: "#59636e",
+                            maxWidth: 220,
+                            wordBreak: "break-all"
+                          }}
+                        >
+                          {displayValue(
+                            member.razorpaySubscriptionId
+                          )}
                         </td>
 
 
@@ -2315,8 +2778,8 @@ function UsersScreen() {
                             >
                               {actionLoading ===
                               `delete:${member.uid}`
-                                ? "Deleting..."
-                                : "Delete"}
+                                ? "Processing..."
+                                : "Disable & Clear Data"}
                             </button>
 
                           </div>

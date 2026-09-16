@@ -25,89 +25,134 @@ const fmtINR0 = (n) =>
    METRIC CARD
    ========================================================================= */
 
+
+function MetricIcon({ type }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.9,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true
+  };
+
+  const icons = {
+    users: (
+      <svg {...common}>
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3.5 19c.3-3.2 2.2-5 5.5-5s5.2 1.8 5.5 5" />
+        <path d="M15.5 6.2a3 3 0 0 1 0 5.6" />
+        <path d="M17 14.5c2.1.6 3.3 2.1 3.5 4.5" />
+      </svg>
+    ),
+    revenue: (
+      <svg {...common}>
+        <path d="M12 3v18" />
+        <path d="M16.5 7.5c-.7-1.1-2.1-1.7-4.1-1.7-2.3 0-3.9 1.1-3.9 2.7 0 4.3 8 1.6 8 5.7 0 1.8-1.7 3-4.2 3-2 0-3.6-.7-4.3-2" />
+      </svg>
+    ),
+    subscription: (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 8v4l2.5 2" />
+      </svg>
+    ),
+    courses: (
+      <svg {...common}>
+        <path d="M4 6.5 12 3l8 3.5-8 3.5L4 6.5Z" />
+        <path d="M6.5 9.2V15c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3V9.2" />
+        <path d="M20 7v5" />
+      </svg>
+    ),
+    content: (
+      <svg {...common}>
+        <path d="M5 4h10l4 4v12H5z" />
+        <path d="M15 4v5h4M8 13h8M8 17h6" />
+      </svg>
+    )
+  };
+
+  return icons[type] || icons.users;
+}
+
 function MetricCard({
   icon,
   label,
   value,
-  delta,
-  spark,
-  sparkKey,
-  sparkColor
+  delta
 }) {
-
-  const MIcon = getAdmin("MIcon");
-  const WSparkline = getAdmin("WSparkline");
-
   return (
-    <div className="metric">
-
-      <div className="m-top">
-
-        <span className="m-ic">
-          {MIcon ? (
-            <MIcon
-              name={icon}
-              size={17}
-            />
-          ) : null}
+    <div
+      className="metric"
+      style={{
+        minHeight: 112,
+        padding: "14px 15px",
+        overflow: "hidden"
+      }}
+    >
+      <div
+        className="m-top"
+        style={{
+          minWidth: 0,
+          gap: 9,
+          alignItems: "center"
+        }}
+      >
+        <span
+          className="m-ic"
+          style={{
+            width: 38,
+            height: 38,
+            minWidth: 38,
+            borderRadius: 12,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--primary-pale, #fde7e1)",
+            color: "var(--primary, #e8473f)"
+          }}
+        >
+          <MetricIcon type={icon} />
         </span>
 
-        <span className="m-label">
+        <span
+          className="m-label"
+          style={{
+            minWidth: 0,
+            lineHeight: 1.15,
+            whiteSpace: "normal"
+          }}
+        >
           {label}
         </span>
-
       </div>
 
-
-      <div className="m-value">
+      <div
+        className="m-value"
+        style={{
+          marginTop: 10,
+          lineHeight: 1
+        }}
+      >
         {value}
       </div>
 
-
-      <div className="m-foot">
-
-        {delta != null ? (
-
-          <span
-            className={`delta ${
-              delta >= 0 ? "up" : "down"
-            }`}
-          >
-
-            {MIcon ? (
-              <MIcon
-                name="arrow"
-                size={12}
-                style={{
-                  transform:
-                    delta >= 0
-                      ? "rotate(-45deg)"
-                      : "rotate(45deg)"
-                }}
-              />
-            ) : null}
-
-            {Math.abs(delta)}%
-
+      {delta != null ? (
+        <div
+          className="m-foot"
+          style={{
+            marginTop: 8,
+            minHeight: 14
+          }}
+        >
+          <span className={`delta ${delta >= 0 ? "up" : "down"}`}>
+            {delta >= 0 ? "↑" : "↓"} {Math.abs(delta)}%
           </span>
-
-        ) : (
-          <span />
-        )}
-
-
-        {spark && WSparkline ? (
-          <WSparkline
-            data={spark}
-            dataKey={sparkKey}
-            color={sparkColor}
-            width={108}
-            height={32}
-          />
-        ) : null}
-
-      </div>
-
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -147,6 +192,65 @@ function firstNumber(...values) {
   return 0;
 }
 
+function getSubscriptionStatus(row) {
+  return String(
+    row?.status ||
+    row?.razorpayStatus ||
+    row?.subscriptionStatus ||
+    ""
+  ).trim().toLowerCase();
+}
+
+function getSubscriptionRevenueDate(row) {
+  return (
+    row?.paidAt ||
+    row?.subscriptionStartDate ||
+    row?.startDate ||
+    row?.createdAt ||
+    row?.updatedAt ||
+    null
+  );
+}
+
+function isSuccessfulSubscription(row) {
+  const status = getSubscriptionStatus(row);
+  return [
+    "active",
+    "paid",
+    "completed",
+    "cancelled",
+    "halted",
+    "paused"
+  ].includes(status);
+}
+
+function getSubscriptionAmount(row) {
+  return firstNumber(
+    row?.amount,
+    row?.totalAmount,
+    row?.price,
+    row?.planAmount
+  );
+}
+
+function uniqueMembersByIdentity(rows) {
+  const map = new Map();
+
+  (rows || []).forEach((row, index) => {
+    const uid = String(row?.uid || row?.userId || row?.memberId || "").trim().toLowerCase();
+    const email = String(row?.email || row?.emailAddress || "").trim().toLowerCase();
+    const id = String(row?.id || "").trim().toLowerCase();
+
+    const key = uid || email || id || `member-${index}`;
+
+    if (!map.has(key)) {
+      map.set(key, row);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
 function getCreatedValue(row) {
   return row?.createdAt || row?.joinedAt || row?.registeredAt || row?.createdOn || row?.paidAt || row?.publishedAt || row?.updatedAt || null;
 }
@@ -170,35 +274,264 @@ function getCollectionRows(name) {
   });
 }
 
-function BackendLineChart({ data, dataKey }) {
-  const W = 760;
-  const H = 240;
-  const pad = { l: 38, r: 18, t: 18, b: 30 };
+function BackendLineChart({ data, dataKey, onPointClick, selectedIndex }) {
+  const W = 900;
+  const H = 330;
+  const pad = { l: 74, r: 24, t: 28, b: 54 };
+
   const values = data.map((d) => Math.max(0, Number(d[dataKey] || 0)));
-  const max = Math.max(1, ...values);
-  const points = data.map((d, i) => {
-    const x = pad.l + (i / Math.max(1, data.length - 1)) * (W - pad.l - pad.r);
-    const y = H - pad.b - (Number(d[dataKey] || 0) / max) * (H - pad.t - pad.b);
-    return `${x},${y}`;
-  }).join(" ");
+  const maxValue = Math.max(1, ...values);
+  const chartW = W - pad.l - pad.r;
+  const chartH = H - pad.t - pad.b;
+
+  const getX = (index) =>
+    pad.l +
+    (index / Math.max(1, data.length - 1)) * chartW;
+
+  const getY = (value) =>
+    H -
+    pad.b -
+    (Number(value || 0) / maxValue) * chartH;
+
+  const linePoints = data
+    .map((d, i) => `${getX(i)},${getY(d[dataKey])}`)
+    .join(" ");
+
+  const areaPoints = data.length
+    ? `${pad.l},${H - pad.b} ${linePoints} ${getX(data.length - 1)},${H - pad.b}`
+    : "";
+
+  const tickValues = [0, 0.25, 0.5, 0.75, 1].map(
+    (ratio) => maxValue * ratio
+  );
+
+  const formatAxisValue = (value) => {
+    if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+    if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+    if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
+    return `₹${Math.round(value).toLocaleString("en-IN")}`;
+  };
+
+  const labelIndexes =
+    data.length <= 8
+      ? data.map((_, i) => i)
+      : Array.from(
+          new Set([
+            0,
+            Math.round((data.length - 1) * 0.25),
+            Math.round((data.length - 1) * 0.5),
+            Math.round((data.length - 1) * 0.75),
+            data.length - 1
+          ])
+        );
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="250" role="img" aria-label="Revenue over time">
-      {[0, 1, 2, 3, 4].map((i) => {
-        const y = pad.t + (i / 4) * (H - pad.t - pad.b);
-        return <line key={i} x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="currentColor" opacity=".08" />;
-      })}
-      <polyline fill="none" stroke="#e8473f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={points} />
-      {data.map((d, i) => {
-        const x = pad.l + (i / Math.max(1, data.length - 1)) * (W - pad.l - pad.r);
-        const y = H - pad.b - (Number(d[dataKey] || 0) / max) * (H - pad.t - pad.b);
-        return <circle key={i} cx={x} cy={y} r="3" fill="#e8473f" />;
-      })}
-      {data.length ? <text x={pad.l} y={H - 8} fontSize="10" fill="currentColor" opacity=".55">{data[0].label}</text> : null}
-      {data.length > 1 ? <text x={W - pad.r} y={H - 8} textAnchor="end" fontSize="10" fill="currentColor" opacity=".55">{data[data.length - 1].label}</text> : null}
-      <text x={W - pad.r} y={18} textAnchor="end" fontSize="10" fill="currentColor" opacity=".55">Max ₹{Math.round(max).toLocaleString("en-IN")}</text>
-    </svg>
+    <div style={{ width: "100%", overflowX: "auto" }}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height="330"
+        role="img"
+        aria-label="Interactive total revenue over time"
+        style={{ minWidth: 620, display: "block" }}
+      >
+        <defs>
+          <linearGradient id="revenueAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#e8473f" stopOpacity=".24" />
+            <stop offset="100%" stopColor="#e8473f" stopOpacity=".02" />
+          </linearGradient>
+        </defs>
+
+        {tickValues.map((value, i) => {
+          const y = getY(value);
+          return (
+            <g key={`grid-${i}`}>
+              <line
+                x1={pad.l}
+                x2={W - pad.r}
+                y1={y}
+                y2={y}
+                stroke="currentColor"
+                opacity=".09"
+              />
+              <text
+                x={pad.l - 10}
+                y={y + 4}
+                textAnchor="end"
+                fontSize="11"
+                fill="currentColor"
+                opacity=".58"
+              >
+                {formatAxisValue(value)}
+              </text>
+            </g>
+          );
+        })}
+
+        <line
+          x1={pad.l}
+          x2={pad.l}
+          y1={pad.t}
+          y2={H - pad.b}
+          stroke="currentColor"
+          opacity=".12"
+        />
+
+        <line
+          x1={pad.l}
+          x2={W - pad.r}
+          y1={H - pad.b}
+          y2={H - pad.b}
+          stroke="currentColor"
+          opacity=".12"
+        />
+
+        {data.length ? (
+          <polygon
+            points={areaPoints}
+            fill="url(#revenueAreaGradient)"
+          />
+        ) : null}
+
+        {data.length > 1 ? (
+          <polyline
+            fill="none"
+            stroke="#e8473f"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={linePoints}
+          />
+        ) : null}
+
+        {data.map((item, index) => {
+          const x = getX(index);
+          const y = getY(item[dataKey]);
+          const selected = selectedIndex === index;
+
+          return (
+            <g
+              key={`${item.label}-${index}`}
+              onClick={() => onPointClick?.(item, index)}
+              style={{ cursor: onPointClick ? "pointer" : "default" }}
+            >
+              <circle
+                cx={x}
+                cy={y}
+                r={selected ? 7 : 4.5}
+                fill="#e8473f"
+                stroke="var(--canvas, #fff)"
+                strokeWidth={selected ? 3 : 2}
+              />
+              <title>
+                {`${item.label}: ${fmtINR0(item[dataKey])}`}
+              </title>
+            </g>
+          );
+        })}
+
+        {labelIndexes.map((index) => {
+          const item = data[index];
+          if (!item) return null;
+
+          return (
+            <text
+              key={`label-${index}`}
+              x={getX(index)}
+              y={H - 18}
+              textAnchor={
+                index === 0
+                  ? "start"
+                  : index === data.length - 1
+                    ? "end"
+                    : "middle"
+              }
+              fontSize="11"
+              fill="currentColor"
+              opacity=".62"
+            >
+              {item.label}
+            </text>
+          );
+        })}
+
+        <text
+          x={pad.l}
+          y={16}
+          fontSize="11"
+          fontWeight="700"
+          fill="currentColor"
+          opacity=".55"
+        >
+          Revenue (₹)
+        </text>
+      </svg>
+    </div>
   );
+}
+
+function aggregateRevenueSeries(rows, grain) {
+  const source = Array.isArray(rows) ? rows : [];
+  if (!source.length) return [];
+
+  if (grain === "daily") {
+    return source;
+  }
+
+  const groups = new Map();
+
+  source.forEach((row, index) => {
+    const date = row.date
+      ? new Date(row.date)
+      : new Date();
+
+    let key;
+    let label;
+
+    if (grain === "monthly") {
+      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      label = date.toLocaleDateString("en-IN", {
+        month: "short",
+        year: "numeric"
+      });
+    } else {
+      const weekStart = new Date(date);
+      weekStart.setHours(0, 0, 0, 0);
+
+      const day = weekStart.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      weekStart.setDate(weekStart.getDate() + diffToMonday);
+
+      key = weekStart.toISOString().slice(0, 10);
+      label = weekStart.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short"
+      });
+    }
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        label,
+        revenue: 0,
+        courseRevenue: 0,
+        subscriptionRevenue: 0,
+        signups: 0,
+        date: date.toISOString()
+      });
+    }
+
+    const group = groups.get(key);
+    group.revenue += Number(row.revenue || 0);
+    group.courseRevenue += Number(row.courseRevenue || 0);
+    group.subscriptionRevenue += Number(row.subscriptionRevenue || 0);
+    group.signups += Number(row.signups || 0);
+
+    if (index === source.length - 1) {
+      group.lastDate = row.date;
+    }
+  });
+
+  return Array.from(groups.values());
 }
 
 function BackendAreaChart({ data }) {
@@ -523,6 +856,7 @@ function useBackendDashboard(days) {
     students: [],
     members: [],
     purchases: [],
+    subscriptions: [],
     notifications: []
   });
 
@@ -533,16 +867,35 @@ function useBackendDashboard(days) {
     }
 
     setState((prev) => ({ ...prev, loading: true, error: "" }));
-    const [content, courses, students, members, purchases, notifications] = await Promise.all([
+    const [
+      content,
+      courses,
+      students,
+      members,
+      purchases,
+      subscriptions,
+      notifications
+    ] = await Promise.all([
       getCollectionRows("content"),
       getCollectionRows("courses"),
       getCollectionRows("students"),
       getCollectionRows("members"),
       getCollectionRows("coursePurchases"),
+      getCollectionRows("subscriptions"),
       getCollectionRows("notifications")
     ]);
 
-    setState({ loading: false, error: "", content, courses, students, members, purchases, notifications });
+    setState({
+      loading: false,
+      error: "",
+      content,
+      courses,
+      students,
+      members,
+      purchases,
+      subscriptions,
+      notifications
+    });
   }, []);
 
   useEffect(() => {
@@ -591,7 +944,16 @@ function ControlPanel() {
   }, [custom, from, to, rangeId]);
 
   const backend = useBackendDashboard(days);
-  const { content, courses, students, members, purchases, notifications, loading } = backend;
+  const {
+    content,
+    courses,
+    students,
+    members,
+    purchases,
+    subscriptions,
+    notifications,
+    loading
+  } = backend;
 
   useEffect(() => {
     const h = document.querySelector(".topbar h1");
@@ -616,10 +978,17 @@ function ControlPanel() {
     [purchases]
   );
 
-  const allPeople = useMemo(() => {
-    const source = students.length ? students : members;
-    return source;
-  }, [students, members]);
+  /*
+     Members count must come from the members collection.
+     Students is a different dataset and must not replace members,
+     otherwise the dashboard count can become incorrect.
+  */
+  const uniqueMembers = useMemo(
+    () => uniqueMembersByIdentity(members),
+    [members]
+  );
+
+  const allPeople = uniqueMembers;
 
   const periodStart = useMemo(() => Date.now() - days * 86400000, [days]);
   const previousPeriodStart = useMemo(() => periodStart - days * 86400000, [periodStart, days]);
@@ -630,11 +999,114 @@ function ControlPanel() {
     return t >= previousPeriodStart && t < periodStart;
   };
 
-  const memberCount = allPeople.length;
-  const revenue = paidPurchases.reduce((sum, p) => sum + firstNumber(p.amount, p.totalAmount, p.price), 0);
-  const currentRevenue = paidPurchases.filter((p) => inCurrentPeriod(p.paidAt || p.createdAt)).reduce((sum, p) => sum + firstNumber(p.amount, p.totalAmount, p.price), 0);
-  const previousRevenue = paidPurchases.filter((p) => inPreviousPeriod(p.paidAt || p.createdAt)).reduce((sum, p) => sum + firstNumber(p.amount, p.totalAmount, p.price), 0);
-  const revenueDelta = previousRevenue > 0 ? Math.round(((currentRevenue - previousRevenue) / previousRevenue) * 100) : null;
+  const memberCount = uniqueMembers.length;
+
+  const courseRevenue = paidPurchases.reduce(
+    (sum, purchase) =>
+      sum + firstNumber(
+        purchase.amount,
+        purchase.totalAmount,
+        purchase.price
+      ),
+    0
+  );
+
+  const paidSubscriptions = subscriptions.filter(isSuccessfulSubscription);
+
+  const subscriptionRevenue = paidSubscriptions.reduce(
+    (sum, subscription) =>
+      sum + getSubscriptionAmount(subscription),
+    0
+  );
+
+  const revenue = courseRevenue + subscriptionRevenue;
+
+  const currentCourseRevenue = paidPurchases
+    .filter((purchase) =>
+      inCurrentPeriod(purchase.paidAt || purchase.createdAt)
+    )
+    .reduce(
+      (sum, purchase) =>
+        sum + firstNumber(
+          purchase.amount,
+          purchase.totalAmount,
+          purchase.price
+        ),
+      0
+    );
+
+  const previousCourseRevenue = paidPurchases
+    .filter((purchase) =>
+      inPreviousPeriod(purchase.paidAt || purchase.createdAt)
+    )
+    .reduce(
+      (sum, purchase) =>
+        sum + firstNumber(
+          purchase.amount,
+          purchase.totalAmount,
+          purchase.price
+        ),
+      0
+    );
+
+  const currentSubscriptionRevenue = paidSubscriptions
+    .filter((subscription) =>
+      inCurrentPeriod(getSubscriptionRevenueDate(subscription))
+    )
+    .reduce(
+      (sum, subscription) =>
+        sum + getSubscriptionAmount(subscription),
+      0
+    );
+
+  const previousSubscriptionRevenue = paidSubscriptions
+    .filter((subscription) =>
+      inPreviousPeriod(getSubscriptionRevenueDate(subscription))
+    )
+    .reduce(
+      (sum, subscription) =>
+        sum + getSubscriptionAmount(subscription),
+      0
+    );
+
+  const currentRevenue =
+    currentCourseRevenue + currentSubscriptionRevenue;
+
+  const previousRevenue =
+    previousCourseRevenue + previousSubscriptionRevenue;
+
+  const revenueDelta =
+    previousRevenue > 0
+      ? Math.round(
+          ((currentRevenue - previousRevenue) / previousRevenue) * 100
+        )
+      : null;
+
+  const activeSubscriptionCount = subscriptions.filter(
+    (subscription) => getSubscriptionStatus(subscription) === "active"
+  ).length;
+
+  const cancelledSubscriptionCount = subscriptions.filter(
+    (subscription) => getSubscriptionStatus(subscription) === "cancelled"
+  ).length;
+
+  const haltedSubscriptionCount = subscriptions.filter(
+    (subscription) => getSubscriptionStatus(subscription) === "halted"
+  ).length;
+
+  const activeMemberCount = uniqueMembers.filter(
+    (member) =>
+      !["inactive", "deactivated", "disabled", "blocked", "suspended"].includes(
+        String(member.status || "").trim().toLowerCase()
+      )
+  ).length;
+
+  const deactivatedMemberCount = uniqueMembers.filter(
+    (member) =>
+      ["deactivated", "disabled", "blocked", "suspended"].includes(
+        String(member.status || "").trim().toLowerCase()
+      )
+  ).length;
 
   const currentSignups = allPeople.filter((p) => inCurrentPeriod(getCreatedValue(p))).length;
   const previousSignups = allPeople.filter((p) => inPreviousPeriod(getCreatedValue(p))).length;
@@ -647,28 +1119,69 @@ function ControlPanel() {
 
   const dateSeries = useMemo(() => {
     const rows = [];
-    const count = Math.min(days, 60);
+    const count = Math.max(2, days);
     const step = 86400000;
     for (let i = count - 1; i >= 0; i -= 1) {
       const start = new Date(Date.now() - i * step);
       start.setHours(0, 0, 0, 0);
       const end = new Date(start.getTime() + step);
-      const revenueValue = paidPurchases.reduce((sum, p) => {
-        const t = safeTimestamp(p.paidAt || p.createdAt);
-        return t >= start.getTime() && t < end.getTime() ? sum + firstNumber(p.amount, p.totalAmount, p.price) : sum;
+      const courseRevenueValue = paidPurchases.reduce((sum, purchase) => {
+        const t = safeTimestamp(
+          purchase.paidAt || purchase.createdAt
+        );
+
+        return t >= start.getTime() && t < end.getTime()
+          ? sum + firstNumber(
+              purchase.amount,
+              purchase.totalAmount,
+              purchase.price
+            )
+          : sum;
       }, 0);
-      const signupValue = allPeople.filter((p) => {
-        const t = safeTimestamp(getCreatedValue(p));
+
+      const subscriptionRevenueValue = paidSubscriptions.reduce(
+        (sum, subscription) => {
+          const t = safeTimestamp(
+            getSubscriptionRevenueDate(subscription)
+          );
+
+          return t >= start.getTime() && t < end.getTime()
+            ? sum + getSubscriptionAmount(subscription)
+            : sum;
+        },
+        0
+      );
+
+      const signupValue = uniqueMembers.filter((member) => {
+        const t = safeTimestamp(getCreatedValue(member));
         return t >= start.getTime() && t < end.getTime();
       }).length;
+
       rows.push({
-        label: start.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
-        revenue: revenueValue,
+        label: start.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short"
+        }),
+        date: start.toISOString(),
+        revenue: courseRevenueValue + subscriptionRevenueValue,
+        courseRevenue: courseRevenueValue,
+        subscriptionRevenue: subscriptionRevenueValue,
         signups: signupValue
       });
     }
     return rows;
-  }, [days, paidPurchases, allPeople]);
+  }, [days, paidPurchases, paidSubscriptions, uniqueMembers]);
+
+  const revenueChartData = useMemo(
+    () => aggregateRevenueSeries(dateSeries, grain),
+    [dateSeries, grain]
+  );
+
+  const [selectedRevenuePoint, setSelectedRevenuePoint] = useState(null);
+
+  useEffect(() => {
+    setSelectedRevenuePoint(null);
+  }, [grain, days]);
 
   const enrollByCourse = useMemo(() => {
     const map = new Map();
@@ -697,16 +1210,7 @@ function ControlPanel() {
     return Array.from(map.entries()).map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value })).sort((a, b) => b.value - a.value).slice(0, 6);
   }, [purchases]);
 
-  const trafficSources = useMemo(() => {
-    const map = new Map();
-    allPeople.forEach((p) => {
-      const key = String(p.source || p.referralSource || p.utmSource || p.signupSource || "Unknown").trim() || "Unknown";
-      map.set(key, (map.get(key) || 0) + 1);
-    });
-    return Array.from(map.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 6);
-  }, [allPeople]);
-
-  const activity = useMemo(() => {
+const activity = useMemo(() => {
   const rows = [];
 
   publishedContent.forEach((item) => {
@@ -820,10 +1324,7 @@ function ControlPanel() {
   paidPurchases,
   members
 ]);
-
-  const studentSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
-  const revenueSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
-  const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
+const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
 
   const rangeButtons = [
     { id: "7d", label: "7D" },
@@ -877,6 +1378,7 @@ function ControlPanel() {
                     content,
                     courses,
                     purchases,
+                    subscriptions,
                     notifications
                   },
                   push
@@ -902,74 +1404,413 @@ function ControlPanel() {
         <div className="cp-layout" style={{ marginTop: 18 }}>
           <div style={{ minWidth: 0 }}>
             <div className="metric-grid">
-              <MetricCard icon="users" label="Members" value={loading ? "—" : memberCount.toLocaleString("en-IN")} spark={studentSpark} sparkKey="signups" sparkColor="#2ead4b" />
-              <MetricCard icon="rupee" label="Total revenue" value={loading ? "—" : fmtINR0(revenue)} delta={revenueDelta} spark={revenueSpark.map((d) => ({ ...d, gross: d.revenue }))} sparkKey="gross" sparkColor="#e8473f" />
-              <MetricCard icon="courses" label="Active courses" value={loading ? "—" : publishedCourses.length.toLocaleString("en-IN")} />
-              <MetricCard icon="upload" label="Published content" value={loading ? "—" : contentCount.toLocaleString("en-IN")} delta={contentDelta} />
-              <MetricCard icon="users" label={`New signups (${days}d)`} value={loading ? "—" : currentSignups.toLocaleString("en-IN")} delta={signupDelta} spark={signupSpark} sparkKey="signups" sparkColor="#2ead4b" />
+              <MetricCard
+                icon="users"
+                label="Members"
+                value={loading ? "—" : memberCount.toLocaleString("en-IN")}
+              />
+
+              <MetricCard
+                icon="revenue"
+                label="Total revenue"
+                value={loading ? "—" : fmtINR0(revenue)}
+                delta={revenueDelta}
+              />
+
+              <MetricCard
+                icon="revenue"
+                label="Course revenue"
+                value={loading ? "—" : fmtINR0(courseRevenue)}
+              />
+
+              <MetricCard
+                icon="subscription"
+                label="Subscription revenue"
+                value={loading ? "—" : fmtINR0(subscriptionRevenue)}
+              />
+
+              <MetricCard
+                icon="users"
+                label="Active members"
+                value={loading ? "—" : activeMemberCount.toLocaleString("en-IN")}
+              />
+
+              <MetricCard
+                icon="courses"
+                label="Active subscriptions"
+                value={loading ? "—" : activeSubscriptionCount.toLocaleString("en-IN")}
+              />
+
+              <MetricCard
+                icon="courses"
+                label="Cancelled subscriptions"
+                value={loading ? "—" : cancelledSubscriptionCount.toLocaleString("en-IN")}
+              />
+
+              <MetricCard
+                icon="courses"
+                label="Active courses"
+                value={loading ? "—" : publishedCourses.length.toLocaleString("en-IN")}
+              />
+
+              <MetricCard
+                icon="content"
+                label="Published content"
+                value={loading ? "—" : contentCount.toLocaleString("en-IN")}
+                delta={contentDelta}
+              />
+
+              <MetricCard
+                icon="users"
+                label={`New signups (${days}d)`}
+                value={loading ? "—" : currentSignups.toLocaleString("en-IN")}
+                delta={signupDelta}
+              />
             </div>
 
             <div className="chart-grid">
               <div className="chart-card span2">
                 <div className="chart-head">
                   <div className="ch-title">
-                    <h3>Revenue over time</h3>
-                    <span className="ch-sub">Real paid purchases · last {days} days</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--primary-pale, #fde7e1)",
+                          color: "var(--primary, #e8473f)"
+                        }}
+                      >
+                        {MIcon ? <MIcon name="rupee" size={17} /> : null}
+                      </span>
+                      <div>
+                        <h3>Total revenue over time</h3>
+                        <span className="ch-sub">
+                          All recorded course + subscription revenue · {grain}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
                   <div className="ch-right">
-                    <div className="legend"><span className="li"><span className="sw" style={{ background: "#e8473f" }} />Paid revenue</span></div>
                     <div className="seg">
-                      <button className={grain === "daily" ? "on" : ""} onClick={() => setGrain("daily")}>Daily</button>
-                      <button className={grain === "weekly" ? "on" : ""} onClick={() => setGrain("weekly")} disabled={days < 14}>Weekly</button>
-                      <button className={grain === "monthly" ? "on" : ""} onClick={() => setGrain("monthly")} disabled={days < 60}>Monthly</button>
+                      {[
+                        { id: "daily", label: "Daily" },
+                        { id: "weekly", label: "Weekly" },
+                        { id: "monthly", label: "Monthly" }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={grain === item.id ? "on" : ""}
+                          onClick={() => setGrain(item.id)}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
-                <BackendLineChart data={dateSeries} dataKey="revenue" />
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    margin: "8px 0 0",
+                    fontSize: 11,
+                    opacity: 0.62
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "#e8473f",
+                      display: "inline-block"
+                    }}
+                  />
+                  Click any point to see the revenue for that period.
+                </div>
+
+                <BackendLineChart
+                  data={revenueChartData}
+                  dataKey="revenue"
+                  selectedIndex={selectedRevenuePoint?.index}
+                  onPointClick={(item, index) =>
+                    setSelectedRevenuePoint({ item, index })
+                  }
+                />
+
+                {selectedRevenuePoint?.item ? (
+                  <div
+                    style={{
+                      marginTop: -4,
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--line, #e7e7e7)",
+                      background: "var(--surface-2, #fafafa)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap"
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 11, opacity: 0.58 }}>
+                        Selected period
+                      </div>
+                      <div style={{ fontWeight: 800, marginTop: 3 }}>
+                        {selectedRevenuePoint.item.label}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+                      <div>
+                        <div style={{ fontSize: 10, opacity: 0.58 }}>
+                          Total
+                        </div>
+                        <b>{fmtINR0(selectedRevenuePoint.item.revenue)}</b>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, opacity: 0.58 }}>
+                          Courses
+                        </div>
+                        <b>{fmtINR0(selectedRevenuePoint.item.courseRevenue)}</b>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, opacity: 0.58 }}>
+                          Subscriptions
+                        </div>
+                        <b>{fmtINR0(selectedRevenuePoint.item.subscriptionRevenue)}</b>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
-
-            <div className="chart-grid two">
+<div className="chart-grid two">
               <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>Enrollments by course</h3><span className="ch-sub">Paid course purchases</span></div></div>
+                <div className="chart-head">
+                  <div className="ch-title">
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--primary-pale, #fde7e1)",
+                          color: "var(--primary, #e8473f)"
+                        }}
+                      >
+                        {MIcon ? <MIcon name="courses" size={17} /> : null}
+                      </span>
+                      <div>
+                        <h3>Enrollments by course</h3>
+                        <span className="ch-sub">Successful paid course purchases</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <BackendBarChart data={enrollByCourse} />
               </div>
               <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>Published content</h3><span className="ch-sub">By category</span></div></div>
+                <div className="chart-head">
+                  <div className="ch-title">
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--primary-pale, #fde7e1)",
+                          color: "var(--primary, #e8473f)"
+                        }}
+                      >
+                        {MIcon ? <MIcon name="upload" size={17} /> : null}
+                      </span>
+                      <div>
+                        <h3>Published content</h3>
+                        <span className="ch-sub">Published content grouped by category</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <BackendDonutChart data={contentByCategory} />
               </div>
             </div>
 
             <div className="chart-grid two">
               <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>Purchase status</h3><span className="ch-sub">From coursePurchases</span></div></div>
+                <div className="chart-head">
+                  <div className="ch-title">
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--primary-pale, #fde7e1)",
+                          color: "var(--primary, #e8473f)"
+                        }}
+                      >
+                        {MIcon ? <MIcon name="rupee" size={17} /> : null}
+                      </span>
+                      <div>
+                        <h3>Purchase status</h3>
+                        <span className="ch-sub">Course purchase payment status</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <BackendStatusChart data={paymentStatus} />
               </div>
-              <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>Traffic sources</h3><span className="ch-sub">Backend profile source fields</span></div></div>
-                <BackendBarChart data={trafficSources} />
-              </div>
-            </div>
+</div>
 
             <div className="chart-grid two">
               <div className="chart-card">
-                <div className="chart-head"><div className="ch-title"><h3>New Member per day</h3><span className="ch-sub">Last {Math.min(days, 60)} days</span></div></div>
+                <div className="chart-head">
+                  <div className="ch-title">
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--primary-pale, #fde7e1)",
+                          color: "var(--primary, #e8473f)"
+                        }}
+                      >
+                        {MIcon ? <MIcon name="users" size={17} /> : null}
+                      </span>
+                      <div>
+                        <h3>New members per day</h3>
+                        <span className="ch-sub">New unique members by signup date</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <BackendAreaChart data={dateSeries} />
               </div>
               <div className="chart-card">
                 <div className="chart-head">
                   <div className="ch-title">
-                    <h3>Data summary</h3>
-                    <span className="ch-sub">Live records currently available in Firestore</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "var(--primary-pale, #fde7e1)",
+                          color: "var(--primary, #e8473f)"
+                        }}
+                      >
+                        {MIcon ? <MIcon name="dashboard" size={17} /> : null}
+                      </span>
+                      <div>
+                        <h3>Business summary</h3>
+                        <span className="ch-sub">Key business totals and revenue</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
                   {[
-                    { icon: "upload", label: "Published content", value: publishedContent.length, meta: "Published", tone: "#2ead4b" },
-                    { icon: "courses", label: "Published courses", value: publishedCourses.length, meta: "Live courses", tone: "#3977ff" },
-                    { icon: "rupee", label: "Paid purchases", value: paidPurchases.length, meta: "Successful payments", tone: "#e8473f" },
-                    { icon: "send", label: "Notifications", value: notifications.length, meta: "Created / sent", tone: "#8b5cf6" }
+                    {
+                      icon: "users",
+                      label: "Total members",
+                      value: memberCount,
+                      meta: "Unique member records",
+                      tone: "#3977ff"
+                    },
+                    {
+                      icon: "users",
+                      label: "Active members",
+                      value: activeMemberCount,
+                      meta: "Currently active",
+                      tone: "#2ead4b"
+                    },
+                    {
+                      icon: "courses",
+                      label: "Active subscriptions",
+                      value: activeSubscriptionCount,
+                      meta: "Razorpay status active",
+                      tone: "#2ead4b"
+                    },
+                    {
+                      icon: "courses",
+                      label: "Cancelled subscriptions",
+                      value: cancelledSubscriptionCount,
+                      meta: "Cancelled subscriptions",
+                      tone: "#e8473f"
+                    },
+                    {
+                      icon: "rupee",
+                      label: "Course revenue",
+                      value: courseRevenue,
+                      meta: "Successful course purchases",
+                      tone: "#e8473f",
+                      isMoney: true
+                    },
+                    {
+                      icon: "rupee",
+                      label: "Subscription revenue",
+                      value: subscriptionRevenue,
+                      meta: "Recorded subscription amounts",
+                      tone: "#2ead4b",
+                      isMoney: true
+                    },
+                    {
+                      icon: "rupee",
+                      label: "Total revenue",
+                      value: revenue,
+                      meta: "Courses + subscriptions",
+                      tone: "#e8473f",
+                      isMoney: true
+                    },
+                    {
+                      icon: "upload",
+                      label: "Published content",
+                      value: publishedContent.length,
+                      meta: "Published",
+                      tone: "#2ead4b"
+                    },
+                    {
+                      icon: "courses",
+                      label: "Published courses",
+                      value: publishedCourses.length,
+                      meta: "Live courses",
+                      tone: "#3977ff"
+                    },
+                    {
+                      icon: "rupee",
+                      label: "Paid course sales",
+                      value: paidPurchases.length,
+                      meta: "Successful payments",
+                      tone: "#e8473f"
+                    }
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -1008,8 +1849,12 @@ function ControlPanel() {
                       </div>
 
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{item.value.toLocaleString("en-IN")}</div>
-                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: item.tone }}>FIRESTORE</div>
+                        <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>
+                          {item.isMoney
+                            ? fmtINR0(item.value)
+                            : Number(item.value || 0).toLocaleString("en-IN")}
+                        </div>
+                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: item.tone }}>LIVE DATA</div>
                       </div>
                     </div>
                   ))}
@@ -1113,6 +1958,7 @@ function exportExcel(dataSets, push) {
       ["Content", (dataSets.content || []).length],
       ["Courses", (dataSets.courses || []).length],
       ["Purchases", (dataSets.purchases || []).length],
+      ["Subscriptions", (dataSets.subscriptions || []).length],
       ["Notifications", (dataSets.notifications || []).length]
     ];
 
@@ -1196,6 +2042,59 @@ function exportExcel(dataSets, push) {
     const purchaseSheet = makeSheet(purchaseRows, [28, 28, 34, 16, 36, 16, 32, 32, 18]);
     XLSX.utils.book_append_sheet(workbook, purchaseSheet, "Purchases");
 
+    const subscriptionRows = [[
+      "ID",
+      "Member ID",
+      "Customer",
+      "Email",
+      "Plan",
+      "Amount",
+      "Status",
+      "Razorpay Subscription ID",
+      "Start Date",
+      "Next Billing Date",
+      "Created Date"
+    ]];
+
+    (dataSets.subscriptions || []).forEach((item) => {
+      subscriptionRows.push([
+        item?.id || "",
+        item?.memberId || item?.uid || item?.userId || "",
+        item?.name || item?.customerName || item?.userName || "",
+        item?.email || item?.customerEmail || "",
+        item?.plan || item?.planName || item?.planId || "",
+        getSubscriptionAmount(item),
+        item?.status || item?.razorpayStatus || "",
+        item?.razorpaySubscriptionId || item?.subscriptionId || "",
+        displayDate(
+          item?.subscriptionStartDate ||
+          item?.startDate ||
+          item?.createdAt
+        ),
+        displayDate(
+          item?.nextBillingDate ||
+          item?.nextBilling
+        ),
+        displayDate(item?.createdAt || item?.updatedAt)
+      ]);
+    });
+
+    const subscriptionSheet = makeSheet(
+      subscriptionRows,
+      [28, 28, 28, 34, 24, 16, 18, 34, 18, 20, 18]
+    );
+
+    if (subscriptionRows.length > 1) {
+      subscriptionSheet["F2"] &&
+        (subscriptionSheet["F2"].z = "₹#,##0.00");
+    }
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      subscriptionSheet,
+      "Subscriptions"
+    );
+
     const notificationRows = [[
       "ID", "Title", "Status", "Created/Sent Date", "Message"
     ]];
@@ -1271,6 +2170,28 @@ function exportExcel(dataSets, push) {
       details: item?.razorpayOrderId || item?.orderId || ""
     }));
 
+    (dataSets.subscriptions || []).forEach((item) => addMasterRow("Subscriptions", item, {
+      nameOrTitle:
+        item?.name ||
+        item?.customerName ||
+        item?.userName ||
+        item?.email ||
+        "Subscription",
+      email: item?.email || item?.customerEmail || "",
+      status: item?.status || item?.razorpayStatus || "",
+      amount: getSubscriptionAmount(item),
+      paymentId: item?.razorpayPaymentId || item?.paymentId || "",
+      date: displayDate(
+        getSubscriptionRevenueDate(item)
+      ),
+      details:
+        item?.plan ||
+        item?.planName ||
+        item?.planId ||
+        item?.razorpaySubscriptionId ||
+        ""
+    }));
+
     (dataSets.notifications || []).forEach((item) => addMasterRow("Notifications", item, {
       nameOrTitle: item?.title || item?.name || "Notification",
       status: item?.status || "",
@@ -1300,6 +2221,7 @@ function exportExcel(dataSets, push) {
       (dataSets.content || []).length +
       (dataSets.courses || []).length +
       (dataSets.purchases || []).length +
+      (dataSets.subscriptions || []).length +
       (dataSets.notifications || []).length;
 
     push(`Exported ${totalRecords} records to Excel`);

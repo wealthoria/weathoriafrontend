@@ -328,13 +328,11 @@ function Shell({
 
         <div className="sb-brand">
 
-          <img
-            src="assets/logo-mark.png"
-            alt=""
-            style={{
-              height: 28
-            }}
-          />
+        <img
+  src="/assets/logo-mark.png"
+  alt="Wealthoria"
+  className="sb-logo"
+/>
 
           <span className="w">
             Wealthoria

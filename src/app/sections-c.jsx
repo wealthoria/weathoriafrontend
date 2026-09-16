@@ -313,20 +313,73 @@ useEffect(() => {
 
           (snapshot) => {
 
-            const data =
-              snapshot.docs.map(
-                (doc) => ({
-                  id: doc.id,
-                  ...doc.data()
-                })
-              );
+           const data =
+  snapshot.docs.map(
+    (doc) => ({
+      id: doc.id,
+      ...doc.data()
+    })
+  );
 
-            console.log(
-              "YOUTUBE FIRESTORE DATA:",
-              data
-            );
+/* =========================================================
+   DISPLAY VIDEOS IN ADMIN-SAVED ORDER
+   ========================================================= */
 
-            setVideos(data);
+data.sort((a, b) => {
+  const aOrder = Number(a.displayOrder);
+  const bOrder = Number(b.displayOrder);
+
+  const aHasOrder =
+    Number.isFinite(aOrder) &&
+    aOrder > 0;
+
+  const bHasOrder =
+    Number.isFinite(bOrder) &&
+    bOrder > 0;
+
+  /* Both have displayOrder */
+  if (
+    aHasOrder &&
+    bHasOrder
+  ) {
+    return aOrder - bOrder;
+  }
+
+  /* Videos with order come first */
+  if (aHasOrder) {
+    return -1;
+  }
+
+  if (bHasOrder) {
+    return 1;
+  }
+
+  /* Old videos without displayOrder
+     fall back to createdAt */
+
+  const aTime =
+    a.createdAt?.toDate
+      ? a.createdAt
+          .toDate()
+          .getTime()
+      : 0;
+
+  const bTime =
+    b.createdAt?.toDate
+      ? b.createdAt
+          .toDate()
+          .getTime()
+      : 0;
+
+  return bTime - aTime;
+});
+
+console.log(
+  "YOUTUBE FIRESTORE DATA - ORDERED:",
+  data
+);
+
+setVideos(data);
 
           },
 

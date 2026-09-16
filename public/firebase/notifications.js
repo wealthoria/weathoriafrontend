@@ -51,7 +51,6 @@
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
-
       const existing =
         document.querySelector(
           `script[src="${src}"]`
@@ -90,9 +89,7 @@
         );
       };
 
-      document.head.appendChild(
-        script
-      );
+      document.head.appendChild(script);
     });
   }
 
@@ -102,7 +99,6 @@
   // =========================================================
 
   async function getMessagingInstance() {
-
     if (!window.firebase) {
       throw new Error(
         "Firebase is not loaded."
@@ -113,7 +109,6 @@
       typeof window.firebase.messaging !==
       "function"
     ) {
-
       console.log(
         "📥 Loading Firebase Messaging SDK..."
       );
@@ -141,13 +136,11 @@
   // =========================================================
 
   async function initializeMemberForegroundNotifications() {
-
     console.log(
       "🔔 Initializing foreground notification listener..."
     );
 
     try {
-
       const member =
         getLoggedInMember();
 
@@ -155,7 +148,6 @@
         !member ||
         !member.uid
       ) {
-
         console.warn(
           "⚠️ No logged-in member found."
         );
@@ -163,9 +155,7 @@
         return false;
       }
 
-
       if (!window.firebase) {
-
         console.error(
           "❌ Firebase is not loaded."
         );
@@ -173,11 +163,9 @@
         return false;
       }
 
-
       if (
         !("serviceWorker" in navigator)
       ) {
-
         console.error(
           "❌ Service Worker not supported."
         );
@@ -185,19 +173,15 @@
         return false;
       }
 
-
       const registration =
         await navigator.serviceWorker.ready;
-
 
       const messaging =
         await getMessagingInstance();
 
-
       if (
         window.memberForegroundListenerReady
       ) {
-
         console.log(
           "ℹ️ Foreground listener already exists."
         );
@@ -205,21 +189,17 @@
         return true;
       }
 
-
       messaging.onMessage(
         function (payload) {
-
           console.log(
             "🔔 Foreground notification received:",
             payload
           );
 
-
           const title =
             payload.notification?.title ||
             payload.data?.title ||
             "Wealthoria";
-
 
           const body =
             payload.notification?.body ||
@@ -243,7 +223,6 @@
             )
           );
 
-
           console.log(
             "✅ Dashboard notification event dispatched."
           );
@@ -258,9 +237,7 @@
             Notification.permission ===
               "granted"
           ) {
-
             try {
-
               const notification =
                 new Notification(
                   title,
@@ -271,49 +248,36 @@
                   }
                 );
 
-
               notification.onclick =
                 function () {
-
                   window.focus();
-
                   notification.close();
-
                 };
-
 
               console.log(
                 "✅ Browser notification displayed."
               );
 
             } catch (notificationError) {
-
               console.error(
                 "❌ Could not display browser notification:",
                 notificationError
               );
-
             }
-
           }
-
         }
       );
 
-
       window.memberForegroundListenerReady =
         true;
-
 
       console.log(
         "✅ Foreground notification listener ready."
       );
 
-
       return true;
 
     } catch (error) {
-
       console.error(
         "❌ Foreground notification initialization error:",
         error
@@ -330,7 +294,6 @@
 
   window.enableMemberNotifications =
     async function () {
-
       console.log(
         "🔔 enableMemberNotifications called"
       );
@@ -342,14 +305,12 @@
         // --------------------------------------------------
 
         if (!window.firebase) {
-
           alert(
             "Firebase is not loaded."
           );
 
           return;
         }
-
 
         console.log(
           "Firebase loaded:",
@@ -364,7 +325,6 @@
         if (
           !("Notification" in window)
         ) {
-
           alert(
             "This browser does not support notifications."
           );
@@ -380,7 +340,6 @@
         const member =
           getLoggedInMember();
 
-
         console.log(
           "Logged-in member:",
           member
@@ -394,12 +353,22 @@
         );
 
 
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT require member.token here.
+         *
+         * The FCM token is generated below and then sent
+         * to the backend using member.token.
+         *
+         * The old check required member.token before the
+         * FCM token could even be generated.
+         */
+
         if (
           !member ||
-          !member.uid ||
-          !member.token
+          !member.uid
         ) {
-
           alert(
             "Please login as a member first."
           );
@@ -415,17 +384,14 @@
         const permission =
           await Notification.requestPermission();
 
-
         console.log(
           "Notification permission:",
           permission
         );
 
-
         if (
           permission !== "granted"
         ) {
-
           alert(
             "Notification permission was not granted."
           );
@@ -448,7 +414,6 @@
         if (
           !("serviceWorker" in navigator)
         ) {
-
           alert(
             "Service Worker is not supported."
           );
@@ -456,10 +421,8 @@
           return;
         }
 
-
         const registration =
           await navigator.serviceWorker.ready;
-
 
         console.log(
           "Service worker ready:",
@@ -474,7 +437,6 @@
         const messaging =
           await getMessagingInstance();
 
-
         console.log(
           "✅ Firebase Messaging instance created."
         );
@@ -488,7 +450,6 @@
           "Requesting FCM token..."
         );
 
-
         const fcmToken =
           await messaging.getToken({
             vapidKey:
@@ -498,30 +459,52 @@
               registration
           });
 
-
         if (!fcmToken) {
-
           alert(
             "Could not get FCM token."
+          );
+
+          console.error(
+            "❌ FCM token is empty."
+          );
+
+          return;
+        }
+
+        console.log(
+          "✅ FCM token received successfully."
+        );
+
+        console.log(
+          "FCM token:",
+          fcmToken
+        );
+
+
+        // --------------------------------------------------
+        // 9. Check member authentication token
+        // --------------------------------------------------
+
+        if (!member.token) {
+          console.error(
+            "❌ Member authentication token is missing."
+          );
+
+          alert(
+            "Member login session is missing. Please logout and login again."
           );
 
           return;
         }
 
 
-        console.log(
-          "✅ FCM token received successfully."
-        );
-
-
         // --------------------------------------------------
-        // 9. Save token to backend
+        // 10. Save FCM token to backend
         // --------------------------------------------------
 
         console.log(
-          "Sending token to backend..."
+          "Sending FCM token to backend..."
         );
-
 
         const response =
           await fetch(
@@ -547,8 +530,17 @@
           );
 
 
-        const data =
-          await response.json();
+        let data = {};
+
+        try {
+          data =
+            await response.json();
+        } catch (jsonError) {
+          console.error(
+            "❌ Could not parse backend response:",
+            jsonError
+          );
+        }
 
 
         console.log(
@@ -558,6 +550,13 @@
 
 
         if (!response.ok) {
+          console.error(
+            "❌ Failed to save FCM token.",
+            {
+              status: response.status,
+              response: data
+            }
+          );
 
           alert(
             data.message ||
@@ -573,6 +572,10 @@
         );
 
 
+        // --------------------------------------------------
+        // 11. Success
+        // --------------------------------------------------
+
         alert(
           "Notifications enabled successfully! 🔔"
         );
@@ -584,14 +587,11 @@
           error
         );
 
-
         alert(
           "Unable to enable notifications:\n" +
           error.message
         );
-
       }
-
     };
 
 

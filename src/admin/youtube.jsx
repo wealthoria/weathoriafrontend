@@ -4,12 +4,14 @@
 
 const { useState, useEffect } = React;
 
-
 /* =========================================================
    ADMIN YOUTUBE
-========================================================= */
+   ========================================================= */
 
 function AdminYouTube() {
+  /* =========================================================
+     FORM STATE
+  ========================================================= */
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -18,20 +20,45 @@ function AdminYouTube() {
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [duration, setDuration] = useState("");
 
-  const [videos, setVideos] = useState([]);
+  /* =========================================================
+     VIDEO DATA
+  ========================================================= */
 
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [previewVideo, setPreviewVideo] = useState(null);
+  /* =========================================================
+     EDIT
+  ========================================================= */
 
+  const [editingVideo, setEditingVideo] = useState(null);
 
   /* =========================================================
-     GET YOUTUBE VIDEO ID
+     PREVIEW
+  ========================================================= */
+
+  const [previewVideo, setPreviewVideo] = useState(null);
+
+  /* =========================================================
+     DESCRIPTION
+  ========================================================= */
+
+  const [expandedDescriptions, setExpandedDescriptions] =
+    useState({});
+
+  /* =========================================================
+     DRAG / DROP
+  ========================================================= */
+
+  const [draggedVideoId, setDraggedVideoId] = useState(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
+  /* =========================================================
+     GET YOUTUBE ID
   ========================================================= */
 
   const getYoutubeId = (url) => {
-
     if (!url) return null;
 
     const patterns = [
@@ -42,60 +69,47 @@ function AdminYouTube() {
     ];
 
     for (const pattern of patterns) {
-
-      const match = url.match(pattern);
+      const match = String(url).match(pattern);
 
       if (match) {
         return match[1];
       }
-
     }
 
     return null;
   };
 
-
   /* =========================================================
-     GET AUTOMATIC YOUTUBE THUMBNAIL
+     GET YOUTUBE THUMBNAIL
   ========================================================= */
 
   const getYoutubeThumbnail = (url) => {
-
     const id = getYoutubeId(url);
 
-    if (!id) return "";
+    if (!id) {
+      return "";
+    }
 
     return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
   };
 
-
   /* =========================================================
-     LOAD VIDEOS FROM FIRESTORE
+     LOAD VIDEOS
   ========================================================= */
 
   useEffect(() => {
-
     if (!window.db) {
-
       console.error(
         "Firestore is not available"
       );
 
       return;
-
     }
-
-    console.log(
-      "Loading youtube_videos..."
-    );
-
 
     const unsubscribe = window.db
       .collection("youtube_videos")
       .onSnapshot(
-
         (snapshot) => {
-
           const data = snapshot.docs.map(
             (doc) => ({
               id: doc.id,
@@ -103,500 +117,959 @@ function AdminYouTube() {
             })
           );
 
+          /* ---------------------------------------------
+             SORT BY DISPLAY ORDER
+          --------------------------------------------- */
 
           data.sort((a, b) => {
+            const aOrder =
+              Number(a.displayOrder);
+
+            const bOrder =
+              Number(b.displayOrder);
+
+            const aHasOrder =
+              Number.isFinite(aOrder) &&
+              aOrder > 0;
+
+            const bHasOrder =
+              Number.isFinite(bOrder) &&
+              bOrder > 0;
+
+            if (
+              aHasOrder &&
+              bHasOrder
+            ) {
+              return aOrder - bOrder;
+            }
+
+            if (aHasOrder) {
+              return -1;
+            }
+
+            if (bHasOrder) {
+              return 1;
+            }
 
             const aTime =
               a.createdAt?.toDate
-                ? a.createdAt.toDate().getTime()
+                ? a.createdAt
+                    .toDate()
+                    .getTime()
                 : 0;
 
             const bTime =
               b.createdAt?.toDate
-                ? b.createdAt.toDate().getTime()
+                ? b.createdAt
+                    .toDate()
+                    .getTime()
                 : 0;
 
             return bTime - aTime;
-
           });
 
+          /* ---------------------------------------------
+             NORMALIZE ORDER
+          --------------------------------------------- */
 
-          console.log(
-            "YouTube videos loaded:",
-            data
+          const normalized = data.map(
+            (video, index) => ({
+              ...video,
+              displayOrder:
+                Number.isFinite(
+                  Number(video.displayOrder)
+                ) &&
+                Number(video.displayOrder) > 0
+                  ? Number(video.displayOrder)
+                  : index + 1
+            })
           );
 
-
-          setVideos(data);
-
+          setVideos(normalized);
         },
-
         (error) => {
-
           console.error(
             "Error loading YouTube videos:",
             error
           );
 
+          setMessage(
+            "Unable to load YouTube videos."
+          );
         }
-
       );
 
-
     return () => unsubscribe();
-
   }, []);
-
 
   /* =========================================================
      YOUTUBE URL CHANGE
   ========================================================= */
 
   const handleYoutubeUrl = (value) => {
-
     setYoutubeUrl(value);
-
 
     const thumbnail =
       getYoutubeThumbnail(value);
 
-
     if (thumbnail) {
-
       setThumbnailUrl(thumbnail);
-
     }
-
   };
 
-
   /* =========================================================
-     SAVE VIDEO
+     RESET FORM
   ========================================================= */
 
-  const saveVideo = async (e) => {
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setCategory("Fundamentals");
+    setYoutubeUrl("");
+    setThumbnailUrl("");
+    setDuration("");
+    setEditingVideo(null);
+  };
 
-    e.preventDefault();
+  /* =========================================================
+     EDIT VIDEO
+  ========================================================= */
+
+  const editVideo = (video) => {
+    if (!video) {
+      return;
+    }
+
+    console.log(
+      "Editing YouTube video:",
+      video
+    );
+
+    setEditingVideo(video);
+
+    setTitle(
+      video.title || ""
+    );
+
+    setDescription(
+      video.description || ""
+    );
+
+    setCategory(
+      video.category ||
+        "Fundamentals"
+    );
+
+    setYoutubeUrl(
+      video.youtubeUrl || ""
+    );
+
+    setThumbnailUrl(
+      video.thumbnailUrl ||
+        getYoutubeThumbnail(
+          video.youtubeUrl || ""
+        )
+    );
+
+    setDuration(
+      video.duration || ""
+    );
 
     setMessage("");
 
+    /*
+     * Scroll to the edit form.
+     */
+
+    window.setTimeout(() => {
+      const formElement =
+        document.getElementById(
+          "youtube-video-form"
+        );
+
+      if (formElement) {
+        formElement.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    }, 50);
+  };
+
+  /* =========================================================
+     SAVE / UPDATE VIDEO
+  ========================================================= */
+
+  const saveVideo = async (event) => {
+    event.preventDefault();
+
+    setMessage("");
 
     if (!title.trim()) {
-
       setMessage(
-        "Please enter a title."
+        "Please enter a video title."
       );
 
       return;
-
     }
 
-
     if (!youtubeUrl.trim()) {
-
       setMessage(
         "Please enter the YouTube link."
       );
 
       return;
-
     }
-
 
     const youtubeId =
       getYoutubeId(
         youtubeUrl.trim()
       );
 
-
     if (!youtubeId) {
-
       setMessage(
         "Please enter a valid YouTube link."
       );
 
       return;
-
     }
 
-
     try {
-
       setLoading(true);
 
-
-      const automaticThumbnail =
+      const finalThumbnail =
         thumbnailUrl.trim() ||
         `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
 
+      /* =====================================================
+         UPDATE
+      ===================================================== */
 
-      await window.db
-        .collection("youtube_videos")
-        .add({
+      if (editingVideo) {
+        await window.db
+          .collection("youtube_videos")
+          .doc(editingVideo.id)
+          .update({
+            title:
+              title.trim(),
 
-          title:
-            title.trim(),
+            description:
+              description.trim(),
 
-          description:
-            description.trim(),
+            category,
 
-          category,
+            youtubeUrl:
+              youtubeUrl.trim(),
 
-          youtubeUrl:
-            youtubeUrl.trim(),
+            youtubeId,
 
-          youtubeId,
+            thumbnailUrl:
+              finalThumbnail,
 
-          thumbnailUrl:
-            automaticThumbnail,
+            duration:
+              duration.trim(),
 
-          duration:
-            duration.trim(),
+            updatedAt:
+              new Date()
+          });
 
-          published:
-            true,
+        setMessage(
+          "Video updated successfully."
+        );
+      }
 
-          createdAt:
-            new Date()
+      /* =====================================================
+         ADD NEW
+      ===================================================== */
 
-        });
+      else {
+        let nextOrder = 1;
 
+        if (videos.length > 0) {
+          const orders =
+            videos.map(
+              (video, index) =>
+                Number(
+                  video.displayOrder
+                ) || index + 1
+            );
 
-      /* RESET FORM */
+          nextOrder =
+            Math.max(...orders) + 1;
+        }
 
-      setTitle("");
-      setDescription("");
-      setCategory("Fundamentals");
-      setYoutubeUrl("");
-      setThumbnailUrl("");
-      setDuration("");
+        await window.db
+          .collection("youtube_videos")
+          .add({
+            title:
+              title.trim(),
 
+            description:
+              description.trim(),
 
-      setMessage(
-        "Video saved successfully."
-      );
+            category,
 
+            youtubeUrl:
+              youtubeUrl.trim(),
+
+            youtubeId,
+
+            thumbnailUrl:
+              finalThumbnail,
+
+            duration:
+              duration.trim(),
+
+            published:
+              true,
+
+            displayOrder:
+              nextOrder,
+
+            createdAt:
+              new Date()
+          });
+
+        setMessage(
+          "Video added successfully."
+        );
+      }
+
+      resetForm();
+
+      window.setTimeout(() => {
+        setMessage("");
+      }, 3000);
 
     } catch (error) {
-
       console.error(
         "Error saving YouTube video:",
         error
       );
 
-
       setMessage(
         "Error saving video: " +
-        error.message
+          (error.message ||
+            "Unknown error")
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
-
 
   /* =========================================================
      DELETE VIDEO
   ========================================================= */
 
   const deleteVideo = async (id) => {
+    if (!id) {
+      return;
+    }
 
-    const confirmDelete =
+    const confirmed =
       window.confirm(
         "Are you sure you want to delete this video?"
       );
 
-
-    if (!confirmDelete) {
+    if (!confirmed) {
       return;
     }
 
-
     try {
-
       await window.db
         .collection("youtube_videos")
         .doc(id)
         .delete();
 
+      if (
+        editingVideo &&
+        editingVideo.id === id
+      ) {
+        resetForm();
+      }
 
       setMessage(
         "Video deleted successfully."
       );
 
+      window.setTimeout(() => {
+        setMessage("");
+      }, 3000);
 
     } catch (error) {
-
       console.error(
         "Error deleting video:",
         error
       );
 
-
       setMessage(
         "Error deleting video: " +
-        error.message
+          (error.message ||
+            "Unknown error")
       );
-
     }
-
   };
 
-
   /* =========================================================
-     OPEN FULL YOUTUBE VIDEO
+     OPEN YOUTUBE
   ========================================================= */
 
   const openYoutube = (video) => {
-
     if (!video?.youtubeUrl) {
       return;
     }
-
 
     window.open(
       video.youtubeUrl,
       "_blank",
       "noopener,noreferrer"
     );
-
   };
 
+  /* =========================================================
+     DESCRIPTION TOGGLE
+  ========================================================= */
+
+  const toggleDescription = (
+    videoId
+  ) => {
+    setExpandedDescriptions(
+      (previous) => ({
+        ...previous,
+        [videoId]:
+          !previous[videoId]
+      })
+    );
+  };
+
+  /* =========================================================
+     DRAG START
+     ONLY THE HANDLE IS DRAGGABLE
+  ========================================================= */
+
+  const handleDragStart = (
+    event,
+    videoId
+  ) => {
+    if (savingOrder) {
+      event.preventDefault();
+      return;
+    }
+
+    setDraggedVideoId(videoId);
+
+    event.dataTransfer.effectAllowed =
+      "move";
+
+    event.dataTransfer.setData(
+      "text/plain",
+      videoId
+    );
+  };
+
+  /* =========================================================
+     DRAG OVER
+  ========================================================= */
+
+  const handleDragOver = (
+    event
+  ) => {
+    event.preventDefault();
+
+    event.dataTransfer.dropEffect =
+      "move";
+  };
+
+  /* =========================================================
+     DRAG END
+  ========================================================= */
+
+  const handleDragEnd = () => {
+    setDraggedVideoId(null);
+  };
+
+  /* =========================================================
+     DROP
+  ========================================================= */
+
+  const handleDrop = async (
+    event,
+    targetVideoId
+  ) => {
+    event.preventDefault();
+
+    const sourceVideoId =
+      draggedVideoId ||
+      event.dataTransfer.getData(
+        "text/plain"
+      );
+
+    setDraggedVideoId(null);
+
+    if (
+      !sourceVideoId ||
+      !targetVideoId ||
+      sourceVideoId ===
+        targetVideoId
+    ) {
+      return;
+    }
+
+    const oldVideos =
+      [...videos];
+
+    const sourceIndex =
+      oldVideos.findIndex(
+        (video) =>
+          video.id ===
+          sourceVideoId
+      );
+
+    const targetIndex =
+      oldVideos.findIndex(
+        (video) =>
+          video.id ===
+          targetVideoId
+      );
+
+    if (
+      sourceIndex === -1 ||
+      targetIndex === -1
+    ) {
+      return;
+    }
+
+    const reordered =
+      [...oldVideos];
+
+    const [
+      movedVideo
+    ] = reordered.splice(
+      sourceIndex,
+      1
+    );
+
+    reordered.splice(
+      targetIndex,
+      0,
+      movedVideo
+    );
+
+    const orderedVideos =
+      reordered.map(
+        (video, index) => ({
+          ...video,
+          displayOrder:
+            index + 1
+        })
+      );
+
+    /* ---------------------------------------------
+       UPDATE UI
+    --------------------------------------------- */
+
+    setVideos(
+      orderedVideos
+    );
+
+    try {
+      setSavingOrder(true);
+
+      setMessage(
+        "Saving video order..."
+      );
+
+      const batch =
+        window.db.batch();
+
+      orderedVideos.forEach(
+        (video, index) => {
+          const reference =
+            window.db
+              .collection(
+                "youtube_videos"
+              )
+              .doc(video.id);
+
+          batch.update(
+            reference,
+            {
+              displayOrder:
+                index + 1
+            }
+          );
+        }
+      );
+
+      await batch.commit();
+
+      setMessage(
+        "Video order saved successfully."
+      );
+
+      window.setTimeout(() => {
+        setMessage("");
+      }, 2500);
+
+    } catch (error) {
+      console.error(
+        "Error saving video order:",
+        error
+      );
+
+      setVideos(
+        oldVideos
+      );
+
+      setMessage(
+        "Error saving video order: " +
+          (error.message ||
+            "Unknown error")
+      );
+    } finally {
+      setSavingOrder(false);
+    }
+  };
 
   /* =========================================================
      CLOSE PREVIEW
   ========================================================= */
 
   const closePreview = () => {
-
     setPreviewVideo(null);
-
   };
 
+  /* =========================================================
+     CANCEL EDIT
+  ========================================================= */
+
+  const cancelEdit = () => {
+    resetForm();
+    setMessage("");
+  };
 
   /* =========================================================
      RENDER
   ========================================================= */
 
   return (
-
     <div
       style={{
-        maxWidth: "1100px",
+        width: "100%",
+        maxWidth: "1150px",
         margin: "0 auto",
-        paddingBottom: "60px"
+        padding:
+          "10px 0 60px"
       }}
     >
 
-
       {/* =====================================================
-          HEADER
+          PAGE HEADER
       ===================================================== */}
 
       <div
         style={{
-          marginBottom: "30px"
+          marginBottom: "25px"
         }}
       >
-
         <h2
           style={{
             margin: 0,
-            fontSize: "28px"
+            fontSize: "28px",
+            fontWeight: 800,
+            color: "#11201f"
           }}
         >
           YouTube Videos
         </h2>
 
-
         <p
           style={{
+            margin:
+              "7px 0 0",
             color: "#777",
-            marginTop: "8px"
+            fontSize: "14px"
           }}
         >
-          Add and manage videos that appear
-          on the public Wealthoria website.
+          Add, edit, preview and
+          reorder your YouTube
+          videos.
         </p>
-
       </div>
 
-
       {/* =====================================================
-          VIDEO COUNT
+          TOTAL VIDEOS
       ===================================================== */}
 
       <div
         className="card"
         style={{
-          marginBottom: "24px",
+          marginBottom:
+            "24px",
+          padding:
+            "20px 24px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between"
+          justifyContent:
+            "space-between"
         }}
       >
-
         <div>
-
           <div
             style={{
-              fontSize: "13px",
-              color: "#777",
-              marginBottom: "5px"
+              fontSize:
+                "13px",
+              color:
+                "#777",
+              marginBottom:
+                "5px"
             }}
           >
             Total YouTube Videos
           </div>
 
-
           <div
             style={{
-              fontSize: "32px",
-              fontWeight: 800
+              fontSize:
+                "30px",
+              fontWeight:
+                800,
+              color:
+                "#11201f"
             }}
           >
             {videos.length}
           </div>
-
         </div>
-
 
         <div
           style={{
-            width: "52px",
-            height: "52px",
-            borderRadius: "14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#fce8e6",
-            color: "#e8473f",
-            fontSize: "24px",
-            fontWeight: 700
+            width:
+              "52px",
+            height:
+              "52px",
+            borderRadius:
+              "14px",
+            display:
+              "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "center",
+            background:
+              "#fde7e1",
+            color:
+              "#e8473f",
+            fontSize:
+              "23px",
+            fontWeight:
+              700
           }}
         >
           ▶
         </div>
-
       </div>
-
 
       {/* =====================================================
           MESSAGE
       ===================================================== */}
 
       {message && (
-
         <div
-          className="form-alert"
           style={{
-            marginBottom: "20px"
+            marginBottom:
+              "20px",
+            padding:
+              "12px 16px",
+            borderRadius:
+              "10px",
+            background:
+              "#fff4f1",
+            border:
+              "1px solid #f3d0c8",
+            color:
+              "#c53d34",
+            fontSize:
+              "14px",
+            fontWeight:
+              600
           }}
         >
-
           {message}
-
         </div>
-
       )}
 
-
       {/* =====================================================
-          ADD VIDEO
+          ADD / EDIT FORM
       ===================================================== */}
 
       <div
+        id="youtube-video-form"
         className="card"
         style={{
-          marginBottom: "35px"
+          marginBottom:
+            "35px",
+          padding:
+            "24px",
+          scrollMarginTop:
+            "30px",
+          border:
+            editingVideo
+              ? "2px solid #e8473f"
+              : undefined
         }}
       >
 
-        <h3
+        {/* FORM HEADER */}
+
+        <div
           style={{
-            marginTop: 0
+            display:
+              "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "space-between",
+            gap:
+              "15px",
+            marginBottom:
+              "22px"
           }}
         >
-          Add YouTube Video
-        </h3>
+          <div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize:
+                  "20px",
+                fontWeight:
+                  800
+              }}
+            >
+              {editingVideo
+                ? "Edit YouTube Video"
+                : "Add YouTube Video"}
+            </h3>
 
+            {editingVideo && (
+              <p
+                style={{
+                  margin:
+                    "5px 0 0",
+                  color:
+                    "#e8473f",
+                  fontSize:
+                    "13px",
+                  fontWeight:
+                    600
+                }}
+              >
+                Editing:{" "}
+                {editingVideo.title}
+              </p>
+            )}
+          </div>
+
+          {editingVideo && (
+            <button
+              type="button"
+              onClick={
+                cancelEdit
+              }
+              className="btn btn-outline btn-sm"
+              style={{
+                whiteSpace:
+                  "nowrap"
+              }}
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
 
         <form
-          onSubmit={saveVideo}
+          onSubmit={
+            saveVideo
+          }
         >
-
 
           {/* TITLE */}
 
-          <div className="field">
-
+          <div
+            className="field"
+            style={{
+              marginBottom:
+                "16px"
+            }}
+          >
             <label>
               Video Title
             </label>
-
 
             <input
               className="input"
               type="text"
               value={title}
-              onChange={(e) =>
+              onChange={(event) =>
                 setTitle(
-                  e.target.value
+                  event.target.value
                 )
               }
-              placeholder="What is Mutual Fund?"
+              placeholder="Enter video title"
+              disabled={loading}
             />
-
           </div>
-
 
           {/* DESCRIPTION */}
 
-          <div className="field">
-
+          <div
+            className="field"
+            style={{
+              marginBottom:
+                "16px"
+            }}
+          >
             <label>
               Description
             </label>
-
 
             <textarea
               className="input"
               rows="4"
               value={description}
-              onChange={(e) =>
+              onChange={(event) =>
                 setDescription(
-                  e.target.value
+                  event.target.value
                 )
               }
               placeholder="Enter video description"
+              disabled={loading}
             />
-
           </div>
-
 
           {/* CATEGORY */}
 
-          <div className="field">
-
+          <div
+            className="field"
+            style={{
+              marginBottom:
+                "16px"
+            }}
+          >
             <label>
               Category
             </label>
 
-
             <select
               className="input"
               value={category}
-              onChange={(e) =>
+              onChange={(event) =>
                 setCategory(
-                  e.target.value
+                  event.target.value
                 )
               }
+              disabled={loading}
             >
-
               <option value="Fundamentals">
                 Fundamentals
               </option>
@@ -616,260 +1089,351 @@ function AdminYouTube() {
               <option value="Mindset">
                 Mindset
               </option>
-
             </select>
-
           </div>
 
+          {/* YOUTUBE URL */}
 
-          {/* YOUTUBE LINK */}
-
-          <div className="field">
-
+          <div
+            className="field"
+            style={{
+              marginBottom:
+                "16px"
+            }}
+          >
             <label>
               YouTube Link
             </label>
-
 
             <input
               className="input"
               type="url"
               value={youtubeUrl}
-              onChange={(e) =>
+              onChange={(event) =>
                 handleYoutubeUrl(
-                  e.target.value
+                  event.target.value
                 )
               }
               placeholder="https://youtu.be/..."
+              disabled={loading}
             />
-
           </div>
-
 
           {/* THUMBNAIL */}
 
-          <div className="field">
-
+          <div
+            className="field"
+            style={{
+              marginBottom:
+                "16px"
+            }}
+          >
             <label>
-
               Thumbnail URL
-
               <span
                 style={{
-                  color: "#888",
-                  fontWeight: 400,
-                  marginLeft: "8px"
+                  marginLeft:
+                    "8px",
+                  color:
+                    "#888",
+                  fontWeight:
+                    400
                 }}
               >
                 Optional
               </span>
-
             </label>
-
 
             <input
               className="input"
               type="url"
               value={thumbnailUrl}
-              onChange={(e) =>
+              onChange={(event) =>
                 setThumbnailUrl(
-                  e.target.value
+                  event.target.value
                 )
               }
               placeholder="Automatically generated from YouTube"
+              disabled={loading}
             />
-
           </div>
-
 
           {/* DURATION */}
 
-          <div className="field">
-
+          <div
+            className="field"
+            style={{
+              marginBottom:
+                "20px"
+            }}
+          >
             <label>
               Duration
             </label>
-
 
             <input
               className="input"
               type="text"
               value={duration}
-              onChange={(e) =>
+              onChange={(event) =>
                 setDuration(
-                  e.target.value
+                  event.target.value
                 )
               }
               placeholder="12:40"
+              disabled={loading}
             />
-
           </div>
 
-
-          {/* =================================================
-              THUMBNAIL PREVIEW
-          ================================================= */}
+          {/* THUMBNAIL PREVIEW */}
 
           {thumbnailUrl && (
-
             <div
               style={{
-                margin:
-                  "20px 0"
+                marginBottom:
+                  "22px"
               }}
             >
-
-              <p
+              <div
                 style={{
-                  fontWeight: 600,
-                  marginBottom: 8
+                  fontSize:
+                    "13px",
+                  fontWeight:
+                    700,
+                  marginBottom:
+                    "8px"
                 }}
               >
-                Preview
-              </p>
-
+                Thumbnail Preview
+              </div>
 
               <div
                 style={{
-                  position: "relative",
-                  width: "280px",
-                  height: "158px",
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                  background: "#111"
+                  width:
+                    "280px",
+                  height:
+                    "158px",
+                  borderRadius:
+                    "12px",
+                  overflow:
+                    "hidden",
+                  background:
+                    "#111",
+                  position:
+                    "relative"
                 }}
               >
-
                 <img
-                  src={thumbnailUrl}
+                  src={
+                    thumbnailUrl
+                  }
                   alt="Thumbnail preview"
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover"
+                    width:
+                      "100%",
+                    height:
+                      "100%",
+                    objectFit:
+                      "cover",
+                    display:
+                      "block"
                   }}
                 />
 
-
                 <div
                   style={{
-                    position: "absolute",
-                    left: "50%",
-                    top: "50%",
+                    position:
+                      "absolute",
+                    left:
+                      "50%",
+                    top:
+                      "50%",
                     transform:
                       "translate(-50%, -50%)",
-                    width: "50px",
-                    height: "50px",
-                    borderRadius: "50%",
+                    width:
+                      "50px",
+                    height:
+                      "50px",
+                    borderRadius:
+                      "50%",
                     background:
                       "#e8473f",
-                    color: "#fff",
-                    display: "flex",
+                    color:
+                      "#fff",
+                    display:
+                      "flex",
                     alignItems:
                       "center",
                     justifyContent:
                       "center",
-                    fontSize: "20px"
+                    fontSize:
+                      "20px"
                   }}
                 >
                   ▶
                 </div>
-
               </div>
-
             </div>
-
           )}
 
+          {/* SAVE BUTTONS */}
 
-          {/* SAVE */}
-
-          <button
-            className="btn btn-green"
-            type="submit"
-            disabled={loading}
+          <div
+            style={{
+              display:
+                "flex",
+              gap:
+                "10px",
+              alignItems:
+                "center"
+            }}
           >
+            <button
+              className="btn btn-green"
+              type="submit"
+              disabled={
+                loading
+              }
+              style={{
+                minWidth:
+                  "140px"
+              }}
+            >
+              {loading
+                ? "Saving..."
+                : editingVideo
+                  ? "Update Video"
+                  : "Save Video"}
+            </button>
 
-            {loading
-              ? "Saving..."
-              : "Save Video"}
-
-          </button>
-
-
+            {editingVideo && (
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={
+                  cancelEdit
+                }
+                disabled={
+                  loading
+                }
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
-
       </div>
 
-
       {/* =====================================================
-          UPLOADED VIDEOS
+          UPLOADED VIDEOS HEADER
       ===================================================== */}
 
-      <div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent:
-              "space-between",
-            marginBottom: "18px"
-          }}
-        >
-
+      <div
+        style={{
+          display:
+            "flex",
+          alignItems:
+            "center",
+          justifyContent:
+            "space-between",
+          gap:
+            "15px",
+          marginBottom:
+            "18px",
+          flexWrap:
+            "wrap"
+        }}
+      >
+        <div>
           <h3
             style={{
-              margin: 0
+              margin: 0,
+              fontSize:
+                "20px",
+              fontWeight:
+                800
             }}
           >
             Uploaded Videos
           </h3>
 
-
-          <span
-            className="badge badge-soft"
+          <p
+            style={{
+              margin:
+                "5px 0 0",
+              color:
+                "#777",
+              fontSize:
+                "13px"
+            }}
           >
-            {videos.length} videos
-          </span>
-
+            Drag the handle on
+            each card to change
+            the order.
+          </p>
         </div>
 
-
-        {videos.length === 0 ? (
-
+        {savingOrder && (
           <div
-            className="card"
             style={{
-              textAlign: "center",
-              padding: "50px 20px",
-              color: "#777"
+              padding:
+                "7px 12px",
+              borderRadius:
+                "8px",
+              background:
+                "#fff4f1",
+              color:
+                "#e8473f",
+              fontSize:
+                "13px",
+              fontWeight:
+                700
             }}
           >
-
-            No YouTube videos added yet.
-
+            Saving order...
           </div>
+        )}
+      </div>
 
-        ) : (
+      {/* =====================================================
+          VIDEO LIST
+      ===================================================== */}
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "20px"
-            }}
-          >
-
-            {videos.map((video) => {
-
+      {videos.length === 0 ? (
+        <div
+          className="card"
+          style={{
+            textAlign:
+              "center",
+            padding:
+              "55px 20px",
+            color:
+              "#777"
+          }}
+        >
+          No YouTube videos
+          added yet.
+        </div>
+      ) : (
+        <div
+          style={{
+            display:
+              "grid",
+            gridTemplateColumns:
+              "repeat(auto-fill, minmax(300px, 1fr))",
+            gap:
+              "22px",
+            alignItems:
+              "start"
+          }}
+        >
+          {videos.map(
+            (video, index) => {
               const youtubeId =
                 video.youtubeId ||
                 getYoutubeId(
                   video.youtubeUrl
                 );
-
 
               const thumbnail =
                 video.thumbnailUrl ||
@@ -879,22 +1443,51 @@ function AdminYouTube() {
                     : ""
                 );
 
+              const description =
+                video.description ||
+                "No description available.";
+
+              const isExpanded =
+                Boolean(
+                  expandedDescriptions[
+                    video.id
+                  ]
+                );
+
+              const isDragging =
+                draggedVideoId ===
+                video.id;
 
               return (
-
                 <div
-                  className="card"
                   key={video.id}
+                  className="card"
+                  onDragOver={
+                    handleDragOver
+                  }
+                  onDrop={(event) =>
+                    handleDrop(
+                      event,
+                      video.id
+                    )
+                  }
                   style={{
                     padding: 0,
-                    overflow: "hidden"
+                    overflow:
+                      "hidden",
+                    opacity:
+                      isDragging
+                        ? 0.55
+                        : 1,
+                    transition:
+                      "opacity .15s ease",
+                    minWidth:
+                      0
                   }}
                 >
 
-
                   {/* =================================================
-                      VIDEO THUMBNAIL
-                      CLICK = PREVIEW
+                      THUMBNAIL
                   ================================================= */}
 
                   <div
@@ -904,7 +1497,10 @@ function AdminYouTube() {
                       )
                     }
                     style={{
-                      position: "relative",
+                      position:
+                        "relative",
+                      width:
+                        "100%",
                       aspectRatio:
                         "16 / 9",
                       background:
@@ -915,26 +1511,27 @@ function AdminYouTube() {
                         "pointer"
                     }}
                   >
-
                     {thumbnail && (
-
                       <img
-                        src={thumbnail}
+                        src={
+                          thumbnail
+                        }
                         alt={
-                          video.title
+                          video.title ||
+                          "YouTube video"
                         }
                         style={{
-                          width: "100%",
-                          height: "100%",
+                          width:
+                            "100%",
+                          height:
+                            "100%",
                           objectFit:
                             "cover",
                           display:
                             "block"
                         }}
                       />
-
                     )}
-
 
                     {/* DARK OVERLAY */}
 
@@ -948,21 +1545,22 @@ function AdminYouTube() {
                       }}
                     />
 
-
-                    {/* =================================================
-                        PREVIEW PLAY ICON
-                    ================================================= */}
+                    {/* PLAY BUTTON */}
 
                     <div
                       style={{
                         position:
                           "absolute",
-                        left: "50%",
-                        top: "50%",
+                        left:
+                          "50%",
+                        top:
+                          "50%",
                         transform:
                           "translate(-50%, -50%)",
-                        width: "64px",
-                        height: "64px",
+                        width:
+                          "58px",
+                        height:
+                          "58px",
                         borderRadius:
                           "50%",
                         background:
@@ -976,26 +1574,23 @@ function AdminYouTube() {
                         justifyContent:
                           "center",
                         fontSize:
-                          "26px",
+                          "23px",
                         boxShadow:
-                          "0 8px 25px rgba(0,0,0,.35)"
+                          "0 8px 25px rgba(0,0,0,.3)"
                       }}
                     >
                       ▶
                     </div>
 
-
-                    {/* =================================================
-                        PREVIEW LABEL
-                    ================================================= */}
+                    {/* PREVIEW */}
 
                     <div
                       style={{
                         position:
                           "absolute",
-                        bottom:
-                          "10px",
                         left:
+                          "10px",
+                        bottom:
                           "10px",
                         padding:
                           "6px 10px",
@@ -1008,17 +1603,15 @@ function AdminYouTube() {
                         fontSize:
                           "12px",
                         fontWeight:
-                          600
+                          700
                       }}
                     >
                       Preview 10 sec
                     </div>
 
-
                     {/* DURATION */}
 
                     {video.duration && (
-
                       <div
                         style={{
                           position:
@@ -1036,19 +1629,20 @@ function AdminYouTube() {
                           color:
                             "#fff",
                           fontSize:
-                            "12px"
+                            "12px",
+                          fontWeight:
+                            600
                         }}
                       >
-                        {video.duration}
+                        {
+                          video.duration
+                        }
                       </div>
-
                     )}
-
                   </div>
 
-
                   {/* =================================================
-                      VIDEO INFORMATION
+                      INFORMATION
                   ================================================= */}
 
                   <div
@@ -1058,139 +1652,458 @@ function AdminYouTube() {
                     }}
                   >
 
-                    <div
-                      style={{
-                        fontSize:
-                          "12px",
-                        color:
-                          "#e8473f",
-                        fontWeight:
-                          700,
-                        marginBottom:
-                          "6px"
-                      }}
-                    >
-                      {video.category}
-                    </div>
-
-
-                    <h4
-                      style={{
-                        margin:
-                          "0 0 7px",
-                        fontSize:
-                          "17px"
-                      }}
-                    >
-                      {video.title}
-                    </h4>
-
-
-                    <p
-                      style={{
-                        margin:
-                          "0 0 14px",
-                        color:
-                          "#777",
-                        fontSize:
-                          "13px",
-                        lineHeight:
-                          1.5
-                      }}
-                    >
-                      {video.description ||
-                        "No description"}
-                    </p>
-
-
-                    {/* ACTIONS */}
+                    {/* ORDER + DRAG HANDLE */}
 
                     <div
                       style={{
                         display:
                           "flex",
-                        gap:
-                          "8px",
-                        flexWrap:
-                          "wrap"
+                        alignItems:
+                          "center",
+                        justifyContent:
+                          "space-between",
+                        marginBottom:
+                          "11px"
                       }}
                     >
+                      <span
+                        style={{
+                          display:
+                            "inline-flex",
+                          alignItems:
+                            "center",
+                          padding:
+                            "5px 9px",
+                          borderRadius:
+                            "7px",
+                          background:
+                            "#f5f5f5",
+                          color:
+                            "#555",
+                          fontSize:
+                            "12px",
+                          fontWeight:
+                            700
+                        }}
+                      >
+                        Order #
+                        {
+                          video.displayOrder ||
+                          index + 1
+                        }
+                      </span>
+
+                      {/* ONLY THIS IS DRAGGABLE */}
+
+                      <div
+                        draggable={
+                          !savingOrder
+                        }
+                        onDragStart={(
+                          event
+                        ) =>
+                          handleDragStart(
+                            event,
+                            video.id
+                          )
+                        }
+                        onDragEnd={
+                          handleDragEnd
+                        }
+                        title="Drag to reorder"
+                        onClick={(event) =>
+                          event.stopPropagation()
+                        }
+                        style={{
+                          width:
+                            "38px",
+                          height:
+                            "34px",
+                          borderRadius:
+                            "8px",
+                          border:
+                            "1px solid #ddd",
+                          background:
+                            "#fafafa",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          color:
+                            "#666",
+                          fontSize:
+                            "20px",
+                          letterSpacing:
+                            "-3px",
+                          cursor:
+                            savingOrder
+                              ? "wait"
+                              : "grab",
+                          userSelect:
+                            "none"
+                        }}
+                      >
+                        ⋮⋮
+                      </div>
+                    </div>
+
+                    {/* CATEGORY */}
+
+                    <div
+                      style={{
+                        display:
+                          "inline-block",
+                        marginBottom:
+                          "7px",
+                        color:
+                          "#e8473f",
+                        fontSize:
+                          "12px",
+                        fontWeight:
+                          800,
+                        textTransform:
+                          "uppercase",
+                        letterSpacing:
+                          ".3px"
+                      }}
+                    >
+                      {video.category ||
+                        "Fundamentals"}
+                    </div>
+
+                    {/* TITLE */}
+
+                    <h4
+                      style={{
+                        margin:
+                          "0 0 9px",
+                        fontSize:
+                          "17px",
+                        lineHeight:
+                          1.35,
+                        fontWeight:
+                          800,
+                        color:
+                          "#11201f"
+                      }}
+                    >
+                      {
+                        video.title ||
+                        "Untitled video"
+                      }
+                    </h4>
+
+                    {/* DESCRIPTION */}
+
+                    <div
+                      style={{
+                        marginBottom:
+                          "16px"
+                      }}
+                    >
+                      <p
+                        style={{
+                          margin: 0,
+                          color:
+                            "#777",
+                          fontSize:
+                            "13px",
+                          lineHeight:
+                            1.55,
+                          display:
+                            isExpanded
+                              ? "block"
+                              : "-webkit-box",
+                          WebkitLineClamp:
+                            isExpanded
+                              ? "unset"
+                              : 3,
+                          WebkitBoxOrient:
+                            "vertical",
+                          overflow:
+                            isExpanded
+                              ? "visible"
+                              : "hidden"
+                        }}
+                      >
+                        {
+                          description
+                        }
+                      </p>
+
+                      {description.length >
+                        140 && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+
+                            toggleDescription(
+                              video.id
+                            );
+                          }}
+                          style={{
+                            marginTop:
+                              "7px",
+                            padding:
+                              "0",
+                            border:
+                              "none",
+                            background:
+                              "transparent",
+                            color:
+                              "#e8473f",
+                            fontSize:
+                              "13px",
+                            fontWeight:
+                              800,
+                            cursor:
+                              "pointer"
+                          }}
+                        >
+                          {isExpanded
+                            ? "Show less"
+                            : "Read more"}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* =================================================
+                        ACTION BUTTONS
+                    ================================================= */}
+
+                    <div
+                      style={{
+                        display:
+                          "grid",
+                        gridTemplateColumns:
+                          "1fr 1.65fr",
+                        gap:
+                          "9px",
+                        width:
+                          "100%"
+                      }}
+                    >
+
+                      {/* EDIT */}
+
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onMouseDown={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(
+                          event
+                        ) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+
+                          console.log(
+                            "EDIT CLICKED",
+                            video.id
+                          );
+
+                          editVideo(
+                            video
+                          );
+                        }}
+                        disabled={
+                          savingOrder ||
+                          loading
+                        }
+                        style={{
+                          width:
+                            "100%",
+                          height:
+                            "46px",
+                          minWidth:
+                            0,
+                          padding:
+                            "0 12px",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          whiteSpace:
+                            "nowrap",
+                          cursor:
+                            "pointer",
+                          boxSizing:
+                            "border-box"
+                        }}
+                      >
+                        Edit
+                      </button>
 
                       {/* PREVIEW */}
 
                       <button
                         type="button"
                         className="btn btn-green btn-sm"
-                        onClick={() =>
+                        onMouseDown={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(
+                          event
+                        ) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+
                           setPreviewVideo(
                             video
-                          )
+                          );
+                        }}
+                        disabled={
+                          savingOrder
                         }
+                        style={{
+                          width:
+                            "100%",
+                          height:
+                            "46px",
+                          minWidth:
+                            0,
+                          padding:
+                            "0 10px",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          whiteSpace:
+                            "nowrap",
+                          boxSizing:
+                            "border-box"
+                        }}
                       >
                         ▶ Preview 10 sec
                       </button>
 
-
-                      {/* YOUTUBE */}
+                      {/* OPEN YOUTUBE */}
 
                       <button
                         type="button"
                         className="btn btn-outline btn-sm"
-                        onClick={() =>
+                        onMouseDown={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(
+                          event
+                        ) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+
                           openYoutube(
                             video
-                          )
+                          );
+                        }}
+                        disabled={
+                          savingOrder
                         }
+                        style={{
+                          width:
+                            "100%",
+                          height:
+                            "46px",
+                          minWidth:
+                            0,
+                          padding:
+                            "0 10px",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          whiteSpace:
+                            "nowrap",
+                          boxSizing:
+                            "border-box"
+                        }}
                       >
                         Open YouTube
                       </button>
-
 
                       {/* DELETE */}
 
                       <button
                         type="button"
                         className="btn btn-sm"
-                        onClick={() =>
+                        onMouseDown={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(
+                          event
+                        ) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+
                           deleteVideo(
                             video.id
-                          )
+                          );
+                        }}
+                        disabled={
+                          savingOrder
                         }
                         style={{
+                          width:
+                            "100%",
+                          height:
+                            "46px",
+                          minWidth:
+                            0,
+                          padding:
+                            "0 10px",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          whiteSpace:
+                            "nowrap",
+                          boxSizing:
+                            "border-box",
                           color:
                             "#d33",
                           border:
                             "1px solid #ddd",
                           background:
-                            "transparent"
+                            "transparent",
+                          cursor:
+                            "pointer"
                         }}
                       >
                         Delete
                       </button>
-
                     </div>
-
                   </div>
-
                 </div>
-
               );
-
-            })}
-
-          </div>
-
-        )}
-
-      </div>
-
+            }
+          )}
+        </div>
+      )}
 
       {/* =====================================================
-          10 SECOND PREVIEW MODAL
+          PREVIEW MODAL
       ===================================================== */}
 
       {previewVideo && (
-
         <div
           onClick={
             closePreview
@@ -1199,7 +2112,8 @@ function AdminYouTube() {
             position:
               "fixed",
             inset: 0,
-            zIndex: 99999,
+            zIndex:
+              99999,
             background:
               "rgba(0,0,0,.78)",
             display:
@@ -1212,10 +2126,9 @@ function AdminYouTube() {
               "20px"
           }}
         >
-
           <div
-            onClick={(e) =>
-              e.stopPropagation()
+            onClick={(event) =>
+              event.stopPropagation()
             }
             style={{
               width:
@@ -1230,7 +2143,6 @@ function AdminYouTube() {
                 "0 25px 80px rgba(0,0,0,.4)"
             }}
           >
-
 
             {/* MODAL HEADER */}
 
@@ -1250,20 +2162,30 @@ function AdminYouTube() {
                   "1px solid #eee"
               }}
             >
-
-              <div>
-
+              <div
+                style={{
+                  minWidth:
+                    0
+                }}
+              >
                 <div
                   style={{
                     fontSize:
                       "16px",
                     fontWeight:
-                      700
+                      800,
+                    overflow:
+                      "hidden",
+                    textOverflow:
+                      "ellipsis",
+                    whiteSpace:
+                      "nowrap"
                   }}
                 >
-                  {previewVideo.title}
+                  {
+                    previewVideo.title
+                  }
                 </div>
-
 
                 <div
                   style={{
@@ -1277,11 +2199,7 @@ function AdminYouTube() {
                 >
                   10-second preview
                 </div>
-
               </div>
-
-
-              {/* CLOSE */}
 
               <button
                 type="button"
@@ -1289,6 +2207,8 @@ function AdminYouTube() {
                   closePreview
                 }
                 style={{
+                  flexShrink:
+                    0,
                   width:
                     "36px",
                   height:
@@ -1304,20 +2224,15 @@ function AdminYouTube() {
                   cursor:
                     "pointer"
                 }}
-                aria-label="Close preview"
               >
                 ×
               </button>
-
             </div>
-
 
             {/* VIDEO */}
 
             <div
               style={{
-                position:
-                  "relative",
                 width:
                   "100%",
                 aspectRatio:
@@ -1326,20 +2241,15 @@ function AdminYouTube() {
                   "#000"
               }}
             >
-
               {(() => {
-
                 const id =
                   previewVideo.youtubeId ||
                   getYoutubeId(
                     previewVideo.youtubeUrl
                   );
 
-
                 if (!id) {
-
                   return (
-
                     <div
                       style={{
                         height:
@@ -1356,26 +2266,18 @@ function AdminYouTube() {
                     >
                       Invalid YouTube URL
                     </div>
-
                   );
-
                 }
 
-
                 return (
-
                   <iframe
                     key={id}
-                    src={
-                      `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&start=0&end=10&controls=1&rel=0`
-                    }
+                    src={`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&start=0&end=10&controls=1&rel=0`}
                     title={
                       "Preview: " +
                       previewVideo.title
                     }
-                    allow={
-                      "autoplay; encrypted-media"
-                    }
+                    allow="autoplay; encrypted-media"
                     allowFullScreen
                     style={{
                       width:
@@ -1383,16 +2285,12 @@ function AdminYouTube() {
                       height:
                         "100%",
                       border:
-                        0
+                        "none"
                     }}
                   />
-
                 );
-
               })()}
-
             </div>
-
 
             {/* MODAL FOOTER */}
 
@@ -1412,7 +2310,6 @@ function AdminYouTube() {
                   "wrap"
               }}
             >
-
               <span
                 style={{
                   fontSize:
@@ -1421,9 +2318,9 @@ function AdminYouTube() {
                     "#777"
                 }}
               >
-                Preview is limited to 10 seconds.
+                Preview is limited
+                to 10 seconds.
               </span>
-
 
               <div
                 style={{
@@ -1433,7 +2330,6 @@ function AdminYouTube() {
                     "8px"
                 }}
               >
-
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
@@ -1443,7 +2339,6 @@ function AdminYouTube() {
                 >
                   Close
                 </button>
-
 
                 <button
                   type="button"
@@ -1456,23 +2351,14 @@ function AdminYouTube() {
                 >
                   Watch Full Video
                 </button>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       )}
-
     </div>
-
   );
-
 }
-
 
 /* =========================================================
    GLOBAL EXPORT
@@ -1480,7 +2366,6 @@ function AdminYouTube() {
 
 window.AdminYouTube =
   AdminYouTube;
-
 
 console.log(
   "Admin YouTube loaded successfully"

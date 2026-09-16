@@ -6,12 +6,16 @@
      - Same-origin assets (jsx/css/png/svg/json/html): stale-while-revalidate.
      - Cross-origin CDN + Google Fonts (versioned/immutable): cache-first.
      - Navigations: network-first, fall back to cache, then offline.html.
+     - Admin + Member portal routes are NOT intercepted by this service worker.
    Bump CACHE_VERSION on any deploy to roll caches.
    ========================================================================= */
 
 
+/* =========================================================================
+   Firebase Messaging
+   ========================================================================= */
 
-   importScripts(
+importScripts(
   "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"
 );
 
@@ -20,7 +24,7 @@ importScripts(
 );
 
 firebase.initializeApp({
-  apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
+  apiKey: "AIzaSyDYeZggBR1oP8r8yjuNMYYs5VSOX3yfnE",
   authDomain: "wealthoria-6fc11.firebaseapp.com",
   projectId: "wealthoria-6fc11",
   storageBucket: "wealthoria-6fc11.firebasestorage.app",
@@ -30,7 +34,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.setBackgroundMessageHandler(function(payload) {
+messaging.setBackgroundMessageHandler(function (payload) {
   console.log(
     "[firebase-messaging-sw.js] Received background message ",
     payload
@@ -53,11 +57,20 @@ messaging.setBackgroundMessageHandler(function(payload) {
 });
 
 
-const CACHE_VERSION = "wealthoria-v4";
+/* =========================================================================
+   Cache configuration
+   ========================================================================= */
+
+const CACHE_VERSION = "wealthoria-v5";
+
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
-/* keep this list short + certain — anything else is cached at runtime */
+
+/* =========================================================================
+   Precache
+   ========================================================================= */
+
 const PRECACHE_URLS = [
   "index.html",
   "offline.html",
@@ -69,135 +82,266 @@ const PRECACHE_URLS = [
   "icons/icon-512.png",
   "icons/icon-192-any.png",
   "icons/icon-512-any.png",
-  "icons/apple-touch-icon.png",
+  "icons/apple-touch-icon.png"
 ];
 
-const CDN_HOSTS = ["unpkg.com", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
+
+/* =========================================================================
+   CDN / Fonts
+   ========================================================================= */
+
+const CDN_HOSTS = [
+  "unpkg.com",
+  "cdnjs.cloudflare.com",
+  "fonts.googleapis.com",
+  "fonts.gstatic.com"
+];
+
+function isCdn(url) {
+  return CDN_HOSTS.some(
+    (h) =>
+      url.hostname === h ||
+      url.hostname.endsWith("." + h)
+  );
+}
+
+
+/* =========================================================================
+   Install
+   ========================================================================= */
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(PRECACHE).then((cache) =>
-      // allSettled: a single 404 won't abort the whole install
-      Promise.allSettled(PRECACHE_URLS.map((u) => cache.add(u)))
-    ).then(() => self.skipWaiting())
+    caches
+      .open(PRECACHE)
+      .then((cache) =>
+        // allSettled: a single 404 won't abort the whole install
+        Promise.allSettled(
+          PRECACHE_URLS.map((u) => cache.add(u))
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
+
+
+/* =========================================================================
+   Activate
+   ========================================================================= */
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== PRECACHE && k !== RUNTIME).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter(
+              (k) =>
+                k !== PRECACHE &&
+                k !== RUNTIME
+            )
+            .map((k) => caches.delete(k))
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
-function isCdn(url) { return CDN_HOSTS.some((h) => url.hostname === h || url.hostname.endsWith("." + h)); }
+
+/* =========================================================================
+   Fetch
+   ========================================================================= */
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET") return;
+
+  // Only handle GET requests.
+  if (req.method !== "GET") {
+    return;
+  }
+
   const url = new URL(req.url);
 
-  // 1) Navigations -> network-first, fall back to cached page, then offline.html
-  // 1) Navigations
-if (req.mode === "navigate") {
 
-  event.respondWith(
+  /* -----------------------------------------------------------------------
+     IMPORTANT:
+     Never intercept Admin or Member Portal routes.
 
-    fetch(req)
-      .then((res) => {
+     This prevents errors such as:
 
-        const pathname =
-          new URL(req.url).pathname;
+       The FetchEvent for "/admin/notifications"
+       resulted in a network error response.
 
-        // Never cache Admin pages
-        if (pathname.startsWith("/admin")) {
+       TypeError: Failed to convert value to 'Response'
+
+     Admin and Member pages should always be handled directly by the
+     browser/Vite/server.
+     ----------------------------------------------------------------------- */
+
+  if (
+    url.origin === self.location.origin &&
+    (
+      url.pathname.startsWith("/admin") ||
+      url.pathname.startsWith("/members")
+    )
+  ) {
+    return;
+  }
+
+
+  /* -----------------------------------------------------------------------
+     1) Navigations
+     Network-first -> cache -> offline page
+     ----------------------------------------------------------------------- */
+
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const pathname = new URL(req.url).pathname;
+
+          // Extra protection: never cache Admin pages.
+          if (pathname.startsWith("/admin")) {
+            return res;
+          }
+
+          // Extra protection: never cache Member pages.
+          if (pathname.startsWith("/members")) {
+            return res;
+          }
+
+          const copy = res.clone();
+
+          caches
+            .open(RUNTIME)
+            .then((c) => c.put(req, copy))
+            .catch(() => {});
+
           return res;
-        }
+        })
 
-        const copy = res.clone();
+        .catch(() => {
+          const pathname =
+            new URL(req.url).pathname;
 
-        caches.open(RUNTIME)
-          .then((c) => c.put(req, copy))
-          .catch(() => {});
-
-        return res;
-      })
-
-      .catch(() => {
-
-        const pathname =
-          new URL(req.url).pathname;
-
-        // Do not show public/offline page for Admin routes
-        if (pathname.startsWith("/admin")) {
-          return new Response(
-            "Admin page unavailable offline.",
-            {
-              status: 503,
-              headers: {
-                "Content-Type": "text/plain"
+          // Do not show public/offline page for Admin routes.
+          if (pathname.startsWith("/admin")) {
+            return new Response(
+              "Admin page unavailable offline.",
+              {
+                status: 503,
+                headers: {
+                  "Content-Type": "text/plain"
+                }
               }
+            );
+          }
+
+          // Do not show public/offline page for Member routes.
+          if (pathname.startsWith("/members")) {
+            return new Response(
+              "Member portal unavailable offline.",
+              {
+                status: 503,
+                headers: {
+                  "Content-Type": "text/plain"
+                }
+              }
+            );
+          }
+
+          return caches.match(req).then((hit) => {
+            if (hit) {
+              return hit;
             }
-          );
-        }
 
-        return caches.match(req)
-          .then((hit) => {
-
-            if (hit) return hit;
-
-            return caches.match("index.html")
+            return caches
+              .match("index.html")
               .then((shell) => {
-
-                if (shell) return shell;
+                if (shell) {
+                  return shell;
+                }
 
                 return caches.match("offline.html");
               });
-
           });
+        })
+    );
 
-      })
+    return;
+  }
 
-  );
 
-  return;
-}
+  /* -----------------------------------------------------------------------
+     2) Cross-origin CDN + fonts
+     Cache-first
+     ----------------------------------------------------------------------- */
 
-  // 2) Cross-origin CDN + fonts -> cache-first (immutable, versioned URLs)
   if (url.origin !== self.location.origin) {
     if (isCdn(url)) {
       event.respondWith(
-        caches.match(req).then((hit) =>
-          hit || fetch(req).then((res) => {
-            const copy = res.clone();
-            caches.open(RUNTIME).then((c) => c.put(req, copy));
-            return res;
-          }).catch(() => hit)
-        )
+        caches.match(req).then((hit) => {
+          if (hit) {
+            return hit;
+          }
+
+          return fetch(req)
+            .then((res) => {
+              const copy = res.clone();
+
+              caches
+                .open(RUNTIME)
+                .then((c) => c.put(req, copy))
+                .catch(() => {});
+
+              return res;
+            })
+            .catch(() => hit);
+        })
       );
     }
-    return; // other cross-origin: let the network handle it
+
+    // Other cross-origin requests:
+    // let the browser/network handle them.
+    return;
   }
 
-  // 3) Same-origin assets -> stale-while-revalidate
+
+  /* -----------------------------------------------------------------------
+     3) Same-origin assets
+     Stale-while-revalidate
+     ----------------------------------------------------------------------- */
+
   event.respondWith(
     caches.match(req).then((hit) => {
       const fetchPromise = fetch(req)
         .then((res) => {
           if (res && res.status === 200) {
             const copy = res.clone();
-            caches.open(RUNTIME).then((c) => c.put(req, copy));
+
+            caches
+              .open(RUNTIME)
+              .then((c) => c.put(req, copy))
+              .catch(() => {});
           }
+
           return res;
         })
         .catch(() => hit);
+
       return hit || fetchPromise;
     })
   );
 });
 
-/* allow the page to trigger an immediate update */
+
+/* =========================================================================
+   Message
+   ========================================================================= */
+
 self.addEventListener("message", (event) => {
-  if (event.data === "SKIP_WAITING") self.skipWaiting();
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });

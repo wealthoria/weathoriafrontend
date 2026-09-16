@@ -427,6 +427,12 @@ function UsersScreen() {
   const [search, setSearch] =
     useState("");
 
+  const [actionLoading, setActionLoading] =
+    useState("");
+
+  const API_BASE_URL =
+    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+
 
   /* =======================================================
      LOAD MEMBERS
@@ -752,6 +758,272 @@ function UsersScreen() {
       );
 
     };
+
+
+  /* =======================================================
+     MEMBER ACTIONS
+  ======================================================= */
+
+  async function getAdminToken() {
+    const currentUser = window.auth?.currentUser;
+
+    if (!currentUser) {
+      throw new Error(
+        "Admin session not found. Please login again."
+      );
+    }
+
+    return currentUser.getIdToken(true);
+  }
+
+
+  async function handleDeactivate(member) {
+    const uid = String(member.uid || "").trim();
+
+    if (!uid) {
+      setError("Member UID is missing.");
+      return;
+    }
+
+    const currentStatus =
+      String(member.status || "active")
+        .trim()
+        .toLowerCase();
+
+    if (currentStatus === "deactivated") {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to deactivate ${
+        member.name || member.email || "this member"
+      }?\n\nThe member will not be able to log in.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setActionLoading(`deactivate:${uid}`);
+      setError("");
+
+      const token =
+        await getAdminToken();
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/members/deactivate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            uid,
+          }),
+        }
+      );
+
+      const data =
+        await response.json().catch(
+          () => ({})
+        );
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.message ||
+          "Unable to deactivate member."
+        );
+      }
+
+      /*
+       * Firestore onSnapshot will update the
+       * table automatically.
+       */
+      setError("");
+
+    } catch (error) {
+      console.error(
+        "Deactivate member error:",
+        error
+      );
+
+      setError(
+        error?.message ||
+        "Unable to deactivate member."
+      );
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+
+  async function handleActivate(member) {
+    const uid = String(member.uid || "").trim();
+
+    if (!uid) {
+      setError("Member UID is missing.");
+      return;
+    }
+
+    const currentStatus =
+      String(member.status || "active")
+        .trim()
+        .toLowerCase();
+
+    if (currentStatus !== "deactivated") {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to activate ${
+        member.name || member.email || "this member"
+      }?\n\nThe member will be able to log in again.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setActionLoading(`activate:${uid}`);
+      setError("");
+
+      const token = await getAdminToken();
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/members/activate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ uid }),
+        }
+      );
+
+      const data =
+        await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to activate member."
+        );
+      }
+
+      setError("");
+    } catch (error) {
+      console.error("Activate member error:", error);
+
+      setError(
+        error?.message || "Unable to activate member."
+      );
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+
+  async function handleDelete(member) {
+    const uid = String(member.uid || "").trim();
+
+    if (!uid) {
+      setError("Member UID is missing.");
+      return;
+    }
+
+    const displayName =
+      member.name ||
+      member.email ||
+      "this member";
+
+    const confirmed = window.confirm(
+      `PERMANENT DELETE\n\n` +
+      `Are you sure you want to permanently delete ${displayName}?\n\n` +
+      `This will delete the member account, subscriptions, ` +
+      `course purchases, notifications, student records and ` +
+      `Firebase Authentication account.\n\n` +
+      `THIS ACTION CANNOT BE UNDONE.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    /*
+     * Second confirmation for the destructive action.
+     */
+    const finalConfirmation =
+      window.confirm(
+        `Final confirmation:\n\n` +
+        `Delete ${displayName} permanently?`
+      );
+
+    if (!finalConfirmation) {
+      return;
+    }
+
+    try {
+      setActionLoading(`delete:${uid}`);
+      setError("");
+
+      const token =
+        await getAdminToken();
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/members/delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            uid,
+          }),
+        }
+      );
+
+      const data =
+        await response.json().catch(
+          () => ({})
+        );
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.message ||
+          "Unable to delete member."
+        );
+      }
+
+      /*
+       * The Firestore onSnapshot listener will
+       * remove the deleted member from the table.
+       */
+      setError("");
+
+    } catch (error) {
+      console.error(
+        "Delete member error:",
+        error
+      );
+
+      setError(
+        error?.message ||
+        "Unable to delete member."
+      );
+    } finally {
+      setActionLoading("");
+    }
+  }
 
 
   /* =======================================================
@@ -1441,7 +1713,8 @@ function UsersScreen() {
                       "STATUS",
                       
                       "NOTIFICATIONS",
-                      "JOINED"
+                      "JOINED",
+                      "ACTIONS"
                     ].map(
                       (heading) => (
 
@@ -1877,6 +2150,177 @@ function UsersScreen() {
                           {formatMemberDate(
                             member.joinedAt
                           )}
+                        </td>
+
+
+                        {/* ACTIONS */}
+
+                        <td
+                          style={{
+                            padding:
+                              "15px 14px",
+                            whiteSpace:
+                              "nowrap"
+                          }}
+                        >
+
+                          <div
+                            style={{
+                              display:
+                                "flex",
+                              alignItems:
+                                "center",
+                              gap: 8
+                            }}
+                          >
+
+                            {String(member.status || "")
+                              .trim()
+                              .toLowerCase() === "deactivated" ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleActivate(member)
+                                }
+                                disabled={
+                                  actionLoading ===
+                                    `activate:${member.uid}` ||
+                                  actionLoading ===
+                                    `delete:${member.uid}`
+                                }
+                                style={{
+                                  height: 34,
+                                  padding: "0 11px",
+                                  border: "1px solid #c9e2ce",
+                                  borderRadius: 8,
+                                  background: "#edf8ef",
+                                  color: "#217a36",
+                                  fontSize: 12,
+                                  fontWeight: 750,
+                                  cursor:
+                                    actionLoading ===
+                                      `activate:${member.uid}` ||
+                                    actionLoading ===
+                                      `delete:${member.uid}`
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  opacity:
+                                    actionLoading ===
+                                      `activate:${member.uid}` ||
+                                    actionLoading ===
+                                      `delete:${member.uid}`
+                                      ? 0.55
+                                      : 1
+                                }}
+                              >
+                                {actionLoading ===
+                                `activate:${member.uid}`
+                                  ? "Activating..."
+                                  : "Activate"}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeactivate(member)
+                                }
+                                disabled={
+                                  actionLoading ===
+                                    `deactivate:${member.uid}` ||
+                                  actionLoading ===
+                                    `delete:${member.uid}` ||
+                                  String(member.status || "")
+                                    .trim()
+                                    .toLowerCase() === "inactive"
+                                }
+                                style={{
+                                  height: 34,
+                                  padding: "0 11px",
+                                  border: "1px solid #ead6a3",
+                                  borderRadius: 8,
+                                  background: "#fff9e8",
+                                  color: "#8a6410",
+                                  fontSize: 12,
+                                  fontWeight: 750,
+                                  cursor:
+                                    actionLoading ===
+                                      `deactivate:${member.uid}` ||
+                                    actionLoading ===
+                                      `delete:${member.uid}` ||
+                                    String(member.status || "")
+                                      .trim()
+                                      .toLowerCase() === "inactive"
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  opacity:
+                                    actionLoading ===
+                                      `deactivate:${member.uid}` ||
+                                    actionLoading ===
+                                      `delete:${member.uid}` ||
+                                    String(member.status || "")
+                                      .trim()
+                                      .toLowerCase() === "inactive"
+                                      ? 0.55
+                                      : 1
+                                }}
+                              >
+                                {actionLoading ===
+                                `deactivate:${member.uid}`
+                                  ? "Deactivating..."
+                                  : "Deactivate"}
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDelete(
+                                  member
+                                )
+                              }
+                              disabled={
+                                actionLoading ===
+                                  `deactivate:${member.uid}` ||
+                                actionLoading ===
+                                  `delete:${member.uid}`
+                              }
+                              style={{
+                                height: 34,
+                                padding:
+                                  "0 11px",
+                                border:
+                                  "1px solid #f0c3bd",
+                                borderRadius: 8,
+                                background:
+                                  "#fff3f1",
+                                color:
+                                  "#b42318",
+                                fontSize: 12,
+                                fontWeight: 750,
+                                cursor:
+                                  actionLoading ===
+                                    `deactivate:${member.uid}` ||
+                                  actionLoading ===
+                                    `delete:${member.uid}`
+                                    ? "not-allowed"
+                                    : "pointer",
+                                opacity:
+                                  actionLoading ===
+                                    `deactivate:${member.uid}` ||
+                                  actionLoading ===
+                                    `delete:${member.uid}`
+                                    ? 0.55
+                                    : 1
+                              }}
+                            >
+                              {actionLoading ===
+                              `delete:${member.uid}`
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+
+                          </div>
+
                         </td>
 
 

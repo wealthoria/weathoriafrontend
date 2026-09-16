@@ -284,16 +284,20 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
         }
 
 
-      setSuccess(
+     setSuccess(
   `Email sent to ${data.emailSentCount || 0} member(s). ` +
   `Push notification sent to ${data.sentCount || 0} member(s).`
 );
 
+setTitle("");
+setMessage("");
+setSelectedMember("");
+setSelectedMembers([]);
 
-        setTitle("");
-        setMessage("");
-        setSelectedMember("");
-        setSelectedMembers([]);
+// Refresh the page after 5 seconds
+setTimeout(() => {
+  window.location.reload();
+}, 5000);
 
       } catch (error) {
 

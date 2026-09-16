@@ -3098,9 +3098,17 @@ const logout =
             <button
               type="button"
               className="member-header-button"
-              onClick={() =>
-                openPage("notifications")
-              }
+          onClick={async () => {
+  if (
+    "Notification" in window &&
+    Notification.permission !== "granted" &&
+    typeof window.enableMemberNotifications === "function"
+  ) {
+    await window.enableMemberNotifications();
+  }
+
+  openPage("notifications");
+}}
             >
 
               🔔 Notifications

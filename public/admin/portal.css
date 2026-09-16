@@ -2638,3 +2638,136 @@ body {
   display: none!important;
 
 }
+
+/* =========================================================================
+   WEALTHORIA UPLOADS — COMPACT ASSET LIBRARY
+   ========================================================================= */
+
+.asset-month-group {
+  width: 100%;
+  margin: 0 0 18px;
+}
+
+.asset-month-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 7px 2px 6px;
+  border-bottom: 1px solid var(--hair);
+  font: var(--body-sm-strong);
+  color: var(--ink);
+}
+
+.asset-month-title .month-line {
+  flex: 1;
+  height: 1px;
+  background: var(--hair);
+}
+
+.asset-month-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  align-items: start;
+}
+
+.asset {
+  min-width: 0;
+  border-radius: 10px;
+}
+
+.asset .athumb {
+  aspect-ratio: 16 / 8.5;
+}
+
+.asset .athumb .tag {
+  left: 7px;
+  top: 7px;
+  font-size: 9px;
+  padding: 3px 7px;
+}
+
+.asset .abody {
+  padding: 9px;
+}
+
+.asset .abody h4 {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.asset .abody .am {
+  margin-top: 3px;
+  gap: 7px;
+  font-size: 10px;
+}
+
+.asset .asset-description,
+.asset .asset-description-wrap {
+  font-size: 10px;
+  line-height: 1.35;
+  margin-top: 5px;
+}
+
+.asset .asset-tags-wrap {
+  margin-top: 5px;
+}
+
+.asset .atags {
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.asset .badge {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+
+.asset .asset-inline-toggle {
+  font-size: 9px;
+}
+
+@media (min-width: 680px) {
+  .asset-month-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (min-width: 900px) {
+  .asset-month-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (min-width: 1250px) {
+  .asset-month-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+/* Compact upload/edit forms */
+.upload-edit-modal .field {
+  margin-bottom: 10px;
+}
+
+.upload-edit-modal .field label {
+  margin-bottom: 4px;
+}
+
+.upload-edit-modal .input,
+.upload-edit-modal .textarea,
+.upload-edit-modal .select {
+  min-height: 38px;
+}
+
+.upload-edit-modal .textarea {
+  min-height: 78px;
+}
+
+.upload-edit-modal .mactions {
+  margin-top: 12px;
+}

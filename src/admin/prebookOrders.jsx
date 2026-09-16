@@ -802,11 +802,31 @@ const loadJsPDF = () => {
 const generateShippingLabelsPDF = async () => {
   try {
     /* =====================================================
+       ONLY INCLUDE ORDERS THAT ARE NOT SHIPPED
+       ===================================================== */
+
+    const labelOrders = filteredOrders.filter((order) => {
+      const shippingStatus = String(
+        order.shippingStatus || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      // Do NOT generate a sticker for shipped orders
+     return (
+  shippingStatus !== "shipped" &&
+  shippingStatus !== "delivered"
+);
+    });
+
+    /* =====================================================
        CHECK ORDERS
        ===================================================== */
 
-    if (!filteredOrders.length) {
-      alert("No orders available to generate PDF.");
+    if (!labelOrders.length) {
+      alert(
+        "No orders available for shipping labels. Shipped orders are excluded."
+      );
       return;
     }
 
@@ -835,7 +855,6 @@ const generateShippingLabelsPDF = async () => {
 
     /* =====================================================
        GRID
-
        3 COLUMNS × 6 ROWS
        18 LABELS PER PAGE
        ===================================================== */
@@ -843,8 +862,7 @@ const generateShippingLabelsPDF = async () => {
     const columns = 3;
     const rows = 6;
 
-    const labelsPerPage =
-      columns * rows;
+    const labelsPerPage = columns * rows;
 
     /* =====================================================
        OUTER MARGIN
@@ -899,10 +917,10 @@ const generateShippingLabelsPDF = async () => {
       ) / (rows - 1);
 
     /* =====================================================
-       PROCESS ORDERS
+       PROCESS ONLY NON-SHIPPED ORDERS
        ===================================================== */
 
-    filteredOrders.forEach(
+    labelOrders.forEach(
       (order, index) => {
 
         /* =================================================
@@ -1060,6 +1078,7 @@ const generateShippingLabelsPDF = async () => {
         );
 
         /* Reset dash */
+
         pdf.setLineDashPattern(
           [],
           0
@@ -1130,8 +1149,6 @@ const generateShippingLabelsPDF = async () => {
 
         /* =================================================
            CUSTOMER NAME
-
-           SMALL SPACE AFTER DELIVER TO
            ================================================= */
 
         pdf.setFont(
@@ -1201,6 +1218,7 @@ const generateShippingLabelsPDF = async () => {
           );
 
         /* Maximum 3 lines */
+
         const safeAddressLines =
           addressLines.slice(
             0,
@@ -1215,8 +1233,6 @@ const generateShippingLabelsPDF = async () => {
 
         /* =================================================
            STATE
-
-           SMALL SPACE AFTER ADDRESS
            ================================================= */
 
         pdf.setFont(
@@ -1240,8 +1256,6 @@ const generateShippingLabelsPDF = async () => {
 
         /* =================================================
            PIN
-
-           VERY SMALL GAP AFTER STATE
            ================================================= */
 
         const pinY =
@@ -1286,20 +1300,6 @@ const generateShippingLabelsPDF = async () => {
           left + 2,
           pinY + 4
         );
-
-        /*
-         * PIN ends at:
-         *
-         * y + 34 + 6
-         * = y + 40
-         *
-         * Box ends at:
-         *
-         * y + 43
-         *
-         * Therefore only 3mm padding
-         * remains below the PIN.
-         */
       }
     );
 

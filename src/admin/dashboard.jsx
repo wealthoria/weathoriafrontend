@@ -325,6 +325,8 @@ function BackendLineChart({ data, dataKey, onPointClick, selectedIndex }) {
           ])
         );
 
+        
+
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <svg

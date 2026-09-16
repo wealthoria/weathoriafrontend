@@ -113,6 +113,67 @@ function detectType(file) {
 }
 
 
+function getAssetDate(value) {
+  if (!value) return null;
+
+  try {
+    if (value && typeof value.toDate === "function") {
+      const date = value.toDate();
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    if (
+      typeof value === "object" &&
+      typeof value.seconds === "number"
+    ) {
+      const date = new Date(
+        value.seconds * 1000 +
+        Math.floor((value.nanoseconds || 0) / 1000000)
+      );
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  } catch (error) {
+    return null;
+  }
+}
+
+function getAssetMonthKey(item) {
+  const date = getAssetDate(
+    item?.publishedAt ||
+    item?.createdAt ||
+    item?.updatedAt
+  );
+
+  if (!date) return "undated";
+
+  return `${date.getFullYear()}-${String(
+    date.getMonth() + 1
+  ).padStart(2, "0")}`;
+}
+
+function formatAssetMonth(key) {
+  if (key === "undated") return "Undated";
+
+  const [year, month] = String(key).split("-");
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    1
+  );
+
+  return date.toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric"
+  });
+}
+
 function formatDate(value) {
   if (!value) {
     return "—";
@@ -165,6 +226,15 @@ function formatDate(value) {
 /* =========================================================
    FILE URL
    ========================================================= */
+
+function hasThumbnail(item) {
+  return Boolean(
+    item?.thumbnailUrl ||
+    item?.thumbnailPath ||
+    item?.thumbnailName
+  );
+}
+
 
 function getFileUrl(fileUrl) {
   if (!fileUrl) {
@@ -493,54 +563,7 @@ function VideoModal({
 
       return;
     }
-
-
-    if (!cleanDescription) {
-      alert(
-        "Description is required."
-      );
-
-      return;
-    }
-
-
-    if (!cleanVideoUrl) {
-      alert(
-        "Video URL is required."
-      );
-
-      return;
-    }
-
-
-    if (!cleanVdocipherUrl) {
-      alert(
-        "VdoCipher URL is required."
-      );
-
-      return;
-    }
-
-
-    if (!cleanVdocipherId) {
-      alert(
-        "VdoCipher Video ID is required."
-      );
-
-      return;
-    }
-
-
-    if (!thumbnailFile) {
-      alert(
-        "Please choose a thumbnail."
-      );
-
-      return;
-    }
-
-
-    onSave({
+onSave({
       type: "video",
 
       title:
@@ -642,7 +665,7 @@ function VideoModal({
 
         <div className="field">
           <label>
-            Title
+            Title <span className="required-star">*</span>
           </label>
 
           <input
@@ -1265,17 +1288,7 @@ function EditContentModal({
 
       return;
     }
-
-    if (!cleanDescription) {
-      alert(
-        "Description is required."
-      );
-
-      return;
-    }
-
-
-    if (isVideo) {
+if (isVideo) {
 
       const cleanVideoUrl =
         videoUrl.trim();
@@ -1285,36 +1298,7 @@ function EditContentModal({
 
       const cleanVdocipherId =
         vdocipherVideoId.trim();
-
-
-      if (!cleanVideoUrl) {
-        alert(
-          "Video URL is required."
-        );
-
-        return;
-      }
-
-
-      if (!cleanVdocipherUrl) {
-        alert(
-          "VdoCipher URL is required."
-        );
-
-        return;
-      }
-
-
-      if (!cleanVdocipherId) {
-        alert(
-          "VdoCipher Video ID is required."
-        );
-
-        return;
-      }
-
-
-      onSave({
+onSave({
         type: "video",
 
         title:
@@ -1457,7 +1441,7 @@ function EditContentModal({
 
         <div className="field">
           <label>
-            Title
+            Title <span className="required-star">*</span>
           </label>
 
           <input
@@ -1929,7 +1913,7 @@ function UploadsScreen() {
   ] = useState(1);
 
 
-  const perPage = 8;
+  const perPage = 20;
 
 
   /* =======================================================
@@ -2317,21 +2301,19 @@ function UploadsScreen() {
 
 
             const aDate =
-              new Date(
-                a.createdAt ||
-                a.updatedAt ||
+              getAssetDate(
                 a.publishedAt ||
-                0
-              ).getTime();
+                a.createdAt ||
+                a.updatedAt
+              )?.getTime() || 0;
 
 
             const bDate =
-              new Date(
-                b.createdAt ||
-                b.updatedAt ||
+              getAssetDate(
                 b.publishedAt ||
-                0
-              ).getTime();
+                b.createdAt ||
+                b.updatedAt
+              )?.getTime() || 0;
 
 
             return (
@@ -2380,6 +2362,39 @@ function UploadsScreen() {
       page *
         perPage
     );
+
+  /* =======================================================
+     GROUP ASSETS BY MONTH + YEAR
+     Newest month appears first.
+     ======================================================= */
+
+  const groupedPageRows =
+    useMemo(
+      () => {
+        const groups = [];
+        const groupMap = new Map();
+
+        pageRows.forEach((item) => {
+          const key = getAssetMonthKey(item);
+
+          if (!groupMap.has(key)) {
+            const group = {
+              key,
+              items: []
+            };
+
+            groupMap.set(key, group);
+            groups.push(group);
+          }
+
+          groupMap.get(key).items.push(item);
+        });
+
+        return groups;
+      },
+      [pageRows]
+    );
+
 
 
   useEffect(
@@ -3376,14 +3391,73 @@ function UploadsScreen() {
 
           <React.Fragment>
 
-            <div
-              className="asset-grid"
-            >
+            {groupedPageRows.map(
 
-              {pageRows.map(
-                (
-                  item
-                ) => {
+
+              (group) => (
+
+
+                <section
+
+
+                  className="asset-month-group"
+
+
+                  key={group.key}
+
+
+                >
+
+
+                  <div className="asset-month-title">
+
+
+                    <span>{formatAssetMonth(group.key)}</span>
+
+
+                    <span className="month-line" />
+
+
+                    <span
+
+
+                      style={{
+
+
+                        fontSize: 10,
+
+
+                        color: "var(--mute)",
+
+
+                        fontWeight: 500
+
+
+                      }}
+
+
+                    >
+
+
+                      {group.items.length}
+
+
+                    </span>
+
+
+                  </div>
+
+
+            
+
+
+                  <div className="asset-month-grid">
+
+
+                    {group.items.map(
+
+
+                      (item) => {
 
                   const itemIsVideo =
                     (
@@ -4094,11 +4168,23 @@ function UploadsScreen() {
 
                   );
 
-                }
-              )}
 
-            </div>
+                      }
 
+
+                    )}
+
+
+                  </div>
+
+
+                </section>
+
+
+              )
+
+
+            )}
 
             {/* =================================================
                 PAGER
@@ -4704,28 +4790,21 @@ function UploadsScreen() {
                       "Firestore is not initialized."
                     );
                   }
-
-
-                  if (
-                    !meta.thumbnailFile
-                  ) {
-                    throw new Error(
-                      "Please choose a thumbnail."
-                    );
-                  }
-
-
-                  /* =====================================
+/* =====================================
                      UPLOAD THUMBNAIL
                   ===================================== */
 
-                  const thumbnailResult =
-                    await uploadFile(
-                      meta.thumbnailFile,
-                      "thumbnail",
-                      "/api/upload-content-thumbnail",
-                      () => {}
-                    );
+                  let thumbnailResult = null;
+
+                  if (meta.thumbnailFile) {
+                    thumbnailResult =
+                      await uploadFile(
+                        meta.thumbnailFile,
+                        "thumbnail",
+                        "/api/upload-content-thumbnail",
+                        () => {}
+                      );
+                  }
 
 
                   /* =====================================
@@ -4764,18 +4843,16 @@ function UploadsScreen() {
                       meta.vdocipherVideoId,
 
                     thumbnailUrl:
-                      thumbnailResult.url,
+                      thumbnailResult?.url || "",
 
                     thumbnailPath:
-                      thumbnailResult.path,
+                      thumbnailResult?.path || "",
 
                     thumbnailName:
-                      thumbnailResult.filename ||
-                      meta.thumbnailFile.name,
+                      thumbnailResult?.filename || "",
 
                     thumbnailSize:
-                      thumbnailResult.size ||
-                      meta.thumbnailFile.size,
+                      thumbnailResult?.size || 0,
 
                     publishedAt:
                       meta.publishedAt,
@@ -4911,29 +4988,21 @@ function UploadsScreen() {
               ) => {
 
                 try {
-
-                  if (
-                    !meta.thumbnailFile
-                  ) {
-
-                    throw new Error(
-                      "Please choose a thumbnail."
-                    );
-
-                  }
-
-
-                  /* =====================================
+/* =====================================
                      THUMBNAIL
                   ===================================== */
 
-                  const thumbnailResult =
-                    await uploadFile(
-                      meta.thumbnailFile,
-                      "thumbnail",
-                      "/api/upload-content-thumbnail",
-                      () => {}
-                    );
+                  let thumbnailResult = null;
+
+                  if (meta.thumbnailFile) {
+                    thumbnailResult =
+                      await uploadFile(
+                        meta.thumbnailFile,
+                        "thumbnail",
+                        "/api/upload-content-thumbnail",
+                        () => {}
+                      );
+                  }
 
 
                   if (!window.db) {
@@ -4988,18 +5057,16 @@ function UploadsScreen() {
                       0,
 
                     thumbnailUrl:
-                      thumbnailResult.url,
+                      thumbnailResult?.url || "",
 
                     thumbnailPath:
-                      thumbnailResult.path,
+                      thumbnailResult?.path || "",
 
                     thumbnailName:
-                      thumbnailResult.filename ||
-                      meta.thumbnailFile.name,
+                      thumbnailResult?.filename || "",
 
                     thumbnailSize:
-                      thumbnailResult.size ||
-                      meta.thumbnailFile.size,
+                      thumbnailResult?.size || 0,
 
                     publishedAt:
                       meta.publishedAt,
@@ -5324,19 +5391,7 @@ function PdfMetadataModal({
 
       return;
     }
-
-
-    if (!cleanDescription) {
-
-      alert(
-        "Description is required."
-      );
-
-      return;
-    }
-
-
-    onSave({
+onSave({
 
       title:
         cleanTitle,
@@ -5489,7 +5544,7 @@ function PdfMetadataModal({
         >
 
           <label>
-            Title
+            Title <span className="required-star">*</span>
           </label>
 
           <input

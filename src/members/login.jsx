@@ -1398,48 +1398,163 @@ window.location.replace(
      CHECKING SAVED SESSION
   ========================================================= */
 
-  if (
-    checkingSession
-  ) {
-
-    return (
-
+/* =========================================================
+   CHECKING SAVED SESSION
+========================================================= */
+if (checkingSession) {
+  return (
+    <div
+      className="members-login-page"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+      }}
+    >
       <div
-        className="members-login-page"
+        className="members-login-card"
+        style={{
+          textAlign: "center",
+          maxWidth: "420px",
+          width: "100%",
+          padding: "45px 30px",
+        }}
       >
+        <div className="wealthoria-session-loader">
 
-        <div
-          className="members-login-card"
-          style={{
-            textAlign:
-              "center"
-          }}
-        >
+          {/* Animated Logo */}
+          <div className="wealthoria-loader-ring">
+            <img
+              src="/assets/logo-mark.png"
+              alt="Wealthoria"
+              className="wealthoria-loader-logo"
+            />
+          </div>
 
-          <span
-            className="members-eyebrow"
-          >
+          <span className="members-eyebrow">
             MEMBER PORTAL
           </span>
 
+          <h1>Welcome back</h1>
 
-          <h1>
-            Checking session...
-          </h1>
+          <p>Restoring your session</p>
 
-
-          <p>
-            Please wait.
-          </p>
+          {/* Loading dots */}
+          <div className="wealthoria-loader-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
 
         </div>
 
+        <style>
+          {`
+            .wealthoria-session-loader {
+              text-align: center;
+            }
+
+            .wealthoria-loader-ring {
+              width: 82px;
+              height: 82px;
+              margin: 0 auto 24px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              animation: wealthoriaPulse 1.8s ease-in-out infinite;
+            }
+
+            .wealthoria-loader-ring::before {
+              content: "";
+              position: absolute;
+              inset: 0;
+              border-radius: 50%;
+              border: 3px solid rgba(232, 71, 63, 0.15);
+              border-top-color: #e8473f;
+              border-right-color: #e8473f;
+              animation: wealthoriaRotate 1s linear infinite;
+            }
+
+            .wealthoria-loader-logo {
+              width: 42px;
+              height: 42px;
+              object-fit: contain;
+              position: relative;
+              z-index: 2;
+            }
+
+            .wealthoria-session-loader h1 {
+              margin: 10px 0 8px;
+            }
+
+            .wealthoria-session-loader p {
+              margin: 0;
+              opacity: 0.65;
+            }
+
+            .wealthoria-loader-dots {
+              display: flex;
+              justify-content: center;
+              gap: 7px;
+              margin-top: 18px;
+            }
+
+            .wealthoria-loader-dots span {
+              width: 7px;
+              height: 7px;
+              border-radius: 50%;
+              background: #e8473f;
+              animation: wealthoriaDots 1.2s infinite ease-in-out;
+            }
+
+            .wealthoria-loader-dots span:nth-child(2) {
+              animation-delay: 0.15s;
+            }
+
+            .wealthoria-loader-dots span:nth-child(3) {
+              animation-delay: 0.3s;
+            }
+
+            @keyframes wealthoriaRotate {
+              to {
+                transform: rotate(360deg);
+              }
+            }
+
+            @keyframes wealthoriaPulse {
+              0%,
+              100% {
+                transform: scale(1);
+              }
+
+              50% {
+                transform: scale(1.06);
+              }
+            }
+
+            @keyframes wealthoriaDots {
+              0%,
+              80%,
+              100% {
+                transform: translateY(0);
+                opacity: 0.4;
+              }
+
+              40% {
+                transform: translateY(-6px);
+                opacity: 1;
+              }
+            }
+          `}
+        </style>
       </div>
-
-    );
-
-  }
-
+    </div>
+  );
+}
 
   /* =========================================================
      RENDER LOGIN

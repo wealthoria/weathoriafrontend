@@ -1516,7 +1516,23 @@ const [member, setMember] =
 
 const [authChecking, setAuthChecking] =
   useState(false);
+const [notificationStatus, setNotificationStatus] =
+  useState("checking");
 
+useEffect(() => {
+  if (!("Notification" in window)) {
+    setNotificationStatus("unsupported");
+    return;
+  }
+
+  if (Notification.permission === "granted") {
+    setNotificationStatus("enabled");
+  } else if (Notification.permission === "denied") {
+    setNotificationStatus("blocked");
+  } else {
+    setNotificationStatus("not-enabled");
+  }
+}, []);
 
   /* =======================================================
      NOTIFICATIONS
@@ -2974,12 +2990,59 @@ const logout =
         </header>
 
 
+
         {/* =================================================
             PAGE CONTENT
         ================================================= */}
 
         <div className="wd-content">
+ {/* NOTIFICATION PERMISSION */}
 
+  {notificationStatus === "not-enabled" && (
+    <div className="notification-banner">
+      <div className="notification-banner-content">
+        <div>
+          <strong>🔔 Stay updated with Wealthoria</strong>
+          <p>
+            Enable notifications to receive important updates,
+            webinar reminders and new content.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={async () => {
+            if (
+              typeof window.enableMemberNotifications === "function"
+            ) {
+              await window.enableMemberNotifications();
+
+              if (
+                "Notification" in window &&
+                Notification.permission === "granted"
+              ) {
+                setNotificationStatus("enabled");
+              }
+            }
+          }}
+        >
+          Enable Notifications
+        </button>
+      </div>
+    </div>
+  )}
+
+  {notificationStatus === "enabled" && (
+    <div className="notification-success">
+      🔔 Notifications are enabled. You'll receive Wealthoria updates on this device.
+    </div>
+  )}
+
+  {notificationStatus === "blocked" && (
+    <div className="notification-blocked">
+      🔕 Notifications are blocked. Please enable them in your browser/device settings.
+    </div>
+  )}
 
           {/* SETTINGS */}
 
@@ -3574,6 +3637,7 @@ const logout =
                     <h3>
                       Explore Wealthoria
                     </h3>
+                  
 
                   </div>
 

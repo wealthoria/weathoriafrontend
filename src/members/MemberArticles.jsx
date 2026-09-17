@@ -12,7 +12,8 @@ function MemberArticles() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Expand/collapse description per article
   const [expandedDescriptionId, setExpandedDescriptionId] =
@@ -250,77 +251,94 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
   }, []);
 
   /* =========================================================
-     FILTER
+     FILTER + MONTH GROUPING
   ========================================================= */
+
+  const getArticleDate = (value) => {
+    if (!value) return null;
+
+    try {
+      if (value && typeof value.toDate === "function") {
+        return value.toDate();
+      }
+
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const getArticleTime = (value) => {
+    const date = getArticleDate(value);
+    return date ? date.getTime() : 0;
+  };
 
   const filteredArticles =
     articles.filter((article) => {
-      const searchText =
-        search
-          .trim()
-          .toLowerCase();
+      const searchText = search.trim().toLowerCase();
 
-      const title =
-        String(article.title || "")
-          .toLowerCase();
-
-      const description =
-        String(article.description || "")
-          .toLowerCase();
+      const title = String(article.title || "").toLowerCase();
+      const description = String(article.description || "").toLowerCase();
 
       const matchesSearch =
         !searchText ||
         title.includes(searchText) ||
         description.includes(searchText) ||
         article.tags.some((tag) =>
-          String(tag)
-            .toLowerCase()
-            .includes(searchText)
+          String(tag).toLowerCase().includes(searchText)
         );
 
-      let matchesDate = true;
+      const articleDate = getArticleDate(article.publishedAt);
 
-      if (selectedDate) {
-        let articleDate = "";
+      const from = startDate
+        ? new Date(`${startDate}T00:00:00`)
+        : null;
 
-        if (
-          article.publishedAt &&
-          typeof article.publishedAt.toDate ===
-            "function"
-        ) {
-          articleDate =
-            article.publishedAt
-              .toDate()
-              .toISOString()
-              .slice(0, 10);
-        } else {
-          const date =
-            new Date(
-              article.publishedAt
-            );
+      const to = endDate
+        ? new Date(`${endDate}T23:59:59.999`)
+        : null;
 
-          if (
-            !Number.isNaN(
-              date.getTime()
-            )
-          ) {
-            articleDate =
-              date
-                .toISOString()
-                .slice(0, 10);
-          }
-        }
+      const matchesFrom = !from || (articleDate && articleDate >= from);
+      const matchesTo = !to || (articleDate && articleDate <= to);
 
-        matchesDate =
-          articleDate ===
-          selectedDate;
+      return matchesSearch && matchesFrom && matchesTo;
+    })
+    .sort((a, b) => getArticleTime(b.publishedAt) - getArticleTime(a.publishedAt));
+
+  const getMonthKey = (value) => {
+    const date = getArticleDate(value);
+    if (!date) return "unknown";
+
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  };
+
+  const getMonthLabel = (value) => {
+    const date = getArticleDate(value);
+    if (!date) return "Date Not Available";
+
+    return date.toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric"
+    });
+  };
+
+  const articleMonths = Object.entries(
+    filteredArticles.reduce((groups, article) => {
+      const key = getMonthKey(article.publishedAt);
+
+      if (!groups[key]) {
+        groups[key] = {
+          key,
+          label: getMonthLabel(article.publishedAt),
+          articles: []
+        };
       }
 
-      return (
-        matchesSearch &&
-        matchesDate
-      );
-    });
+      groups[key].articles.push(article);
+      return groups;
+    }, {})
+  ).sort(([a], [b]) => b.localeCompare(a)).map(([, month]) => month);
 
   /* =========================================================
      LOADING
@@ -397,56 +415,55 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
           FILTERS
       ===================================================== */}
 
-      <div
-        className="newsletter-filters"
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "center",
-          marginTop: 20,
-          marginBottom: 24,
-          flexWrap: "wrap"
-        }}
-      >
+      <div className="newsletter-filters">
 
         <input
           type="search"
           value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value
-            )
-          }
+          onChange={(event) => setSearch(event.target.value)}
           placeholder="Search articles & reports..."
           className="newsletter-search"
         />
 
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(event) =>
-            setSelectedDate(
-              event.target.value
-            )
-          }
-          className="newsletter-date-filter"
-        />
+        <div className="newsletter-date-filter-group">
+          <div className="newsletter-date-field">
+            <label htmlFor="articles-from-date">FROM DATE</label>
+            <input
+              id="articles-from-date"
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="newsletter-date-filter"
+            />
+          </div>
 
-        {(search || selectedDate) && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearch("");
-              setSelectedDate("");
-            }}
-            className="newsletter-clear-filter"
-          >
-            Clear
-          </button>
-        )}
+          <div className="newsletter-date-field">
+            <label htmlFor="articles-to-date">TO DATE</label>
+            <input
+              id="articles-to-date"
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="newsletter-date-filter"
+            />
+          </div>
+
+          {(search || startDate || endDate) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setStartDate("");
+                setEndDate("");
+              }}
+              className="newsletter-clear-filter"
+            >
+              Clear
+            </button>
+          )}
+        </div>
 
       </div>
-
 
       {/* =====================================================
           CONTENT
@@ -465,11 +482,21 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
       ) : (
 
-        <div className="member-newsletter-grid">
+        <div className="member-newsletter-months">
+          {articleMonths.map((month) => (
+            <section className="member-newsletter-month" key={month.key}>
+              <div className="member-newsletter-month-header">
+                <div>
+                  <span>ARTICLES & REPORTS</span>
+                  <h3>{month.label}</h3>
+                </div>
+                <strong>
+                  {month.articles.length} {month.articles.length === 1 ? "Article" : "Articles"}
+                </strong>
+              </div>
 
-          {filteredArticles.map(
-            (article) => (
-
+              <div className="member-newsletter-grid">
+                {month.articles.map((article) => (
               <article
                 className="member-newsletter-card"
                 key={article.id}
@@ -481,7 +508,6 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                 ================================================= */}
 
                 <div
-                  className="member-newsletter-icon article-clickable-thumbnail"
                   role="button"
                   tabIndex={
                     article.pdfUrl ? 0 : -1
@@ -500,15 +526,9 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                     }
 
                   }}
+                  className="member-newsletter-icon article-clickable-thumbnail"
                   style={{
-                    width: "100%",
-                    height: 180,
-                    overflow: "hidden",
-                    borderRadius: 12,
-                    flexShrink: 0,
-                    cursor: article.pdfUrl
-                      ? "pointer"
-                      : "default"
+                    cursor: article.pdfUrl ? "pointer" : "default"
                   }}
                 >
 
@@ -556,11 +576,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
                 <div
                   className="member-newsletter-content"
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column"
-                  }}
+
                 >
 
                   {/* DATE */}
@@ -579,104 +595,55 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                   </h3>
 
 
-                  {/* DESCRIPTION
-                      <= 150 characters: show full description
-                      > 150 characters: show first 150 + clickable ...
-                      Click ...: expand
-                      Click less: collapse
-                  */}
-
+                  {/* DESCRIPTION — CSS limits this to exactly two lines */}
                   {article.description && (
-                    <div
-                      style={{
-                        marginTop: 8,
-                        fontSize: 13,
-                        lineHeight: 1.5,
-                        color: "inherit",
-                        opacity: 0.78,
-                        display: "block",
-                        width: "100%",
-                        minHeight: 20,
-                        overflow: "visible"
-                      }}
-                    >
-                      {expandedDescriptionId === article.id ? (
-                        <>
-                          {article.description}
-
-                          {article.description.length > 150 && (
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              onClick={() =>
-                                setExpandedDescriptionId(null)
-                              }
-                              onKeyDown={(event) => {
-                                if (
-                                  event.key === "Enter" ||
-                                  event.key === " "
-                                ) {
-                                  event.preventDefault();
-                                  setExpandedDescriptionId(null);
-                                }
-                              }}
-                              style={{
-                                display: "inline",
-                                marginLeft: 4,
-                                color: "#e8473f",
-                                fontWeight: 700,
-                                textDecoration: "underline",
-                                cursor: "pointer",
-                                opacity: 1,
-                                position: "relative",
-                                zIndex: 50
-                              }}
-                            >
-                              less
-                            </span>
-                          )}
-                        </>
-                      ) : article.description.length > 150 ? (
-                        <>
-                          {article.description
-                            .slice(0, 150)
-                            .trimEnd()}
-
+                    expandedDescriptionId === article.id ? (
+                      <p className="member-newsletter-description article-description-expanded">
+                        {article.description}
+                        {article.description.length > 0 && (
                           <span
+                            className="member-article-description-toggle"
                             role="button"
                             tabIndex={0}
-                            aria-label="Show full description"
-                            onClick={() =>
-                              setExpandedDescriptionId(article.id)
-                            }
+                            onClick={() => setExpandedDescriptionId(null)}
                             onKeyDown={(event) => {
-                              if (
-                                event.key === "Enter" ||
-                                event.key === " "
-                              ) {
+                              if (event.key === "Enter" || event.key === " ") {
                                 event.preventDefault();
-                                setExpandedDescriptionId(article.id);
+                                setExpandedDescriptionId(null);
                               }
                             }}
-                            style={{
-                              display: "inline",
-                              marginLeft: 2,
-                              color: "#e8473f",
-                              fontWeight: 700,
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                              opacity: 1,
-                              position: "relative",
-                              zIndex: 50
-                            }}
                           >
-                            ...
+                            less
                           </span>
-                        </>
-                      ) : (
-                        article.description
-                      )}
-                    </div>
+                        )}
+                      </p>
+                    ) : (
+                      <p
+                        className={`member-newsletter-description ${
+                          article.description.length > 120
+                            ? "article-description-collapsed article-description-expandable"
+                            : ""
+                        }`}
+                        role={article.description.length > 120 ? "button" : undefined}
+                        tabIndex={article.description.length > 120 ? 0 : undefined}
+                        onClick={() => {
+                          if (article.description.length > 120) {
+                            setExpandedDescriptionId(article.id);
+                          }
+                        }}
+                        onKeyDown={(event) => {
+                          if (
+                            article.description.length > 120 &&
+                            (event.key === "Enter" || event.key === " ")
+                          ) {
+                            event.preventDefault();
+                            setExpandedDescriptionId(article.id);
+                          }
+                        }}
+                      >
+                        {article.description}
+                      </p>
+                    )
                   )}
 
 
@@ -769,10 +736,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
                 <div
                   className="article-report-button-wrap"
-                  style={{
-                    marginTop: "auto",
-                    paddingTop: 20
-                  }}
+
                 >
 
                   <button
@@ -782,13 +746,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                       openPdf(article)
                     }
                     style={{
-                      width: "100%",
-                      position: "relative",
-                      zIndex: 30,
-                      pointerEvents: "auto",
-                      cursor: article.pdfUrl
-                        ? "pointer"
-                        : "default"
+                      cursor: article.pdfUrl ? "pointer" : "default"
                     }}
                   >
                     Read Article →
@@ -797,14 +755,13 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                 </div>
 
               </article>
-
-            )
-          )}
-
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
 
       )}
-
 
       {/* =====================================================
           PDF PREVIEW

@@ -16,32 +16,212 @@
 
 
   // =========================================================
-  // GET LOGGED-IN MEMBER
+  // GET CURRENT LOGGED-IN MEMBER
+  // MULTI-ACCOUNT SAFE
   // =========================================================
 
   function getLoggedInMember() {
-    let member = null;
 
-    const localMember =
-      localStorage.getItem("wealthoria-member");
+    const MEMBER_SESSIONS_KEY =
+      "wealthoria-member-sessions";
 
-    const sessionMember =
-      sessionStorage.getItem("wealthoria-member");
+    const CURRENT_MEMBER_KEY =
+      "wealthoria-current-member";
 
-    try {
-      if (localMember) {
-        member = JSON.parse(localMember);
-      } else if (sessionMember) {
-        member = JSON.parse(sessionMember);
+
+    // =========================================================
+    // GET CURRENT MEMBER UID
+    // =========================================================
+
+    const readCurrentMemberUid = () => {
+
+      const raw =
+        sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
+        localStorage.getItem(CURRENT_MEMBER_KEY);
+
+      if (!raw) {
+        return "";
       }
-    } catch (error) {
-      console.error(
-        "❌ Member session parse error:",
-        error
-      );
+
+      try {
+
+        const parsed =
+          JSON.parse(raw);
+
+        if (typeof parsed === "string") {
+          return parsed;
+        }
+
+        return parsed?.uid || "";
+
+      } catch (error) {
+
+        // UID may already be stored as plain text
+        return raw;
+
+      }
+
+    };
+
+
+    // =========================================================
+    // READ MEMBER SESSIONS
+    // =========================================================
+
+    const readSessions = (storage) => {
+
+      try {
+
+        const raw =
+          storage.getItem(MEMBER_SESSIONS_KEY);
+
+        if (!raw) {
+          return {};
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        if (
+          parsed &&
+          typeof parsed === "object"
+        ) {
+          return parsed;
+        }
+
+        return {};
+
+      } catch (error) {
+
+        console.error(
+          "❌ Member sessions parse error:",
+          error
+        );
+
+        return {};
+
+      }
+
+    };
+
+
+    // =========================================================
+    // GET CURRENT UID
+    // =========================================================
+
+    const currentUid =
+      readCurrentMemberUid();
+
+
+    // =========================================================
+    // FIND CURRENT MEMBER IN SESSION STORAGE
+    // =========================================================
+
+    if (currentUid) {
+
+      const sessionStore =
+        readSessions(sessionStorage);
+
+      if (
+        sessionStore[currentUid]
+      ) {
+
+        console.log(
+          "✅ Current member found in sessionStorage:",
+          sessionStore[currentUid].email
+        );
+
+        return sessionStore[currentUid];
+
+      }
+
+
+      // =======================================================
+      // FIND CURRENT MEMBER IN LOCAL STORAGE
+      // =======================================================
+
+      const localStore =
+        readSessions(localStorage);
+
+      if (
+        localStore[currentUid]
+      ) {
+
+        console.log(
+          "✅ Current member found in localStorage:",
+          localStore[currentUid].email
+        );
+
+        return localStore[currentUid];
+
+      }
+
     }
 
-    return member;
+
+    // =========================================================
+    // LEGACY SESSION FALLBACK
+    // =========================================================
+    //
+    // This keeps compatibility with old login sessions.
+    // =========================================================
+
+    const legacyLocal =
+      localStorage.getItem(
+        "wealthoria-member"
+      );
+
+    const legacySession =
+      sessionStorage.getItem(
+        "wealthoria-member"
+      );
+
+
+    try {
+
+      if (legacySession) {
+
+        const member =
+          JSON.parse(
+            legacySession
+          );
+
+        console.log(
+          "⚠️ Using legacy sessionStorage member session."
+        );
+
+        return member;
+
+      }
+
+
+      if (legacyLocal) {
+
+        const member =
+          JSON.parse(
+            legacyLocal
+          );
+
+        console.log(
+          "⚠️ Using legacy localStorage member session."
+        );
+
+        return member;
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "❌ Legacy member session parse error:",
+        error
+      );
+
+    }
+
+
+    return null;
+
   }
 
 
@@ -50,32 +230,43 @@
   // =========================================================
 
   function loadScript(src) {
+
     return new Promise((resolve, reject) => {
+
       const existing =
         document.querySelector(
           `script[src="${src}"]`
         );
 
       if (existing) {
+
         resolve();
+
         return;
+
       }
+
 
       const script =
         document.createElement("script");
 
       script.src = src;
 
+
       script.onload = () => {
+
         console.log(
           "✅ Script loaded:",
           src
         );
 
         resolve();
+
       };
 
+
       script.onerror = (error) => {
+
         console.error(
           "❌ Script failed:",
           src,
@@ -87,10 +278,14 @@
             "Failed to load: " + src
           )
         );
+
       };
 
+
       document.head.appendChild(script);
+
     });
+
   }
 
 
@@ -99,16 +294,21 @@
   // =========================================================
 
   async function getMessagingInstance() {
+
     if (!window.firebase) {
+
       throw new Error(
         "Firebase is not loaded."
       );
+
     }
+
 
     if (
       typeof window.firebase.messaging !==
       "function"
     ) {
+
       console.log(
         "📥 Loading Firebase Messaging SDK..."
       );
@@ -116,18 +316,24 @@
       await loadScript(
         FIREBASE_MESSAGING_SDK
       );
+
     }
+
 
     if (
       typeof window.firebase.messaging !==
       "function"
     ) {
+
       throw new Error(
         "Firebase Messaging SDK could not be loaded."
       );
+
     }
 
+
     return firebase.messaging();
+
   }
 
 
@@ -136,70 +342,91 @@
   // =========================================================
 
   async function initializeMemberForegroundNotifications() {
+
     console.log(
       "🔔 Initializing foreground notification listener..."
     );
 
+
     try {
+
       const member =
         getLoggedInMember();
+
 
       if (
         !member ||
         !member.uid
       ) {
+
         console.warn(
           "⚠️ No logged-in member found."
         );
 
         return false;
+
       }
 
+
       if (!window.firebase) {
+
         console.error(
           "❌ Firebase is not loaded."
         );
 
         return false;
+
       }
+
 
       if (
         !("serviceWorker" in navigator)
       ) {
+
         console.error(
           "❌ Service Worker not supported."
         );
 
         return false;
+
       }
+
 
       const registration =
         await navigator.serviceWorker.ready;
 
+
       const messaging =
         await getMessagingInstance();
+
 
       if (
         window.memberForegroundListenerReady
       ) {
+
         console.log(
           "ℹ️ Foreground listener already exists."
         );
 
         return true;
+
       }
+
 
       messaging.onMessage(
         function (payload) {
+
           console.log(
             "🔔 Foreground notification received:",
             payload
           );
 
+
           const title =
             payload.notification?.title ||
             payload.data?.title ||
             "Wealthoria";
+
 
           const body =
             payload.notification?.body ||
@@ -223,6 +450,7 @@
             )
           );
 
+
           console.log(
             "✅ Dashboard notification event dispatched."
           );
@@ -237,7 +465,9 @@
             Notification.permission ===
               "granted"
           ) {
+
             try {
+
               const notification =
                 new Notification(
                   title,
@@ -248,43 +478,58 @@
                   }
                 );
 
+
               notification.onclick =
                 function () {
+
                   window.focus();
+
                   notification.close();
+
                 };
+
 
               console.log(
                 "✅ Browser notification displayed."
               );
 
             } catch (notificationError) {
+
               console.error(
                 "❌ Could not display browser notification:",
                 notificationError
               );
+
             }
+
           }
+
         }
       );
 
+
       window.memberForegroundListenerReady =
         true;
+
 
       console.log(
         "✅ Foreground notification listener ready."
       );
 
+
       return true;
 
     } catch (error) {
+
       console.error(
         "❌ Foreground notification initialization error:",
         error
       );
 
       return false;
+
     }
+
   }
 
 
@@ -294,9 +539,11 @@
 
   window.enableMemberNotifications =
     async function () {
+
       console.log(
         "🔔 enableMemberNotifications called"
       );
+
 
       try {
 
@@ -305,12 +552,15 @@
         // --------------------------------------------------
 
         if (!window.firebase) {
+
           alert(
             "Firebase is not loaded."
           );
 
           return;
+
         }
+
 
         console.log(
           "Firebase loaded:",
@@ -325,11 +575,13 @@
         if (
           !("Notification" in window)
         ) {
+
           alert(
             "This browser does not support notifications."
           );
 
           return;
+
         }
 
 
@@ -339,6 +591,7 @@
 
         const member =
           getLoggedInMember();
+
 
         console.log(
           "Logged-in member:",
@@ -365,15 +618,18 @@
          * FCM token could even be generated.
          */
 
+
         if (
           !member ||
           !member.uid
         ) {
+
           alert(
             "Please login as a member first."
           );
 
           return;
+
         }
 
 
@@ -384,19 +640,23 @@
         const permission =
           await Notification.requestPermission();
 
+
         console.log(
           "Notification permission:",
           permission
         );
 
+
         if (
           permission !== "granted"
         ) {
+
           alert(
             "Notification permission was not granted."
           );
 
           return;
+
         }
 
 
@@ -414,15 +674,19 @@
         if (
           !("serviceWorker" in navigator)
         ) {
+
           alert(
             "Service Worker is not supported."
           );
 
           return;
+
         }
+
 
         const registration =
           await navigator.serviceWorker.ready;
+
 
         console.log(
           "Service worker ready:",
@@ -437,6 +701,7 @@
         const messaging =
           await getMessagingInstance();
 
+
         console.log(
           "✅ Firebase Messaging instance created."
         );
@@ -450,6 +715,7 @@
           "Requesting FCM token..."
         );
 
+
         const fcmToken =
           await messaging.getToken({
             vapidKey:
@@ -459,21 +725,28 @@
               registration
           });
 
+
         if (!fcmToken) {
+
           alert(
             "Could not get FCM token."
           );
+
 
           console.error(
             "❌ FCM token is empty."
           );
 
+
           return;
+
         }
+
 
         console.log(
           "✅ FCM token received successfully."
         );
+
 
         console.log(
           "FCM token:",
@@ -486,15 +759,19 @@
         // --------------------------------------------------
 
         if (!member.token) {
+
           console.error(
             "❌ Member authentication token is missing."
           );
+
 
           alert(
             "Member login session is missing. Please logout and login again."
           );
 
+
           return;
+
         }
 
 
@@ -505,6 +782,7 @@
         console.log(
           "Sending FCM token to backend..."
         );
+
 
         const response =
           await fetch(
@@ -532,14 +810,19 @@
 
         let data = {};
 
+
         try {
+
           data =
             await response.json();
+
         } catch (jsonError) {
+
           console.error(
             "❌ Could not parse backend response:",
             jsonError
           );
+
         }
 
 
@@ -550,6 +833,7 @@
 
 
         if (!response.ok) {
+
           console.error(
             "❌ Failed to save FCM token.",
             {
@@ -558,12 +842,15 @@
             }
           );
 
+
           alert(
             data.message ||
             "Failed to save notification token."
           );
 
+
           return;
+
         }
 
 
@@ -580,6 +867,7 @@
           "Notifications enabled successfully! 🔔"
         );
 
+
       } catch (error) {
 
         console.error(
@@ -587,11 +875,14 @@
           error
         );
 
+
         alert(
           "Unable to enable notifications:\n" +
           error.message
         );
+
       }
+
     };
 
 
@@ -610,5 +901,6 @@
   console.log(
     "✅ Wealthoria notification system loaded."
   );
+
 
 })();

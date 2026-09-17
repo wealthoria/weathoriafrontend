@@ -35,7 +35,8 @@ function MemberLogin() {
   const [checkingSession, setCheckingSession] =
     useState(true);
 
-
+const [subscriptionInactive, setSubscriptionInactive] =
+  useState(false);
   /* =========================================================
      PREVENT PASSWORD MANAGER AUTOFILL
   ========================================================= */
@@ -54,267 +55,657 @@ function MemberLogin() {
   const API_BASE_URL =
     "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
+/* =========================================================
+   MULTI-MEMBER SESSION STORAGE
+========================================================= */
 
-  /* =========================================================
-     STORAGE HELPERS
-  ========================================================= */
+const MEMBER_SESSIONS_KEY =
+  "wealthoria-member-sessions";
 
-  const clearMemberSession = () => {
+const CURRENT_MEMBER_KEY =
+  "wealthoria-current-member";
 
-    try {
 
-      localStorage.removeItem(
-        "wealthoria-member"
-      );
+const readStorageObject = (storage) => {
 
-      sessionStorage.removeItem(
-        "wealthoria-member"
-      );
+  try {
 
-    } catch (storageError) {
+    const raw =
+      storage.getItem(MEMBER_SESSIONS_KEY);
 
-      console.error(
-        "Could not clear member session:",
-        storageError
-      );
-
+    if (!raw) {
+      return {};
     }
 
+    const parsed =
+      JSON.parse(raw);
+
+    return parsed &&
+      typeof parsed === "object"
+      ? parsed
+      : {};
+
+  } catch (error) {
+
+    console.warn(
+      "Could not read member sessions:",
+      error
+    );
+
+    return {};
+  }
+
+};
+
+
+const writeStorageObject = (
+  storage,
+  sessions
+) => {
+
+  storage.setItem(
+    MEMBER_SESSIONS_KEY,
+    JSON.stringify(sessions)
+  );
+
+};
+
+
+const getAllMemberSessions = () => {
+
+  const localSessions =
+    readStorageObject(localStorage);
+
+  const sessionSessions =
+    readStorageObject(sessionStorage);
+
+  return {
+    ...localSessions,
+    ...sessionSessions
   };
 
-
-  const getSavedMemberSession = () => {
-
-    try {
-
-      const localSession =
-        localStorage.getItem(
-          "wealthoria-member"
-        );
-
-      if (localSession) {
-
-        return {
-          value: localSession,
-          type: "local"
-        };
-
-      }
+};
 
 
-      const sessionOnly =
-        sessionStorage.getItem(
-          "wealthoria-member"
-        );
+const saveMemberSession = (
+  session,
+  shouldRemember
+) => {
 
-      if (sessionOnly) {
+  try {
 
-        return {
-          value: sessionOnly,
-          type: "session"
-        };
-
-      }
-
-
-      return null;
-
-    } catch (storageError) {
-
-      console.error(
-        "Could not read member session:",
-        storageError
-      );
-
-      return null;
-
-    }
-
-  };
-
-
-  const saveMemberSession = (
-    session,
-    shouldRemember
-  ) => {
-
-    try {
-
-      /*
-       * Always remove the old copy first.
-       * This prevents localStorage and sessionStorage
-       * from both containing an active login.
-       */
-
-      localStorage.removeItem(
-        "wealthoria-member"
-      );
-
-      sessionStorage.removeItem(
-        "wealthoria-member"
-      );
-
-
-      if (shouldRemember) {
-
-        localStorage.setItem(
-          "wealthoria-member",
-          JSON.stringify(session)
-        );
-
-      }
-
-      else {
-
-        sessionStorage.setItem(
-          "wealthoria-member",
-          JSON.stringify(session)
-        );
-
-      }
-
-    } catch (storageError) {
-
-      console.error(
-        "Could not save member session:",
-        storageError
-      );
-
+    if (!session?.uid) {
       throw new Error(
-        "Unable to save your login session."
+        "Member UID is missing."
+      );
+    }
+
+
+    const localSessions =
+      readStorageObject(localStorage);
+
+    const sessionSessions =
+      readStorageObject(sessionStorage);
+
+
+    /* Remove this member from both stores first */
+    delete localSessions[session.uid];
+    delete sessionSessions[session.uid];
+
+
+    if (shouldRemember) {
+
+      localSessions[session.uid] =
+        session;
+
+      writeStorageObject(
+        localStorage,
+        localSessions
+      );
+
+      /* Current member is persistent */
+      localStorage.setItem(
+        CURRENT_MEMBER_KEY,
+        session.uid
+      );
+
+      sessionStorage.removeItem(
+        CURRENT_MEMBER_KEY
+      );
+
+    } else {
+
+      sessionSessions[session.uid] =
+        session;
+
+      writeStorageObject(
+        sessionStorage,
+        sessionSessions
+      );
+
+      /* Current member is tab/session based */
+      sessionStorage.setItem(
+        CURRENT_MEMBER_KEY,
+        session.uid
+      );
+
+      localStorage.removeItem(
+        CURRENT_MEMBER_KEY
       );
 
     }
 
-  };
+
+    console.log(
+      "Member session saved:",
+      session.uid
+    );
+
+  } catch (storageError) {
+
+    console.error(
+      "Could not save member session:",
+      storageError
+    );
+
+    throw new Error(
+      "Unable to save your login session."
+    );
+
+  }
+
+};
+
+
+const getSavedMemberSession = () => {
+
+  try {
+
+    /*
+     * Session storage gets priority because it
+     * represents the account currently active
+     * in this browser tab.
+     */
+
+    const sessionCurrentUid =
+      sessionStorage.getItem(
+        CURRENT_MEMBER_KEY
+      );
+
+
+    if (sessionCurrentUid) {
+
+      const sessionSessions =
+        readStorageObject(
+          sessionStorage
+        );
+
+      const session =
+        sessionSessions[
+          sessionCurrentUid
+        ];
+
+      if (session) {
+
+        return {
+          value:
+            JSON.stringify(session),
+          type:
+            "session",
+          uid:
+            sessionCurrentUid
+        };
+
+      }
+
+    }
+
+
+    const localCurrentUid =
+      localStorage.getItem(
+        CURRENT_MEMBER_KEY
+      );
+
+
+    if (localCurrentUid) {
+
+      const localSessions =
+        readStorageObject(
+          localStorage
+        );
+
+      const session =
+        localSessions[
+          localCurrentUid
+        ];
+
+      if (session) {
+
+        return {
+          value:
+            JSON.stringify(session),
+          type:
+            "local",
+          uid:
+            localCurrentUid
+        };
+
+      }
+
+    }
+
+
+    return null;
+
+  } catch (storageError) {
+
+    console.error(
+      "Could not read current member session:",
+      storageError
+    );
+
+    return null;
+
+  }
+
+};
+
+
+const getSavedAccounts = () => {
+
+  try {
+
+    const sessions =
+      getAllMemberSessions();
+
+    return Object.values(
+      sessions
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Could not get saved accounts:",
+      error
+    );
+
+    return [];
+
+  }
+
+};
+
+
+const setCurrentMember = (
+  uid
+) => {
+
+  const allSessions =
+    getAllMemberSessions();
+
+  const session =
+    allSessions[uid];
+
+  if (!session) {
+    return false;
+  }
+
+
+  const localSessions =
+    readStorageObject(
+      localStorage
+    );
+
+  const sessionSessions =
+    readStorageObject(
+      sessionStorage
+    );
+
+
+  if (
+    localSessions[uid]
+  ) {
+
+    localStorage.setItem(
+      CURRENT_MEMBER_KEY,
+      uid
+    );
+
+    sessionStorage.removeItem(
+      CURRENT_MEMBER_KEY
+    );
+
+  } else {
+
+    sessionStorage.setItem(
+      CURRENT_MEMBER_KEY,
+      uid
+    );
+
+    localStorage.removeItem(
+      CURRENT_MEMBER_KEY
+    );
+
+  }
+
+
+  return true;
+
+};
+
+
+const clearCurrentMember = () => {
+
+  localStorage.removeItem(
+    CURRENT_MEMBER_KEY
+  );
+
+  sessionStorage.removeItem(
+    CURRENT_MEMBER_KEY
+  );
+
+};
+
+
+const removeMemberSession = (
+  uid
+) => {
+
+  const localSessions =
+    readStorageObject(
+      localStorage
+    );
+
+  const sessionSessions =
+    readStorageObject(
+      sessionStorage
+    );
+
+
+  delete localSessions[uid];
+  delete sessionSessions[uid];
+
+
+  writeStorageObject(
+    localStorage,
+    localSessions
+  );
+
+  writeStorageObject(
+    sessionStorage,
+    sessionSessions
+  );
+
+
+  const localCurrent =
+    localStorage.getItem(
+      CURRENT_MEMBER_KEY
+    );
+
+  const sessionCurrent =
+    sessionStorage.getItem(
+      CURRENT_MEMBER_KEY
+    );
+
+
+  if (
+    localCurrent === uid
+  ) {
+
+    localStorage.removeItem(
+      CURRENT_MEMBER_KEY
+    );
+
+  }
+
+  if (
+    sessionCurrent === uid
+  ) {
+
+    sessionStorage.removeItem(
+      CURRENT_MEMBER_KEY
+    );
+
+  }
+
+};
+
 
 
   /* =========================================================
-     RECORD MEMBER LOGIN
+     ACTIVATE CANCELLED SUBSCRIPTION
   ========================================================= */
 
-  const recordMemberLogin = async ({
-    uid,
-    email,
-    name,
-    token
-  }) => {
+  const activateSubscription = async () => {
+    setError("");
+    setLoading(true);
 
     try {
+      const saved = getSavedMemberSession();
 
-      const loginTime =
-        new Date().toISOString();
+      if (!saved) {
+        throw new Error("Your login session was not found. Please login again.");
+      }
 
-
-      const response =
-        await fetch(
-          `${API_BASE_URL}/api/members/login-status`,
-          {
-            method: "POST",
-
-            headers: {
-
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`
-
-            },
-
-            body:
-              JSON.stringify({
-
-                uid:
-                  uid,
-
-                name:
-                  name || "",
-
-                email:
-                  email,
-
-                loginTime:
-                  loginTime,
-
-                status:
-                  "online"
-
-              })
-
-          }
-        );
-
-
-      let data = null;
-
-
+      let session;
       try {
-
-        data =
-          await response.json();
-
-      } catch (jsonError) {
-
-        console.warn(
-          "Could not parse login-status response:",
-          jsonError
-        );
-
+        session = JSON.parse(saved.value);
+      } catch {
+        throw new Error("Your login session is invalid. Please login again.");
       }
 
-
-      if (!response.ok) {
-
-        console.warn(
-          "Member login record was not saved:",
-          data?.message ||
-          response.status
-        );
-
-        return false;
-
+      if (!session?.token || !session?.uid) {
+        throw new Error("Your login session is invalid. Please login again.");
       }
 
+      if (!window.Razorpay) {
+        throw new Error("Payment system is still loading. Please try again.");
+      }
 
-      console.log(
-        "Member login record saved successfully:",
+      /* Create a NEW Razorpay subscription using the existing plan */
+      const createResponse = await fetch(
+        `${API_BASE_URL}/api/subscription/reactivate`,
         {
-          uid:
-            uid,
-
-          email:
-            email,
-
-          loginTime:
-            loginTime,
-
-          status:
-            "online"
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.token}`,
+            "Content-Type": "application/json"
+          }
         }
       );
 
+      let createData = null;
 
-      return true;
+      try {
+        createData = await createResponse.json();
+      } catch {
+        createData = null;
+      }
 
-    } catch (error) {
+      if (!createResponse.ok || !createData?.success) {
+        throw new Error(
+          createData?.message ||
+          "Unable to start subscription activation."
+        );
+      }
 
-      /*
-       * Login tracking should NEVER prevent
-       * a valid member from entering the portal.
-       */
+      const subscriptionId = createData.subscriptionId;
+      const razorpayKey = createData.key;
 
-      console.warn(
-        "Could not record member login:",
-        error
+      if (!subscriptionId || !razorpayKey) {
+        throw new Error(
+          "Razorpay subscription details were not received."
+        );
+      }
+
+      setLoading(false);
+
+      const options = {
+        key: razorpayKey,
+        subscription_id: subscriptionId,
+        name: "Wealthoria",
+        description: "Wealthoria Premium Subscription",
+        prefill: {
+          name: session.name || "",
+          email: session.email || ""
+        },
+        theme: {
+          color: "#e8473f"
+        },
+
+        handler: async (response) => {
+          setLoading(true);
+          setError("");
+
+          try {
+            const paymentId =
+              response?.razorpay_payment_id;
+
+            const returnedSubscriptionId =
+              response?.razorpay_subscription_id ||
+              subscriptionId;
+
+            if (!paymentId) {
+              throw new Error(
+                "Razorpay payment ID was not received."
+              );
+            }
+
+            if (
+              returnedSubscriptionId !== subscriptionId
+            ) {
+              throw new Error(
+                "Razorpay subscription verification failed."
+              );
+            }
+
+            const completeResponse = await fetch(
+              `${API_BASE_URL}/api/subscription/reactivate/complete`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${session.token}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  subscriptionId,
+                  paymentId
+                })
+              }
+            );
+
+            let completeData = null;
+
+            try {
+              completeData =
+                await completeResponse.json();
+            } catch {
+              completeData = null;
+            }
+
+            if (
+              !completeResponse.ok ||
+              !completeData?.success
+            ) {
+              throw new Error(
+                completeData?.message ||
+                "Payment was received, but subscription activation could not be completed."
+              );
+            }
+
+            /* Update the existing session only */
+            const updatedSession = {
+              ...session,
+              status: "active",
+              subscription: {
+                ...(session.subscription || {}),
+                status: "active",
+                razorpaySubscriptionId:
+                  completeData.razorpaySubscriptionId ||
+                  subscriptionId
+              }
+            };
+
+        const storage =
+  saved.type === "local"
+    ? localStorage
+    : sessionStorage;
+
+const sessions =
+  readStorageObject(storage);
+
+sessions[session.uid] =
+  updatedSession;
+
+writeStorageObject(
+  storage,
+  sessions
+);
+
+            setSubscriptionInactive(false);
+
+            window.location.replace(
+              "/members/dashboard"
+            );
+          } catch (activationError) {
+            console.error(
+              "Subscription activation completion error:",
+              activationError
+            );
+
+            setError(
+              activationError?.message ||
+              "Subscription activation failed. Please contact support."
+            );
+
+            setLoading(false);
+          }
+        },
+
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            console.log(
+              "Razorpay subscription activation cancelled by member."
+            );
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.on(
+        "payment.failed",
+        (response) => {
+          console.error(
+            "Razorpay activation payment failed:",
+            response?.error
+          );
+
+          setError(
+            response?.error?.description ||
+            "Payment failed. Your subscription remains inactive."
+          );
+
+          setLoading(false);
+        }
       );
 
-      return false;
+      razorpay.open();
+    } catch (activationError) {
+      console.error(
+        "Subscription activation error:",
+        activationError
+      );
 
+      setError(
+        activationError?.message ||
+        "Unable to activate subscription."
+      );
+
+      setLoading(false);
     }
-
   };
-
 
   /* =========================================================
      CHECK EXISTING MEMBER SESSION
@@ -324,284 +715,273 @@ function MemberLogin() {
 
     let cancelled = false;
 
+    const checkExistingSession = async () => {
 
-    const checkExistingSession =
-      async () => {
+      try {
+
+        const saved =
+          getSavedMemberSession();
+
+        if (!saved) {
+
+          if (!cancelled) {
+            setSubscriptionInactive(false);
+            setCheckingSession(false);
+          }
+
+          return;
+        }
+
+        let session;
+
+        try {
+
+          session =
+            JSON.parse(saved.value);
+
+        } catch (parseError) {
+
+          console.error(
+            "Saved member session is invalid:",
+            parseError
+          );
+
+          if (saved?.uid) {
+            removeMemberSession(saved.uid);
+          }
+
+          if (!cancelled) {
+            setSubscriptionInactive(false);
+            setCheckingSession(false);
+          }
+
+          return;
+        }
+
+        if (!session?.uid || !session?.token) {
+
+          console.warn(
+            "Saved member session is missing uid or token."
+          );
+
+          if (session?.uid) {
+            removeMemberSession(session.uid);
+          }
+
+          if (!cancelled) {
+            setSubscriptionInactive(false);
+            setCheckingSession(false);
+          }
+
+          return;
+        }
+
+        const response =
+          await fetch(
+            `${API_BASE_URL}/api/members/me`,
+            {
+              method: "GET",
+              headers: {
+                Authorization:
+                  `Bearer ${session.token}`,
+                "Content-Type":
+                  "application/json"
+              }
+            }
+          );
+
+        let data = null;
+
+        try {
+
+          data =
+            await response.json();
+
+        } catch (jsonError) {
+
+          console.error(
+            "Could not parse session response:",
+            jsonError
+          );
+
+        }
+
+        if (
+          response.ok &&
+          data?.success &&
+          data?.member
+        ) {
+
+          const currentStatus =
+            String(
+              data.member.status || ""
+            )
+              .trim()
+              .toLowerCase();
+
+          const inactiveStatuses = [
+            "inactive",
+            "cancelled",
+            "canceled",
+            "deactivated",
+            "disabled",
+            "blocked",
+            "suspended"
+          ];
+
+          const updatedSession = {
+            ...session,
+
+            uid:
+              data.member.uid ||
+              session.uid,
+
+            email:
+              data.member.email ||
+              session.email ||
+              "",
+
+            name:
+              data.member.name ||
+              session.name ||
+              "",
+
+            role:
+              data.member.role ||
+              session.role ||
+              "member",
+
+            status:
+              currentStatus,
+
+            subscription:
+              data.member.subscription ||
+              session.subscription ||
+              null
+          };
+
+          const storage =
+            saved.type === "local"
+              ? localStorage
+              : sessionStorage;
+
+          const sessions =
+            readStorageObject(storage);
+
+          sessions[session.uid] =
+            updatedSession;
+
+          writeStorageObject(
+            storage,
+            sessions
+          );
+
+          console.log(
+            "Existing member session status:",
+            currentStatus
+          );
+
+          if (
+            inactiveStatuses.includes(
+              currentStatus
+            )
+          ) {
+
+            if (!cancelled) {
+
+              const canReactivate =
+                currentStatus === "inactive" ||
+                currentStatus === "cancelled" ||
+                currentStatus === "canceled";
+
+              if (canReactivate) {
+
+                setSubscriptionInactive(true);
+                setCheckingSession(false);
+
+              } else {
+
+                removeMemberSession(
+                  session.uid
+                );
+
+                setSubscriptionInactive(false);
+                setCheckingSession(false);
+
+              }
+
+            }
+
+            return;
+          }
+
+        if (!cancelled) {
+
+  setSubscriptionInactive(false);
+  setCheckingSession(false);
+
+}
+
+return;
+
+    
+        }
+
+        console.warn(
+          "Saved member session is no longer valid."
+        );
+
+        removeMemberSession(
+          session.uid
+        );
+
+        if (!cancelled) {
+
+          setSubscriptionInactive(false);
+          setCheckingSession(false);
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Existing member session check failed:",
+          error
+        );
 
         try {
 
           const saved =
             getSavedMemberSession();
 
-
-          /* -----------------------------------------------
-             NO SAVED SESSION
-          ----------------------------------------------- */
-
-          if (!saved) {
-
-            if (!cancelled) {
-
-              setCheckingSession(
-                false
-              );
-
-            }
-
-            return;
-
+          if (saved?.uid) {
+            removeMemberSession(saved.uid);
           }
 
-
-          /* -----------------------------------------------
-             PARSE SAVED SESSION
-          ----------------------------------------------- */
-
-          let session;
-
-
-          try {
-
-            session =
-              JSON.parse(
-                saved.value
-              );
-
-          } catch (parseError) {
-
-            console.error(
-              "Saved member session is invalid:",
-              parseError
-            );
-
-            clearMemberSession();
-
-            if (!cancelled) {
-
-              setCheckingSession(
-                false
-              );
-
-            }
-
-            return;
-
-          }
-
-
-          /* -----------------------------------------------
-             CHECK REQUIRED VALUES
-          ----------------------------------------------- */
-
-          if (
-            !session?.uid ||
-            !session?.token
-          ) {
-
-            console.warn(
-              "Saved member session is missing uid or token."
-            );
-
-            clearMemberSession();
-
-            if (!cancelled) {
-
-              setCheckingSession(
-                false
-              );
-
-            }
-
-            return;
-
-          }
-
-
-          /* -----------------------------------------------
-             VERIFY SESSION WITH BACKEND
-          ----------------------------------------------- */
-
-          const response =
-            await fetch(
-              `${API_BASE_URL}/api/members/me`,
-              {
-                method: "GET",
-
-                headers: {
-
-                  Authorization:
-                    `Bearer ${session.token}`,
-
-                  "Content-Type":
-                    "application/json"
-
-                }
-
-              }
-            );
-
-
-          let data = null;
-
-
-          try {
-
-            data =
-              await response.json();
-
-          } catch (jsonError) {
-
-            console.error(
-              "Could not parse session response:",
-              jsonError
-            );
-
-          }
-
-
-          /* -----------------------------------------------
-             VALID SESSION
-          ----------------------------------------------- */
-
-          if (
-            response.ok &&
-            data?.success &&
-            data?.member
-          ) {
-
-            const updatedSession = {
-
-              ...session,
-
-              uid:
-                data.member.uid ||
-                session.uid,
-
-              email:
-                data.member.email ||
-                session.email ||
-                "",
-
-              name:
-                data.member.name ||
-                session.name ||
-                "",
-
-              role:
-                data.member.role ||
-                session.role ||
-                "member"
-
-            };
-
-
-            /* ---------------------------------------------
-               UPDATE SAME STORAGE TYPE
-            --------------------------------------------- */
-
-            if (
-              saved.type === "local"
-            ) {
-
-              localStorage.setItem(
-                "wealthoria-member",
-                JSON.stringify(
-                  updatedSession
-                )
-              );
-
-            }
-
-            else {
-
-              sessionStorage.setItem(
-                "wealthoria-member",
-                JSON.stringify(
-                  updatedSession
-                )
-              );
-
-            }
-
-
-            console.log(
-              "Existing member session is valid."
-            );
-
-
-            /*
-             * IMPORTANT:
-             *
-             * This is an already-existing member login.
-             *
-             * We DO NOT create another login record here.
-             */
-
-            if (!cancelled) {
-
-              window.location.replace(
-                "/members/dashboard"
-              );
-
-            }
-
-            return;
-
-          }
-
-
-          /* -----------------------------------------------
-             INVALID / EXPIRED SESSION
-          ----------------------------------------------- */
+        } catch (storageError) {
 
           console.warn(
-            "Saved member session is no longer valid."
+            "Could not remove invalid saved member session:",
+            storageError
           );
-
-
-          clearMemberSession();
-
-
-          if (!cancelled) {
-
-            setCheckingSession(
-              false
-            );
-
-          }
-
-
-        } catch (error) {
-
-          console.error(
-            "Existing member session check failed:",
-            error
-          );
-
-
-          clearMemberSession();
-
-
-          if (!cancelled) {
-
-            setCheckingSession(
-              false
-            );
-
-          }
 
         }
 
-      };
+        if (!cancelled) {
 
+          setSubscriptionInactive(false);
+          setCheckingSession(false);
+
+        }
+
+      }
+
+    };
 
     checkExistingSession();
 
-
     return () => {
-
       cancelled = true;
-
     };
 
   }, []);
@@ -988,28 +1368,15 @@ function MemberLogin() {
         /* =================================================
            3. CREATE MEMBER SESSION
         ================================================= */
-
-        const session = {
-
-          uid:
-            data.uid,
-
-          email:
-            data.email ||
-            cleanEmail,
-
-          name:
-            data.name ||
-            "",
-
-          role:
-            data.role ||
-            "member",
-
-          token:
-            data.token
-
-        };
+const session = {
+  uid: data.uid,
+  email: data.email || cleanEmail,
+  name: data.name || "",
+  role: data.role || "member",
+  status: data.status || "active",
+  subscription: data.subscription || null,
+  token: data.token
+};
 
 
         /* =================================================
@@ -1050,31 +1417,27 @@ function MemberLogin() {
            5. CREATE LOGIN RECORD
         ================================================= */
 
-        await recordMemberLogin({
-
-          uid:
-            session.uid,
-
-          email:
-            session.email,
-
-          name:
-            session.name,
-
-          token:
-            session.token
-
-        });
-
-
         /* =================================================
            6. MEMBER DASHBOARD
         ================================================= */
 
-        window.location.replace(
-          "/members/dashboard"
-        );
+const loginStatus = String(session.status || "")
+  .trim()
+  .toLowerCase();
 
+if (
+  loginStatus === "inactive" ||
+  loginStatus === "cancelled" ||
+  loginStatus === "canceled"
+) {
+  setSubscriptionInactive(true);
+  setLoading(false);
+  return;
+}
+
+window.location.replace(
+  "/members/dashboard"
+);
 
       } catch (err) {
 
@@ -1214,51 +1577,96 @@ function MemberLogin() {
   ========================================================= */
 
   return (
+  <div className="members-login-page">
 
-    <div
-      className="members-login-page"
+    <a
+      href="/"
+      className="members-login-brand"
+      aria-label="Go to Wealthoria website"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        textDecoration: "none",
+        color: "inherit"
+      }}
     >
+      <img
+        src="/assets/logo-mark.png"
+        alt="Wealthoria"
+      />
+
+      <span>
+        Wealthoria
+      </span>
+    </a>
+
+    {subscriptionInactive ? (
+
+      <div className="members-login-card">
+
+        <div className="members-login-heading">
+
+          <span className="members-eyebrow">
+            SUBSCRIPTION
+          </span>
+
+          <h1>
+            Subscription Inactive
+          </h1>
+
+          <p>
+            Your subscription has been cancelled.
+          </p>
+
+          <p>
+            Activate your subscription to continue
+            using the Wealthoria Member Portal.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          className="members-login-button"
+          onClick={activateSubscription}
+          disabled={loading}
+        >
+          Activate Subscription →
+        </button>
+
+<button
+  type="button"
+  className="members-link"
+  style={{
+    marginTop: "14px",
+    width: "100%"
+  }}
+  onClick={() => {
+    clearCurrentMember();
+
+    setSubscriptionInactive(false);
+    setCheckingSession(false);
+    setError("");
+    setEmail("");
+    setPassword("");
+    setEmailEditable(false);
+    setPasswordEditable(false);
+  }}
+  disabled={loading}
+>
+  Use another account
+</button>
 
 
-      {/* =====================================================
-          BRAND
-      ===================================================== */}
-
-      <a
-        href="/"
-        className="members-login-brand"
-        aria-label="Go to Wealthoria website"
-
-        style={{
-          display:
-            "flex",
-
-          alignItems:
-            "center",
-
-          gap:
-            "8px",
-
-          textDecoration:
-            "none",
-
-          color:
-            "inherit"
-        }}
-      >
-
-        <img
-          src="/assets/logo-mark.png"
-          alt="Wealthoria"
-        />
 
 
-        <span>
-          Wealthoria
-        </span>
 
-      </a>
 
+      </div>
+
+    ) : (
+      <>
 
       {/* =====================================================
           LOGIN CARD
@@ -1278,6 +1686,8 @@ function MemberLogin() {
           >
             MEMBER PORTAL
           </span>
+
+
 
 
           <h1>
@@ -1638,17 +2048,14 @@ function MemberLogin() {
 
 
         </form>
-
-
       </div>
+      </>
+    )}
 
-
-    </div>
-
-  );
+  </div>
+);
 
 }
-
 
 /* =========================================================
    EXPORT

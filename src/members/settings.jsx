@@ -23,9 +23,6 @@ function MemberSettings() {
   const [savingPassword, setSavingPassword] =
     useState(false);
 
-  const [uid, setUid] =
-    useState("");
-
   const [name, setName] =
     useState("");
 
@@ -54,76 +51,125 @@ function MemberSettings() {
 const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
   /* =========================================================
-     GET MEMBER SESSION
+     GET CURRENT MEMBER SESSION
+     MULTI-ACCOUNT SAFE
   ========================================================= */
 
-  const getSession = () => {
+  const MEMBER_SESSIONS_KEY = "wealthoria-member-sessions";
+  const CURRENT_MEMBER_KEY = "wealthoria-current-member";
 
-    const saved =
-      localStorage.getItem(
-        "wealthoria-member"
-      ) ||
-      sessionStorage.getItem(
-        "wealthoria-member"
-      );
+  const readCurrentMemberUid = () => {
+    const raw =
+      sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
+      localStorage.getItem(CURRENT_MEMBER_KEY);
 
-    if (!saved) {
-      return null;
-    }
+    if (!raw) return "";
 
     try {
-
-      return JSON.parse(saved);
-
+      const parsed = JSON.parse(raw);
+      if (typeof parsed === "string") return parsed;
+      return parsed?.uid || "";
     } catch (err) {
-
-      console.error(
-        "Session parse error:",
-        err
-      );
-
-      return null;
+      return raw;
     }
+  };
+
+  const readSessions = (storage) => {
+    try {
+      const raw = storage.getItem(MEMBER_SESSIONS_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      console.error("Member sessions parse error:", err);
+      return {};
+    }
+  };
+
+  const getSession = () => {
+    const currentUid = readCurrentMemberUid();
+
+    if (currentUid) {
+      const sessionStore = readSessions(sessionStorage);
+      if (sessionStore[currentUid]) {
+        return sessionStore[currentUid];
+      }
+
+      const localStore = readSessions(localStorage);
+      if (localStore[currentUid]) {
+        return localStore[currentUid];
+      }
+    }
+
+    /* Backward compatibility for older single-session accounts */
+    const legacy =
+      localStorage.getItem("wealthoria-member") ||
+      sessionStorage.getItem("wealthoria-member");
+
+    if (legacy) {
+      try {
+        return JSON.parse(legacy);
+      } catch (err) {
+        console.error("Legacy session parse error:", err);
+      }
+    }
+
+    return null;
   };
 
 
   /* =========================================================
      SAVE UPDATED SESSION
+     UPDATES ONLY THE CURRENT MEMBER
   ========================================================= */
 
-  const saveSession =
-    (updatedSession) => {
+  const saveSession = (updatedSession) => {
+    if (!updatedSession?.uid) return;
 
-      if (
-        localStorage.getItem(
-          "wealthoria-member"
-        )
-      ) {
+    const uid = updatedSession.uid;
 
-        localStorage.setItem(
-          "wealthoria-member",
-          JSON.stringify(
-            updatedSession
-          )
-        );
-      }
+    const sessionStore = readSessions(sessionStorage);
+    if (sessionStore[uid]) {
+      sessionStore[uid] = updatedSession;
+      sessionStorage.setItem(
+        MEMBER_SESSIONS_KEY,
+        JSON.stringify(sessionStore)
+      );
+    }
 
+    const localStore = readSessions(localStorage);
+    if (localStore[uid]) {
+      localStore[uid] = updatedSession;
+      localStorage.setItem(
+        MEMBER_SESSIONS_KEY,
+        JSON.stringify(localStore)
+      );
+    }
 
-      if (
-        sessionStorage.getItem(
-          "wealthoria-member"
-        )
-      ) {
+    /*
+      If this is an older session, keep the legacy key working
+      without affecting the new multi-account storage.
+    */
+    if (
+      localStorage.getItem("wealthoria-member") &&
+      !localStore[uid]
+    ) {
+      localStorage.setItem(
+        "wealthoria-member",
+        JSON.stringify(updatedSession)
+      );
+    }
 
-        sessionStorage.setItem(
-          "wealthoria-member",
-          JSON.stringify(
-            updatedSession
-          )
-        );
-      }
-
-    };
+    if (
+      sessionStorage.getItem("wealthoria-member") &&
+      !sessionStore[uid]
+    ) {
+      sessionStorage.setItem(
+        "wealthoria-member",
+        JSON.stringify(updatedSession)
+      );
+    }
+  };
 
 
   /* =========================================================
@@ -170,10 +216,6 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
           /* ---------------------------------------------
              INITIAL VALUES
           --------------------------------------------- */
-
-          setUid(
-            session.uid
-          );
 
           setName(
             session.name || ""
@@ -223,12 +265,6 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
             const member =
               data.member;
-
-
-            setUid(
-              member.uid ||
-              session.uid
-            );
 
             setName(
               member.name || ""
@@ -685,27 +721,11 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
   /* =========================================================
      BACK
   ========================================================= */
-
-  const goBack =
-    () => {
-
-      if (
-        window.membersNavigate
-      ) {
-
-        window.membersNavigate(
-          "/members/dashboard"
-        );
-
-      } else {
-
-        window.location.href =
-          "/members/dashboard";
-
-      }
-
-    };
-
+const goBack = () => {
+  // Use a native browser navigation so the MembersRouter
+  // always receives /members/dashboard.
+  window.location.href = "/members/dashboard";
+};
 
   /* =========================================================
      CLEAR MESSAGES WHEN TYPING
@@ -774,672 +794,476 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
   ========================================================= */
 
   return (
+    <>
+      <style>{`
+        .member-settings-page {
+          width: 100%;
+          max-width: 820px;
+          margin: 0 auto;
+          padding: 22px 24px 42px;
+          box-sizing: border-box;
+        }
 
-    <section
-      style={{
-        width: "100%",
-        maxWidth: "1100px",
-        margin: "0 auto"
-      }}
-    >
+        .member-settings-top {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 20px;
+          margin-bottom: 18px;
+        }
 
-      {/* =====================================================
-          PAGE HEADER
-      ===================================================== */}
+        .member-settings-top h2 {
+          margin: 5px 0 4px;
+          color: #20231f;
+          font-size: 25px;
+          line-height: 1.2;
+          letter-spacing: -0.02em;
+        }
 
-      <div
-        style={{
-          display:
-            "flex",
+        .member-settings-top p {
+          margin: 0;
+          color: #858a82;
+          font-size: 12px;
+          line-height: 1.5;
+        }
 
-          justifyContent:
-            "space-between",
+        .member-settings-card {
+          width: 100%;
+          background: #fff;
+          border: 1px solid #e7e9e4;
+          border-radius: 14px;
+          overflow: hidden;
+        }
 
-          alignItems:
-            "flex-end",
+        .member-settings-section {
+          padding: 22px 24px;
+        }
 
-          gap:
-            "24px",
+        .member-settings-section + .member-settings-section {
+          border-top: 1px solid #eceee9;
+        }
 
-          marginBottom:
-            "28px"
-        }}
-      >
+        .member-settings-section-head {
+          margin-bottom: 17px;
+        }
 
-        <div>
+        .member-settings-section-head .member-panel-label {
+          margin-bottom: 5px;
+        }
 
-          <span
-            className="member-eyebrow"
-          >
-            ACCOUNT
-          </span>
+        .member-settings-section-head h3 {
+          margin: 0;
+          color: #252822;
+          font-size: 16px;
+          line-height: 1.3;
+        }
 
+        .member-settings-section-head p {
+          margin: 5px 0 0;
+          color: #8a8f87;
+          font-size: 11px;
+          line-height: 1.5;
+        }
 
-          <h2
-            style={{
-              margin:
-                "6px 0 8px"
-            }}
-          >
-            Settings
-          </h2>
+        .member-settings-field {
+          margin-top: 14px;
+        }
 
+        .member-settings-field:first-child {
+          margin-top: 0;
+        }
 
-          <p
-            style={{
-              margin:
-                0,
+        .member-settings-field label {
+          display: block;
+          margin-bottom: 6px;
+          color: #343832;
+          font-size: 11px;
+          font-weight: 650;
+        }
 
-              color:
-                "var(--muted, #71717a)"
-            }}
-          >
-            Manage your Wealthoria account details.
-          </p>
+        .member-settings-input {
+          width: 100%;
+          height: 42px;
+          padding: 0 12px;
+          box-sizing: border-box;
+          border: 1px solid #d9ddd7;
+          border-radius: 8px;
+          outline: none;
+          background: #fbfcfa;
+          color: #242722;
+          font: inherit;
+          font-size: 12px;
+          transition: border-color .18s ease, box-shadow .18s ease;
+        }
 
-        </div>
+        .member-settings-input:focus {
+          border-color: #e8473f;
+          box-shadow: 0 0 0 3px rgba(232,71,63,.08);
+          background: #fff;
+        }
 
+        .member-settings-input:disabled {
+          opacity: .65;
+          cursor: not-allowed;
+        }
 
-        <button
-          type="button"
-          className="member-panel-link"
-          onClick={
-            goBack
+        .member-settings-message {
+          margin-bottom: 14px;
+          padding: 10px 12px;
+          border-radius: 8px;
+          font-size: 11px;
+          font-weight: 600;
+          line-height: 1.45;
+        }
+
+        .member-settings-message.success {
+          background: #f0f8f2;
+          color: #23804b;
+          border: 1px solid #d7ebdc;
+        }
+
+        .member-settings-message.error {
+          background: #fff1ef;
+          color: #c13d34;
+          border: 1px solid #f2d1cc;
+        }
+
+        .member-settings-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 17px;
+        }
+
+        .member-settings-primary {
+          min-width: 122px;
+          height: 40px;
+          padding: 0 17px;
+          border: 0;
+          border-radius: 8px;
+          background: #e8473f;
+          color: #fff;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: transform .18s ease, opacity .18s ease;
+        }
+
+        .member-settings-primary:hover:not(:disabled) {
+          transform: translateY(-1px);
+        }
+
+        .member-settings-primary:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+        }
+
+        .member-settings-secondary {
+          border: 0;
+          background: transparent;
+          color: #d45a45;
+          font: inherit;
+          font-size: 11px;
+          cursor: pointer;
+        }
+
+        .member-settings-secondary:hover {
+          text-decoration: underline;
+        }
+
+        .member-settings-security-note {
+          margin-top: 15px;
+          padding: 10px 12px;
+          border-radius: 8px;
+          background: #f8f9f7;
+          color: #858a82;
+          font-size: 10px;
+          line-height: 1.55;
+        }
+
+        .member-settings-loading {
+          width: 100%;
+          max-width: 760px;
+          margin: 20px auto;
+          padding: 45px 20px;
+          box-sizing: border-box;
+          text-align: center;
+          color: #858a82;
+          font-size: 12px;
+          background: #fff;
+          border: 1px solid #e7e9e4;
+          border-radius: 14px;
+        }
+
+        html[data-theme="dark"] .member-settings-top h2 {
+          color: #f3f5f7;
+        }
+
+        html[data-theme="dark"] .member-settings-top p,
+        html[data-theme="dark"] .member-settings-section-head p {
+          color: #9da5ad;
+        }
+
+        html[data-theme="dark"] .member-settings-card {
+          background: #181b1f;
+          border-color: #30353c;
+        }
+
+        html[data-theme="dark"] .member-settings-section + .member-settings-section {
+          border-color: #30353c;
+        }
+
+        html[data-theme="dark"] .member-settings-section-head h3,
+        html[data-theme="dark"] .member-settings-field label {
+          color: #f3f5f7;
+        }
+
+        html[data-theme="dark"] .member-settings-input {
+          background: #20242a;
+          border-color: #363c44;
+          color: #f3f5f7;
+        }
+
+        html[data-theme="dark"] .member-settings-input:focus {
+          background: #20242a;
+        }
+
+        html[data-theme="dark"] .member-settings-security-note {
+          background: #20242a;
+          color: #a9b0b8;
+        }
+
+        html[data-theme="dark"] .member-settings-loading {
+          background: #181b1f;
+          border-color: #30353c;
+          color: #a9b0b8;
+        }
+
+        @media (max-width: 700px) {
+          .member-settings-page {
+            padding: 18px 14px 30px;
           }
-        >
-          ← Back to Dashboard
-        </button>
 
-      </div>
+          .member-settings-top {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 10px;
+          }
 
+          .member-settings-top h2 {
+            font-size: 23px;
+          }
 
-      {/* =====================================================
-          SETTINGS CARD
-      ===================================================== */}
+          .member-settings-section {
+            padding: 18px 16px;
+          }
+        }
+      `}</style>
 
-      <div
-        className="member-panel"
-        style={{
-          width:
-            "100%",
+      <section className="member-settings-page">
 
-          maxWidth:
-            "820px",
-
-          margin:
-            "0 auto",
-
-          overflow:
-            "hidden"
-        }}
-      >
-
-        <div
-          className="member-panel-header"
-          style={{
-            paddingBottom:
-              "22px"
-          }}
-        >
-
+        <div className="member-settings-top">
           <div>
-
-            <span
-              className="member-panel-label"
-            >
-              PROFILE
+            <span className="member-eyebrow">
+              ACCOUNT
             </span>
 
+            <h2>Settings</h2>
 
-            <h3
-              style={{
-                marginTop:
-                  "5px"
-              }}
-            >
-              Personal Information
-            </h3>
-
+            <p>
+              Manage your Wealthoria account details.
+            </p>
           </div>
+
+         
 
         </div>
 
+        <div className="member-settings-card">
 
-        <div
-          style={{
-            padding:
-              "26px 28px 30px"
-          }}
-        >
+          {/* PROFILE */}
+          <section className="member-settings-section">
 
-          {/* =================================================
-              SUCCESS MESSAGE
-          ================================================= */}
+            <div className="member-settings-section-head">
+              <span className="member-panel-label">
+                PROFILE
+              </span>
 
-          {success && (
+              <h3>Personal Information</h3>
 
-            <div
-              style={{
-                marginBottom:
-                  "22px",
-
-                padding:
-                  "13px 15px",
-
-                borderRadius:
-                  "10px",
-
-                background:
-                  "rgba(34,155,91,.09)",
-
-                color:
-                  "#218a50",
-
-                fontSize:
-                  "13px",
-
-                fontWeight:
-                  600
-              }}
-            >
-
-              âœ“ {success}
-
+              <p>
+                Update the name and email associated with your member account.
+              </p>
             </div>
 
-          )}
-
-
-          {/* =================================================
-              ERROR MESSAGE
-          ================================================= */}
-
-          {error && (
-
-            <div
-              style={{
-                marginBottom:
-                  "22px",
-
-                padding:
-                  "13px 15px",
-
-                borderRadius:
-                  "10px",
-
-                background:
-                  "rgba(220,60,50,.09)",
-
-                color:
-                  "#c52f2f",
-
-                fontSize:
-                  "13px",
-
-                fontWeight:
-                  600,
-
-                lineHeight:
-                  1.5
-              }}
-            >
-
-              {error}
-
-            </div>
-
-          )}
-
-
-          {/* =================================================
-              NAME
-          ================================================= */}
-
-          <div
-            className="field"
-          >
-
-            <label>
-              Name
-            </label>
-
-
-            <input
-              className="input"
-              type="text"
-              value={name}
-              onChange={(event) => {
-
-                setName(
-                  event.target.value
-                );
-
-                clearMessages();
-
-              }}
-              placeholder="Enter your name"
-              disabled={
-                savingProfile ||
-                savingPassword
-              }
-            />
-
-          </div>
-
-
-          {/* =================================================
-              EMAIL
-          ================================================= */}
-
-          <div
-            className="field"
-            style={{
-              marginTop:
-                "20px"
-            }}
-          >
-
-            <label>
-              Email
-            </label>
-
-
-            <input
-              className="input"
-              type="email"
-              value={email}
-              onChange={(event) => {
-
-                setEmail(
-                  event.target.value
-                );
-
-                clearMessages();
-
-              }}
-              placeholder="Enter your email"
-              autoComplete="email"
-              disabled={
-                savingProfile ||
-                savingPassword
-              }
-            />
-
-          </div>
-
-
-          {/* =================================================
-              USER ID
-          ================================================= */}
-
-          <div
-            className="field"
-            style={{
-              marginTop:
-                "20px"
-            }}
-          >
-
-            <label>
-              User ID
-            </label>
-
-
-            <input
-              className="input"
-              type="text"
-              value={uid}
-              readOnly
-              style={{
-                background:
-                  "rgba(0,0,0,.035)",
-
-                opacity:
-                  0.7,
-
-                cursor:
-                  "not-allowed"
-              }}
-            />
-
-
-            <small
-              style={{
-                display:
-                  "block",
-
-                marginTop:
-                  "6px",
-
-                fontSize:
-                  "12px",
-
-                opacity:
-                  0.55
-              }}
-            >
-              Your User ID cannot be changed.
-            </small>
-
-          </div>
-
-
-          {/* =================================================
-              SAVE PROFILE
-          ================================================= */}
-
-          <div
-            style={{
-              marginTop:
-                "28px",
-
-              display:
-                "flex",
-
-              alignItems:
-                "center",
-
-              gap:
-                "14px"
-            }}
-          >
-
-            <button
-              type="button"
-              className="btn btn-green"
-              onClick={
-                saveProfile
-              }
-              disabled={
-                savingProfile ||
-                savingPassword
-              }
-            >
-
-              {savingProfile
-                ? "Saving..."
-                : "Save Changes"}
-
-            </button>
-
-
-            <button
-              type="button"
-              className="member-panel-link"
-              onClick={
-                goBack
-              }
-              disabled={
-                savingProfile ||
-                savingPassword
-              }
-            >
-              Cancel
-            </button>
-
-          </div>
-
-
-          {/* =================================================
-              SECURITY
-          ================================================= */}
-
-          <div
-            style={{
-              marginTop:
-                "36px",
-
-              paddingTop:
-                "28px",
-
-              borderTop:
-                "1px solid rgba(0,0,0,.08)"
-            }}
-          >
-
-            <span
-              className="member-panel-label"
-            >
-              SECURITY
-            </span>
-
-
-            <h3
-              style={{
-                margin:
-                  "6px 0 10px"
-              }}
-            >
-              Change Password
-            </h3>
-
-
-            <p
-              style={{
-                margin:
-                  "0 0 22px",
-
-                fontSize:
-                  "13px",
-
-                lineHeight:
-                  1.6,
-
-                opacity:
-                  0.65
-              }}
-            >
-              Your member password is managed securely
-              through the Wealthoria member system.
-            </p>
-
-
-            {/* CURRENT PASSWORD */}
-
-            <div
-              className="field"
-            >
-
-              <label>
-                Current Password
-              </label>
-
+            {success && (
+              <div className="member-settings-message success">
+                ✓ {success}
+              </div>
+            )}
+
+            {error && (
+              <div className="member-settings-message error">
+                {error}
+              </div>
+            )}
+
+            <div className="member-settings-field">
+              <label>Name</label>
 
               <input
-                className="input"
+                className="member-settings-input"
+                type="text"
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  clearMessages();
+                }}
+                placeholder="Enter your name"
+                disabled={savingProfile || savingPassword}
+              />
+            </div>
+
+            <div className="member-settings-field">
+              <label>Email</label>
+
+              <input
+                className="member-settings-input"
+                type="email"
+                value={email}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  clearMessages();
+                }}
+                placeholder="Enter your email"
+                autoComplete="email"
+                disabled={savingProfile || savingPassword}
+              />
+            </div>
+
+            <div className="member-settings-actions">
+              <button
+                type="button"
+                className="member-settings-primary"
+                onClick={saveProfile}
+                disabled={savingProfile || savingPassword}
+              >
+                {savingProfile ? "Saving..." : "Save Changes"}
+              </button>
+
+              <button
+                type="button"
+                className="member-settings-secondary"
+                onClick={goBack}
+                disabled={savingProfile || savingPassword}
+              >
+                Cancel
+              </button>
+            </div>
+
+          </section>
+
+          {/* SECURITY */}
+          <section className="member-settings-section">
+
+            <div className="member-settings-section-head">
+              <span className="member-panel-label">
+                SECURITY
+              </span>
+
+              <h3>Change Password</h3>
+
+              <p>
+                Keep your account secure by using a strong password.
+              </p>
+            </div>
+
+            <div className="member-settings-field">
+              <label>Current Password</label>
+
+              <input
+                className="member-settings-input"
                 type="password"
                 value={currentPassword}
                 onChange={(event) => {
-
-                  setCurrentPassword(
-                    event.target.value
-                  );
-
+                  setCurrentPassword(event.target.value);
                   clearMessages();
-
                 }}
                 placeholder="Enter current password"
                 autoComplete="current-password"
-                disabled={
-                  savingProfile ||
-                  savingPassword
-                }
+                disabled={savingProfile || savingPassword}
               />
-
             </div>
 
-
-            {/* NEW PASSWORD */}
-
-            <div
-              className="field"
-              style={{
-                marginTop:
-                  "20px"
-              }}
-            >
-
-              <label>
-                New Password
-              </label>
-
+            <div className="member-settings-field">
+              <label>New Password</label>
 
               <input
-                className="input"
+                className="member-settings-input"
                 type="password"
                 value={newPassword}
                 onChange={(event) => {
-
-                  setNewPassword(
-                    event.target.value
-                  );
-
+                  setNewPassword(event.target.value);
                   clearMessages();
-
                 }}
                 placeholder="Enter new password"
                 autoComplete="new-password"
-                disabled={
-                  savingProfile ||
-                  savingPassword
-                }
+                disabled={savingProfile || savingPassword}
               />
-
 
               <small
                 style={{
-                  display:
-                    "block",
-
-                  marginTop:
-                    "6px",
-
-                  fontSize:
-                    "12px",
-
-                  opacity:
-                    0.55
+                  display: "block",
+                  marginTop: 5,
+                  fontSize: 10,
+                  color: "#8a8f87"
                 }}
               >
                 Minimum 6 characters.
               </small>
-
             </div>
 
-
-            {/* CONFIRM PASSWORD */}
-
-            <div
-              className="field"
-              style={{
-                marginTop:
-                  "20px"
-              }}
-            >
-
-              <label>
-                Confirm New Password
-              </label>
-
+            <div className="member-settings-field">
+              <label>Confirm New Password</label>
 
               <input
-                className="input"
+                className="member-settings-input"
                 type="password"
                 value={confirmPassword}
                 onChange={(event) => {
-
-                  setConfirmPassword(
-                    event.target.value
-                  );
-
+                  setConfirmPassword(event.target.value);
                   clearMessages();
-
                 }}
                 placeholder="Confirm new password"
                 autoComplete="new-password"
-                disabled={
-                  savingProfile ||
-                  savingPassword
-                }
+                disabled={savingProfile || savingPassword}
               />
-
             </div>
 
-
-            {/* CHANGE PASSWORD BUTTON */}
-
-            <div
-              style={{
-                marginTop:
-                  "26px"
-              }}
-            >
-
+            <div className="member-settings-actions">
               <button
                 type="button"
-                className="btn btn-green"
-                onClick={
-                  changePassword
-                }
-                disabled={
-                  savingProfile ||
-                  savingPassword
-                }
+                className="member-settings-primary"
+                onClick={changePassword}
+                disabled={savingProfile || savingPassword}
               >
-
-                {savingPassword
-                  ? "Updating..."
-                  : "Update Password"}
-
+                {savingPassword ? "Updating..." : "Update Password"}
               </button>
-
             </div>
 
-
-            {/* SECURITY MESSAGE */}
-
-            <div
-              style={{
-                marginTop:
-                  "24px",
-
-                padding:
-                  "14px 16px",
-
-                borderRadius:
-                  "10px",
-
-                background:
-                  "rgba(0,0,0,.025)",
-
-                fontSize:
-                  "12px",
-
-                lineHeight:
-                  1.6,
-
-                opacity:
-                  0.65
-              }}
-            >
-
-              Your password is never displayed in the
-              member interface. The server verifies the
-              current password and stores only a secure
-              password hash in Firestore.
-
+            <div className="member-settings-security-note">
+              Your password is never displayed in the member interface.
+              The server verifies the current password and stores only a
+              secure password hash in Firestore.
             </div>
 
-          </div>
+          </section>
 
         </div>
-
-      </div>
-
-    </section>
-
+      </section>
+    </>
   );
-
 }
 
 

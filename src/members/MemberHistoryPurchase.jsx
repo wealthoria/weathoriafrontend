@@ -31,17 +31,162 @@ const [toDate, setToDate] = useState("");
       return;
     }
 
-    let session = null;
+   let session = null;
+
+const MEMBER_SESSIONS_KEY =
+  "wealthoria-member-sessions";
+
+const CURRENT_MEMBER_KEY =
+  "wealthoria-current-member";
+
+try {
+
+  // =========================================================
+  // GET CURRENT MEMBER UID
+  // =========================================================
+
+  const currentMemberRaw =
+    sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
+    localStorage.getItem(CURRENT_MEMBER_KEY);
+
+  let currentUid = "";
+
+  if (currentMemberRaw) {
 
     try {
-      session = JSON.parse(
-        localStorage.getItem("wealthoria-member") ||
-        sessionStorage.getItem("wealthoria-member") ||
-        "null"
-      );
-    } catch (err) {
-      console.error("Unable to read member session:", err);
+
+      const parsed =
+        JSON.parse(currentMemberRaw);
+
+      if (typeof parsed === "string") {
+        currentUid = parsed;
+      } else {
+        currentUid = parsed?.uid || "";
+      }
+
+    } catch (error) {
+
+      // If UID is stored directly as a string
+      currentUid = currentMemberRaw;
+
     }
+
+  }
+
+
+  // =========================================================
+  // GET MEMBER SESSIONS
+  // =========================================================
+
+  const getSessions = (storage) => {
+
+    try {
+
+      const raw =
+        storage.getItem(MEMBER_SESSIONS_KEY);
+
+      if (!raw) {
+        return {};
+      }
+
+      const parsed =
+        JSON.parse(raw);
+
+      if (
+        parsed &&
+        typeof parsed === "object"
+      ) {
+        return parsed;
+      }
+
+      return {};
+
+    } catch (error) {
+
+      console.error(
+        "Unable to read member sessions:",
+        error
+      );
+
+      return {};
+
+    }
+
+  };
+
+
+  // =========================================================
+  // FIND CURRENT MEMBER
+  // =========================================================
+
+  if (currentUid) {
+
+    const sessionSessions =
+      getSessions(sessionStorage);
+
+    if (sessionSessions[currentUid]) {
+
+      session =
+        sessionSessions[currentUid];
+
+    } else {
+
+      const localSessions =
+        getSessions(localStorage);
+
+      if (localSessions[currentUid]) {
+
+        session =
+          localSessions[currentUid];
+
+      }
+
+    }
+
+  }
+
+
+  // =========================================================
+  // LEGACY FALLBACK
+  // =========================================================
+
+  if (!session) {
+
+    const legacyLocal =
+      localStorage.getItem(
+        "wealthoria-member"
+      );
+
+    const legacySession =
+      sessionStorage.getItem(
+        "wealthoria-member"
+      );
+
+    if (legacySession) {
+
+      session =
+        JSON.parse(legacySession);
+
+    } else if (legacyLocal) {
+
+      session =
+        JSON.parse(legacyLocal);
+
+    }
+
+  }
+
+
+} catch (err) {
+
+  console.error(
+    "Unable to read member session:",
+    err
+  );
+
+  session = null;
+
+}
 
     if (!session?.uid) {
       setPurchases([]);
@@ -627,48 +772,6 @@ const [toDate, setToDate] = useState("");
           SUMMARY
       ===================================================== */}
 
-      {!loading && !error && (
-
-        <div className="purchase-history-summary">
-
-          <div className="purchase-history-stat">
-
-            <small>
-              Courses Purchased
-            </small>
-
-            <strong>
-              {purchases.length}
-            </strong>
-
-          </div>
-
-
-          <div className="purchase-history-stat">
-
-            <small>
-              Total Spent
-            </small>
-
-            <strong>
-              ₹
-              {formatAmount(
-                purchases.reduce(
-                  (total, item) =>
-                    total +
-                    Number(
-                      item.amount || 0
-                    ),
-                  0
-                )
-              )}
-            </strong>
-
-          </div>
-
-        </div>
-
-      )}
 
 
       {/* =====================================================
@@ -759,9 +862,7 @@ const [toDate, setToDate] = useState("");
 
         <div className="purchase-history-error">
 
-          <div className="purchase-history-empty-icon">
-            âš 
-          </div>
+         
 
           <h3>
             Unable to load purchases
@@ -787,9 +888,7 @@ const [toDate, setToDate] = useState("");
 
           <div className="purchase-history-empty">
 
-            <div className="purchase-history-empty-icon">
-              ðŸ§¾
-            </div>
+            
 
             <h3>
               No purchases yet

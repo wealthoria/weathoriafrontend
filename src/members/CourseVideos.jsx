@@ -9,21 +9,159 @@ const { useState, useEffect } = React;
    COURSE DATA
 ========================================================= */
 const getMemberSession = () => {
+
+  const MEMBER_SESSIONS_KEY =
+    "wealthoria-member-sessions";
+
+  const CURRENT_MEMBER_KEY =
+    "wealthoria-current-member";
+
   try {
-    return JSON.parse(
-      localStorage.getItem("wealthoria-member") ||
-      sessionStorage.getItem("wealthoria-member") ||
-      "null"
-    );
+
+    // =======================================================
+    // GET CURRENT MEMBER UID
+    // =======================================================
+
+    const currentRaw =
+      sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
+      localStorage.getItem(CURRENT_MEMBER_KEY);
+
+    let currentUid = "";
+
+    if (currentRaw) {
+
+      try {
+
+        const parsed =
+          JSON.parse(currentRaw);
+
+        if (typeof parsed === "string") {
+          currentUid = parsed;
+        } else {
+          currentUid = parsed?.uid || "";
+        }
+
+      } catch (error) {
+
+        currentUid = currentRaw;
+
+      }
+
+    }
+
+
+    // =======================================================
+    // GET SAVED MEMBER SESSIONS
+    // =======================================================
+
+    const getSessions = (storage) => {
+
+      try {
+
+        const raw =
+          storage.getItem(MEMBER_SESSIONS_KEY);
+
+        if (!raw) {
+          return {};
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        return (
+          parsed &&
+          typeof parsed === "object"
+        )
+          ? parsed
+          : {};
+
+      } catch (error) {
+
+        console.error(
+          "Unable to read member sessions:",
+          error
+        );
+
+        return {};
+
+      }
+
+    };
+
+
+    // =======================================================
+    // FIND CURRENT MEMBER
+    // =======================================================
+
+    if (currentUid) {
+
+      const sessionStore =
+        getSessions(sessionStorage);
+
+      if (sessionStore[currentUid]) {
+
+        return sessionStore[currentUid];
+
+      }
+
+
+      const localStore =
+        getSessions(localStorage);
+
+      if (localStore[currentUid]) {
+
+        return localStore[currentUid];
+
+      }
+
+    }
+
+
+    // =======================================================
+    // LEGACY FALLBACK
+    // =======================================================
+
+    const legacySession =
+      sessionStorage.getItem(
+        "wealthoria-member"
+      );
+
+    const legacyLocal =
+      localStorage.getItem(
+        "wealthoria-member"
+      );
+
+    if (legacySession) {
+
+      return JSON.parse(
+        legacySession
+      );
+
+    }
+
+    if (legacyLocal) {
+
+      return JSON.parse(
+        legacyLocal
+      );
+
+    }
+
+
+    return null;
+
   } catch (error) {
+
     console.error(
       "Unable to read member session:",
       error
     );
-    return null;
-  }
-};
 
+    return null;
+
+  }
+
+};
 const COURSE_VIDEOS = [
   {
     id: "course-1",
@@ -315,8 +453,8 @@ function CourseVideos() {
      SELECTED COURSE LEVEL
   ======================================================= */
 
-  const [selectedLevel, setSelectedLevel] =
-    useState(null);
+ const [selectedLevel, setSelectedLevel] =
+  useState("beginner");
 
 
   /* =======================================================
@@ -575,11 +713,7 @@ const buyCourse = async (course) => {
     }
 
    const memberSession =
-  JSON.parse(
-    localStorage.getItem("wealthoria-member") ||
-    sessionStorage.getItem("wealthoria-member") ||
-    "null"
-  );
+  getMemberSession();
 
 if (!memberSession?.token) {
   alert("Please login first.");

@@ -2,8 +2,7 @@ import React from "react";
 
 const { useState, useEffect } = React;
 
-const MEMBER_API =
-  "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+const MEMBER_API ="https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 /* =========================================================
    HELPERS
@@ -56,6 +55,30 @@ function getDate(value) {
   return new Date(time).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
+    year: "numeric"
+  });
+}
+
+function getMonthKey(value) {
+  const time = getTime(value);
+  if (!time) return "unknown";
+
+  const date = new Date(time);
+
+  return `${date.getFullYear()}-${String(
+    date.getMonth() + 1
+  ).padStart(2, "0")}`;
+}
+
+function getMonthLabel(value) {
+  const time = getTime(value);
+
+  if (!time) {
+    return "Other Videos";
+  }
+
+  return new Date(time).toLocaleDateString("en-IN", {
+    month: "long",
     year: "numeric"
   });
 }
@@ -235,6 +258,12 @@ function MemberVideo() {
   const [searchQuery, setSearchQuery] =
     useState("");
 
+  const [startDate, setStartDate] =
+    useState("");
+
+  const [endDate, setEndDate] =
+    useState("");
+
   /* =======================================================
      LOAD PUBLISHED VIDEOS
   ======================================================= */
@@ -327,6 +356,34 @@ function MemberVideo() {
           .trim()
           .toLowerCase();
 
+      const videoTime = getTime(
+        video.publishedAt ||
+          video.createdAt
+      );
+
+      // Inclusive date-wise filtering.
+      if (startDate) {
+        const startTime =
+          new Date(
+            `${startDate}T00:00:00`
+          ).getTime();
+
+        if (!videoTime || videoTime < startTime) {
+          return false;
+        }
+      }
+
+      if (endDate) {
+        const endTime =
+          new Date(
+            `${endDate}T23:59:59.999`
+          ).getTime();
+
+        if (!videoTime || videoTime > endTime) {
+          return false;
+        }
+      }
+
       if (!query) {
         return true;
       }
@@ -363,6 +420,39 @@ function MemberVideo() {
       );
     });
 
+  const groupedVideos = filteredVideos.reduce(
+    (groups, video) => {
+      const dateValue =
+        video.publishedAt ||
+        video.createdAt;
+
+      const monthKey =
+        getMonthKey(dateValue);
+
+      if (!groups[monthKey]) {
+        groups[monthKey] = {
+          label: getMonthLabel(dateValue),
+          videos: []
+        };
+      }
+
+      groups[monthKey].videos.push(video);
+
+      return groups;
+    },
+    {}
+  );
+
+  const videoMonths =
+    Object.entries(groupedVideos).sort(
+      (a, b) => {
+        if (a[0] === "unknown") return 1;
+        if (b[0] === "unknown") return -1;
+
+        return b[0].localeCompare(a[0]);
+      }
+    );
+
   /* =======================================================
      OPEN VIDEO
   ======================================================= */
@@ -386,6 +476,34 @@ function MemberVideo() {
   return (
     <>
       <section className="member-video-page">
+        
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div className="member-video-header">
+          <div>
+            <span className="member-eyebrow">
+              LEARNING
+            </span>
+
+            <h2>
+              Videos
+            </h2>
+
+            <p>
+              Watch the latest video
+              content from Wealthoria.
+            </p>
+          </div>
+
+          <div className="member-video-count">
+            {filteredVideos.length}{" "}
+            {filteredVideos.length === 1
+              ? "Video"
+              : "Videos"}
+          </div>
+        </div>
 
         {/* =================================================
             SEARCH
@@ -425,32 +543,58 @@ function MemberVideo() {
           )}
         </div>
 
+
+
         {/* =================================================
-            HEADER
+            DATE-WISE FILTER
         ================================================= */}
 
-        <div className="member-video-header">
-          <div>
-            <span className="member-eyebrow">
-              LEARNING
-            </span>
+        <div className="member-video-date-filter">
+          <div className="member-video-date-field">
+            <label htmlFor="member-video-start-date">
+              From Date
+            </label>
 
-            <h2>
-              Videos
-            </h2>
-
-            <p>
-              Watch the latest video
-              content from Wealthoria.
-            </p>
+            <input
+              id="member-video-start-date"
+              type="date"
+              value={startDate}
+              onChange={(event) =>
+                setStartDate(event.target.value)
+              }
+              aria-label="Filter videos from date"
+            />
           </div>
 
-          <div className="member-video-count">
-            {filteredVideos.length}{" "}
-            {filteredVideos.length === 1
-              ? "Video"
-              : "Videos"}
+          <div className="member-video-date-field">
+            <label htmlFor="member-video-end-date">
+              To Date
+            </label>
+
+            <input
+              id="member-video-end-date"
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) =>
+                setEndDate(event.target.value)
+              }
+              aria-label="Filter videos to date"
+            />
           </div>
+
+          {(startDate || endDate) && (
+            <button
+              type="button"
+              className="member-video-date-clear"
+              onClick={() => {
+                setStartDate("");
+                setEndDate("");
+              }}
+            >
+              Clear Dates
+            </button>
+          )}
         </div>
 
         {/* =================================================
@@ -521,103 +665,136 @@ function MemberVideo() {
           )}
 
         {/* =================================================
-            VIDEO GRID
+            MONTH-WISE VIDEO GRID
         ================================================= */}
 
         {!loading &&
           !error &&
           filteredVideos.length > 0 && (
-            <div className="member-video-grid">
+            <div className="member-video-months">
 
-              {filteredVideos.map(
-                (video) => (
-                  <article
-                    className="member-video-card"
-                    key={video.id}
+              {videoMonths.map(
+                ([monthKey, month]) => (
+                  <section
+                    className="member-video-month"
+                    key={monthKey}
                   >
 
-                    {/* THUMBNAIL */}
-
-                    <button
-                      type="button"
-                      className="member-video-thumbnail"
-                      onClick={() =>
-                        openVideo(video)
-                      }
-                      aria-label={`Play ${
-                        video.title ||
-                        "video"
-                      }`}
-                    >
-                      {video.thumbnailUrl ? (
-                        <img
-                          src={getFileUrl(
-                            video.thumbnailUrl
-                          )}
-                          alt={
-                            video.title ||
-                            "Video thumbnail"
-                          }
-                        />
-                      ) : (
-                        <div className="member-video-no-thumbnail">
-                          ▶
-                        </div>
-                      )}
-
-                      <span className="member-video-badge">
-                        VIDEO
-                      </span>
-
-                      <span className="member-video-play">
-                        ▶
-                      </span>
-                    </button>
-
-                    {/* BODY */}
-
-                    <div className="member-video-body">
-
-                      <h3>
-                        {video.title ||
-                          "Untitled Video"}
-                      </h3>
-
-                      {video.description && (
-                        <p>
-                          {video.description}
-                        </p>
-                      )}
-
-                      <div className="member-video-meta">
-
-                        <span>
-                          {video.category ||
-                            "Video"}
+                    <div className="member-video-month-header">
+                      <div>
+                        <span className="member-video-month-eyebrow">
+                          VIDEO LIBRARY
                         </span>
 
-                        <span>
-                          {getDate(
-                            video.publishedAt ||
-                              video.createdAt
-                          )}
-                        </span>
-
+                        <h3>
+                          {month.label}
+                        </h3>
                       </div>
 
-                      <button
-                        type="button"
-                        className="member-video-open"
-                        onClick={() =>
-                          openVideo(video)
-                        }
-                      >
-                        ▶ Watch Video
-                      </button>
-
+                      <span className="member-video-month-count">
+                        {month.videos.length}{" "}
+                        {month.videos.length === 1
+                          ? "Video"
+                          : "Videos"}
+                      </span>
                     </div>
 
-                  </article>
+                    <div className="member-video-grid">
+
+                      {month.videos.map(
+                        (video) => (
+                          <article
+                            className="member-video-card"
+                            key={video.id}
+                          >
+
+                            {/* THUMBNAIL */}
+
+                            <button
+                              type="button"
+                              className="member-video-thumbnail"
+                              onClick={() =>
+                                openVideo(video)
+                              }
+                              aria-label={`Play ${
+                                video.title ||
+                                "video"
+                              }`}
+                            >
+                              {video.thumbnailUrl ? (
+                                <img
+                                  src={getFileUrl(
+                                    video.thumbnailUrl
+                                  )}
+                                  alt={
+                                    video.title ||
+                                    "Video thumbnail"
+                                  }
+                                />
+                              ) : (
+                                <div className="member-video-no-thumbnail">
+                                  ▶
+                                </div>
+                              )}
+
+                              <span className="member-video-badge">
+                                VIDEO
+                              </span>
+
+                              <span className="member-video-play">
+                                ▶
+                              </span>
+                            </button>
+
+                            {/* BODY */}
+
+                            <div className="member-video-body">
+
+                              <h3>
+                                {video.title ||
+                                  "Untitled Video"}
+                              </h3>
+
+                              {video.description && (
+                                <p>
+                                  {video.description}
+                                </p>
+                              )}
+
+                              <div className="member-video-meta">
+
+                                <span>
+                                  {video.category ||
+                                    "Video"}
+                                </span>
+
+                                <span>
+                                  {getDate(
+                                    video.publishedAt ||
+                                      video.createdAt
+                                  )}
+                                </span>
+
+                              </div>
+
+                              <button
+                                type="button"
+                                className="member-video-open"
+                                onClick={() =>
+                                  openVideo(video)
+                                }
+                              >
+                                ▶ Watch Video
+                              </button>
+
+                            </div>
+
+                          </article>
+                        )
+                      )}
+
+                    </div>
+                  </section>
                 )
               )}
 

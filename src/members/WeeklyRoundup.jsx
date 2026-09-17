@@ -11,7 +11,8 @@ function WeeklyRoundup() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
 
   const API_BASE_URL =
@@ -203,92 +204,91 @@ function WeeklyRoundup() {
   }, []);
 
 
-  const filteredReports =
-    reports.filter(
-      (report) => {
+  const getReportDate = (value) => {
+    if (!value) return null;
 
-        const searchText =
-          search
-            .trim()
-            .toLowerCase();
-
-
-        const matchesSearch =
-          !searchText ||
-          report.title
-            .toLowerCase()
-            .includes(searchText) ||
-          report.description
-            .toLowerCase()
-            .includes(searchText) ||
-          report.tags.some(
-            (tag) =>
-              String(tag)
-                .toLowerCase()
-                .includes(searchText)
-          );
-
-
-        let matchesDate = true;
-
-
-        if (selectedDate) {
-
-          let reportDate = "";
-
-
-          if (
-            report.publishedAt &&
-            typeof report.publishedAt.toDate ===
-              "function"
-          ) {
-
-            const date =
-              report.publishedAt
-                .toDate();
-
-            reportDate =
-              date
-                .toISOString()
-                .slice(0, 10);
-
-          } else {
-
-            const date =
-              new Date(
-                report.publishedAt
-              );
-
-            if (
-              !Number.isNaN(
-                date.getTime()
-              )
-            ) {
-
-              reportDate =
-                date
-                  .toISOString()
-                  .slice(0, 10);
-
-            }
-
-          }
-
-
-          matchesDate =
-            reportDate ===
-            selectedDate;
-
-        }
-
-
-        return (
-          matchesSearch &&
-          matchesDate
-        );
-
+    try {
+      if (value && typeof value.toDate === "function") {
+        return value.toDate();
       }
+
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const filteredReports = reports.filter((report) => {
+    const searchText = search.trim().toLowerCase();
+
+    const matchesSearch =
+      !searchText ||
+      String(report.title || "").toLowerCase().includes(searchText) ||
+      String(report.description || "").toLowerCase().includes(searchText) ||
+      report.tags.some((tag) =>
+        String(tag).toLowerCase().includes(searchText)
+      );
+
+    const reportDate = getReportDate(report.publishedAt);
+
+    let matchesStartDate = true;
+    let matchesEndDate = true;
+
+    if (startDate) {
+      const from = new Date(`${startDate}T00:00:00`);
+      matchesStartDate = reportDate ? reportDate >= from : false;
+    }
+
+    if (endDate) {
+      const to = new Date(`${endDate}T23:59:59.999`);
+      matchesEndDate = reportDate ? reportDate <= to : false;
+    }
+
+    return matchesSearch && matchesStartDate && matchesEndDate;
+  });
+
+  const getMonthKey = (value) => {
+    const date = getReportDate(value);
+    if (!date) return "unknown";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  };
+
+  const getMonthLabel = (monthKey) => {
+    if (monthKey === "unknown") return "Undated Reports";
+
+    const [year, month] = monthKey.split("-");
+    return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString(
+      "en-IN",
+      { month: "long", year: "numeric" }
     );
+  };
+
+  const groupedReports = filteredReports.reduce((groups, report) => {
+    const key = getMonthKey(report.publishedAt);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(report);
+    return groups;
+  }, {});
+
+  const reportMonths = Object.entries(groupedReports)
+    .sort(([a], [b]) => {
+      if (a === "unknown") return 1;
+      if (b === "unknown") return -1;
+      return b.localeCompare(a);
+    })
+    .map(([key, items]) => ({
+      key,
+      label: getMonthLabel(key),
+      reports: items.sort((a, b) => {
+        const da = getReportDate(a.publishedAt);
+        const db = getReportDate(b.publishedAt);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return db.getTime() - da.getTime();
+      })
+    }));
 
 
   if (loading) {
@@ -360,63 +360,56 @@ function WeeklyRoundup() {
 
       {/* FILTERS */}
 
-      <div
-        className="newsletter-filters"
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "center",
-          marginTop: 20,
-          marginBottom: 24,
-          flexWrap: "wrap"
-        }}
-      >
-
+      <div className="newsletter-filters">
         <input
           type="search"
           value={search}
-          onChange={(event) =>
-            setSearch(event.target.value)
-          }
+          onChange={(event) => setSearch(event.target.value)}
           placeholder="Search weekly roundup..."
           className="newsletter-search"
         />
 
+        <div className="newsletter-date-filter-group">
+          <div className="newsletter-date-field">
+            <label>FROM DATE</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="newsletter-date-filter"
+            />
+          </div>
 
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(event) =>
-            setSelectedDate(
-              event.target.value
-            )
-          }
-          className="newsletter-date-filter"
-        />
+          <div className="newsletter-date-field">
+            <label>TO DATE</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="newsletter-date-filter"
+            />
+          </div>
 
-
-        {(search || selectedDate) && (
-
-          <button
-            type="button"
-            onClick={() => {
-              setSearch("");
-              setSelectedDate("");
-            }}
-            className="newsletter-clear-filter"
-          >
-            Clear
-          </button>
-
-        )}
-
+          {(search || startDate || endDate) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setStartDate("");
+                setEndDate("");
+              }}
+              className="newsletter-clear-filter"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
 
       {/* REPORTS */}
 
       {filteredReports.length === 0 ? (
-
         <div
           style={{
             padding: 40,
@@ -425,130 +418,82 @@ function WeeklyRoundup() {
         >
           No Weekly Roundup reports available yet.
         </div>
-
       ) : (
-
-        <div className="member-newsletter-grid">
-
-          {filteredReports.map((report) => (
-
-            <article
-              className="member-newsletter-card"
-              key={report.id}
+        <div className="member-newsletter-months">
+          {reportMonths.map((month) => (
+            <section
+              className="member-newsletter-month"
+              key={month.key}
             >
+              <div className="member-newsletter-month-header">
+                <div>
+                  <span>WEEKLY ROUNDUP</span>
+                  <h3>{month.label}</h3>
+                </div>
 
-
-              {/* THUMBNAIL */}
-
-              <div className="member-newsletter-icon">
-
-                {report.thumbnailUrl ? (
-
-                  <img
-  src={getFileUrl(report.thumbnailUrl)}
-  alt={report.title}
-  style={{
-    width: "auto",
-    height: "140px",
-    maxWidth: "100%",
-    objectFit: "contain",
-    display: "block",
-    margin: "0 auto"
-  }}
-/>
-
-                ) : (
-
-                  <span>PDF</span>
-
-                )}
-
+                <strong>
+                  {month.reports.length}{" "}
+                  {month.reports.length === 1 ? "Report" : "Reports"}
+                </strong>
               </div>
 
-
-              {/* CONTENT */}
-
-              <div className="member-newsletter-content">
-
-                <span className="member-newsletter-date">
-
-                  {formatDate(
-                    report.publishedAt
-                  )}
-
-                </span>
-
-
-                <h3>
-                  {report.title}
-                </h3>
-
-
-                <p>
-                  {report.description}
-                </p>
-
-
-                {report.tags.length > 0 && (
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 6,
-                      marginTop: 10
-                    }}
+              <div className="member-newsletter-grid">
+                {month.reports.map((report) => (
+                  <article
+                    className="member-newsletter-card"
+                    key={report.id}
                   >
+                    <div className="member-newsletter-icon">
+                      {report.thumbnailUrl ? (
+                        <img
+                          src={getFileUrl(report.thumbnailUrl)}
+                          alt={report.title}
+                        />
+                      ) : (
+                        <span>PDF</span>
+                      )}
+                    </div>
 
-                    {report.tags
-                      .slice(0, 4)
-                      .map((tag) => (
+                    <div className="member-newsletter-content">
+                      <span className="member-newsletter-date">
+                        {formatDate(report.publishedAt)}
+                      </span>
 
-                        <span
-                          key={tag}
-                          className="badge badge-soft"
-                          style={{
-                            fontSize: 10
-                          }}
-                        >
-                          {tag}
-                        </span>
+                      <h3>{report.title}</h3>
 
-                      ))}
+                      <p>{report.description}</p>
 
-                  </div>
+                      {report.tags.length > 0 && (
+                        <div className="member-newsletter-tags">
+                          {report.tags.slice(0, 4).map((tag) => (
+                            <span
+                              key={tag}
+                              className="badge badge-soft"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                )}
-
+                    <button
+                      type="button"
+                      className="member-newsletter-button"
+                      disabled={!report.pdfUrl}
+                      onClick={() => {
+                        if (!report.pdfUrl) return;
+                        setSelectedPdf(report);
+                      }}
+                    >
+                      Read Report →
+                    </button>
+                  </article>
+                ))}
               </div>
-
-
-              {/* BUTTON */}
-
-              <button
-                type="button"
-                className="member-newsletter-button"
-                disabled={!report.pdfUrl}
-                onClick={() => {
-
-                  if (!report.pdfUrl) {
-                    return;
-                  }
-
-                  setSelectedPdf(report);
-
-                }}
-              >
-                Read Report →
-              </button>
-
-
-            </article>
-
+            </section>
           ))}
-
         </div>
-
       )}
 
 

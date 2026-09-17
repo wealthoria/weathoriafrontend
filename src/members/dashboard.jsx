@@ -737,186 +737,66 @@ window.DashboardWeeklyRoundup =
 
 
 /* =========================================================
-   DASHBOARD OVERVIEW CHARTS
-   Uses existing wd-* classes only.
-========================================================= */
+   DASHBOARD BOOK PROMO
+   ========================================================= */
 
-function DashboardOverviewCharts({ stats }) {
-  const courses = Number(stats?.courses || 0);
-  const weeklyRoundups = Number(stats?.marketReports || 0);
-  const purchases = Number(stats?.purchases || 0);
-
-  const [contentMix, setContentMix] = React.useState({
-    articles: 0,
-    videos: 0,
-    newsletters: 0
-  });
-
-  React.useEffect(() => {
-    if (!window.db) return;
-
-    let cancelled = false;
-
-    Promise.all([
-      window.db.collection("content")
-        .where("category", "==", "Articles & Reports")
-        .where("status", "==", "published")
-        .get(),
-
-      window.db.collection("content")
-        .where("category", "==", "Vedios")
-        .where("status", "==", "published")
-        .get(),
-
-      window.db.collection("content")
-        .where("category", "==", "Newsletter")
-        .where("status", "==", "published")
-        .get()
-    ])
-      .then(([articles, videos, newsletters]) => {
-        if (cancelled) return;
-
-        setContentMix({
-          articles: articles.size,
-          videos: videos.size,
-          newsletters: newsletters.size
-        });
-      })
-      .catch((error) => {
-        console.error("Dashboard overview chart error:", error);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const total =
-    contentMix.articles +
-    contentMix.videos +
-    contentMix.newsletters +
-    weeklyRoundups +
-    courses;
-
-  const maxValue = Math.max(
-    courses,
-    contentMix.videos,
-    contentMix.articles,
-    weeklyRoundups,
-    contentMix.newsletters,
-    purchases,
-    1
-  );
-
-  const bars = [
-    { label: "Courses", value: courses },
-    { label: "Videos", value: contentMix.videos },
-    { label: "Articles", value: contentMix.articles },
-    { label: "Weekly Reports", value: weeklyRoundups },
-    { label: "Newsletters", value: contentMix.newsletters },
-    { label: "My Purchases", value: purchases }
-  ];
-
-  const p1 = total ? (contentMix.articles / total) * 100 : 0;
-  const p2 = p1 + (total ? (contentMix.videos / total) * 100 : 0);
-  const p3 = p2 + (total ? (contentMix.newsletters / total) * 100 : 0);
-  const p4 = p3 + (total ? (weeklyRoundups / total) * 100 : 0);
+function DashboardBookPromo() {
+  const openBook = () => {
+    window.location.href = "https://www.wealthoria.in/Book.html";
+  };
 
   return (
-    <section className="wd-two-column">
-      <section className="wd-panel">
-        <div className="wd-panel-head">
-          <div>
-            <span className="wd-panel-label">CONTENT OVERVIEW</span>
-            <h3>Published Content</h3>
+    <section className="wd-book-ad" aria-label="Hoodikeya Vijnana pre-book offer">
+      <div className="wd-book-ad-track">
+        <button type="button" className="wd-book-ad-card" onClick={openBook}>
+          <div className="wd-book-ad-copy">
+            <span className="wd-book-ad-kicker">NEW RELEASE</span>
+            <h3>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h3>
+            <p>Learn investing with practical, simple insights.</p>
+            <div className="wd-book-ad-price"><b>₹999</b><del>₹1499</del></div>
+            <span className="wd-book-ad-cta">Pre-book now →</span>
           </div>
-        </div>
+          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
+        </button>
 
-        <div className="wd-overview-chart-row">
-          <div
-            className="wd-overview-donut"
-            style={{
-              background: total
-                ? `conic-gradient(
-                    #e8473f 0 ${p1}%,
-                    #f39a3d ${p1}% ${p2}%,
-                    #5878d6 ${p2}% ${p3}%,
-                    #7a63c7 ${p3}% ${p4}%,
-                    #2c9b72 ${p4}% 100%
-                  )`
-                : "#e9ebee"
-            }}
-          >
-            <div className="wd-overview-donut-inner">
-              <strong>{total}</strong>
-              <span>TOTAL</span>
-            </div>
+        <button type="button" className="wd-book-ad-card wd-book-ad-card-alt" onClick={openBook}>
+          <div className="wd-book-ad-copy">
+            <span className="wd-book-ad-kicker">LIMITED OFFER</span>
+            <h3>Build wealth with knowledge.</h3>
+            <p>Pre-book today for ₹999. Shipping starts Oct 1.</p>
+            <span className="wd-book-ad-cta">Explore the book →</span>
           </div>
+          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
+        </button>
 
-          <div className="wd-overview-legend">
-            {[
-              ["#e8473f", "Articles & Reports", contentMix.articles],
-              ["#f39a3d", "Videos", contentMix.videos],
-              ["#5878d6", "Newsletters", contentMix.newsletters],
-              ["#7a63c7", "Weekly Reports", weeklyRoundups],
-              ["#2c9b72", "Courses", courses]
-            ].map(([color, label, value]) => (
-              <div key={label}>
-                <i style={{ background: color }} />
-                <span>{label}</span>
-                <b>{value}</b>
-              </div>
-            ))}
+        <button type="button" className="wd-book-ad-card" onClick={openBook}>
+          <div className="wd-book-ad-copy">
+            <span className="wd-book-ad-kicker">WEALTHORIA BOOK</span>
+            <h3>6 Months Ahead.</h3>
+            <p>Start your investing journey with Wealthoria.</p>
+            <div className="wd-book-ad-price"><b>₹999</b><del>₹1499</del></div>
+            <span className="wd-book-ad-cta">Pre-book now →</span>
           </div>
-        </div>
-      </section>
+          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
+        </button>
 
-      <section className="wd-panel">
-        <div className="wd-panel-head">
-          <div>
-            <span className="wd-panel-label">ACTIVITY</span>
-            <h3>Learning & Content</h3>
+        <button type="button" className="wd-book-ad-card wd-book-ad-card-alt" onClick={openBook}>
+          <div className="wd-book-ad-copy">
+            <span className="wd-book-ad-kicker">NEW RELEASE</span>
+            <h3>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h3>
+            <p>Learn investing with practical, simple insights.</p>
+            <div className="wd-book-ad-price"><b>₹999</b><del>₹1499</del></div>
+            <span className="wd-book-ad-cta">Pre-book now →</span>
           </div>
-        </div>
-
-        <div className="wd-overview-bars">
-          {bars.map((bar) => (
-            <div className="wd-overview-bar-row" key={bar.label}>
-              <div className="wd-overview-bar-meta">
-                <span>{bar.label}</span>
-                <b>{bar.value}</b>
-              </div>
-
-              <div className="wd-overview-bar-track">
-                <div
-                  className="wd-overview-bar-fill"
-                  style={{
-                    width: bar.value
-                      ? `${Math.max((bar.value / maxValue) * 100, 8)}%`
-                      : "0%"
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="wd-overview-summary">
-          <div>
-            <span>My Purchases</span>
-            <strong>{purchases}</strong>
-          </div>
-          <div>
-            <span>Published Courses</span>
-            <strong>{courses}</strong>
-          </div>
-        </div>
-      </section>
+          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
+        </button>
+      </div>
+      <div className="wd-book-ad-glow" aria-hidden="true" />
     </section>
   );
 }
 
-window.DashboardOverviewCharts = DashboardOverviewCharts;
+window.DashboardBookPromo = DashboardBookPromo;
 
 
 /* =========================================================
@@ -1513,8 +1393,8 @@ function MemberDashboard() {
   const DashboardLatestContent =
     window.DashboardLatestContent;
 
-  const DashboardOverviewCharts =
-    window.DashboardOverviewCharts;
+  const DashboardBookPromo =
+    window.DashboardBookPromo;
 
     const MemberArticles =
   window.MemberArticles;
@@ -1615,132 +1495,370 @@ function MemberDashboard() {
      MEMBER SESSION
   ======================================================= */
 
-  useEffect(() => {
+ /* =======================================================
+   MEMBER SESSION
+======================================================= */
 
-    const checkMemberSession =
-      async () => {
+const MEMBER_SESSIONS_KEY =
+  "wealthoria-member-sessions";
 
-        try {
-
-          const saved =
-            localStorage.getItem(
-              "wealthoria-member"
-            ) ||
-            sessionStorage.getItem(
-              "wealthoria-member"
-            );
+const CURRENT_MEMBER_KEY =
+  "wealthoria-current-member";
 
 
-          if (!saved) {
+const readMemberSessions = (storage) => {
 
-            setMember(null);
+  try {
 
-            setAuthChecking(false);
+    const raw =
+      storage.getItem(
+        MEMBER_SESSIONS_KEY
+      );
+
+    if (!raw) {
+      return {};
+    }
+
+    const parsed =
+      JSON.parse(raw);
+
+    return parsed &&
+      typeof parsed === "object"
+      ? parsed
+      : {};
+
+  } catch (error) {
+
+    console.warn(
+      "Could not read member sessions:",
+      error
+    );
+
+    return {};
+
+  }
+
+};
 
 
-            if (
-              window.membersNavigate
-            ) {
+const getCurrentMemberSession = () => {
 
-              window.membersNavigate(
-                "/members/login"
-              );
+  try {
 
-            } else {
+    /* Session storage has priority */
+    const sessionUid =
+      sessionStorage.getItem(
+        CURRENT_MEMBER_KEY
+      );
 
-              window.location.href =
-                "/members/login";
+    if (sessionUid) {
 
-            }
+      const sessions =
+        readMemberSessions(
+          sessionStorage
+        );
 
-            return;
+      const session =
+        sessions[sessionUid];
 
-          }
+      if (
+        session?.uid &&
+        session?.token
+      ) {
+
+        return {
+          session,
+          storage:
+            sessionStorage
+        };
+
+      }
+
+    }
 
 
-          let parsedMember;
+    /* Then localStorage */
+    const localUid =
+      localStorage.getItem(
+        CURRENT_MEMBER_KEY
+      );
+
+    if (localUid) {
+
+      const sessions =
+        readMemberSessions(
+          localStorage
+        );
+
+      const session =
+        sessions[localUid];
+
+      if (
+        session?.uid &&
+        session?.token
+      ) {
+
+        return {
+          session,
+          storage:
+            localStorage
+        };
+
+      }
+
+    }
 
 
-          try {
+    return null;
 
-            parsedMember =
-              JSON.parse(saved);
+  } catch (error) {
 
-          } catch (error) {
+    console.error(
+      "Could not read current member session:",
+      error
+    );
 
-            localStorage.removeItem(
-              "wealthoria-member"
-            );
+    return null;
 
-            sessionStorage.removeItem(
-              "wealthoria-member"
-            );
+  }
 
-            setMember(null);
+};
 
-            setAuthChecking(false);
 
-            return;
+const updateCurrentMemberSession = (
+  storage,
+  session
+) => {
 
-          }
+  try {
 
+    const sessions =
+      readMemberSessions(
+        storage
+      );
+
+    sessions[session.uid] =
+      session;
+
+    storage.setItem(
+      MEMBER_SESSIONS_KEY,
+      JSON.stringify(
+        sessions
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Could not update member session:",
+      error
+    );
+
+  }
+
+};
+
+
+const removeCurrentMemberSession = (
+  uid
+) => {
+
+  try {
+
+    if (!uid) {
+      return;
+    }
+
+    const localSessions =
+      readMemberSessions(
+        localStorage
+      );
+
+    const sessionSessions =
+      readMemberSessions(
+        sessionStorage
+      );
+
+
+    delete localSessions[uid];
+    delete sessionSessions[uid];
+
+
+    localStorage.setItem(
+      MEMBER_SESSIONS_KEY,
+      JSON.stringify(
+        localSessions
+      )
+    );
+
+    sessionStorage.setItem(
+      MEMBER_SESSIONS_KEY,
+      JSON.stringify(
+        sessionSessions
+      )
+    );
+
+
+    if (
+      localStorage.getItem(
+        CURRENT_MEMBER_KEY
+      ) === uid
+    ) {
+
+      localStorage.removeItem(
+        CURRENT_MEMBER_KEY
+      );
+
+    }
+
+
+    if (
+      sessionStorage.getItem(
+        CURRENT_MEMBER_KEY
+      ) === uid
+    ) {
+
+      sessionStorage.removeItem(
+        CURRENT_MEMBER_KEY
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Could not remove member session:",
+      error
+    );
+
+  }
+
+};
+
+
+useEffect(() => {
+
+  const checkMemberSession =
+    async () => {
+
+      try {
+
+        const current =
+          getCurrentMemberSession();
+
+
+        /* ==============================================
+           NO CURRENT MEMBER
+        ============================================== */
+
+        if (!current) {
+
+          setMember(null);
+          setAuthChecking(false);
 
           if (
-            !parsedMember.uid ||
-            !parsedMember.token
+            window.membersNavigate
           ) {
 
-            setMember(null);
+            window.membersNavigate(
+              "/members/login"
+            );
 
-            setAuthChecking(false);
+          } else {
 
-            return;
+            window.location.href =
+              "/members/login";
 
           }
 
+          return;
 
-          const response =
-            await fetch(
-              `${DASHBOARD_API}/api/members/me`,
-              {
-                method:
-                  "GET",
+        }
 
-                headers: {
 
-                  Authorization:
-                    `Bearer ${parsedMember.token}`
+        const {
+          session: parsedMember,
+          storage
+        } = current;
 
-                }
 
+        /* ==============================================
+           VERIFY MEMBER WITH BACKEND
+        ============================================== */
+
+        const response =
+          await fetch(
+            `${DASHBOARD_API}/api/members/me`,
+            {
+              method: "GET",
+              headers: {
+                Authorization:
+                  `Bearer ${parsedMember.token}`,
+                "Content-Type":
+                  "application/json"
               }
-            );
+            }
+          );
 
 
-          const data =
-            await response.json();
+        const data =
+          await response.json();
 
 
-          if (
-            !response.ok ||
-            !data.success ||
-            !data.member
-          ) {
+        if (
+          !response.ok ||
+          !data?.success ||
+          !data?.member
+        ) {
 
-            throw new Error(
-              data?.message ||
-              "Member session is no longer valid."
-            );
+          throw new Error(
+            data?.message ||
+            "Member session is no longer valid."
+          );
 
-          }
+        }
 
 
-          const latestMember =
-            data.member;
+        const latestMember =
+          data.member;
 
+
+        const currentStatus =
+          String(
+            latestMember.status ||
+            ""
+          )
+            .trim()
+            .toLowerCase();
+
+
+        /* ==============================================
+           BLOCK INACTIVE / DISABLED MEMBERS
+        ============================================== */
+
+        const blockedStatuses = [
+          "inactive",
+          "cancelled",
+          "canceled",
+          "deactivated",
+          "disabled",
+          "blocked",
+          "suspended"
+        ];
+
+
+        if (
+          blockedStatuses.includes(
+            currentStatus
+          )
+        ) {
+
+          /*
+           * Keep inactive/cancelled session because
+           * login.jsx needs it for activation.
+           */
 
           const updatedSession = {
-
             ...parsedMember,
 
             uid:
@@ -1749,80 +1867,36 @@ function MemberDashboard() {
 
             email:
               latestMember.email ||
-              parsedMember.email,
+              parsedMember.email ||
+              "",
 
             name:
               latestMember.name ||
+              parsedMember.name ||
               "",
 
             role:
               latestMember.role ||
-              "member"
+              parsedMember.role ||
+              "member",
 
+            status:
+              currentStatus,
+
+            subscription:
+              latestMember.subscription ||
+              parsedMember.subscription ||
+              null
           };
 
 
-          if (
-            localStorage.getItem(
-              "wealthoria-member"
-            )
-          ) {
-
-            localStorage.setItem(
-              "wealthoria-member",
-
-              JSON.stringify(
-                updatedSession
-              )
-            );
-
-          }
-
-
-          if (
-            sessionStorage.getItem(
-              "wealthoria-member"
-            )
-          ) {
-
-            sessionStorage.setItem(
-              "wealthoria-member",
-
-              JSON.stringify(
-                updatedSession
-              )
-            );
-
-          }
-
-
-          setMember(
+          updateCurrentMemberSession(
+            storage,
             updatedSession
           );
 
 
-          setAuthChecking(false);
-
-
-        } catch (error) {
-
-          console.error(
-            "Member session error:",
-            error
-          );
-
-
-          localStorage.removeItem(
-            "wealthoria-member"
-          );
-
-          sessionStorage.removeItem(
-            "wealthoria-member"
-          );
-
-
           setMember(null);
-
           setAuthChecking(false);
 
 
@@ -1834,17 +1908,114 @@ function MemberDashboard() {
               "/members/login"
             );
 
+          } else {
+
+            window.location.href =
+              "/members/login";
+
           }
+
+          return;
 
         }
 
-      };
+
+        /* ==============================================
+           ACTIVE MEMBER
+        ============================================== */
+
+        const updatedSession = {
+
+          ...parsedMember,
+
+          uid:
+            latestMember.uid ||
+            parsedMember.uid,
+
+          email:
+            latestMember.email ||
+            parsedMember.email ||
+            "",
+
+          name:
+            latestMember.name ||
+            parsedMember.name ||
+            "",
+
+          role:
+            latestMember.role ||
+            parsedMember.role ||
+            "member",
+
+          status:
+            currentStatus,
+
+          subscription:
+            latestMember.subscription ||
+            parsedMember.subscription ||
+            null
+
+        };
 
 
-    checkMemberSession();
+        updateCurrentMemberSession(
+          storage,
+          updatedSession
+        );
 
-  }, []);
 
+        setMember(
+          updatedSession
+        );
+
+        setAuthChecking(
+          false
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Member session error:",
+          error
+        );
+
+
+        const current =
+          getCurrentMemberSession();
+
+
+        if (current?.session?.uid) {
+
+          removeCurrentMemberSession(
+            current.session.uid
+          );
+
+        }
+
+
+        setMember(null);
+        setAuthChecking(false);
+
+
+        if (
+          window.membersNavigate
+        ) {
+
+          window.membersNavigate(
+            "/members/login"
+          );
+
+        }
+
+      }
+
+    };
+
+
+  checkMemberSession();
+
+}, []);
 
   /* =======================================================
      LOAD UNREAD COUNT ONLY
@@ -2959,6 +3130,18 @@ const logout =
         </nav>
 
 
+        {/* SIDEBAR LOGOUT */}
+
+        <button
+          type="button"
+          className="wd-nav-item wd-sidebar-logout"
+          onClick={logout}
+        >
+          <span>↪</span>
+          <b>Logout</b>
+        </button>
+
+
         {/* SIDEBAR PROFILE */}
 
         <div className="wd-sidebar-user">
@@ -3097,7 +3280,7 @@ const logout =
 
             <button
               type="button"
-              className="member-header-button"
+              className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
           onClick={async () => {
   if (
     "Notification" in window &&
@@ -3127,7 +3310,7 @@ const logout =
 
             <button
               type="button"
-              className="wd-header-button"
+              className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"
               onClick={() =>
                 openPage("settings")
               }
@@ -3164,7 +3347,7 @@ const logout =
 
             <button
               type="button"
-              className="wd-header-button"
+              className="wd-header-button wd-header-logout-button"
               onClick={logout}
             >
               ↪ Logout
@@ -3477,25 +3660,29 @@ const logout =
                 </div>
 
 
-                <div className="wd-stat-card">
+              
 
-                  <div className="wd-stat-icon">
-                    ◒
-                  </div>
+<div className="wd-stat-card">
+  <div className="wd-stat-icon">
+    ◒
+  </div>
 
+  <div>
+    <span>Weekly Roundups</span>
 
-                  <div>
+    <strong>
+      {statsLoading
+        ? "—"
+        : stats.marketReports}
+    </strong>
 
-                  
+    <small>
+      Published weekly reports
+    </small>
+  </div>
+</div>
 
-
-                    <small>
-                      Weekly Roundups
-                    </small>
-
-                  </div>
-
-                </div>
+              
 
 
                 <div className="wd-stat-card">
@@ -3532,9 +3719,13 @@ const logout =
 
 
               {/* OVERVIEW CHARTS */}
-              {DashboardOverviewCharts && (
-                <DashboardOverviewCharts stats={stats} />
+
+              {/* BOOK PROMO */}
+
+              {DashboardBookPromo && (
+                <DashboardBookPromo />
               )}
+
 
               {/* LATEST CONTENT */}
 

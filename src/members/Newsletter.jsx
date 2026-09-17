@@ -18,7 +18,10 @@ function Newsletter() {
 
 const [contentType, setContentType] =  useState("all");
 
-const [selectedDate, setSelectedDate] =
+const [startDate, setStartDate] =
+  useState("");
+
+const [endDate, setEndDate] =
   useState("");
 
 
@@ -208,90 +211,121 @@ const filteredNewsletters =
     (newsletter) => {
 
       const searchText =
-        search
-          .trim()
-          .toLowerCase();
-
+        search.trim().toLowerCase();
 
       const matchesSearch =
         !searchText ||
-        newsletter.title
-          .toLowerCase()
-          .includes(searchText) ||
-        newsletter.description
-          .toLowerCase()
-          .includes(searchText) ||
+        newsletter.title.toLowerCase().includes(searchText) ||
+        newsletter.description.toLowerCase().includes(searchText) ||
         newsletter.tags.some(
           (tag) =>
-            String(tag)
-              .toLowerCase()
-              .includes(searchText)
+            String(tag).toLowerCase().includes(searchText)
         );
 
+      let newsletterTime = 0;
+
+      try {
+        const value = newsletter.publishedAt;
+
+        if (
+          value &&
+          typeof value.toDate === "function"
+        ) {
+          newsletterTime = value.toDate().getTime();
+        } else {
+          const parsed = new Date(value).getTime();
+
+          if (!Number.isNaN(parsed)) {
+            newsletterTime = parsed;
+          }
+        }
+      } catch (error) {
+        newsletterTime = 0;
+      }
 
       let matchesDate = true;
 
-
-      if (selectedDate) {
-
-        let newsletterDate = "";
-
-
-        if (
-          newsletter.publishedAt &&
-          typeof newsletter.publishedAt.toDate ===
-            "function"
-        ) {
-
-          const date =
-            newsletter.publishedAt
-              .toDate();
-
-          newsletterDate =
-            date
-              .toISOString()
-              .slice(0, 10);
-
-        } else {
-
-          const date =
-            new Date(
-              newsletter.publishedAt
-            );
-
-          if (
-            !Number.isNaN(
-              date.getTime()
-            )
-          ) {
-
-            newsletterDate =
-              date
-                .toISOString()
-                .slice(0, 10);
-
-          }
-
-        }
-
+      if (startDate) {
+        const startTime =
+          new Date(`${startDate}T00:00:00`).getTime();
 
         matchesDate =
-          newsletterDate ===
-          selectedDate;
-
+          newsletterTime > 0 &&
+          newsletterTime >= startTime;
       }
 
+      if (matchesDate && endDate) {
+        const endTime =
+          new Date(`${endDate}T23:59:59.999`).getTime();
 
-      return (
-        matchesSearch &&
-        matchesDate
-      );
+        matchesDate =
+          newsletterTime > 0 &&
+          newsletterTime <= endTime;
+      }
 
+      return matchesSearch && matchesDate;
     }
   );
 
+const getMonthKey = (value) => {
+  try {
+    const date =
+      value && typeof value.toDate === "function"
+        ? value.toDate()
+        : new Date(value);
 
-  
+    if (!date || Number.isNaN(date.getTime())) {
+      return "unknown";
+    }
+
+    return `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}`;
+  } catch (error) {
+    return "unknown";
+  }
+};
+
+const getMonthLabel = (value) => {
+  try {
+    const date =
+      value && typeof value.toDate === "function"
+        ? value.toDate()
+        : new Date(value);
+
+    if (!date || Number.isNaN(date.getTime())) {
+      return "Other Newsletters";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      month: "long",
+      year: "numeric"
+    });
+  } catch (error) {
+    return "Other Newsletters";
+  }
+};
+
+const newsletterMonths = (() => {
+  const groups = {};
+
+  filteredNewsletters.forEach((newsletter) => {
+    const monthKey = getMonthKey(newsletter.publishedAt);
+
+    if (!groups[monthKey]) {
+      groups[monthKey] = {
+        label: getMonthLabel(newsletter.publishedAt),
+        newsletters: []
+      };
+    }
+
+    groups[monthKey].newsletters.push(newsletter);
+  });
+
+  return Object.entries(groups).sort(([a], [b]) =>
+    b.localeCompare(a)
+  );
+})();
 
   if (loading) {
     return (
@@ -350,14 +384,6 @@ const filteredNewsletters =
       </div>
 <div
   className="newsletter-filters"
-  style={{
-    display: "flex",
-    gap: 10,
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 24,
-    flexWrap: "wrap"
-  }}
 >
 
   <input
@@ -370,33 +396,56 @@ const filteredNewsletters =
     className="newsletter-search"
   />
 
+  <div className="newsletter-date-filter-group">
 
-  <input
-    type="date"
-    value={selectedDate}
-    onChange={(event) =>
-      setSelectedDate(
-        event.target.value
-      )
-    }
-    className="newsletter-date-filter"
-  />
+    <div className="newsletter-date-field">
+      <label htmlFor="newsletter-start-date">
+        From Date
+      </label>
 
+      <input
+        id="newsletter-start-date"
+        type="date"
+        value={startDate}
+        onChange={(event) =>
+          setStartDate(event.target.value)
+        }
+        className="newsletter-date-filter"
+      />
+    </div>
 
-  {(search || selectedDate) && (
+    <div className="newsletter-date-field">
+      <label htmlFor="newsletter-end-date">
+        To Date
+      </label>
 
-    <button
-      type="button"
-      onClick={() => {
-        setSearch("");
-        setSelectedDate("");
-      }}
-      className="newsletter-clear-filter"
-    >
-      Clear
-    </button>
+      <input
+        id="newsletter-end-date"
+        type="date"
+        value={endDate}
+        min={startDate || undefined}
+        onChange={(event) =>
+          setEndDate(event.target.value)
+        }
+        className="newsletter-date-filter"
+      />
+    </div>
 
-  )}
+    {(search || startDate || endDate) && (
+      <button
+        type="button"
+        onClick={() => {
+          setSearch("");
+          setStartDate("");
+          setEndDate("");
+        }}
+        className="newsletter-clear-filter"
+      >
+        Clear
+      </button>
+    )}
+
+  </div>
 
 </div>
 
@@ -416,117 +465,125 @@ const filteredNewsletters =
 
       ) : (
 
-        <div className="member-newsletter-grid">
+        <div className="member-newsletter-months">
 
-          {filteredNewsletters.map((newsletter) => (
+          {newsletterMonths.map(
+            ([monthKey, month]) => (
+              <section
+                className="member-newsletter-month"
+                key={monthKey}
+              >
 
-            <article
-              className="member-newsletter-card"
-              key={newsletter.id}
-            >
+                <div className="member-newsletter-month-header">
 
-              <div className="member-newsletter-icon">
+                  <div>
+                    <span className="member-newsletter-month-eyebrow">
+                      NEWSLETTER LIBRARY
+                    </span>
 
-                {newsletter.thumbnailUrl ? (
-
-                  <img
-                    src={getFileUrl(
-                      newsletter.thumbnailUrl
-                    )}
-                    alt={newsletter.title}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block"
-                    }}
-                  />
-
-                ) : (
-
-                  <span>PDF</span>
-
-                )}
-
-              </div>
-
-
-              <div className="member-newsletter-content">
-
-                <span className="member-newsletter-date">
-                  {formatDate(
-                    newsletter.publishedAt
-                  )}
-                </span>
-
-
-                <h3>
-                  {newsletter.title}
-                </h3>
-
-
-                <p>
-                  {newsletter.description}
-                </p>
-
-
-                {newsletter.tags.length > 0 && (
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 6,
-                      marginTop: 10
-                    }}
-                  >
-
-                    {newsletter.tags
-                      .slice(0, 4)
-                      .map((tag) => (
-
-                        <span
-                          key={tag}
-                          className="badge badge-soft"
-                          style={{
-                            fontSize: 10
-                          }}
-                        >
-                          {tag}
-                        </span>
-
-                      ))}
-
+                    <h3>
+                      {month.label}
+                    </h3>
                   </div>
 
-                )}
+                  <span className="member-newsletter-month-count">
+                    {month.newsletters.length}{" "}
+                    {month.newsletters.length === 1
+                      ? "Newsletter"
+                      : "Newsletters"}
+                  </span>
 
-              </div>
+                </div>
 
+                <div className="member-newsletter-grid">
 
-              <button
-                type="button"
-                className="member-newsletter-button"
-                disabled={!newsletter.pdfUrl}
-                onClick={() => {
+                  {month.newsletters.map(
+                    (newsletter) => (
+                      <article
+                        className="member-newsletter-card"
+                        key={newsletter.id}
+                      >
 
-                  if (!newsletter.pdfUrl) {
-                    return;
-                  }
+                        <div className="member-newsletter-icon">
 
-                  setSelectedPdf(newsletter);
+                          {newsletter.thumbnailUrl ? (
+                            <img
+                              src={getFileUrl(
+                                newsletter.thumbnailUrl
+                              )}
+                              alt={newsletter.title}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block"
+                              }}
+                            />
+                          ) : (
+                            <span>PDF</span>
+                          )}
 
-                }}
-              >
-                Read Newsletter →
-              </button>
+                        </div>
 
-            </article>
+                        <div className="member-newsletter-content">
 
-          ))}
+                          <span className="member-newsletter-date">
+                            {formatDate(
+                              newsletter.publishedAt
+                            )}
+                          </span>
+
+                          <h3>
+                            {newsletter.title}
+                          </h3>
+
+                          <p>
+                            {newsletter.description}
+                          </p>
+
+                          {newsletter.tags.length > 0 && (
+                            <div className="member-newsletter-tags">
+                              {newsletter.tags
+                                .slice(0, 4)
+                                .map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="badge badge-soft"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                            </div>
+                          )}
+
+                        </div>
+
+                        <button
+                          type="button"
+                          className="member-newsletter-button"
+                          disabled={!newsletter.pdfUrl}
+                          onClick={() => {
+                            if (!newsletter.pdfUrl) {
+                              return;
+                            }
+
+                            setSelectedPdf(newsletter);
+                          }}
+                        >
+                          Read Newsletter →
+                        </button>
+
+                      </article>
+                    )
+                  )}
+
+                </div>
+
+              </section>
+            )
+          )}
 
         </div>
-
       )}
 
 

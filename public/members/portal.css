@@ -6646,38 +6646,83 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 }
 
 
-.member-video-date-input-wrapper {
-  position: relative;
+.member-video-date-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.member-video-date-field {
   width: 100%;
 }
 
-.member-video-date-input-wrapper input[type="date"] {
-  width: 100%;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 2;
-  background: transparent;
+.member-video-date-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
 }
 
-.member-video-date-placeholder {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #999;
+.member-video-date-field input[type="date"] {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
   font-size: 16px;
-  pointer-events: none;
-  z-index: 1;
+  color: #333;
+  box-sizing: border-box;
 }
 
-.member-video-date-input-wrapper input[type="date"]:focus {
-  background: white;
+.member-video-date-field input[type="date"]:focus {
+  outline: none;
+  border-color: #ff843f;
 }
 
-/* Mobile */
+.member-video-date-clear {
+  height: 54px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  background: #f1f1f1;
+  color: #444;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.member-video-date-clear:hover {
+  background: #e7e7e7;
+}
+
+
+/* MOBILE */
+
 @media (max-width: 768px) {
-  .member-video-date-placeholder {
-    left: 20px;
+
+  .member-video-date-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
+  }
+
+  .member-video-date-field {
+    width: 100%;
+  }
+
+  .member-video-date-field input[type="date"] {
+    height: 52px;
     font-size: 16px;
   }
+
+  .member-video-date-clear {
+    width: 100%;
+    height: 48px;
+  }
+
 }

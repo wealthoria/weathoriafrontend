@@ -548,17 +548,16 @@ function MemberVideo() {
         {/* =================================================
             DATE-WISE FILTER
         ================================================= */}
-<div className="member-video-date-field">
-  <label htmlFor="member-video-start-date">
-    From Date
-  </label>
+{/* =================================================
+    DATE-WISE FILTER
+================================================= */}
 
-  <div className="member-video-date-input-wrapper">
-    {!startDate && (
-      <span className="member-video-date-placeholder">
-        Select start date
-      </span>
-    )}
+<div className="member-video-date-filter">
+
+  <div className="member-video-date-field">
+    <label htmlFor="member-video-start-date">
+      From Date
+    </label>
 
     <input
       id="member-video-start-date"
@@ -570,18 +569,12 @@ function MemberVideo() {
       aria-label="Filter videos from date"
     />
   </div>
-</div>
-<div className="member-video-date-field">
-  <label htmlFor="member-video-end-date">
-    To Date
-  </label>
 
-  <div className="member-video-date-input-wrapper">
-    {!endDate && (
-      <span className="member-video-date-placeholder">
-        Select end date
-      </span>
-    )}
+
+  <div className="member-video-date-field">
+    <label htmlFor="member-video-end-date">
+      To Date
+    </label>
 
     <input
       id="member-video-end-date"
@@ -594,6 +587,21 @@ function MemberVideo() {
       aria-label="Filter videos to date"
     />
   </div>
+
+
+  {(startDate || endDate) && (
+    <button
+      type="button"
+      className="member-video-date-clear"
+      onClick={() => {
+        setStartDate("");
+        setEndDate("");
+      }}
+    >
+      Clear Dates
+    </button>
+  )}
+
 </div>
 
         {/* =================================================

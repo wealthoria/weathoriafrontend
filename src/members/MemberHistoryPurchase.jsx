@@ -1055,7 +1055,7 @@ try {
 
 
                 <div className="purchase-history-status">
-                  âœ“
+                 
                   {purchase.status ||
                     "paid"}
                 </div>

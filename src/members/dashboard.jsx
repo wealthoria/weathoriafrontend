@@ -1402,12 +1402,13 @@ function MemberDashboard() {
   /* =======================================================
      MEMBER
   ======================================================= */
+const initialMemberSession = getCurrentMemberSession();
 
-  const [member, setMember] =
-    useState(null);
+const [member, setMember] =
+  useState(initialMemberSession?.session || null);
 
-  const [authChecking, setAuthChecking] =
-    useState(true);
+const [authChecking, setAuthChecking] =
+  useState(false);
 
 
   /* =======================================================
@@ -2701,19 +2702,6 @@ const logout =
      AUTH LOADING
   ======================================================= */
 
-  if (authChecking) {
-
-    return (
-
-      <div className="wd-auth-loading">
-
-        Checking login...
-
-      </div>
-
-    );
-
-  }
 
 
   if (!member) {

@@ -711,281 +711,150 @@ writeStorageObject(
      CHECK EXISTING MEMBER SESSION
   ========================================================= */
 
-  useEffect(() => {
+  /* =========================================================
+   RESTORE EXISTING MEMBER SESSION
+========================================================= */
 
-    let cancelled = false;
+useEffect(() => {
+  let cancelled = false;
 
-    const checkExistingSession = async () => {
+  const restoreExistingSession = async () => {
+    try {
+      const saved = getSavedMemberSession();
 
-      try {
-
-        const saved =
-          getSavedMemberSession();
-
-        if (!saved) {
-
-          if (!cancelled) {
-            setSubscriptionInactive(false);
-            setCheckingSession(false);
-          }
-
-          return;
-        }
-
-        let session;
-
-        try {
-
-          session =
-            JSON.parse(saved.value);
-
-        } catch (parseError) {
-
-          console.error(
-            "Saved member session is invalid:",
-            parseError
-          );
-
-          if (saved?.uid) {
-            removeMemberSession(saved.uid);
-          }
-
-          if (!cancelled) {
-            setSubscriptionInactive(false);
-            setCheckingSession(false);
-          }
-
-          return;
-        }
-
-        if (!session?.uid || !session?.token) {
-
-          console.warn(
-            "Saved member session is missing uid or token."
-          );
-
-          if (session?.uid) {
-            removeMemberSession(session.uid);
-          }
-
-          if (!cancelled) {
-            setSubscriptionInactive(false);
-            setCheckingSession(false);
-          }
-
-          return;
-        }
-
-        const response =
-          await fetch(
-            `${API_BASE_URL}/api/members/me`,
-            {
-              method: "GET",
-              headers: {
-                Authorization:
-                  `Bearer ${session.token}`,
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
-
-        let data = null;
-
-        try {
-
-          data =
-            await response.json();
-
-        } catch (jsonError) {
-
-          console.error(
-            "Could not parse session response:",
-            jsonError
-          );
-
-        }
-
-        if (
-          response.ok &&
-          data?.success &&
-          data?.member
-        ) {
-
-          const currentStatus =
-            String(
-              data.member.status || ""
-            )
-              .trim()
-              .toLowerCase();
-
-          const inactiveStatuses = [
-            "inactive",
-            "cancelled",
-            "canceled",
-            "deactivated",
-            "disabled",
-            "blocked",
-            "suspended"
-          ];
-
-          const updatedSession = {
-            ...session,
-
-            uid:
-              data.member.uid ||
-              session.uid,
-
-            email:
-              data.member.email ||
-              session.email ||
-              "",
-
-            name:
-              data.member.name ||
-              session.name ||
-              "",
-
-            role:
-              data.member.role ||
-              session.role ||
-              "member",
-
-            status:
-              currentStatus,
-
-            subscription:
-              data.member.subscription ||
-              session.subscription ||
-              null
-          };
-
-          const storage =
-            saved.type === "local"
-              ? localStorage
-              : sessionStorage;
-
-          const sessions =
-            readStorageObject(storage);
-
-          sessions[session.uid] =
-            updatedSession;
-
-          writeStorageObject(
-            storage,
-            sessions
-          );
-
-          console.log(
-            "Existing member session status:",
-            currentStatus
-          );
-
-          if (
-            inactiveStatuses.includes(
-              currentStatus
-            )
-          ) {
-
-            if (!cancelled) {
-
-              const canReactivate =
-                currentStatus === "inactive" ||
-                currentStatus === "cancelled" ||
-                currentStatus === "canceled";
-
-              if (canReactivate) {
-
-                setSubscriptionInactive(true);
-                setCheckingSession(false);
-
-              } else {
-
-                removeMemberSession(
-                  session.uid
-                );
-
-                setSubscriptionInactive(false);
-                setCheckingSession(false);
-
-              }
-
-            }
-
-            return;
-          }
-
+      /* -----------------------------------------------
+         NO SAVED SESSION
+         → Show login form
+      ------------------------------------------------ */
+      if (!saved) {
         if (!cancelled) {
-
-  setSubscriptionInactive(false);
-  setCheckingSession(false);
-
-}
-
-return;
-
-    
-        }
-
-        console.warn(
-          "Saved member session is no longer valid."
-        );
-
-        removeMemberSession(
-          session.uid
-        );
-
-        if (!cancelled) {
-
           setSubscriptionInactive(false);
           setCheckingSession(false);
-
         }
-
-      } catch (error) {
-
-        console.error(
-          "Existing member session check failed:",
-          error
-        );
-
-        try {
-
-          const saved =
-            getSavedMemberSession();
-
-          if (saved?.uid) {
-            removeMemberSession(saved.uid);
-          }
-
-        } catch (storageError) {
-
-          console.warn(
-            "Could not remove invalid saved member session:",
-            storageError
-          );
-
-        }
-
-        if (!cancelled) {
-
-          setSubscriptionInactive(false);
-          setCheckingSession(false);
-
-        }
-
+        return;
       }
 
-    };
+      let session;
 
-    checkExistingSession();
+      try {
+        session = JSON.parse(saved.value);
+      } catch (error) {
+        console.warn("Invalid saved member session:", error);
 
-    return () => {
-      cancelled = true;
-    };
+        if (saved.uid) {
+          removeMemberSession(saved.uid);
+        }
 
-  }, []);
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
 
+        return;
+      }
+
+      /* -----------------------------------------------
+         INVALID SESSION DATA
+      ------------------------------------------------ */
+      if (!session?.uid || !session?.token) {
+        console.warn("Saved member session is incomplete.");
+
+        if (session?.uid) {
+          removeMemberSession(session.uid);
+        }
+
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
+
+        return;
+      }
+
+      /* -----------------------------------------------
+         IMPORTANT:
+         Restore login immediately.
+
+         Do NOT make the user enter email/password
+         again just because they returned to login page.
+      ------------------------------------------------ */
+
+      console.log(
+        "Existing member session found:",
+        session.uid
+      );
+
+      const currentStatus = String(
+        session.status || "active"
+      )
+        .trim()
+        .toLowerCase();
+
+      const inactiveStatuses = [
+        "inactive",
+        "cancelled",
+        "canceled",
+        "deactivated",
+        "disabled",
+        "blocked",
+        "suspended"
+      ];
+
+      /* -----------------------------------------------
+         INACTIVE SUBSCRIPTION
+      ------------------------------------------------ */
+
+      if (
+        inactiveStatuses.includes(currentStatus)
+      ) {
+        if (!cancelled) {
+          const canReactivate =
+            currentStatus === "inactive" ||
+            currentStatus === "cancelled" ||
+            currentStatus === "canceled";
+
+          if (canReactivate) {
+            setSubscriptionInactive(true);
+            setCheckingSession(false);
+          } else {
+            removeMemberSession(session.uid);
+            setSubscriptionInactive(false);
+            setCheckingSession(false);
+          }
+        }
+
+        return;
+      }
+
+      /* -----------------------------------------------
+         SESSION IS AVAILABLE
+         → Go directly to dashboard.
+      ------------------------------------------------ */
+
+      if (!cancelled) {
+        setCheckingSession(false);
+
+        window.location.replace(
+          "/members/dashboard"
+        );
+      }
+
+    } catch (error) {
+      console.error(
+        "Existing member session restore failed:",
+        error
+      );
+
+      if (!cancelled) {
+        setCheckingSession(false);
+      }
+    }
+  };
+
+  restoreExistingSession();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   /* =========================================================
      LOGIN

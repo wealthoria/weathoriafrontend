@@ -6644,3 +6644,40 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
     width: 100%;
   }
 }
+
+
+.member-video-date-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.member-video-date-input-wrapper input[type="date"] {
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+.member-video-date-placeholder {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.member-video-date-input-wrapper input[type="date"]:focus {
+  background: white;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .member-video-date-placeholder {
+    left: 20px;
+    font-size: 16px;
+  }
+}

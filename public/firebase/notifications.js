@@ -403,19 +403,54 @@
       // -----------------------------------------------------
       // 4. Permission must be granted
       // -----------------------------------------------------
+if (
+  "Notification" in window &&
+  Notification.permission === "granted"
+) {
 
-      if (
-        Notification.permission !== "granted"
-      ) {
+  try {
 
-        console.log(
-          "ℹ️ Notification permission is:",
-          Notification.permission
-        );
+    const registration =
+      await navigator.serviceWorker.ready;
 
-        return false;
+    await registration.showNotification(
+      title,
+      {
+        body: body,
+
+        icon:
+          "/icons/icon-192.png",
+
+        badge:
+          "/icons/icon-192.png",
+
+        tag:
+          "wealthoria-foreground-notification",
+
+        renotify:
+          true,
+
+        data: {
+          url:
+            "/members/dashboard"
+        }
       }
+    );
 
+    console.log(
+      "✅ System notification displayed."
+    );
+
+  } catch (notificationError) {
+
+    console.error(
+      "❌ Could not display system notification:",
+      notificationError
+    );
+
+  }
+
+}
 
       // -----------------------------------------------------
       // 5. Firebase check

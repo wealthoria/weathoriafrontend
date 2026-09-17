@@ -1,18 +1,5 @@
 /* =========================================================================
-   Wealthoria — Service Worker
-   Strategy:
-     - Precache a small, certain "app shell" (atomic install can't be broken
-       by one missing optional file — we use allSettled).
-     - Same-origin assets (jsx/css/png/svg/json/html): stale-while-revalidate.
-     - Cross-origin CDN + Google Fonts (versioned/immutable): cache-first.
-     - Navigations: network-first, fall back to cache, then offline.html.
-     - Admin + Member portal routes are NOT intercepted by this service worker.
-   Bump CACHE_VERSION on any deploy to roll caches.
-   ========================================================================= */
-
-
-/* =========================================================================
-   Firebase Messaging
+   Wealthoria — Firebase Messaging Service Worker
    ========================================================================= */
 
 importScripts(
@@ -23,6 +10,11 @@ importScripts(
   "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
 );
 
+
+/* =========================================================================
+   FIREBASE CONFIG
+   ========================================================================= */
+
 firebase.initializeApp({
   apiKey: "AIzaSyDYeZggBR1oP8r8yjuNMYYs5VSOX3yfnE",
   authDomain: "wealthoria-6fc11.firebaseapp.com",
@@ -32,23 +24,54 @@ firebase.initializeApp({
   appId: "1:141910518023:web:7198ed847f459cb71ebda2"
 });
 
+
 const messaging = firebase.messaging();
 
-messaging.setBackgroundMessageHandler(function (payload) {
+
+/* =========================================================================
+   BACKGROUND PUSH NOTIFICATION
+   ========================================================================= */
+
+messaging.onBackgroundMessage(function (payload) {
+
   console.log(
-    "[firebase-messaging-sw.js] Received background message ",
+    "[Wealthoria SW] Background message received:",
     payload
   );
 
+
   const notificationTitle =
-    payload.notification?.title || "Wealthoria";
+    payload.notification?.title ||
+    payload.data?.title ||
+    "Wealthoria";
+
+
+  const notificationBody =
+    payload.notification?.body ||
+    payload.data?.body ||
+    "You have a new notification.";
+
 
   const notificationOptions = {
-    body:
-      payload.notification?.body ||
-      "You have a new notification.",
-    icon: "/icons/icon-192.png"
+
+    body: notificationBody,
+
+    icon: "/icons/icon-192.png",
+
+    badge: "/icons/icon-192.png",
+
+    tag: "wealthoria-notification",
+
+    renotify: true,
+
+    data: {
+      url:
+        payload.data?.url ||
+        "/members/dashboard"
+    }
+
   };
+
 
   return self.registration.showNotification(
     notificationTitle,
@@ -58,290 +81,586 @@ messaging.setBackgroundMessageHandler(function (payload) {
 
 
 /* =========================================================================
-   Cache configuration
+   NOTIFICATION CLICK
    ========================================================================= */
 
-const CACHE_VERSION = "wealthoria-v5";
+self.addEventListener(
+  "notificationclick",
+  function (event) {
 
-const PRECACHE = `${CACHE_VERSION}-precache`;
-const RUNTIME = `${CACHE_VERSION}-runtime`;
+    console.log(
+      "[Wealthoria SW] Notification clicked"
+    );
+
+
+    event.notification.close();
+
+
+    const targetUrl =
+      event.notification?.data?.url ||
+      "/members/dashboard";
+
+
+    event.waitUntil(
+
+      clients
+        .matchAll({
+          type: "window",
+          includeUncontrolled: true
+        })
+
+        .then(function (clientList) {
+
+          // ---------------------------------------------------
+          // If Wealthoria is already open, focus it
+          // ---------------------------------------------------
+
+          for (
+            const client of clientList
+          ) {
+
+            if (
+              client.url.includes(
+                "wealthoria.in"
+              ) &&
+              "focus" in client
+            ) {
+
+              return client.focus();
+            }
+          }
+
+
+          // ---------------------------------------------------
+          // Otherwise open Wealthoria
+          // ---------------------------------------------------
+
+          if (
+            clients.openWindow
+          ) {
+
+            return clients.openWindow(
+              targetUrl
+            );
+          }
+
+        })
+
+    );
+  }
+);
 
 
 /* =========================================================================
-   Precache
+   CACHE CONFIGURATION
+   ========================================================================= */
+
+const CACHE_VERSION =
+  "wealthoria-v6";
+
+const PRECACHE =
+  `${CACHE_VERSION}-precache`;
+
+const RUNTIME =
+  `${CACHE_VERSION}-runtime`;
+
+
+/* =========================================================================
+   PRECACHE
    ========================================================================= */
 
 const PRECACHE_URLS = [
+
   "index.html",
+
   "offline.html",
+
   "manifest.webmanifest",
+
   "assets/colors_and_type.css",
+
   "app/site.css",
+
   "assets/logo-mark.png",
+
   "icons/icon-192.png",
+
   "icons/icon-512.png",
+
   "icons/icon-192-any.png",
+
   "icons/icon-512-any.png",
+
   "icons/apple-touch-icon.png"
+
 ];
 
 
 /* =========================================================================
-   CDN / Fonts
+   CDN / FONTS
    ========================================================================= */
 
 const CDN_HOSTS = [
+
   "unpkg.com",
+
   "cdnjs.cloudflare.com",
+
   "fonts.googleapis.com",
+
   "fonts.gstatic.com"
+
 ];
 
+
 function isCdn(url) {
+
   return CDN_HOSTS.some(
-    (h) =>
-      url.hostname === h ||
-      url.hostname.endsWith("." + h)
+    function (host) {
+
+      return (
+        url.hostname === host ||
+        url.hostname.endsWith(
+          "." + host
+        )
+      );
+
+    }
   );
+
 }
 
 
 /* =========================================================================
-   Install
+   INSTALL
    ========================================================================= */
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(PRECACHE)
-      .then((cache) =>
-        // allSettled: a single 404 won't abort the whole install
-        Promise.allSettled(
-          PRECACHE_URLS.map((u) => cache.add(u))
-        )
-      )
-      .then(() => self.skipWaiting())
-  );
-});
+self.addEventListener(
+  "install",
+  function (event) {
 
+    event.waitUntil(
 
-/* =========================================================================
-   Activate
-   ========================================================================= */
+      caches
+        .open(PRECACHE)
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter(
-              (k) =>
-                k !== PRECACHE &&
-                k !== RUNTIME
+        .then(function (cache) {
+
+          return Promise.allSettled(
+
+            PRECACHE_URLS.map(
+              function (url) {
+
+                return cache.add(url);
+
+              }
             )
-            .map((k) => caches.delete(k))
-        )
-      )
-      .then(() => self.clients.claim())
-  );
-});
 
+          );
 
-/* =========================================================================
-   Fetch
-   ========================================================================= */
-
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-
-  // Only handle GET requests.
-  if (req.method !== "GET") {
-    return;
-  }
-
-  const url = new URL(req.url);
-
-
-  /* -----------------------------------------------------------------------
-     IMPORTANT:
-     Never intercept Admin or Member Portal routes.
-
-     This prevents errors such as:
-
-       The FetchEvent for "/admin/notifications"
-       resulted in a network error response.
-
-       TypeError: Failed to convert value to 'Response'
-
-     Admin and Member pages should always be handled directly by the
-     browser/Vite/server.
-     ----------------------------------------------------------------------- */
-
-  if (
-    url.origin === self.location.origin &&
-    (
-      url.pathname.startsWith("/admin") ||
-      url.pathname.startsWith("/members")
-    )
-  ) {
-    return;
-  }
-
-
-  /* -----------------------------------------------------------------------
-     1) Navigations
-     Network-first -> cache -> offline page
-     ----------------------------------------------------------------------- */
-
-  if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const pathname = new URL(req.url).pathname;
-
-          // Extra protection: never cache Admin pages.
-          if (pathname.startsWith("/admin")) {
-            return res;
-          }
-
-          // Extra protection: never cache Member pages.
-          if (pathname.startsWith("/members")) {
-            return res;
-          }
-
-          const copy = res.clone();
-
-          caches
-            .open(RUNTIME)
-            .then((c) => c.put(req, copy))
-            .catch(() => {});
-
-          return res;
         })
 
-        .catch(() => {
-          const pathname =
-            new URL(req.url).pathname;
+        .then(function () {
 
-          // Do not show public/offline page for Admin routes.
-          if (pathname.startsWith("/admin")) {
-            return new Response(
-              "Admin page unavailable offline.",
-              {
-                status: 503,
-                headers: {
-                  "Content-Type": "text/plain"
-                }
-              }
-            );
-          }
+          return self.skipWaiting();
 
-          // Do not show public/offline page for Member routes.
-          if (pathname.startsWith("/members")) {
-            return new Response(
-              "Member portal unavailable offline.",
-              {
-                status: 503,
-                headers: {
-                  "Content-Type": "text/plain"
-                }
-              }
-            );
-          }
-
-          return caches.match(req).then((hit) => {
-            if (hit) {
-              return hit;
-            }
-
-            return caches
-              .match("index.html")
-              .then((shell) => {
-                if (shell) {
-                  return shell;
-                }
-
-                return caches.match("offline.html");
-              });
-          });
         })
+
     );
 
-    return;
   }
+);
 
 
-  /* -----------------------------------------------------------------------
-     2) Cross-origin CDN + fonts
-     Cache-first
-     ----------------------------------------------------------------------- */
+/* =========================================================================
+   ACTIVATE
+   ========================================================================= */
 
-  if (url.origin !== self.location.origin) {
-    if (isCdn(url)) {
-      event.respondWith(
-        caches.match(req).then((hit) => {
-          if (hit) {
-            return hit;
-          }
+self.addEventListener(
+  "activate",
+  function (event) {
 
-          return fetch(req)
-            .then((res) => {
-              const copy = res.clone();
+    event.waitUntil(
 
-              caches
-                .open(RUNTIME)
-                .then((c) => c.put(req, copy))
-                .catch(() => {});
+      caches
+        .keys()
 
-              return res;
-            })
-            .catch(() => hit);
+        .then(function (keys) {
+
+          return Promise.all(
+
+            keys
+
+              .filter(function (key) {
+
+                return (
+                  key !== PRECACHE &&
+                  key !== RUNTIME
+                );
+
+              })
+
+              .map(function (key) {
+
+                return caches.delete(key);
+
+              })
+
+          );
+
         })
-      );
+
+        .then(function () {
+
+          return self.clients.claim();
+
+        })
+
+    );
+
+  }
+);
+
+
+/* =========================================================================
+   FETCH
+   ========================================================================= */
+
+self.addEventListener(
+  "fetch",
+  function (event) {
+
+    const request =
+      event.request;
+
+
+    if (
+      request.method !== "GET"
+    ) {
+
+      return;
     }
 
-    // Other cross-origin requests:
-    // let the browser/network handle them.
-    return;
-  }
+
+    const url =
+      new URL(request.url);
 
 
-  /* -----------------------------------------------------------------------
-     3) Same-origin assets
-     Stale-while-revalidate
-     ----------------------------------------------------------------------- */
+    /* -------------------------------------------------------
+       Never intercept Admin / Member routes
+       ------------------------------------------------------- */
 
-  event.respondWith(
-    caches.match(req).then((hit) => {
-      const fetchPromise = fetch(req)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const copy = res.clone();
+    if (
+      url.origin === self.location.origin &&
+      (
+        url.pathname.startsWith("/admin") ||
+        url.pathname.startsWith("/members")
+      )
+    ) {
+
+      return;
+    }
+
+
+    /* -------------------------------------------------------
+       Navigation
+       ------------------------------------------------------- */
+
+    if (
+      request.mode === "navigate"
+    ) {
+
+      event.respondWith(
+
+        fetch(request)
+
+          .then(function (response) {
+
+            const pathname =
+              new URL(
+                request.url
+              ).pathname;
+
+
+            if (
+              pathname.startsWith(
+                "/admin"
+              ) ||
+              pathname.startsWith(
+                "/members"
+              )
+            ) {
+
+              return response;
+            }
+
+
+            const copy =
+              response.clone();
+
 
             caches
               .open(RUNTIME)
-              .then((c) => c.put(req, copy))
-              .catch(() => {});
-          }
+              .then(function (cache) {
 
-          return res;
+                return cache.put(
+                  request,
+                  copy
+                );
+
+              })
+              .catch(function () {});
+
+
+            return response;
+
+          })
+
+          .catch(function () {
+
+            const pathname =
+              new URL(
+                request.url
+              ).pathname;
+
+
+            if (
+              pathname.startsWith(
+                "/admin"
+              )
+            ) {
+
+              return new Response(
+                "Admin page unavailable offline.",
+                {
+                  status: 503,
+
+                  headers: {
+                    "Content-Type":
+                      "text/plain"
+                  }
+                }
+              );
+
+            }
+
+
+            if (
+              pathname.startsWith(
+                "/members"
+              )
+            ) {
+
+              return new Response(
+                "Member portal unavailable offline.",
+                {
+                  status: 503,
+
+                  headers: {
+                    "Content-Type":
+                      "text/plain"
+                  }
+                }
+              );
+
+            }
+
+
+            return caches
+              .match(request)
+
+              .then(function (cached) {
+
+                if (cached) {
+                  return cached;
+                }
+
+
+                return caches
+                  .match(
+                    "index.html"
+                  )
+
+                  .then(function (shell) {
+
+                    if (shell) {
+                      return shell;
+                    }
+
+
+                    return caches.match(
+                      "offline.html"
+                    );
+
+                  });
+
+              });
+
+          })
+
+      );
+
+
+      return;
+    }
+
+
+    /* -------------------------------------------------------
+       Cross-origin CDN
+       ------------------------------------------------------- */
+
+    if (
+      url.origin !==
+      self.location.origin
+    ) {
+
+      if (
+        isCdn(url)
+      ) {
+
+        event.respondWith(
+
+          caches
+            .match(request)
+
+            .then(function (cached) {
+
+              if (cached) {
+                return cached;
+              }
+
+
+              return fetch(request)
+
+                .then(function (response) {
+
+                  const copy =
+                    response.clone();
+
+
+                  caches
+                    .open(RUNTIME)
+
+                    .then(function (cache) {
+
+                      return cache.put(
+                        request,
+                        copy
+                      );
+
+                    })
+
+                    .catch(function () {});
+
+
+                  return response;
+
+                })
+
+                .catch(function () {
+
+                  return cached;
+
+                });
+
+            })
+
+        );
+
+      }
+
+
+      return;
+    }
+
+
+    /* -------------------------------------------------------
+       Same-origin assets
+       ------------------------------------------------------- */
+
+    event.respondWith(
+
+      caches
+        .match(request)
+
+        .then(function (cached) {
+
+          const fetchPromise =
+            fetch(request)
+
+              .then(function (response) {
+
+                if (
+                  response &&
+                  response.status === 200
+                ) {
+
+                  const copy =
+                    response.clone();
+
+
+                  caches
+                    .open(RUNTIME)
+
+                    .then(function (cache) {
+
+                      return cache.put(
+                        request,
+                        copy
+                      );
+
+                    })
+
+                    .catch(function () {});
+
+                }
+
+
+                return response;
+
+              })
+
+              .catch(function () {
+
+                return cached;
+
+              });
+
+
+          return (
+            cached ||
+            fetchPromise
+          );
+
         })
-        .catch(() => hit);
 
-      return hit || fetchPromise;
-    })
-  );
-});
+    );
+
+  }
+);
 
 
 /* =========================================================================
-   Message
+   MESSAGE
    ========================================================================= */
 
-self.addEventListener("message", (event) => {
-  if (event.data === "SKIP_WAITING") {
-    self.skipWaiting();
+self.addEventListener(
+  "message",
+  function (event) {
+
+    if (
+      event.data ===
+      "SKIP_WAITING"
+    ) {
+
+      self.skipWaiting();
+
+    }
+
   }
-});
+);
+
+
+console.log(
+  "🔥 Wealthoria Firebase Messaging Service Worker loaded."
+);

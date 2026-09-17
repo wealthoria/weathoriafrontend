@@ -1365,6 +1365,113 @@ function MemberNotificationsPage({
    MEMBER DASHBOARD
 ========================================================= */
 
+/* =========================================================
+   MEMBER SESSION HELPERS
+   Session is restored from browser storage.
+   Dashboard does NOT call /api/members/me on every refresh.
+========================================================= */
+
+const MEMBER_SESSIONS_KEY =
+  "wealthoria-member-sessions";
+
+const CURRENT_MEMBER_KEY =
+  "wealthoria-current-member";
+
+const readMemberSessions = (storage) => {
+  try {
+    const raw = storage.getItem(MEMBER_SESSIONS_KEY);
+    if (!raw) return {};
+
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object"
+      ? parsed
+      : {};
+  } catch (error) {
+    console.warn("Could not read member sessions:", error);
+    return {};
+  }
+};
+
+const getCurrentMemberSession = () => {
+  try {
+    const sessionUid = sessionStorage.getItem(CURRENT_MEMBER_KEY);
+
+    if (sessionUid) {
+      const sessions = readMemberSessions(sessionStorage);
+      const session = sessions[sessionUid];
+
+      if (session?.uid && session?.token) {
+        return { session, storage: sessionStorage };
+      }
+    }
+
+    const localUid = localStorage.getItem(CURRENT_MEMBER_KEY);
+
+    if (localUid) {
+      const sessions = readMemberSessions(localStorage);
+      const session = sessions[localUid];
+
+      if (session?.uid && session?.token) {
+        return { session, storage: localStorage };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Could not read current member session:", error);
+    return null;
+  }
+};
+
+const updateCurrentMemberSession = (storage, session) => {
+  try {
+    if (!storage || !session?.uid) return;
+
+    const sessions = readMemberSessions(storage);
+    sessions[session.uid] = session;
+
+    storage.setItem(
+      MEMBER_SESSIONS_KEY,
+      JSON.stringify(sessions)
+    );
+  } catch (error) {
+    console.error("Could not update member session:", error);
+  }
+};
+
+const removeCurrentMemberSession = (uid) => {
+  try {
+    if (!uid) return;
+
+    const localSessions = readMemberSessions(localStorage);
+    const sessionSessions = readMemberSessions(sessionStorage);
+
+    delete localSessions[uid];
+    delete sessionSessions[uid];
+
+    localStorage.setItem(
+      MEMBER_SESSIONS_KEY,
+      JSON.stringify(localSessions)
+    );
+
+    sessionStorage.setItem(
+      MEMBER_SESSIONS_KEY,
+      JSON.stringify(sessionSessions)
+    );
+
+    if (localStorage.getItem(CURRENT_MEMBER_KEY) === uid) {
+      localStorage.removeItem(CURRENT_MEMBER_KEY);
+    }
+
+    if (sessionStorage.getItem(CURRENT_MEMBER_KEY) === uid) {
+      sessionStorage.removeItem(CURRENT_MEMBER_KEY);
+    }
+  } catch (error) {
+    console.error("Could not remove member session:", error);
+  }
+};
+
+
 function MemberDashboard() {
 
   const CourseVideos =
@@ -1496,525 +1603,50 @@ const [authChecking, setAuthChecking] =
      MEMBER SESSION
   ======================================================= */
 
- /* =======================================================
-   MEMBER SESSION
-======================================================= */
-
-const MEMBER_SESSIONS_KEY =
-  "wealthoria-member-sessions";
-
-const CURRENT_MEMBER_KEY =
-  "wealthoria-current-member";
-
-
-const readMemberSessions = (storage) => {
-
-  try {
-
-    const raw =
-      storage.getItem(
-        MEMBER_SESSIONS_KEY
-      );
-
-    if (!raw) {
-      return {};
-    }
-
-    const parsed =
-      JSON.parse(raw);
-
-    return parsed &&
-      typeof parsed === "object"
-      ? parsed
-      : {};
-
-  } catch (error) {
-
-    console.warn(
-      "Could not read member sessions:",
-      error
-    );
-
-    return {};
-
-  }
-
-};
-
-
-const getCurrentMemberSession = () => {
-
-  try {
-
-    /* Session storage has priority */
-    const sessionUid =
-      sessionStorage.getItem(
-        CURRENT_MEMBER_KEY
-      );
-
-    if (sessionUid) {
-
-      const sessions =
-        readMemberSessions(
-          sessionStorage
-        );
-
-      const session =
-        sessions[sessionUid];
-
-      if (
-        session?.uid &&
-        session?.token
-      ) {
-
-        return {
-          session,
-          storage:
-            sessionStorage
-        };
-
-      }
-
-    }
-
-
-    /* Then localStorage */
-    const localUid =
-      localStorage.getItem(
-        CURRENT_MEMBER_KEY
-      );
-
-    if (localUid) {
-
-      const sessions =
-        readMemberSessions(
-          localStorage
-        );
-
-      const session =
-        sessions[localUid];
-
-      if (
-        session?.uid &&
-        session?.token
-      ) {
-
-        return {
-          session,
-          storage:
-            localStorage
-        };
-
-      }
-
-    }
-
-
-    return null;
-
-  } catch (error) {
-
-    console.error(
-      "Could not read current member session:",
-      error
-    );
-
-    return null;
-
-  }
-
-};
-
-
-const updateCurrentMemberSession = (
-  storage,
-  session
-) => {
-
-  try {
-
-    const sessions =
-      readMemberSessions(
-        storage
-      );
-
-    sessions[session.uid] =
-      session;
-
-    storage.setItem(
-      MEMBER_SESSIONS_KEY,
-      JSON.stringify(
-        sessions
-      )
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Could not update member session:",
-      error
-    );
-
-  }
-
-};
-
-
-const removeCurrentMemberSession = (
-  uid
-) => {
-
-  try {
-
-    if (!uid) {
-      return;
-    }
-
-    const localSessions =
-      readMemberSessions(
-        localStorage
-      );
-
-    const sessionSessions =
-      readMemberSessions(
-        sessionStorage
-      );
-
-
-    delete localSessions[uid];
-    delete sessionSessions[uid];
-
-
-    localStorage.setItem(
-      MEMBER_SESSIONS_KEY,
-      JSON.stringify(
-        localSessions
-      )
-    );
-
-    sessionStorage.setItem(
-      MEMBER_SESSIONS_KEY,
-      JSON.stringify(
-        sessionSessions
-      )
-    );
-
-
-    if (
-      localStorage.getItem(
-        CURRENT_MEMBER_KEY
-      ) === uid
-    ) {
-
-      localStorage.removeItem(
-        CURRENT_MEMBER_KEY
-      );
-
-    }
-
-
-    if (
-      sessionStorage.getItem(
-        CURRENT_MEMBER_KEY
-      ) === uid
-    ) {
-
-      sessionStorage.removeItem(
-        CURRENT_MEMBER_KEY
-      );
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Could not remove member session:",
-      error
-    );
-
-  }
-
-};
-
+  /* =======================================================
+     MEMBER SESSION
+  ======================================================= */
 
 useEffect(() => {
 
-  const checkMemberSession =
-    async () => {
-
-      try {
-
-        const current =
-          getCurrentMemberSession();
-
-
-        /* ==============================================
-           NO CURRENT MEMBER
-        ============================================== */
-
-        if (!current) {
-
-          setMember(null);
-          setAuthChecking(false);
-
-          if (
-            window.membersNavigate
-          ) {
-
-            window.membersNavigate(
-              "/members/login"
-            );
-
-          } else {
-
-            window.location.href =
-              "/members/login";
-
-          }
-
-          return;
-
-        }
-
-
-        const {
-          session: parsedMember,
-          storage
-        } = current;
-
-
-        /* ==============================================
-           VERIFY MEMBER WITH BACKEND
-        ============================================== */
-
-        const response =
-          await fetch(
-            `${DASHBOARD_API}/api/members/me`,
-            {
-              method: "GET",
-              headers: {
-                Authorization:
-                  `Bearer ${parsedMember.token}`,
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (
-          !response.ok ||
-          !data?.success ||
-          !data?.member
-        ) {
-
-          throw new Error(
-            data?.message ||
-            "Member session is no longer valid."
-          );
-
-        }
-
-
-        const latestMember =
-          data.member;
-
-
-        const currentStatus =
-          String(
-            latestMember.status ||
-            ""
-          )
-            .trim()
-            .toLowerCase();
-
-
-        /* ==============================================
-           BLOCK INACTIVE / DISABLED MEMBERS
-        ============================================== */
-
-        const blockedStatuses = [
-          "inactive",
-          "cancelled",
-          "canceled",
-          "deactivated",
-          "disabled",
-          "blocked",
-          "suspended"
-        ];
-
-
-        if (
-          blockedStatuses.includes(
-            currentStatus
-          )
-        ) {
-
-          /*
-           * Keep inactive/cancelled session because
-           * login.jsx needs it for activation.
-           */
-
-          const updatedSession = {
-            ...parsedMember,
-
-            uid:
-              latestMember.uid ||
-              parsedMember.uid,
-
-            email:
-              latestMember.email ||
-              parsedMember.email ||
-              "",
-
-            name:
-              latestMember.name ||
-              parsedMember.name ||
-              "",
-
-            role:
-              latestMember.role ||
-              parsedMember.role ||
-              "member",
-
-            status:
-              currentStatus,
-
-            subscription:
-              latestMember.subscription ||
-              parsedMember.subscription ||
-              null
-          };
-
-
-          updateCurrentMemberSession(
-            storage,
-            updatedSession
-          );
-
-
-          setMember(null);
-          setAuthChecking(false);
-
-
-          if (
-            window.membersNavigate
-          ) {
-
-            window.membersNavigate(
-              "/members/login"
-            );
-
-          } else {
-
-            window.location.href =
-              "/members/login";
-
-          }
-
-          return;
-
-        }
-
-
-        /* ==============================================
-           ACTIVE MEMBER
-        ============================================== */
-
-        const updatedSession = {
-
-          ...parsedMember,
-
-          uid:
-            latestMember.uid ||
-            parsedMember.uid,
-
-          email:
-            latestMember.email ||
-            parsedMember.email ||
-            "",
-
-          name:
-            latestMember.name ||
-            parsedMember.name ||
-            "",
-
-          role:
-            latestMember.role ||
-            parsedMember.role ||
-            "member",
-
-          status:
-            currentStatus,
-
-          subscription:
-            latestMember.subscription ||
-            parsedMember.subscription ||
-            null
-
-        };
-
-
-        updateCurrentMemberSession(
-          storage,
-          updatedSession
-        );
-
-
-        setMember(
-          updatedSession
-        );
-
-        setAuthChecking(
-          false
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Member session error:",
-          error
-        );
-
-
-        const current =
-          getCurrentMemberSession();
-
-
-        if (current?.session?.uid) {
-
-          removeCurrentMemberSession(
-            current.session.uid
-          );
-
-        }
-
-
-        setMember(null);
-        setAuthChecking(false);
-
-
-        if (
-          window.membersNavigate
-        ) {
-
-          window.membersNavigate(
-            "/members/login"
-          );
-
-        }
-
-      }
-
-    };
-
-
-  checkMemberSession();
+  /* ============================================================
+     RESTORE SAVED MEMBER SESSION
+
+     IMPORTANT:
+     - Do NOT call /api/members/me here.
+     - Do NOT re-check login on every refresh.
+     - Do NOT ask for email/password again.
+     - The saved browser session is restored immediately.
+     - If the session is missing/invalid locally, go to login.
+
+     The actual logout/invalid-token handling remains responsible
+     for clearing the session when authentication is explicitly
+     terminated.
+  ============================================================ */
+
+  const current = getCurrentMemberSession();
+
+  if (!current?.session?.uid || !current?.session?.token) {
+    setMember(null);
+    setAuthChecking(false);
+
+    if (window.membersNavigate) {
+      window.membersNavigate("/members/login");
+    } else {
+      window.location.replace("/members/login");
+    }
+
+    return;
+  }
+
+  /*
+   * Restore the member instantly from localStorage/sessionStorage.
+   * This is what makes refresh, browser back, and switching tabs
+   * stay logged in without another /api/members/me request.
+   */
+
+  setMember(current.session);
+  setAuthChecking(false);
 
 }, []);
 
@@ -2577,39 +2209,30 @@ useEffect(() => {
 const logout =
   async () => {
 
+  const current =
+    getCurrentMemberSession();
+
   try {
 
-    const saved =
-      localStorage.getItem(
-        "wealthoria-member"
-      ) ||
-      sessionStorage.getItem(
-        "wealthoria-member"
-      );
+    const session =
+      current?.session;
 
-    if (saved) {
+    if (session?.token) {
 
-      const session =
-        JSON.parse(saved);
+      await fetch(
+        `${DASHBOARD_API}/api/members/logout`,
+        {
+          method: "POST",
 
-      if (session?.token) {
+          headers: {
+            "Content-Type":
+              "application/json",
 
-        await fetch(
-          `${DASHBOARD_API}/api/members/logout`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${session.token}`
-            }
+            Authorization:
+              `Bearer ${session.token}`
           }
-        );
-
-      }
+        }
+      );
 
     }
 
@@ -2622,13 +2245,18 @@ const logout =
 
   }
 
-  localStorage.removeItem(
-    "wealthoria-member"
-  );
+  /* Remove the current member from BOTH storage types. */
+  if (current?.session?.uid) {
+    removeCurrentMemberSession(
+      current.session.uid
+    );
+  }
 
   sessionStorage.removeItem(
-    "wealthoria-member"
+    "wealthoria-active-page"
   );
+
+  setMember(null);
 
   setNotificationSlides(
     []

@@ -1817,9 +1817,7 @@ a { color: inherit; }
     gap: 6px;
   }
 
-  .nav-right .lang-toggle {
-    display: none;
-  }
+ 
 
   .nav-right .theme-toggle {
     width: 36px;

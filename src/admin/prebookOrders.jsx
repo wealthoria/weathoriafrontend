@@ -541,6 +541,17 @@ function PrebookOrders() {
     filteredOrders.length
   );
 
+  const pageEligibleLabelCount = paginatedOrders.filter((order) => {
+    const shippingStatus = String(order.shippingStatus || "")
+      .trim()
+      .toLowerCase();
+    return shippingStatus !== "shipped" && shippingStatus !== "delivered";
+  }).length;
+
+  const pageGeneratedLabelCount = paginatedOrders.filter(
+    (order) => order.labelGenerated === true
+  ).length;
+
 
   /* =======================================================
      COUNTS
@@ -1126,19 +1137,6 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
         await batch.commit();
       }
 
-      setOrders((prev) =>
-        prev.map((order) => {
-          if (!labelOrders.some((item) => item.id === order.id)) return order;
-          return {
-            ...order,
-            labelGenerated: true,
-            labelGeneratedAt: generatedAt,
-            labelBatchId,
-            labelGenerationCount: Number(order.labelGenerationCount || 0) + 1
-          };
-        })
-      );
-
       setLabelNotice(
         reprint
           ? `Reprinted page row ${pageRowNumbers[0]}.`
@@ -1162,6 +1160,105 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
     alert(
       error?.message ||
         "Unable to generate the PDF. Please try again."
+    );
+  } finally {
+    setLabelGenerating(false);
+  }
+};
+
+/* =======================================================
+   RESET LABEL GENERATION COUNT FOR CURRENT PAGE
+======================================================= */
+
+const resetLabelCountsForCurrentPage = async () => {
+  const resettableOrders = paginatedOrders.filter((order) => {
+    return (
+      order.labelGenerated === true ||
+      Number(order.labelGenerationCount || 0) > 0 ||
+      order.labelBatchId ||
+      order.labelGeneratedAt
+    );
+  });
+
+  if (!resettableOrders.length) {
+    alert(`No generated label counts to reset on Page ${currentPage}.`);
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Reset label count for ${resettableOrders.length} order${resettableOrders.length === 1 ? "" : "s"} on Page ${currentPage}?\n\n` +
+    `Their label count will become 0.\n` +
+    `The next time you generate them, the count will start from 1.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setLabelGenerating(true);
+
+    for (let i = 0; i < resettableOrders.length; i += 400) {
+      const chunk = resettableOrders.slice(i, i + 400);
+      const batch = window.db.batch();
+
+      chunk.forEach((order) => {
+        const ref = window.db
+          .collection("bookOrders")
+          .doc(order.id);
+
+        batch.update(ref, {
+          labelGenerated: false,
+          labelGeneratedAt: null,
+          labelBatchId: null,
+          labelGenerationCount: 0
+        });
+      });
+
+      await batch.commit();
+    }
+
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (!resettableOrders.some((item) => item.id === order.id)) {
+          return order;
+        }
+
+        return {
+          ...order,
+          labelGenerated: false,
+          labelGeneratedAt: null,
+          labelBatchId: null,
+          labelGenerationCount: 0
+        };
+      })
+    );
+
+    setSelected((prev) => {
+      if (!prev || !resettableOrders.some((item) => item.id === prev.id)) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        labelGenerated: false,
+        labelGeneratedAt: null,
+        labelBatchId: null,
+        labelGenerationCount: 0
+      };
+    });
+
+    setLabelNotice(
+      `Page ${currentPage}: label counts reset to 0. The next generation will start from 1.`
+    );
+
+    alert(
+      `Label counts reset successfully for ${resettableOrders.length} order${resettableOrders.length === 1 ? "" : "s"}.\n\n` +
+      `Next generation will start from count 1.`
+    );
+  } catch (error) {
+    console.error("Reset label count error:", error);
+    alert(
+      error?.message ||
+      "Unable to reset label counts. Please try again."
     );
   } finally {
     setLabelGenerating(false);
@@ -1210,90 +1307,138 @@ const reprintShippingLabel = async (order) => {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-start",
+          alignItems: "center",
           gap: 20,
-          marginBottom: 22,
+          marginBottom: 18,
           flexWrap: "wrap"
         }}
       >
         <div>
-          <div
+          <h2
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 7
+              margin: 0,
+              fontSize: 25,
+              lineHeight: 1.15,
+              fontWeight: 750,
+              letterSpacing: "-.02em"
             }}
           >
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 25,
-                lineHeight: 1.15,
-                fontWeight: 750,
-                letterSpacing: "-.02em"
-              }}
-            >
-              Pre-book Orders
-            </h2>
+            Pre-book Orders
+          </h2>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              color: "#667085"
+            }}
+          >
+            Showing {pageStart}-{pageEnd} of {filteredOrders.length} records · Page {currentPage} of {totalPages}
           </div>
-
-
-
         </div>
 
-        
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            justifyContent: "flex-end"
+          }}
+        >
+          <div style={{ textAlign: "right" }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 750,
+                color: "#344054"
+              }}
+            >
+              {pageEligibleLabelCount} labels to generate
+            </div>
+            <div
+              style={{
+                marginTop: 3,
+                fontSize: 11,
+                color: "#667085"
+              }}
+            >
+              {pageGeneratedLabelCount} already generated · 18 per A4
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={resetLabelCountsForCurrentPage}
+            disabled={
+              labelGenerating ||
+              pageGeneratedLabelCount === 0
+            }
+            style={{
+              height: 42,
+              padding: "0 15px",
+              border: "1px solid #dfe3e8",
+              borderRadius: 10,
+              background:
+                labelGenerating || pageGeneratedLabelCount === 0
+                  ? "#f2f4f7"
+                  : "#fff",
+              color:
+                labelGenerating || pageGeneratedLabelCount === 0
+                  ? "#98a2b3"
+                  : "#344054",
+              fontSize: 13,
+              fontWeight: 750,
+              cursor:
+                labelGenerating || pageGeneratedLabelCount === 0
+                  ? "not-allowed"
+                  : "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            Reset Count
+          </button>
+
           <button
             type="button"
             onClick={() => generateShippingLabelsPDF(paginatedOrders)}
-            disabled={
-              labelGenerating ||
-              !paginatedOrders.some(
-                (order) =>
-                  !["shipped", "delivered"].includes(
-                    String(order.shippingStatus || "").toLowerCase()
-                  )
-              )
-            }
+            disabled={labelGenerating || pageEligibleLabelCount === 0}
             style={{
               height: 42,
               padding: "0 16px",
               border: "none",
               borderRadius: 10,
               background:
-                labelGenerating
+                labelGenerating || pageEligibleLabelCount === 0
                   ? "#d0d5dd"
-                  : paginatedOrders.some(
-                      (order) =>
-                        !["shipped", "delivered"].includes(
-                          String(order.shippingStatus || "").toLowerCase()
-                        )
-                    )
-                  ? "rgb(232 95 78)"
-                  : "#d0d5dd",
+                  : "rgb(232 95 78)",
               color: "#fff",
               fontSize: 13,
               fontWeight: 750,
-              cursor: labelGenerating ? "wait" : "pointer",
+              cursor:
+                labelGenerating || pageEligibleLabelCount === 0
+                  ? "not-allowed"
+                  : "pointer",
               whiteSpace: "nowrap"
             }}
           >
-            {labelGenerating ? "Generating..." : "Generate Page Labels"}
+            {labelGenerating
+              ? "Generating..."
+              : `Generate Labels (${pageEligibleLabelCount})`}
           </button>
+        </div>
       </div>
-
 
       {labelNotice && (
         <div
           style={{
             marginBottom: 16,
             padding: "10px 14px",
-            borderRadius: 10,
-            background: "#f5f3ff",
-            border: "1px solid #e4d7ff",
-            color: "#6941c6",
+            borderRadius: 9,
+            background: "#f8fafc",
+            border: "1px solid #e4e7ec",
+            color: "#475467",
             fontSize: 12,
-            fontWeight: 700
+            fontWeight: 650
           }}
         >
           {labelNotice}
@@ -1628,10 +1773,7 @@ const reprintShippingLabel = async (order) => {
               color: "#667085"
             }}
           >
-            Showing {pageStart}-{pageEnd} of {filteredOrders.length} · Page rows 1-{paginatedOrders.length}
-            {filteredOrders.length !== orders.length
-              ? ` (filtered from ${orders.length})`
-              : ""}
+            Rows {pageStart}-{pageEnd}
           </div>
         </div>
 
@@ -1662,6 +1804,7 @@ const reprintShippingLabel = async (order) => {
               >
 
                 {[
+                  "Row",
                   "Booking ID",
                   "Name",
                   "Email",
@@ -1918,56 +2061,73 @@ const reprintShippingLabel = async (order) => {
                               </button>
                             )}
 
-                            {order.labelGenerated === true && (
-                              <span
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  padding: "5px 9px",
-                                  borderRadius: 999,
-                                  background: "#f5f3ff",
-                                  color: "#6941c6",
-                                  fontSize: 11,
-                                  fontWeight: 750,
-                                  whiteSpace: "nowrap"
-                                }}
-                              >
-                                ✓ Label Generated · Row {pageRow}
-                                {Number(order.labelGenerationCount || 0) > 1
-                                  ? ` · ${order.labelGenerationCount}×`
-                                  : ""}
-                              </span>
-                            )}
                           </div>
                         </td>
 
                         {/* LABEL */}
-                        <td style={{ padding: "14px" }}>
+                        <td style={{ padding: "12px 14px", minWidth: 150 }}>
                           {order.labelGenerated === true ? (
-                            <button
-                              type="button"
-                              onClick={() => reprintShippingLabel(order)}
-                              disabled={labelGenerating}
+                            <div
                               style={{
-                                height: 34,
-                                padding: "0 12px",
-                                border: "1px solid #d9c7ff",
-                                borderRadius: 8,
-                                background: "#faf8ff",
-                                color: "#6941c6",
-                                fontSize: 12,
-                                fontWeight: 700,
-                                cursor: labelGenerating ? "not-allowed" : "pointer",
-                                whiteSpace: "nowrap",
-                                opacity: labelGenerating ? 0.65 : 1
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                gap: 5
                               }}
                             >
-                              Reprint
-                            </button>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 7,
+                                  fontSize: 12,
+                                  fontWeight: 750,
+                                  color: "#344054"
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    width: 7,
+                                    height: 7,
+                                    borderRadius: "50%",
+                                    background: "#12b76a",
+                                    flexShrink: 0
+                                  }}
+                                />
+                                Generated
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  color: "#667085"
+                                }}
+                              >
+                                Printed {Math.max(1, Number(order.labelGenerationCount || 1))} time{Math.max(1, Number(order.labelGenerationCount || 1)) === 1 ? "" : "s"}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => reprintShippingLabel(order)}
+                                disabled={labelGenerating}
+                                style={{
+                                  height: 30,
+                                  padding: "0 10px",
+                                  border: "1px solid #dfe3e8",
+                                  borderRadius: 7,
+                                  background: "#fff",
+                                  color: "#344054",
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  cursor: labelGenerating ? "not-allowed" : "pointer",
+                                  opacity: labelGenerating ? 0.65 : 1
+                                }}
+                              >
+                                Reprint
+                              </button>
+                            </div>
                           ) : (
                             <span
                               style={{
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: "#98a2b3"
                               }}
                             >
@@ -2067,7 +2227,7 @@ const reprintShippingLabel = async (order) => {
                 color: "#667085"
               }}
             >
-              Page {currentPage} of {totalPages} · {ORDERS_PER_PAGE} records per page · Page rows 1-{paginatedOrders.length}
+              Showing {pageStart}-{pageEnd} of {filteredOrders.length} records · 50 per page
             </div>
 
             <div

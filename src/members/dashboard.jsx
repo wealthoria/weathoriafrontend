@@ -2502,225 +2502,93 @@ const logout =
 
         <nav className="wd-sidebar-nav">
 
+          {/* DASHBOARD FIRST */}
 
           <div className="wd-nav-title">
             OVERVIEW
           </div>
 
-
           <button
             type="button"
             className={
-              activePage ===
-              "dashboard"
+              activePage === "dashboard"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }
-            onClick={() =>
-              openPage("dashboard")
-            }
+            onClick={() => openPage("dashboard")}
           >
-
-            <span>
-              ⌂
-            </span>
-
-            <b>
-              Dashboard
-            </b>
-
+            <span>⌂</span>
+            <b>Dashboard</b>
           </button>
 
+
+          {/* ALL OTHER PAGES — ALPHABETICAL */}
 
           <div className="wd-nav-title">
-            LEARNING
+            ALL PAGES
           </div>
 
+          {/* ARTICLES & REPORTS */}
 
           <button
             type="button"
             className={
-              activePage ===
-              "courses"
+              activePage === "articles"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }
-            onClick={() =>
-              openPage("courses")
-            }
+            onClick={() => openPage("articles")}
           >
-
-            <span>
-              ▶
-            </span>
-
-            <b>
-              Courses
-            </b>
-
+            <span>◈</span>
+            <b>Articles & Reports</b>
           </button>
 
 
+          {/* CALCULATORS */}
 
-                    <button
+          <button
             type="button"
             className={
-              activePage === "videos"
+              activePage === "calculator"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }
-            onClick={() =>
-              openPage("videos")
-            }
+            onClick={() => openPage("calculator")}
           >
-            <span>
-              ▶
-            </span>
-
-            <b>
-              Videos
-            </b>
+            <span>=</span>
+            <b>Calculators</b>
           </button>
 
 
+          {/* COURSES */}
+
           <button
             type="button"
             className={
-              activePage ===
-              "newsletter"
+              activePage === "courses"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }
-            onClick={() =>
-              openPage("newsletter")
-            }
+            onClick={() => openPage("courses")}
           >
-
-            <span>
-              ✉
-            </span>
-
-            <b>
-              Newsletter
-            </b>
-
+            <span>▶</span>
+            <b>Courses</b>
           </button>
 
 
-          <button
-            type="button"
-            className={
-              activePage ===
-              "weekly"
-                ? "wd-nav-item active"
-                : "wd-nav-item"
-            }
-            onClick={() =>
-              openPage("weekly")
-            }
-          >
-
-            <span>
-              ↗
-            </span>
-
-            <b>
-              Weekly Roundup
-            </b>
-
-          </button>
-
-
-          <button
-  type="button"
-  className={
-    activePage === "articles"
-      ? "wd-nav-item active"
-      : "wd-nav-item"
-  }
-  onClick={() =>
-    openPage("articles")
-  }
->
-
-  <span>
-    ◈
-  </span>
-
-  <b>
-    Articles & Reports
-  </b>
-
-</button>
-
-
-          <div className="wd-nav-title">
-            DATA & RESEARCH
-          </div>
-
-
+          {/* NEWSLETTER */}
 
           <button
             type="button"
             className={
-              activePage ===
-              "calculator"
+              activePage === "newsletter"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }
-            onClick={() =>
-              openPage("calculator")
-            }
+            onClick={() => openPage("newsletter")}
           >
-
-            <span>
-              =
-            </span>
-
-            <b>
-              Calculators
-            </b>
-
-          </button>
-
-
-          <div className="wd-nav-title">
-            ACCOUNT
-          </div>
-
-
-          {/* PURCHASES */}
-
-          <button
-            type="button"
-            className={
-              activePage ===
-              "purchase"
-                ? "wd-nav-item active"
-                : "wd-nav-item"
-            }
-            onClick={() =>
-              openPage("purchase")
-            }
-          >
-
-            <span>
-              ▣
-            </span>
-
-            <b>
-              Purchase History
-            </b>
-
-
-            {stats.purchases > 0 && (
-
-              <em>
-                {stats.purchases}
-              </em>
-
-            )}
-
+            <span>✉</span>
+            <b>Newsletter</b>
           </button>
 
 
@@ -2729,35 +2597,75 @@ const logout =
           <button
             type="button"
             className={
-              activePage ===
-              "notifications"
+              activePage === "notifications"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }
-            onClick={() =>
-              openPage("notifications")
-            }
+            onClick={() => openPage("notifications")}
           >
-
-            <span>
-              ♢
-            </span>
-
-            <b>
-              Notifications
-            </b>
-
+            <span>♢</span>
+            <b>Notifications</b>
 
             {unreadNotifications > 0 && (
-
               <em>
                 {unreadNotifications}
               </em>
-
             )}
-
           </button>
 
+
+          {/* PURCHASE HISTORY */}
+
+          <button
+            type="button"
+            className={
+              activePage === "purchase"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() => openPage("purchase")}
+          >
+            <span>▣</span>
+            <b>Purchase History</b>
+
+            {stats.purchases > 0 && (
+              <em>
+                {stats.purchases}
+              </em>
+            )}
+          </button>
+
+
+          {/* VIDEOS */}
+
+          <button
+            type="button"
+            className={
+              activePage === "videos"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() => openPage("videos")}
+          >
+            <span>▶</span>
+            <b>Videos</b>
+          </button>
+
+
+          {/* WEEKLY ROUNDUP */}
+
+          <button
+            type="button"
+            className={
+              activePage === "weekly"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() => openPage("weekly")}
+          >
+            <span>↗</span>
+            <b>Weekly Roundup</b>
+          </button>
 
         </nav>
 

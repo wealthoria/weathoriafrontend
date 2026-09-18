@@ -1764,3 +1764,78 @@ a { color: inherit; }
     padding:30px 22px;
   }
 }
+
+
+/* =========================================================
+   MOBILE / PWA HEADER FIX
+========================================================= */
+
+@media (max-width: 979px) {
+
+  .nav .nav-inner {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-left: 14px;
+    padding-right: 14px;
+    gap: 8px;
+  }
+
+  .nav .mobile-logo-only {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .nav .mobile-logo-only .brand {
+    min-width: 0;
+    max-width: 100%;
+    gap: 7px;
+  }
+
+  .nav .mobile-logo-only .brand-mark {
+    height: 30px !important;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .nav .mobile-logo-only .brand-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .nav .mobile-logo-only .brand-word {
+    font-size: 17px;
+    letter-spacing: .12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-right {
+    flex: 0 0 auto;
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .nav-right .lang-toggle {
+    display: none;
+  }
+
+  .nav-right .theme-toggle {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+
+  .nav-right .hamburger {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+
+  .nav {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}

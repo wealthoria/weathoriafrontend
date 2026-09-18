@@ -802,27 +802,44 @@ useEffect(() => {
          INACTIVE SUBSCRIPTION
       ------------------------------------------------ */
 
-      if (
-        inactiveStatuses.includes(currentStatus)
-      ) {
-        if (!cancelled) {
-          const canReactivate =
-            currentStatus === "inactive" ||
-            currentStatus === "cancelled" ||
-            currentStatus === "canceled";
+    const accessUntil =
+  session?.subscription?.accessUntil ||
+  session?.accessUntil ||
+  null;
+const expiryTime =
+  accessUntil &&
+  typeof accessUntil === "object" &&
+  typeof accessUntil.seconds === "number"
+    ? accessUntil.seconds * 1000
+    : accessUntil
+      ? new Date(accessUntil).getTime()
+      : 0;
+const accessActive =
+  Number.isFinite(expiryTime) &&
+  expiryTime > Date.now();
 
-          if (canReactivate) {
-            setSubscriptionInactive(true);
-            setCheckingSession(false);
-          } else {
-            removeMemberSession(session.uid);
-            setSubscriptionInactive(false);
-            setCheckingSession(false);
-          }
-        }
+if (
+  inactiveStatuses.includes(currentStatus) &&
+  !accessActive
+) {
+  if (!cancelled) {
+    const canReactivate =
+      currentStatus === "inactive" ||
+      currentStatus === "cancelled" ||
+      currentStatus === "canceled";
 
-        return;
-      }
+    if (canReactivate) {
+      setSubscriptionInactive(true);
+      setCheckingSession(false);
+    } else {
+      removeMemberSession(session.uid);
+      setSubscriptionInactive(false);
+      setCheckingSession(false);
+    }
+  }
+
+  return;
+}
 
       /* -----------------------------------------------
          SESSION IS AVAILABLE
@@ -1289,15 +1306,33 @@ const session = {
         /* =================================================
            6. MEMBER DASHBOARD
         ================================================= */
-
 const loginStatus = String(session.status || "")
   .trim()
   .toLowerCase();
 
+const accessUntil =
+  session?.subscription?.accessUntil ||
+  session?.accessUntil ||
+  null;
+const expiryTime =
+  accessUntil &&
+  typeof accessUntil === "object" &&
+  typeof accessUntil.seconds === "number"
+    ? accessUntil.seconds * 1000
+    : accessUntil
+      ? new Date(accessUntil).getTime()
+      : 0;
+const accessActive =
+  Number.isFinite(expiryTime) &&
+  expiryTime > Date.now();
+
 if (
-  loginStatus === "inactive" ||
-  loginStatus === "cancelled" ||
-  loginStatus === "canceled"
+  (
+    loginStatus === "inactive" ||
+    loginStatus === "cancelled" ||
+    loginStatus === "canceled"
+  ) &&
+  !accessActive
 ) {
   setSubscriptionInactive(true);
   setLoading(false);

@@ -1514,7 +1514,62 @@ const initialMemberSession = getCurrentMemberSession();
 const [member, setMember] =
   useState(initialMemberSession?.session || null);
 
+  const [membershipDays, setMembershipDays] =
+  useState(
+    Number(
+      initialMemberSession?.session?.subscription?.remainingDays ??
+      initialMemberSession?.session?.remainingDays ??
+      0
+    )
+  );
+
+useEffect(() => {
+
+  const updateMembershipDays = () => {
+
+    const accessUntil =
+      member?.subscription?.accessUntil ||
+      member?.accessUntil;
+
+    if (!accessUntil) {
+      setMembershipDays(0);
+      return;
+    }
+
+  const expiryTime =
+  getDashboardTime(accessUntil);
+    if (!Number.isFinite(expiryTime)) {
+      return;
+    }
+
+    const remaining =
+      Math.max(
+        0,
+        Math.ceil(
+          (expiryTime - Date.now()) /
+          (1000 * 60 * 60 * 24)
+        )
+      );
+
+    setMembershipDays(remaining);
+  };
+
+  updateMembershipDays();
+
+  const timer =
+    setInterval(
+      updateMembershipDays,
+      60 * 1000
+    );
+
+  return () => clearInterval(timer);
+
+}, [member]);
+
 const [authChecking, setAuthChecking] =
+  useState(false);
+
+  const [membershipLoaded, setMembershipLoaded] =
   useState(false);
 const [notificationStatus, setNotificationStatus] =
   useState("checking");
@@ -1622,50 +1677,77 @@ useEffect(() => {
   /* =======================================================
      MEMBER SESSION
   ======================================================= */
-
 useEffect(() => {
 
-  /* ============================================================
-     RESTORE SAVED MEMBER SESSION
+  const loadMember = async () => {
 
-     IMPORTANT:
-     - Do NOT call /api/members/me here.
-     - Do NOT re-check login on every refresh.
-     - Do NOT ask for email/password again.
-     - The saved browser session is restored immediately.
-     - If the session is missing/invalid locally, go to login.
+    const current = getCurrentMemberSession();
 
-     The actual logout/invalid-token handling remains responsible
-     for clearing the session when authentication is explicitly
-     terminated.
-  ============================================================ */
+    if (!current?.session?.uid || !current?.session?.token) {
+      setMember(null);
+      setAuthChecking(false);
 
-  const current = getCurrentMemberSession();
+      if (window.membersNavigate) {
+        window.membersNavigate("/members/login");
+      } else {
+        window.location.replace("/members/login");
+      }
 
-  if (!current?.session?.uid || !current?.session?.token) {
-    setMember(null);
-    setAuthChecking(false);
-
-    if (window.membersNavigate) {
-      window.membersNavigate("/members/login");
-    } else {
-      window.location.replace("/members/login");
+      return;
     }
 
-    return;
-  }
+    try {
 
-  /*
-   * Restore the member instantly from localStorage/sessionStorage.
-   * This is what makes refresh, browser back, and switching tabs
-   * stay logged in without another /api/members/me request.
-   */
+      const response = await fetch(
+        `${DASHBOARD_API}/api/members/me`,
+        {
+          method: "GET",
+          headers: {
+            Authorization:
+              `Bearer ${current.session.token}`
+          }
+        }
+      );
 
-  setMember(current.session);
-  setAuthChecking(false);
+      const data = await response.json();
+
+      if (!response.ok || !data?.success || !data?.member) {
+        throw new Error(
+          data?.message ||
+          "Unable to load member details."
+        );
+      }
+
+      const updatedSession = {
+        ...current.session,
+        ...data.member
+      };
+
+      updateCurrentMemberSession(
+        current.storage,
+        updatedSession
+      );
+setMember(updatedSession);
+setMembershipLoaded(true);
+setAuthChecking(false);
+
+    } catch (error) {
+
+      console.error(
+        "Member session refresh failed:",
+        error
+      );
+
+    setMember(current.session);
+setMembershipLoaded(true);
+setAuthChecking(false);
+    }
+
+  };
+
+  loadMember();
 
 }, []);
-
   /* =======================================================
      LOAD UNREAD COUNT ONLY
      
@@ -2348,12 +2430,36 @@ const logout =
 
 
 
-  if (!member) {
+if (!member) {
+  return null;
+}
 
-    return null;
+if (!membershipLoaded) {
+  return (
+    <div className="wd-page-state">
+      Loading membership...
+    </div>
+  );
+}
 
-  }
+if (membershipDays <= 0) {
+  return (
+    <div className="wd-page-state">
+      <h2>Membership Expired</h2>
+      <p>Your Wealthoria membership has expired.</p>
 
+      <button
+        type="button"
+        onClick={() => {
+          window.location.href =
+            "/members/subscription";
+        }}
+      >
+        Activate Subscription
+      </button>
+    </div>
+  );
+}
 
   /* =======================================================
      RENDER
@@ -3158,6 +3264,53 @@ const logout =
 
             <>
 
+{/* MEMBERSHIP STATUS */}
+<section className="wd-panel membership-status-panel">
+
+  <div className="wd-panel-head">
+    <div>
+      <span className="wd-panel-label">
+        MEMBERSHIP
+      </span>
+
+      <h3>
+        {membershipDays > 0
+          ? String(
+              member?.subscription?.status || ""
+            ).toLowerCase() === "cancelled"
+            ? "Membership: Cancelled"
+            : "Membership: Active"
+          : "Membership Expired"}
+      </h3>
+
+      <p>
+        {membershipDays > 0
+          ? `You still have access until ${getDashboardDate(
+              member?.subscription?.accessUntil ||
+              member?.accessUntil
+            )}`
+          : "Your membership access has expired."}
+      </p>
+    </div>
+
+  {membershipDays > 0 ? (
+  <strong>
+    {membershipDays} days remaining
+  </strong>
+) : (
+  <button
+    type="button"
+    onClick={() => {
+      window.location.href =
+        "/members/subscription";
+    }}
+  >
+    Activate Subscription
+  </button>
+)}
+  </div>
+
+</section>
 
               {/* WELCOME */}
 

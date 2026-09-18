@@ -299,7 +299,8 @@ a { color: inherit; }
   background: radial-gradient(110% 78% at 16% 42%, var(--canvas-soft) 0%, color-mix(in srgb, var(--canvas-soft) 55%, transparent) 44%, transparent 72%);
 }
 [data-theme="dark"] .hero::after { background: radial-gradient(110% 78% at 16% 42%, var(--canvas-soft) 0%, color-mix(in srgb, var(--canvas-soft) 60%, transparent) 44%, transparent 72%); }
-.hero-grid { position: relative; z-index: 3; display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; padding: 40px 0 56px; }
+.hero-grid 
+{ position: relative; z-index: 3; display: grid; grid-template-columns: 1fr; gap: 40px; align-items: center; }
 @media (min-width: 920px) { .hero-grid { grid-template-columns: 1.05fr .95fr; gap: 56px; padding: 64px 0; } }
 .hero h1 { font: var(--display-xl); font-size: clamp(40px, 7vw, 64px); color: var(--ink); margin: 18px 0 0; letter-spacing: -.5px; }
 .hero .lede { font: var(--body-lg); color: var(--body); max-width: 480px; margin: 22px 0 0; }

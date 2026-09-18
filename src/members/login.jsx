@@ -1310,10 +1310,55 @@ const loginStatus = String(session.status || "")
   .trim()
   .toLowerCase();
 
+/* Get the latest membership/access information */
+const meResponse = await fetch(
+  `${API_BASE_URL}/api/members/me`,
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${session.token}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
+
+let meData = null;
+
+try {
+  meData = await meResponse.json();
+} catch {
+  meData = null;
+}
+
+if (!meResponse.ok || !meData?.success) {
+  throw new Error(
+    meData?.message ||
+    "Unable to verify your membership."
+  );
+}
+
+/* Update session with latest membership information */
+const updatedSession = {
+  ...session,
+  ...meData.member,
+  subscription:
+    meData.member?.subscription ||
+    session.subscription ||
+    null,
+  token: session.token
+};
+
+saveMemberSession(
+  updatedSession,
+  remember
+);
+
+/* Check current access */
 const accessUntil =
-  session?.subscription?.accessUntil ||
-  session?.accessUntil ||
+  updatedSession?.subscription?.accessUntil ||
+  updatedSession?.accessUntil ||
   null;
+
 const expiryTime =
   accessUntil &&
   typeof accessUntil === "object" &&
@@ -1322,6 +1367,7 @@ const expiryTime =
     : accessUntil
       ? new Date(accessUntil).getTime()
       : 0;
+
 const accessActive =
   Number.isFinite(expiryTime) &&
   expiryTime > Date.now();

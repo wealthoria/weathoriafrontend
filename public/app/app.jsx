@@ -1,6 +1,4 @@
-import React from "react";
-
-/* global React, window, localStorage, document */
+/* global React, ReactDOM, window, localStorage, document */
 
 const {
   useState,
@@ -304,6 +302,7 @@ function App() {
         onNav={onNav}
       />
 
+
       <main>
 
         <Hero
@@ -587,12 +586,35 @@ function RootApp() {
 
 
 /* =========================================================
-   VITE GLOBAL EXPORTS
+   REACT ROOT
    ========================================================= */
 
-window.WealthoriaApp = App;
+const rootElement =
+  document.getElementById(
+    "root"
+  );
 
-window.WealthoriaRootApp = RootApp;
+
+if (!rootElement) {
+
+  console.error(
+    "[Wealthoria] #root element was not found."
+  );
+
+}
+else {
+
+  const root =
+    ReactDOM.createRoot(
+      rootElement
+    );
+
+
+  root.render(
+    <RootApp />
+  );
+
+}
 
 
 /* =========================================================

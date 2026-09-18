@@ -1,5 +1,4 @@
 /* global React, window */
-import React from "react";
 
 const { useState, useEffect } = React;
 const {
@@ -313,73 +312,20 @@ useEffect(() => {
 
           (snapshot) => {
 
-           const data =
-  snapshot.docs.map(
-    (doc) => ({
-      id: doc.id,
-      ...doc.data()
-    })
-  );
+            const data =
+              snapshot.docs.map(
+                (doc) => ({
+                  id: doc.id,
+                  ...doc.data()
+                })
+              );
 
-/* =========================================================
-   DISPLAY VIDEOS IN ADMIN-SAVED ORDER
-   ========================================================= */
+            console.log(
+              "YOUTUBE FIRESTORE DATA:",
+              data
+            );
 
-data.sort((a, b) => {
-  const aOrder = Number(a.displayOrder);
-  const bOrder = Number(b.displayOrder);
-
-  const aHasOrder =
-    Number.isFinite(aOrder) &&
-    aOrder > 0;
-
-  const bHasOrder =
-    Number.isFinite(bOrder) &&
-    bOrder > 0;
-
-  /* Both have displayOrder */
-  if (
-    aHasOrder &&
-    bHasOrder
-  ) {
-    return aOrder - bOrder;
-  }
-
-  /* Videos with order come first */
-  if (aHasOrder) {
-    return -1;
-  }
-
-  if (bHasOrder) {
-    return 1;
-  }
-
-  /* Old videos without displayOrder
-     fall back to createdAt */
-
-  const aTime =
-    a.createdAt?.toDate
-      ? a.createdAt
-          .toDate()
-          .getTime()
-      : 0;
-
-  const bTime =
-    b.createdAt?.toDate
-      ? b.createdAt
-          .toDate()
-          .getTime()
-      : 0;
-
-  return bTime - aTime;
-});
-
-console.log(
-  "YOUTUBE FIRESTORE DATA - ORDERED:",
-  data
-);
-
-setVideos(data);
+            setVideos(data);
 
           },
 
@@ -751,7 +697,16 @@ setVideos(data);
                   {v.description && (
                     <>
                       <p
-                        className={`yt-description${expandedDescriptions[v.id] ? " expanded" : ""}`}
+                        className="yt-description"
+                        style={{
+                          marginTop: 6,
+                          marginBottom: 8,
+                          lineHeight: 1.5,
+                          display: "-webkit-box",
+                          WebkitBoxOrient: "vertical",
+                          WebkitLineClamp: expandedDescriptions[v.id] ? "unset" : 4,
+                          overflow: expandedDescriptions[v.id] ? "visible" : "hidden"
+                        }}
                       >
                         {v.description}
                       </p>

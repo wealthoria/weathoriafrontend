@@ -1,11 +1,10 @@
+/* global React, window */
 /* =========================================================================
    Calculators overlay — SIP, Lumpsum, Goal Planning SIP, Retirement, DCF
    Brand-styled versions of the reference calculators. Pure client-side math.
    Exposes: CalcOverlay, ComingSoonOverlay (window)
    ========================================================================= */
-
-import React, { useState, useEffect, useRef } from "react";
-
+const { useState, useEffect, useRef } = React;
 const { Icon } = window;
 
 const fmtINR = (n) => {

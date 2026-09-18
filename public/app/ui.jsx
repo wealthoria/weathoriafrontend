@@ -1,29 +1,14 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useCallback
-} from "react";
+/* global React, window */
+/* =========================================================================
+   Wealthoria - shared UI: app context, icon set, small primitives.
+   Exported to window so the section files (separate Babel scripts) can use them.
+   ========================================================================= */
+const { createContext, useContext, useEffect, useRef, useState } = React;
 
-/* global window */
 /* ---- app context: language + theme -------------------------------------- */
 const AppCtx = createContext(null);
 function useApp() {return useContext(AppCtx);}
 
-/* ---- modal accessibility ------------------------------------------------ */
-function useModalA11y() {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
-}
 /* ---- icon set (Lucide-style: single stroke, rounded joins) -------------- */
 const ICON_PATHS = {
   book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></>,
@@ -121,7 +106,7 @@ function ImagePlaceholder({ label, icon = "spark", style, className = "" }) {
 function BrandLockup({ markHeight = 34, showSub = false, onClick, href = "#top" }) {
   return (
     <a className="brand" href={href} onClick={onClick}>
-      <img className="brand-mark" src="assets/logo-mark.png" alt="Wealthoria" style={{ height: markHeight }} />
+      <img className="brand-mark" src="/assets/logo-mark.png" alt="Wealthoria" style={{ height: markHeight }} />
       <span className="brand-text">
         <span className="brand-word">Wealthoria</span>
         {showSub && <span className="brand-sub">Education Private Limited</span>}
@@ -130,13 +115,4 @@ function BrandLockup({ markHeight = 34, showSub = false, onClick, href = "#top" 
 
 }
 
-Object.assign(window, {
-  AppCtx,
-  useApp,
-  useModalA11y,
-  Icon,
-  Reveal,
-  SectionHead,
-  ImagePlaceholder,
-  BrandLockup
-});
+Object.assign(window, { AppCtx, useApp, Icon, Reveal, SectionHead, ImagePlaceholder, BrandLockup });

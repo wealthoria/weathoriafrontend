@@ -1,5 +1,4 @@
-/* global React, window */
-import React from "react";
+
 
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
@@ -16,8 +15,8 @@ function NavBar({ onNav }) {
     <React.Fragment>
       <header className="nav">
         <div className="wrap nav-inner">
-          <span className="mobile-logo-only"><BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} /></span>
-         <nav className="nav-links">
+          <BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} />
+       <nav className="nav-links">
   {t.nav.links.map((l) =>
     <a
       key={l.id}
@@ -33,27 +32,27 @@ function NavBar({ onNav }) {
     </a>
   )}
 
-<div className="products-nav">
-
-  <a
-    href="#"
-    aria-haspopup="true"
-    onClick={(e) => e.preventDefault()}
-  >
-    Products
-  </a>
-
-  <div className="products-dropdown">
-
-    <a
-      href="Book.html"
+  {/* PRODUCTS */}
+  <div className="products-nav">
+    <button
+      type="button"
+      className="products-nav-btn"
+      aria-haspopup="true"
     >
-      📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
-    </a>
+      {lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products"}
+      <span className="products-arrow">⌄</span>
+    </button>
 
+    <div className="products-dropdown">
+      <a href="/hoodikeya-vijnana.html">
+        <span className="product-icon">📖</span>
+        <span>
+          <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
+          <small>₹999 · Pre-book now</small>
+        </span>
+      </a>
+    </div>
   </div>
-
-</div>
 </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">
@@ -64,8 +63,7 @@ function NavBar({ onNav }) {
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
         
-
-    {/*
+        
    <a
   className="btn btn-green member-login-button"
   href="/members/login"
@@ -74,69 +72,53 @@ function NavBar({ onNav }) {
   <Icon name="user" size={17} />
   <span >Member</span>
 </a>
-*/}
-
- {/*<a
+ <a
   className="nav-login"
   href="/Student%20Portal.html#/student/register"
   aria-label="Student Register"
 >
   <Icon name="user" size={17} />
   <span className="nav-login-txt">Student</span>
-</a>*/}
-
- <a
-  className="btn btn-green member-login-button"
-  href="comingbacksoon.html"
-  aria-label="Member Login"
->
-  <Icon name="user" size={17} />
-  <span >Member</span>
 </a>
-
-
-
           {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
-            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" type="button"><Icon name="menu" size={20} /></button>
+            <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} aria-controls="mobile-navigation"><Icon name="menu" size={20} /></button>
           </div>
         </div>
       </header>
 
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
-      <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
+      <aside id="mobile-navigation" className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
           <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
- {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
-
-
-<div className="products-nav">
-
+      {t.nav.links.map((l) => (
   <a
-    href="#"
-    aria-haspopup="true"
-    onClick={(e) => e.preventDefault()}
+    key={l.id}
+    onClick={() => {
+      if (l.id === "Disclosure") {
+        setOpen(false);
+        window.location.href = "/wealthoria-disclosure.html";
+      } else {
+        go(l.id);
+      }
+    }}
   >
-    Products
+    {l.label}
   </a>
+))}
 
-  <div className="products-dropdown">
-
-    <a
-      href="Book.html"
-      
-    >
-      📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
-    </a>
-
-  </div>
-
-</div>
-
+<a
+  href="/hoodikeya-vijnana.html"
+  onClick={() => setOpen(false)}
+>
+  📖 {lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ · ₹999"}
+</a>
+       
         <div className="drawer-foot">
-          <a className="btn btn-outline btn-block drawer-member-login" href="/members/login"><Icon name="lock" size={16} />Member login</a>
+          <a className="btn btn-outline btn-block" href="/students/login"><Icon name="user" size={17} />Student login</a>
+          <a className="btn btn-outline btn-block" href="/members/login"><Icon name="lock" size={16} />Member login</a>
         {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
         </div>
       </aside>
@@ -197,7 +179,7 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} style={{ fontSize: "58px" }}></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => {window.open("comingbacksoon.html", "_self");
+            <button className="btn btn-green" onClick={() => {window.open("subscription.html", "_self");
 }}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
 
 {h.ctaSecondary && (
@@ -325,13 +307,4 @@ function Why() {
 
 }
 
-
-
-Object.assign(window, {
-  NavBar,
-  Hero,
-  Ticker,
-  Narrative,
-  Metrics,
-  Why
-});
+Object.assign(window, { NavBar, Hero, Ticker, Narrative, Metrics, Why });

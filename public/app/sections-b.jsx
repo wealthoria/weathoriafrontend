@@ -1,4 +1,8 @@
 /* global React, window */
+
+import React from "react";
+
+
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, ImagePlaceholder } = window;
 

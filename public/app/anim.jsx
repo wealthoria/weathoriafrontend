@@ -1,3 +1,5 @@
+import React from "react";
+
 /* global React, window */
 /* =========================================================================
    Wealthoria — GSAP animation layer
@@ -257,3 +259,4 @@ function SiteAnimations() {
 }
 
 window.SiteAnimations = SiteAnimations;
+

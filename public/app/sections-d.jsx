@@ -1,3 +1,5 @@
+import React from "react";
+
 /* global React, window */
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
@@ -541,7 +543,7 @@ function Footer() {
         Contact Us
       </a>
 
-      
+    
     </div>
 
 
@@ -598,7 +600,7 @@ function Footer() {
         <div className="footer-bar">
 
           <span>
-  © {new Date().getFullYear()} Wealthoria Education Pvt. Ltd. All rights reserved.
+  Â© {new Date().getFullYear()} Wealthoria Education Pvt. Ltd. All rights reserved.
 </span>
 
           <span>

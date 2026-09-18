@@ -340,6 +340,24 @@ function AddressBox({ title, address }) {
 }
 
 
+function formatRowRanges(numbers) {
+  if (!Array.isArray(numbers) || !numbers.length) return "—";
+  const sorted = [...new Set(numbers)].sort((a, b) => a - b);
+  const ranges = [];
+  let start = sorted[0];
+  let end = sorted[0];
+  for (let i = 1; i < sorted.length; i += 1) {
+    const current = sorted[i];
+    if (current === end + 1) { end = current; continue; }
+    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+    start = current;
+    end = current;
+  }
+  ranges.push(start === end ? `${start}` : `${start}-${end}`);
+  return ranges.join(", ");
+}
+
+
 /* =========================================================
    MAIN PAGE
 ========================================================= */
@@ -361,6 +379,11 @@ function PrebookOrders() {
   const [emailOrder, setEmailOrder] = useState(null);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [labelGenerating, setLabelGenerating] = useState(false);
+  const [labelNotice, setLabelNotice] = useState("");
+
+  const ORDERS_PER_PAGE = 50;
 
 
   /* =======================================================
@@ -481,6 +504,42 @@ function PrebookOrders() {
     paymentFilter,
     shippingFilter
   ]);
+
+  /* =======================================================
+     PAGINATION — 50 RECORDS PER PAGE
+  ======================================================= */
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredOrders.length / ORDERS_PER_PAGE)
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, paymentFilter, shippingFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * ORDERS_PER_PAGE;
+    return filteredOrders.slice(
+      start,
+      start + ORDERS_PER_PAGE
+    );
+  }, [filteredOrders, currentPage]);
+
+  const pageStart = filteredOrders.length
+    ? (currentPage - 1) * ORDERS_PER_PAGE + 1
+    : 0;
+
+  const pageEnd = Math.min(
+    currentPage * ORDERS_PER_PAGE,
+    filteredOrders.length
+  );
 
 
   /* =======================================================
@@ -716,7 +775,7 @@ function PrebookOrders() {
 
 /* =======================================================
    GENERATE SHIPPING LABEL PDF
-   2 COLUMNS × 3 ROWS PER A4 PAGE
+   3 COLUMNS × 6 ROWS = 18 LABELS PER A4 PAGE
 ======================================================= */
 
 /* =========================================================
@@ -799,35 +858,61 @@ const loadJsPDF = () => {
 };
 
 
-const generateShippingLabelsPDF = async () => {
+const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => {
+  const { reprint = false } = options;
+
+  if (labelGenerating) return;
+
   try {
+    setLabelGenerating(true);
+
     /* =====================================================
-       ONLY INCLUDE ORDERS THAT ARE NOT SHIPPED
+       SELECT ORDERS
+       - Generate Page Labels always generates the current page again.
+       - Reprint intentionally generates one existing label again.
+       - Shipped/delivered orders are always excluded.
        ===================================================== */
 
-    const labelOrders = filteredOrders.filter((order) => {
-      const shippingStatus = String(
-        order.shippingStatus || ""
-      )
+    const sourceOrders = Array.isArray(ordersToPrint)
+      ? ordersToPrint
+      : paginatedOrders;
+
+    const indexedSourceOrders = sourceOrders.map((order, index) => ({
+      order,
+      pageRow: index + 1
+    }));
+
+    const eligibleRows = indexedSourceOrders.filter(({ order }) => {
+      const shippingStatus = String(order.shippingStatus || "")
         .trim()
         .toLowerCase();
 
-      // Do NOT generate a sticker for shipped orders
-     return (
-  shippingStatus !== "shipped" &&
-  shippingStatus !== "delivered"
-);
+      return shippingStatus !== "shipped" && shippingStatus !== "delivered";
     });
 
-    /* =====================================================
-       CHECK ORDERS
-       ===================================================== */
+    const labelOrders = eligibleRows.map(({ order }) => order);
 
     if (!labelOrders.length) {
       alert(
-        "No orders available for shipping labels. Shipped orders are excluded."
+        reprint
+          ? "No eligible order is available for reprint."
+          : "No eligible orders are available on this page. Shipped and delivered orders are excluded."
       );
       return;
+    }
+
+    const totalLabelPages = Math.ceil(labelOrders.length / 18);
+    const pageRowNumbers = eligibleRows.map(({ pageRow }) => pageRow);
+    const rowRangeText = formatRowRanges(pageRowNumbers);
+
+    if (!reprint) {
+      const confirmed = window.confirm(
+        `Generate ${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"} for the current page?\n\n` +
+        `Page rows: ${rowRangeText}\n` +
+        `${totalLabelPages} A4 page${totalLabelPages === 1 ? "" : "s"} will be created (18 labels per A4 page).\n\n` +
+        `You can generate this page again later.`
+      );
+      if (!confirmed) return;
     }
 
     /* =====================================================
@@ -854,483 +939,253 @@ const generateShippingLabelsPDF = async () => {
     const pageHeight = 297;
 
     /* =====================================================
-       GRID
-       3 COLUMNS × 6 ROWS
-       18 LABELS PER PAGE
+       GRID — 3 COLUMNS × 6 ROWS = 18 LABELS/A4
        ===================================================== */
 
     const columns = 3;
     const rows = 6;
-
     const labelsPerPage = columns * rows;
-
-    /* =====================================================
-       OUTER MARGIN
-       ===================================================== */
 
     const marginX = 2;
     const marginY = 2;
-
-    /* =====================================================
-       HORIZONTAL GAP
-       ===================================================== */
-
     const gapX = 2;
 
-    /* =====================================================
-       LABEL WIDTH
-
-       210 - margins - gaps
-       ===================================================== */
-
     const labelWidth =
-      (
-        pageWidth -
-        marginX * 2 -
-        gapX * (columns - 1)
-      ) / columns;
-
-    /* =====================================================
-       LABEL HEIGHT
-
-       Content box is intentionally shorter so
-       there is NO large empty space below PIN.
-       ===================================================== */
+      (pageWidth - marginX * 2 - gapX * (columns - 1)) / columns;
 
     const labelHeight = 43;
 
-    /* =====================================================
-       VERTICAL GAP
-
-       Remaining A4 height is distributed between
-       the 6 rows.
-       ===================================================== */
-
-    const availableHeight =
-      pageHeight -
-      marginY * 2;
+    const availableHeight = pageHeight - marginY * 2;
 
     const gapY =
-      (
-        availableHeight -
-        labelHeight * rows
-      ) / (rows - 1);
+      (availableHeight - labelHeight * rows) / (rows - 1);
 
     /* =====================================================
-       PROCESS ONLY NON-SHIPPED ORDERS
+       DRAW LABELS
        ===================================================== */
 
-    labelOrders.forEach(
-      (order, index) => {
-
-        /* =================================================
-           POSITION
-           ================================================= */
-
-        const position =
-          index % labelsPerPage;
-
-        /* =================================================
-           NEW PAGE AFTER 18 LABELS
-           ================================================= */
-
-        if (
-          index > 0 &&
-          position === 0
-        ) {
-          pdf.addPage();
-        }
-
-        /* =================================================
-           COLUMN
-           ================================================= */
-
-        const column =
-          position % columns;
-
-        /* =================================================
-           ROW
-           ================================================= */
-
-        const row =
-          Math.floor(
-            position / columns
-          );
-
-        /* =================================================
-           BOX POSITION
-           ================================================= */
-
-        const x =
-          marginX +
-          column *
-            (
-              labelWidth +
-              gapX
-            );
-
-        const y =
-          marginY +
-          row *
-            (
-              labelHeight +
-              gapY
-            );
-
-        /* =================================================
-           CUSTOMER DATA
-           ================================================= */
-
-        const customer =
-          order.customer || {};
-
-        const address =
-          order.shippingAddress || {};
-
-        /* =================================================
-           CUSTOMER NAME
-           ================================================= */
-
-        const name =
-          customer.name ||
-          address.name ||
-          "—";
-
-        /* =================================================
-           PHONE
-           ================================================= */
-
-        const phone =
-          customer.phone ||
-          address.phone ||
-          "—";
-
-        /* =================================================
-           ADDRESS
-           ================================================= */
-
-        const completeAddress = [
-          address.address,
-          address.landmark,
-          address.city
-        ]
-          .filter(Boolean)
-          .join(", ");
-
-        /* =================================================
-           STATE
-           ================================================= */
-
-        const state =
-          address.state ||
-          "—";
-
-        /* =================================================
-           PINCODE
-           ================================================= */
-
-        const pincode =
-          address.pincode ||
-          "—";
-
-        /* =================================================
-           SMALL INTERNAL PADDING
-           ================================================= */
-
-        const paddingX = 2;
-
-        const left =
-          x + paddingX;
-
-        const right =
-          x +
-          labelWidth -
-          paddingX;
-
-        const contentWidth =
-          labelWidth -
-          paddingX * 2;
-
-        /* =================================================
-           DASHED BORDER
-           ================================================= */
-
-        pdf.setDrawColor(
-          140,
-          140,
-          140
-        );
-
-        pdf.setLineWidth(
-          0.25
-        );
-
-        pdf.setLineDashPattern(
-          [1.2, 1.2],
-          0
-        );
-
-        pdf.rect(
-          x,
-          y,
-          labelWidth,
-          labelHeight
-        );
-
-        /* Reset dash */
-
-        pdf.setLineDashPattern(
-          [],
-          0
-        );
-
-        /* =================================================
-           COMPANY NAME
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "bold"
-        );
-
-        pdf.setFontSize(
-          6
-        );
-
-        pdf.text(
-          "WEALTHORIA EDUCATION PRIVATE LIMITED",
-          left,
-          y + 4.2,
-          {
-            maxWidth:
-              contentWidth
-          }
-        );
-
-        /* =================================================
-           DIVIDER
-           ================================================= */
-
-        pdf.setDrawColor(
-          100,
-          100,
-          100
-        );
-
-        pdf.setLineWidth(
-          0.15
-        );
-
-        pdf.line(
-          left,
-          y + 5.8,
-          right,
-          y + 5.8
-        );
-
-        /* =================================================
-           DELIVER TO
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "bold"
-        );
-
-        pdf.setFontSize(
-          5.5
-        );
-
-        pdf.text(
-          "DELIVER TO",
-          left,
-          y + 8.5
-        );
-
-        /* =================================================
-           CUSTOMER NAME
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "bold"
-        );
-
-        pdf.setFontSize(
-          9
-        );
-
-        const nameLines =
-          pdf.splitTextToSize(
-            String(name),
-            contentWidth
-          );
-
-        const safeNameLines =
-          nameLines.slice(
-            0,
-            2
-          );
-
-        pdf.text(
-          safeNameLines,
-          left,
-          y + 12.5
-        );
-
-        /* =================================================
-           PHONE
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "normal"
-        );
-
-        pdf.setFontSize(
-          6.5
-        );
-
-        pdf.text(
-          `Ph: ${phone}`,
-          left,
-          y + 18.5
-        );
-
-        /* =================================================
-           ADDRESS
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "normal"
-        );
-
-        pdf.setFontSize(
-          6.5
-        );
-
-        const addressLines =
-          pdf.splitTextToSize(
-            completeAddress ||
-              "Address not available",
-            contentWidth
-          );
-
-        /* Maximum 3 lines */
-
-        const safeAddressLines =
-          addressLines.slice(
-            0,
-            3
-          );
-
-        pdf.text(
-          safeAddressLines,
-          left,
-          y + 22.5
-        );
-
-        /* =================================================
-           STATE
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "bold"
-        );
-
-        pdf.setFontSize(
-          6.5
-        );
-
-        pdf.text(
-          `State: ${state}`,
-          left,
-          y + 32.5,
-          {
-            maxWidth:
-              contentWidth
-          }
-        );
-
-        /* =================================================
-           PIN
-           ================================================= */
-
-        const pinY =
-          y + 34;
-
-        const pinHeight =
-          6;
-
-        /* =================================================
-           PIN BACKGROUND
-           ================================================= */
-
-        pdf.setFillColor(
-          235,
-          235,
-          235
-        );
-
-        pdf.rect(
-          left,
-          pinY,
-          contentWidth,
-          pinHeight,
-          "F"
-        );
-
-        /* =================================================
-           PIN TEXT
-           ================================================= */
-
-        pdf.setFont(
-          "helvetica",
-          "bold"
-        );
-
-        pdf.setFontSize(
-          8
-        );
-
-        pdf.text(
-          `PIN: ${pincode}`,
-          left + 2,
-          pinY + 4
-        );
+    labelOrders.forEach((order, index) => {
+      const position = index % labelsPerPage;
+
+      if (index > 0 && position === 0) {
+        pdf.addPage();
       }
-    );
+
+      const column = position % columns;
+      const row = Math.floor(position / columns);
+
+      const x =
+        marginX + column * (labelWidth + gapX);
+
+      const y =
+        marginY + row * (labelHeight + gapY);
+
+      const customer = order.customer || {};
+      const address = order.shippingAddress || {};
+
+      const name =
+        customer.name || address.name || "—";
+
+      const phone =
+        customer.phone || address.phone || "—";
+
+      const completeAddress = [
+        address.address,
+        address.landmark,
+        address.city
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      const state = address.state || "—";
+      const pincode = address.pincode || "—";
+
+      const paddingX = 2;
+      const left = x + paddingX;
+      const right = x + labelWidth - paddingX;
+      const contentWidth = labelWidth - paddingX * 2;
+
+      /* Dashed border */
+      pdf.setDrawColor(140, 140, 140);
+      pdf.setLineWidth(0.25);
+      pdf.setLineDashPattern([1.2, 1.2], 0);
+      pdf.rect(x, y, labelWidth, labelHeight);
+      pdf.setLineDashPattern([], 0);
+
+      /* Company */
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(6);
+      pdf.text(
+        "WEALTHORIA EDUCATION PRIVATE LIMITED",
+        left,
+        y + 4.2,
+        { maxWidth: contentWidth }
+      );
+
+      /* Divider */
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineWidth(0.15);
+      pdf.line(left, y + 5.8, right, y + 5.8);
+
+      /* Deliver to */
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(5.5);
+      pdf.text("DELIVER TO", left, y + 8.5);
+
+      /* Customer name */
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      const nameLines = pdf.splitTextToSize(
+        String(name),
+        contentWidth
+      );
+      const safeNameLines = nameLines.slice(0, 2);
+      pdf.text(safeNameLines, left, y + 12.5);
+
+      /* Phone */
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(6.5);
+      pdf.text(`Ph: ${phone}`, left, y + 18.5);
+
+      /* Address */
+      const addressLines = pdf.splitTextToSize(
+        completeAddress || "Address not available",
+        contentWidth
+      );
+      const safeAddressLines = addressLines.slice(0, 3);
+      pdf.text(safeAddressLines, left, y + 22.5);
+
+      /* State */
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(6.5);
+      pdf.text(`State: ${state}`, left, y + 32.5, {
+        maxWidth: contentWidth
+      });
+
+      /* PIN */
+      const pinY = y + 34;
+      const pinHeight = 6;
+
+      pdf.setFillColor(235, 235, 235);
+      pdf.rect(
+        left,
+        pinY,
+        contentWidth,
+        pinHeight,
+        "F"
+      );
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.text(
+        `PIN: ${pincode}`,
+        left + 2,
+        pinY + 4
+      );
+    });
 
     /* =====================================================
        SAVE PDF
        ===================================================== */
 
-    const today =
-      new Date()
-        .toISOString()
-        .slice(
-          0,
-          10
-        );
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
 
-    pdf.save(
-      `wealthoria-shipping-labels-${today}.pdf`
-    );
+    const filePrefix = reprint
+      ? "wealthoria-shipping-labels-reprint"
+      : "wealthoria-shipping-labels";
 
+    pdf.save(`${filePrefix}-${today}.pdf`);
+
+    /* =====================================================
+       RECORD LABEL GENERATION
+       Every generation is recorded so the row always shows that a
+       label exists and when it was last generated.
+       ===================================================== */
+
+    if (window.db?.batch) {
+      const labelBatchId =
+        `LBL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const generatedAt = new Date().toISOString();
+
+      for (let i = 0; i < labelOrders.length; i += 400) {
+        const chunk = labelOrders.slice(i, i + 400);
+        const batch = window.db.batch();
+
+        chunk.forEach((order) => {
+          const ref = window.db.collection("bookOrders").doc(order.id);
+          batch.update(ref, {
+            labelGenerated: true,
+            labelGeneratedAt: generatedAt,
+            labelBatchId,
+            labelGenerationCount: Number(order.labelGenerationCount || 0) + 1
+          });
+        });
+
+        await batch.commit();
+      }
+
+      setOrders((prev) =>
+        prev.map((order) => {
+          if (!labelOrders.some((item) => item.id === order.id)) return order;
+          return {
+            ...order,
+            labelGenerated: true,
+            labelGeneratedAt: generatedAt,
+            labelBatchId,
+            labelGenerationCount: Number(order.labelGenerationCount || 0) + 1
+          };
+        })
+      );
+
+      setLabelNotice(
+        reprint
+          ? `Reprinted page row ${pageRowNumbers[0]}.`
+          : `Page ${currentPage}: generated rows ${rowRangeText}. You can generate this page again anytime.`
+      );
+
+      alert(
+        `${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"} generated successfully.\n\n` +
+        `${reprint ? "Row" : "Page rows"}: ${rowRangeText}\n` +
+        `Batch: ${labelBatchId}`
+      );
+    } else {
+      alert("PDF generated, but Firestore is not available to record the label status.");
+    }
   } catch (error) {
-
     console.error(
       "Shipping label PDF error:",
       error
     );
 
     alert(
-      "Unable to generate the PDF. Please try again."
+      error?.message ||
+        "Unable to generate the PDF. Please try again."
     );
+  } finally {
+    setLabelGenerating(false);
   }
 };
+
+/* =======================================================
+   REPRINT ONE EXISTING LABEL
+======================================================= */
+
+const reprintShippingLabel = async (order) => {
+  if (!order?.id) return;
+
+  const confirmed = window.confirm(
+    `Reprint the shipping label for ${
+      order.bookingId || order.id
+    }?\n\nThis will intentionally create a duplicate label.`
+  );
+
+  if (!confirmed) return;
+
+  await generateShippingLabelsPDF([order], { reprint: true });
+};
+
   /* =======================================================
      RENDER
   ======================================================= */
@@ -1389,30 +1244,61 @@ const generateShippingLabelsPDF = async () => {
 
         
           <button
-  type="button"
-  onClick={generateShippingLabelsPDF}
-  disabled={!filteredOrders.length}
-  style={{
-    height: 42,
-    padding: "0 16px",
-    border: "none",
-    borderRadius: 10,
-    background: filteredOrders.length
-      ? "rgb(232 95 78)"
-      : "#d0d5dd",
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: 750,
-    cursor: filteredOrders.length
-      ? "pointer"
-      : "not-allowed",
-    whiteSpace: "nowrap"
-  }}
->
-  Generate PDF
-</button>
+            type="button"
+            onClick={() => generateShippingLabelsPDF(paginatedOrders)}
+            disabled={
+              labelGenerating ||
+              !paginatedOrders.some(
+                (order) =>
+                  !["shipped", "delivered"].includes(
+                    String(order.shippingStatus || "").toLowerCase()
+                  )
+              )
+            }
+            style={{
+              height: 42,
+              padding: "0 16px",
+              border: "none",
+              borderRadius: 10,
+              background:
+                labelGenerating
+                  ? "#d0d5dd"
+                  : paginatedOrders.some(
+                      (order) =>
+                        !["shipped", "delivered"].includes(
+                          String(order.shippingStatus || "").toLowerCase()
+                        )
+                    )
+                  ? "rgb(232 95 78)"
+                  : "#d0d5dd",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 750,
+              cursor: labelGenerating ? "wait" : "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {labelGenerating ? "Generating..." : "Generate Page Labels"}
+          </button>
       </div>
 
+
+      {labelNotice && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: "10px 14px",
+            borderRadius: 10,
+            background: "#f5f3ff",
+            border: "1px solid #e4d7ff",
+            color: "#6941c6",
+            fontSize: 12,
+            fontWeight: 700
+          }}
+        >
+          {labelNotice}
+        </div>
+      )}
 
       {/* ===================================================
           SUMMARY CARDS
@@ -1742,8 +1628,10 @@ const generateShippingLabelsPDF = async () => {
               color: "#667085"
             }}
           >
-            Showing {filteredOrders.length} of{" "}
-            {orders.length}
+            Showing {pageStart}-{pageEnd} of {filteredOrders.length} · Page rows 1-{paginatedOrders.length}
+            {filteredOrders.length !== orders.length
+              ? ` (filtered from ${orders.length})`
+              : ""}
           </div>
         </div>
 
@@ -1781,6 +1669,7 @@ const generateShippingLabelsPDF = async () => {
                   "Qty",
                   "Amount",
                   "Delivery Status",
+                  "Label",
                   "View",
                   "Send Email"
                 ].map(
@@ -1814,7 +1703,7 @@ const generateShippingLabelsPDF = async () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={11}
                     style={{
                       padding: 50,
                       textAlign:
@@ -1830,7 +1719,7 @@ const generateShippingLabelsPDF = async () => {
               ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={11}
                     style={{
                       padding: 50,
                       textAlign:
@@ -1846,8 +1735,8 @@ const generateShippingLabelsPDF = async () => {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map(
-                  (order) => {
+                paginatedOrders.map(
+                  (order, pageIndex) => {
                     const customer =
                       order.customer ||
                       {};
@@ -1855,6 +1744,8 @@ const generateShippingLabelsPDF = async () => {
                     const product =
                       order.product ||
                       {};
+
+                    const pageRow = pageIndex + 1;
 
                     return (
                       <tr
@@ -1864,6 +1755,20 @@ const generateShippingLabelsPDF = async () => {
                             "1px solid #edf0f3"
                         }}
                       >
+
+                        {/* PAGE ROW */}
+                        <td
+                          style={{
+                            padding: "14px",
+                            fontSize: 12,
+                            fontWeight: 800,
+                            color: "#475467",
+                            textAlign: "center",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {pageRow}
+                        </td>
 
                         {/* BOOKING ID */}
                         <td
@@ -2012,7 +1917,63 @@ const generateShippingLabelsPDF = async () => {
                                   : "Mark as Shipped"}
                               </button>
                             )}
+
+                            {order.labelGenerated === true && (
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  padding: "5px 9px",
+                                  borderRadius: 999,
+                                  background: "#f5f3ff",
+                                  color: "#6941c6",
+                                  fontSize: 11,
+                                  fontWeight: 750,
+                                  whiteSpace: "nowrap"
+                                }}
+                              >
+                                ✓ Label Generated · Row {pageRow}
+                                {Number(order.labelGenerationCount || 0) > 1
+                                  ? ` · ${order.labelGenerationCount}×`
+                                  : ""}
+                              </span>
+                            )}
                           </div>
+                        </td>
+
+                        {/* LABEL */}
+                        <td style={{ padding: "14px" }}>
+                          {order.labelGenerated === true ? (
+                            <button
+                              type="button"
+                              onClick={() => reprintShippingLabel(order)}
+                              disabled={labelGenerating}
+                              style={{
+                                height: 34,
+                                padding: "0 12px",
+                                border: "1px solid #d9c7ff",
+                                borderRadius: 8,
+                                background: "#faf8ff",
+                                color: "#6941c6",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: labelGenerating ? "not-allowed" : "pointer",
+                                whiteSpace: "nowrap",
+                                opacity: labelGenerating ? 0.65 : 1
+                              }}
+                            >
+                              Reprint
+                            </button>
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: 12,
+                                color: "#98a2b3"
+                              }}
+                            >
+                              Not generated
+                            </span>
+                          )}
                         </td>
 
                         {/* VIEW */}
@@ -2086,6 +2047,78 @@ const generateShippingLabelsPDF = async () => {
           </table>
 
         </div>
+
+        {/* PAGINATION */}
+        {filteredOrders.length > ORDERS_PER_PAGE && (
+          <div
+            style={{
+              padding: "13px 16px",
+              borderTop: "1px solid #e8ebef",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap"
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                color: "#667085"
+              }}
+            >
+              Page {currentPage} of {totalPages} · {ORDERS_PER_PAGE} records per page · Page rows 1-{paginatedOrders.length}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8
+              }}
+            >
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                style={{
+                  height: 36,
+                  padding: "0 12px",
+                  border: "1px solid #dfe3e8",
+                  borderRadius: 8,
+                  background: currentPage === 1 ? "#f2f4f7" : "#fff",
+                  color: currentPage === 1 ? "#98a2b3" : "#344054",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer"
+                }}
+              >
+                Previous
+              </button>
+
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+                style={{
+                  height: 36,
+                  padding: "0 12px",
+                  border: "1px solid #dfe3e8",
+                  borderRadius: 8,
+                  background: currentPage === totalPages ? "#f2f4f7" : "#fff",
+                  color: currentPage === totalPages ? "#98a2b3" : "#344054",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: currentPage === totalPages ? "not-allowed" : "pointer"
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
 
@@ -2855,6 +2888,20 @@ const generateShippingLabelsPDF = async () => {
                   true
                     ? "Yes"
                     : "No"}
+                </DetailField>
+
+                <DetailField label="Shipping Label">
+                  {selected.labelGenerated === true
+                    ? "Generated"
+                    : "Not generated"}
+                </DetailField>
+
+                <DetailField label="Label Batch ID">
+                  {selected.labelBatchId}
+                </DetailField>
+
+                <DetailField label="Label Generated At">
+                  {formatDate(selected.labelGeneratedAt)}
                 </DetailField>
 
                 <DetailField label="Created">

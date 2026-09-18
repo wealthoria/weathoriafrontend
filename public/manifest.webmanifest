@@ -3,7 +3,7 @@
   "short_name": "Wealthoria",
   "description": "Financial literacy and investment education for first-time investors across Karnataka. Learn in Kannada and English.",
   "id": "/",
-  "start_url": "Wealthoria.html",
+  "start_url": "/",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

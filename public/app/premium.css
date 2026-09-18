@@ -195,7 +195,7 @@
 .narrative p.sub { font: var(--body-md); color: rgba(244,243,236,.66); margin: 18px 0 0; max-width: 52ch; position: relative; z-index: 1; }
 
 /* ---- #4 stat blocks ---- */
-.statband { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border-radius: var(--rounded-xl); overflow: hidden; }
+.statband { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border-radius: var(--rounded-xl); overflow: hidden; margin:10px 0px}
 @media (min-width: 860px) { .statband { grid-template-columns: repeat(4, 1fr); } }
 .statb { background: var(--glass-bg, var(--canvas)); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); padding: 28px 26px; box-shadow: inset 0 1px 0 var(--glass-edge); }
 .statb .sl { font: var(--caption); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--mute); display: flex; align-items: center; gap: 8px; }

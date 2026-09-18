@@ -334,7 +334,7 @@ function DashboardNewsletter({ onOpen }) {
           (error) => {
 
             console.error(
-              "Dashboard Newsletter error:",
+              "Dashboard Weekly Order Wins error:",
               error
             );
 
@@ -413,7 +413,7 @@ function DashboardNewsletter({ onOpen }) {
       {!newsletter ? (
 
         <div className="wd-empty">
-          No published newsletter available.
+          No published Weekly Order Wins available.
         </div>
 
       ) : (
@@ -465,7 +465,7 @@ function DashboardNewsletter({ onOpen }) {
             </span>
 
             <span className="wd-feature-link">
-              Read Newsletter →
+              Read Weekly Order Wins →
             </span>
 
           </div>
@@ -1016,7 +1016,7 @@ function DashboardLatestContent({ onOpen }) {
                 : item.type === "Weekly Roundup"
                 ? "Read Report →"
                 : item.type === "Newsletter"
-                ? "Read Newsletter →"
+                ? "Read Weekly Order Wins →"
                 : item.type === "Courses"
                 ? "View Course →"
                 : "Watch Video →";
@@ -2588,7 +2588,7 @@ const logout =
             onClick={() => openPage("newsletter")}
           >
             <span>✉</span>
-            <b>Newsletter</b>
+            <b>Weekly Order Wins</b>
           </button>
 
 
@@ -3006,7 +3006,7 @@ const logout =
             ) : (
 
               <div className="wd-page-state">
-                Newsletter is loading...
+                Weekly Order Wins is loading...
               </div>
 
             )

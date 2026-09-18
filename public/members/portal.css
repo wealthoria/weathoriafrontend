@@ -6915,3 +6915,98 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 [data-theme="dark"] .wd-sidebar .wd-nav-item b {
   color: inherit;
 }
+
+/* ================================
+   MEMBERSHIP STATUS CARD
+================================ */
+
+.membership-status-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 22px;
+  background: linear-gradient(135deg, #fff7f2, #ffffff);
+  border: 1px solid #ffd9c7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.membership-status-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: #ff843f;
+  border-radius: 18px 0 0 18px;
+}
+
+.membership-status-panel .wd-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.membership-status-panel .wd-panel-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #ff843f;
+}
+
+.membership-status-panel h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #171717;
+}
+
+.membership-status-panel p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.membership-status-panel > .wd-panel-head > strong {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff0e8;
+  color: #e65f20;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .membership-status-panel {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .membership-status-panel .wd-panel-head {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .membership-status-panel h3 {
+    font-size: 18px;
+  }
+
+  .membership-status-panel p {
+    font-size: 13px;
+    max-width: 190px;
+  }
+
+  .membership-status-panel > .wd-panel-head > strong {
+    padding: 9px 10px;
+    font-size: 13px;
+    min-width: 90px;
+  }
+}

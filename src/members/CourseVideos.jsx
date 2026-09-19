@@ -482,75 +482,48 @@ const [purchasedCourses, setPurchasedCourses] =
   useState([]);
 
 useEffect(() => {
+  const loadPurchasedCourses = async () => {
+    const session = getMemberSession();
 
-  const session =
-    getMemberSession();
+    if (!session?.token) {
+      setPurchasedCourses([]);
+      return;
+    }
 
-  if (!session?.uid || !window.db) {
-    setPurchasedCourses([]);
-    return;
-  }
-
-  const unsubscribe =
-    window.db
-      .collection("coursePurchases")
-      .where(
-        "userId",
-        "==",
-        session.uid
-      )
-      .onSnapshot(
-        (snapshot) => {
-
-          const ids =
-            snapshot.docs
-              .map((doc) => {
-
-                const data =
-                  doc.data() || {};
-
-                return {
-                  courseId:
-                    String(
-                      data.courseId || ""
-                    ),
-
-                  status:
-                    data.status || "paid"
-                };
-
-              })
-              .filter(
-                (item) =>
-                  item.courseId &&
-                  item.status === "paid"
-              )
-              .map(
-                (item) =>
-                  item.courseId
-              );
-
-          setPurchasedCourses(
-            [...new Set(ids)]
-          );
-
-        },
-
-        (error) => {
-
-          console.error(
-            "Purchase lookup error:",
-            error
-          );
-
-          setPurchasedCourses([]);
-
+    try {
+      const response = await fetch(
+        "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/payment/purchase-history",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.token}`,
+            "Content-Type": "application/json"
+          }
         }
       );
 
-  return () =>
-    unsubscribe();
+      const data = await response.json();
 
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to load purchase history."
+        );
+      }
+
+      const ids = (data.purchases || [])
+        .filter((item) => item.status === "paid")
+        .map((item) => String(item.courseId || ""))
+        .filter(Boolean);
+
+      setPurchasedCourses([...new Set(ids)]);
+
+    } catch (error) {
+      console.error("Purchase lookup error:", error);
+      setPurchasedCourses([]);
+    }
+  };
+
+  loadPurchasedCourses();
 }, []);
   /* =======================================================
      COURSES FROM FIRESTORE

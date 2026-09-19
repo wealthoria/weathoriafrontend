@@ -928,10 +928,7 @@ alert(
      FILTER COURSES
   ======================================================= */
 
-  const availableCourses =
-    firestoreCourses.length > 0
-      ? firestoreCourses
-      : COURSE_VIDEOS;
+ const availableCourses = firestoreCourses;
 
   const filteredCourses =
     availableCourses.filter((course) => {

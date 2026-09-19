@@ -2807,7 +2807,7 @@ if (membershipDays <= 0) {
                    : activePage === "videos"
                   ? "Videos"
                   : activePage === "newsletter"
-                  ? "Newsletter"
+                  ? "Weekly Order Wins"
                   : activePage === "weekly"
                   ? "Weekly Roundup"
 

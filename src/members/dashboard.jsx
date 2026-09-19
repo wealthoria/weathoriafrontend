@@ -1527,9 +1527,11 @@ useEffect(() => {
 
   const updateMembershipDays = () => {
 
-    const accessUntil =
-      member?.subscription?.accessUntil ||
-      member?.accessUntil;
+  const accessUntil =
+  member?.subscription?.accessUntil ||
+  member?.subscription?.nextBillingDate ||
+  member?.accessUntil ||
+  member?.nextBillingDate;
 
     if (!accessUntil) {
       setMembershipDays(0);

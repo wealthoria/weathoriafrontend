@@ -239,117 +239,85 @@ function DashboardNewsletter({ onOpen }) {
   const [loading, setLoading] =
     useState(true);
 
+useEffect(() => {
+  const loadNewsletter = async () => {
+    try {
+      const current = getCurrentMemberSession();
 
-  useEffect(() => {
+      if (!current?.session?.token) {
+        setLoading(false);
+        return;
+      }
 
-    if (!window.db) {
-
-      setLoading(false);
-
-      return;
-
-    }
-
-
-    const unsubscribe =
-      window.db
-        .collection("content")
-        .where(
-          "category",
-          "==",
-          "Newsletter"
-        )
-        .where(
-          "status",
-          "==",
-          "published"
-        )
-        .onSnapshot(
-
-          (snapshot) => {
-
-            const rows =
-              snapshot.docs.map(
-                (doc) => {
-
-                  const data =
-                    doc.data() || {};
-
-                  return {
-
-                    id: doc.id,
-
-                    title:
-                      data.title ||
-                      data.pdfName ||
-                      "Newsletter",
-
-                    description:
-                      data.description ||
-                      "",
-
-                    tags:
-                      Array.isArray(data.tags)
-                        ? data.tags
-                        : [],
-
-                    thumbnailUrl:
-                      data.thumbnailUrl ||
-                      "",
-
-                    pdfUrl:
-                      data.pdfUrl ||
-                      "",
-
-                    publishedAt:
-                      data.publishedAt ||
-                      data.createdAt ||
-                      ""
-
-                  };
-
-                }
-              );
-
-
-            rows.sort(
-              (a, b) =>
-                getDashboardTime(
-                  b.publishedAt
-                ) -
-                getDashboardTime(
-                  a.publishedAt
-                )
-            );
-
-
-            setNewsletter(
-              rows[0] || null
-            );
-
-            setLoading(false);
-
-          },
-
-          (error) => {
-
-            console.error(
-              "Dashboard Weekly Order Wins error:",
-              error
-            );
-
-            setLoading(false);
-
+      const response = await fetch(
+        `${DASHBOARD_API}/api/members/dashboard-content`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${current.session.token}`,
+            "Content-Type": "application/json"
           }
+        }
+      );
 
+      const data = await response.json();
+
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.message || "Unable to load newsletter."
         );
+      }
 
+      const rows = Array.isArray(data.content)
+        ? data.content
+            .filter(
+              item =>
+                item.category === "Newsletter" &&
+                item.status === "published"
+            )
+            .map(item => ({
+              id: item.id,
+              title:
+                item.title ||
+                item.pdfName ||
+                "Newsletter",
+              description:
+                item.description || "",
+              tags: Array.isArray(item.tags)
+                ? item.tags
+                : [],
+              thumbnailUrl:
+                item.thumbnailUrl || "",
+              pdfUrl:
+                item.pdfUrl || "",
+              publishedAt:
+                item.publishedAt ||
+                item.createdAt ||
+                ""
+            }))
+        : [];
 
-    return () =>
-      unsubscribe();
+      rows.sort(
+        (a, b) =>
+          getDashboardTime(b.publishedAt) -
+          getDashboardTime(a.publishedAt)
+      );
 
-  }, []);
+      setNewsletter(rows[0] || null);
+    } catch (error) {
+      console.error(
+        "Dashboard Newsletter error:",
+        error
+      );
 
+      setNewsletter(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadNewsletter();
+}, []);
 
   const openNewsletter =
     () => {
@@ -497,112 +465,82 @@ function DashboardWeeklyRoundup({onOpen}) {
   const [loading, setLoading] =
     useState(true);
 
+useEffect(() => {
+  const loadWeeklyRoundup = async () => {
+    try {
+      const current = getCurrentMemberSession();
 
-  useEffect(() => {
+      if (!current?.session?.token) {
+        setLoading(false);
+        return;
+      }
 
-    if (!window.db) {
-
-      setLoading(false);
-
-      return;
-
-    }
-
-
-    const unsubscribe =
-      window.db
-        .collection("content")
-        .where(
-          "category",
-          "==",
-          "Weekly Roundup"
-        )
-        .where(
-          "status",
-          "==",
-          "published"
-        )
-        .onSnapshot(
-
-          (snapshot) => {
-
-            const rows =
-              snapshot.docs.map(
-                (doc) => {
-
-                  const data =
-                    doc.data() || {};
-
-                  return {
-
-                    id: doc.id,
-
-                    title:
-                      data.title ||
-                      data.pdfName ||
-                      "Weekly Roundup",
-
-                    description:
-                      data.description ||
-                      "",
-
-                    thumbnailUrl:
-                      data.thumbnailUrl ||
-                      "",
-
-                    pdfUrl:
-                      data.pdfUrl ||
-                      "",
-
-                    publishedAt:
-                      data.publishedAt ||
-                      data.createdAt ||
-                      ""
-
-                  };
-
-                }
-              );
-
-
-            rows.sort(
-              (a, b) =>
-                getDashboardTime(
-                  b.publishedAt
-                ) -
-                getDashboardTime(
-                  a.publishedAt
-                )
-            );
-
-
-            setReport(
-              rows[0] || null
-            );
-
-            setLoading(false);
-
-          },
-
-          (error) => {
-
-            console.error(
-              "Dashboard Weekly Roundup error:",
-              error
-            );
-
-            setLoading(false);
-
+      const response = await fetch(
+        `${DASHBOARD_API}/api/members/dashboard-content`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${current.session.token}`,
+            "Content-Type": "application/json"
           }
+        }
+      );
 
+      const data = await response.json();
+
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.message || "Unable to load weekly roundup."
         );
+      }
 
+      const rows = Array.isArray(data.content)
+        ? data.content
+            .filter(
+              item =>
+                item.category === "Weekly Roundup" &&
+                item.status === "published"
+            )
+            .map(item => ({
+              id: item.id,
+              title:
+                item.title ||
+                item.pdfName ||
+                "Weekly Roundup",
+              description:
+                item.description || "",
+              thumbnailUrl:
+                item.thumbnailUrl || "",
+              pdfUrl:
+                item.pdfUrl || "",
+              publishedAt:
+                item.publishedAt ||
+                item.createdAt ||
+                ""
+            }))
+        : [];
 
-    return () =>
-      unsubscribe();
+      rows.sort(
+        (a, b) =>
+          getDashboardTime(b.publishedAt) -
+          getDashboardTime(a.publishedAt)
+      );
 
-  }, []);
+      setReport(rows[0] || null);
+    } catch (error) {
+      console.error(
+        "Dashboard Weekly Roundup error:",
+        error
+      );
 
+      setReport(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadWeeklyRoundup();
+}, []);
 
   const openWeekly =
     () => {

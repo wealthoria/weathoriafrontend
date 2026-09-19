@@ -294,7 +294,7 @@ const getMonthLabel = (value) => {
         : new Date(value);
 
     if (!date || Number.isNaN(date.getTime())) {
-      return "Other Newsletters";
+      return "Other Weekly order wins";
     }
 
     return date.toLocaleDateString("en-IN", {
@@ -302,7 +302,7 @@ const getMonthLabel = (value) => {
       year: "numeric"
     });
   } catch (error) {
-    return "Other Newsletters";
+    return "Other Weekly order wins";
   }
 };
 
@@ -336,7 +336,7 @@ const newsletterMonths = (() => {
             textAlign: "center"
           }}
         >
-          Loading newsletters...
+          Loading Weekly Order Wins...
         </div>
       </section>
     );
@@ -371,11 +371,11 @@ const newsletterMonths = (() => {
           </span>
 
           <h2>
-            Newsletters
+            Weekly Order Wins
           </h2>
 
           <p>
-            Read the latest Wealthoria newsletters,
+            Read the latest Wealthoria Weekly order wins,
             market updates and investment insights.
           </p>
 
@@ -392,7 +392,7 @@ const newsletterMonths = (() => {
     onChange={(event) =>
       setSearch(event.target.value)
     }
-    placeholder="Search newsletters..."
+    placeholder="Search Weekly order wins..."
     className="newsletter-search"
   />
 
@@ -460,7 +460,7 @@ const newsletterMonths = (() => {
             textAlign: "center"
           }}
         >
-          No newsletters available yet.
+          No Weekly order wins available yet.
         </div>
 
       ) : (

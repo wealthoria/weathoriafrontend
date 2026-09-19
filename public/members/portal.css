@@ -7143,3 +7143,44 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
     min-width: 90px;
   }
 }
+
+/* MOBILE COURSE CARD */
+
+@media (max-width: 600px) {
+
+  .member-course-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .member-course-card {
+    border-radius: 16px;
+  }
+
+  .member-course-body {
+    padding: 17px;
+  }
+
+  .member-course-body h3 {
+    font-size: 17px;
+  }
+
+  .member-course-body p {
+    font-size: 12px;
+    min-height: auto;
+  }
+
+  .member-course-footer {
+    margin-top: 17px;
+    align-items: center;
+  }
+
+  .member-course-button {
+    min-width: 105px;
+    padding: 10px 15px;
+  }
+
+  .member-course-price strong {
+    font-size: 20px;
+  }
+}

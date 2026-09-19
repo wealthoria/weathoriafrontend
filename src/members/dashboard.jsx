@@ -805,95 +805,107 @@ window.DashboardBookPromo = DashboardBookPromo;
    Uses the existing wd-* CSS classes only.
 ========================================================= */
 
-function DashboardLatestContent({ onOpen }) {
-
+function DashboardLatestContent({ onOpen, member }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
+  if (!member?.token) {
+    setLoading(false);
+    return;
+  }
 
-    if (!window.db) {
-      setLoading(false);
-      return;
-    }
+  let cancelled = false;
 
-    let cancelled = false;
-
-    const configs = [
-      {
-        type: "Newsletter",
-        collection: "content",
-        category: "Newsletter"
-      },
-      {
-        type: "Weekly Roundup",
-        collection: "content",
-        category: "Weekly Roundup"
-      },
-      {
-        type: "Articles & Reports",
-        collection: "content",
-        category: "Articles & Reports"
-      },
-      {
-        type: "Videos",
-        collection: "content",
-        category: "Vedios"
-      },
-      {
-        type: "Courses",
-        collection: "courses"
-      }
-    ];
-
-    const loadLatest = async () => {
-
-      try {
-
-        const snapshots = await Promise.all(
-          configs.map(config => {
-
-            let query = window.db
-              .collection(config.collection)
-              .where("status", "==", "published");
-
-            if (config.category) {
-              query = query.where(
-                "category",
-                "==",
-                config.category
-              );
-            }
-
-            return query.get();
-
-          })
-        );
-
-        if (cancelled) {
-          return;
+  const loadLatest = async () => {
+    try {
+      const response = await fetch(
+        `${DASHBOARD_API}/api/members/dashboard-content`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${member.token}`,
+            "Content-Type": "application/json"
+          }
         }
+      );
 
-        const latest = snapshots
-          .map((snapshot, index) => {
+      const data = await response.json();
 
-            const config = configs[index];
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.message ||
+          "Unable to load dashboard content."
+        );
+      }
 
-            const rows = snapshot.docs.map(doc => {
+      if (cancelled) {
+        return;
+      }
 
-              const data = doc.data() || {};
+      const configs = [
+        {
+          type: "Newsletter",
+          category: "Newsletter",
+          rows: Array.isArray(data.content)
+            ? data.content.filter(
+                item =>
+                  item.category === "Newsletter"
+              )
+            : []
+        },
+        {
+          type: "Weekly Roundup",
+          category: "Weekly Roundup",
+          rows: Array.isArray(data.content)
+            ? data.content.filter(
+                item =>
+                  item.category === "Weekly Roundup"
+              )
+            : []
+        },
+        {
+          type: "Articles & Reports",
+          category: "Articles & Reports",
+          rows: Array.isArray(data.content)
+            ? data.content.filter(
+                item =>
+                  item.category === "Articles & Reports"
+              )
+            : []
+        },
+        {
+          type: "Videos",
+          category: "Vedios",
+          rows: Array.isArray(data.content)
+            ? data.content.filter(
+                item =>
+                  item.category === "Vedios"
+              )
+            : []
+        },
+        {
+          type: "Courses",
+          category: "Courses",
+          rows: Array.isArray(data.courses)
+            ? data.courses
+            : []
+        }
+      ];
 
+      const latest = configs
+        .map(config => {
+          const rows = config.rows
+            .map(data => {
               const publishedAt =
                 data.publishedAt ||
                 data.createdAt ||
                 "";
 
               return {
-                id: doc.id,
+                id: data.id,
                 type: config.type,
-                category:
-                  config.category ||
-                  "Courses",
+                category: config.category,
 
                 title:
                   data.title ||
@@ -918,49 +930,42 @@ function DashboardLatestContent({ onOpen }) {
                   getDashboardTime(
                     publishedAt
                   )
-
               };
-
             });
 
-            rows.sort(
-              (a, b) =>
-                b._time - a._time
-            );
+          rows.sort(
+            (a, b) =>
+              b._time - a._time
+          );
 
-            return rows[0] || null;
+          return rows[0] || null;
+        })
+        .filter(Boolean);
 
-          })
-          .filter(Boolean);
+      setItems(latest);
 
-        setItems(latest);
+    } catch (error) {
+      console.error(
+        "Dashboard latest content error:",
+        error
+      );
 
-      } catch (error) {
+      setItems([]);
 
-        console.error(
-          "Dashboard latest content error:",
-          error
-        );
-
-        setItems([]);
-
-      } finally {
-
-        if (!cancelled) {
-          setLoading(false);
-        }
-
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
       }
+    }
+  };
 
-    };
+  loadLatest();
 
-    loadLatest();
+  return () => {
+    cancelled = true;
+  };
 
-    return () => {
-      cancelled = true;
-    };
-
-  }, []);
+}, [member]);
 
   if (loading) {
 
@@ -2168,14 +2173,30 @@ setAuthChecking(false);
                 .get(),
 
 
-              window.db
-                .collection("coursePurchases")
-                .where(
-                  "userId",
-                  "==",
-                  member.uid
-                )
-                .get()
+             fetch(
+  `${DASHBOARD_API}/api/payment/purchase-history`,
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${member.token}`,
+      "Content-Type": "application/json"
+    }
+  }
+).then(async (response) => {
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(
+      data.message || "Unable to load purchase history."
+    );
+  }
+
+  return {
+    size: Array.isArray(data.purchases)
+      ? data.purchases.length
+      : 0
+  };
+})
 
             ]);
 

@@ -23,177 +23,186 @@ const [toDate, setToDate] = useState("");
      LOAD PURCHASES FOR CURRENT MEMBER
   ======================================================= */
 
-  useEffect(() => {
+useEffect(() => {
 
-    if (!window.db) {
-      setError("Firestore is not available.");
-      setLoading(false);
-      return;
-    }
+  const loadPurchases = async () => {
 
-   let session = null;
+    let session = null;
 
-const MEMBER_SESSIONS_KEY =
-  "wealthoria-member-sessions";
+    const MEMBER_SESSIONS_KEY =
+      "wealthoria-member-sessions";
 
-const CURRENT_MEMBER_KEY =
-  "wealthoria-current-member";
-
-try {
-
-  // =========================================================
-  // GET CURRENT MEMBER UID
-  // =========================================================
-
-  const currentMemberRaw =
-    sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
-    localStorage.getItem(CURRENT_MEMBER_KEY);
-
-  let currentUid = "";
-
-  if (currentMemberRaw) {
+    const CURRENT_MEMBER_KEY =
+      "wealthoria-current-member";
 
     try {
 
-      const parsed =
-        JSON.parse(currentMemberRaw);
+      // =========================================================
+      // GET CURRENT MEMBER UID
+      // =========================================================
 
-      if (typeof parsed === "string") {
-        currentUid = parsed;
-      } else {
-        currentUid = parsed?.uid || "";
+      const currentMemberRaw =
+        sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
+        localStorage.getItem(CURRENT_MEMBER_KEY);
+
+      let currentUid = "";
+
+      if (currentMemberRaw) {
+
+        try {
+
+          const parsed =
+            JSON.parse(currentMemberRaw);
+
+          if (typeof parsed === "string") {
+            currentUid = parsed;
+          } else {
+            currentUid = parsed?.uid || "";
+          }
+
+        } catch (error) {
+
+          // If UID is stored directly as a string
+          currentUid = currentMemberRaw;
+
+        }
+
       }
 
-    } catch (error) {
 
-      // If UID is stored directly as a string
-      currentUid = currentMemberRaw;
+      // =========================================================
+      // GET MEMBER SESSIONS
+      // =========================================================
 
-    }
+      const getSessions = (storage) => {
 
-  }
+        try {
+
+          const raw =
+            storage.getItem(MEMBER_SESSIONS_KEY);
+
+          if (!raw) {
+            return {};
+          }
+
+          const parsed =
+            JSON.parse(raw);
+
+          if (
+            parsed &&
+            typeof parsed === "object"
+          ) {
+            return parsed;
+          }
+
+          return {};
+
+        } catch (error) {
+
+          console.error(
+            "Unable to read member sessions:",
+            error
+          );
+
+          return {};
+
+        }
+
+      };
 
 
-  // =========================================================
-  // GET MEMBER SESSIONS
-  // =========================================================
+      // =========================================================
+      // FIND CURRENT MEMBER
+      // =========================================================
 
-  const getSessions = (storage) => {
+      if (currentUid) {
 
-    try {
+        const sessionSessions =
+          getSessions(sessionStorage);
 
-      const raw =
-        storage.getItem(MEMBER_SESSIONS_KEY);
+        if (sessionSessions[currentUid]) {
 
-      if (!raw) {
-        return {};
+          session =
+            sessionSessions[currentUid];
+
+        } else {
+
+          const localSessions =
+            getSessions(localStorage);
+
+          if (localSessions[currentUid]) {
+
+            session =
+              localSessions[currentUid];
+
+          }
+
+        }
+
       }
 
-      const parsed =
-        JSON.parse(raw);
 
-      if (
-        parsed &&
-        typeof parsed === "object"
-      ) {
-        return parsed;
+      // =========================================================
+      // LEGACY FALLBACK
+      // =========================================================
+
+      if (!session) {
+
+        const legacyLocal =
+          localStorage.getItem(
+            "wealthoria-member"
+          );
+
+        const legacySession =
+          sessionStorage.getItem(
+            "wealthoria-member"
+          );
+
+        if (legacySession) {
+
+          session =
+            JSON.parse(legacySession);
+
+        } else if (legacyLocal) {
+
+          session =
+            JSON.parse(legacyLocal);
+
+        }
+
       }
 
-      return {};
 
-    } catch (error) {
+    } catch (err) {
 
       console.error(
-        "Unable to read member sessions:",
-        error
+        "Unable to read member session:",
+        err
       );
 
-      return {};
+      session = null;
 
     }
 
-  };
 
-
-  // =========================================================
-  // FIND CURRENT MEMBER
-  // =========================================================
-
-  if (currentUid) {
-
-    const sessionSessions =
-      getSessions(sessionStorage);
-
-    if (sessionSessions[currentUid]) {
-
-      session =
-        sessionSessions[currentUid];
-
-    } else {
-
-      const localSessions =
-        getSessions(localStorage);
-
-      if (localSessions[currentUid]) {
-
-        session =
-          localSessions[currentUid];
-
-      }
-
-    }
-
-  }
-
-
-  // =========================================================
-  // LEGACY FALLBACK
-  // =========================================================
-
-  if (!session) {
-
-    const legacyLocal =
-      localStorage.getItem(
-        "wealthoria-member"
-      );
-
-    const legacySession =
-      sessionStorage.getItem(
-        "wealthoria-member"
-      );
-
-    if (legacySession) {
-
-      session =
-        JSON.parse(legacySession);
-
-    } else if (legacyLocal) {
-
-      session =
-        JSON.parse(legacyLocal);
-
-    }
-
-  }
-
-
-} catch (err) {
-
-  console.error(
-    "Unable to read member session:",
-    err
-  );
-
-  session = null;
-
-}
+    // =========================================================
+    // CHECK LOGIN
+    // =========================================================
 
     if (!session?.uid) {
+
       setPurchases([]);
-      setError("Please login to view your purchase history.");
+
+      setError(
+        "Please login to view your purchase history."
+      );
+
       setLoading(false);
+
       return;
+
     }
+
 
     console.log(
       "PURCHASE HISTORY MEMBER:",
@@ -201,76 +210,93 @@ try {
       session.email
     );
 
+
     setLoading(true);
     setError("");
 
-    const unsubscribe = window.db
-      .collection("coursePurchases")
-      .where("userId", "==", session.uid)
-      .onSnapshot(
-        (snapshot) => {
 
-          console.log(
-            "PURCHASE HISTORY DOC COUNT:",
-            snapshot.size
-          );
+    // =========================================================
+    // LOAD PURCHASE HISTORY FROM BACKEND
+    // =========================================================
 
-          const rows = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
+    const API_BASE_URL =
+      "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
-          rows.sort((a, b) => {
+    try {
 
-            const getTime = (value) => {
+      const response =
+        await fetch(
+          `${API_BASE_URL}/api/payment/purchase-history`,
+          {
+            method: "GET",
 
-              if (!value) {
-                return 0;
-              }
+            headers: {
+              Authorization:
+                `Bearer ${session.token}`,
 
-              if (typeof value.toMillis === "function") {
-                return value.toMillis();
-              }
+              "Content-Type":
+                "application/json"
+            }
 
-              if (typeof value.toDate === "function") {
-                return value.toDate().getTime();
-              }
+          }
+        );
 
-              const parsed = new Date(value).getTime();
 
-              return Number.isNaN(parsed) ? 0 : parsed;
+      const data =
+        await response.json();
 
-            };
 
-            return getTime(b.paidAt) - getTime(a.paidAt);
+      if (
+        !response.ok ||
+        !data.success
+      ) {
 
-          });
+        throw new Error(
+          data.message ||
+          "Unable to load purchase history."
+        );
 
-          setPurchases(rows);
-          setLoading(false);
-          setError("");
+      }
 
-        },
-        (err) => {
 
-          console.error(
-            "Purchase history error:",
-            err
-          );
-
-          setError(
-            "Unable to load your purchase history."
-          );
-
-          setLoading(false);
-
-        }
+      console.log(
+        "PURCHASE HISTORY DOC COUNT:",
+        data.purchases?.length || 0
       );
 
-    return () => unsubscribe();
 
-  }, []);
+      setPurchases(
+        data.purchases || []
+      );
 
+      setLoading(false);
+      setError("");
+
+
+    } catch (err) {
+
+      console.error(
+        "Purchase history error:",
+        err
+      );
+
+
+      setError(
+        err.message ||
+        "Unable to load your purchase history."
+      );
+
+
+      setLoading(false);
+
+    }
+
+  };
+
+
+  loadPurchases();
+
+}, []);
 
   /* =======================================================
      FORMAT DATE

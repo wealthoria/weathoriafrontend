@@ -559,36 +559,48 @@ useEffect(() => {
   const [firestoreCourses, setFirestoreCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
+  const loadCourses = async () => {
+    const session = getMemberSession();
 
-    if (!window.db) {
+    if (!session?.token) {
+      setFirestoreCourses([]);
       setCoursesLoading(false);
       return;
     }
 
-    const unsubscribe = window.db
-      .collection("courses")
-      .where("status", "==", "published")
-      .onSnapshot(
-        (snapshot) => {
-          const data = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
-          setFirestoreCourses(data);
-          setCoursesLoading(false);
-        },
-        (error) => {
-          console.error("Error loading courses:", error);
-          setCoursesLoading(false);
+    try {
+      const response = await fetch(
+        "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/members/dashboard-content",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.token}`,
+            "Content-Type": "application/json"
+          }
         }
       );
 
-    return () => unsubscribe();
+      const data = await response.json();
 
-  }, []);
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to load courses."
+        );
+      }
 
+      setFirestoreCourses(data.courses || []);
+      setCoursesLoading(false);
+
+    } catch (error) {
+      console.error("Error loading courses:", error);
+      setFirestoreCourses([]);
+      setCoursesLoading(false);
+    }
+  };
+
+  loadCourses();
+}, []);
 
   /* =======================================================
      SAVE PURCHASED COURSES

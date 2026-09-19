@@ -2613,7 +2613,7 @@ if (membershipDays <= 0) {
           <button
             type="button"
             className={
-              activePage === "newsletter"
+              activePage === "Weekly Order Wins"
                 ? "wd-nav-item active"
                 : "wd-nav-item"
             }

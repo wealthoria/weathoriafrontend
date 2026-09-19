@@ -2109,14 +2109,9 @@ setAuthChecking(false);
 
   useEffect(() => {
 
-    if (
-      !member ||
-      !window.db
-    ) {
-
-      return;
-
-    }
+ if (!member?.token) {
+  return;
+}
 
 
     let cancelled = false;
@@ -2129,51 +2124,26 @@ setAuthChecking(false);
 
           setStatsLoading(true);
 
+const response = await fetch(
+  `${DASHBOARD_API}/api/members/dashboard-content`,
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${member.token}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
 
-          const [
-            contentSnapshot,
-            courseSnapshot,
-            reportSnapshot,
-            purchaseSnapshot
-          ] =
-            await Promise.all([
+const data = await response.json();
 
-              window.db
-                .collection("content")
-                .where(
-                  "status",
-                  "==",
-                  "published"
-                )
-                .get(),
+if (!response.ok || !data.success) {
+  throw new Error(
+    data.message || "Unable to load dashboard statistics."
+  );
+}
 
-
-              window.db
-                .collection("courses")
-                .where(
-                  "status",
-                  "==",
-                  "published"
-                )
-                .get(),
-
-
-              window.db
-                .collection("content")
-                .where(
-                  "category",
-                  "==",
-                  "Weekly Roundup"
-                )
-                .where(
-                  "status",
-                  "==",
-                  "published"
-                )
-                .get(),
-
-
-             fetch(
+const purchaseResponse = await fetch(
   `${DASHBOARD_API}/api/payment/purchase-history`,
   {
     method: "GET",
@@ -2182,23 +2152,18 @@ setAuthChecking(false);
       "Content-Type": "application/json"
     }
   }
-).then(async (response) => {
-  const data = await response.json();
+);
 
-  if (!response.ok || !data.success) {
-    throw new Error(
-      data.message || "Unable to load purchase history."
-    );
-  }
+const purchaseData = await purchaseResponse.json();
 
-  return {
-    size: Array.isArray(data.purchases)
-      ? data.purchases.length
-      : 0
-  };
-})
+if (!purchaseResponse.ok || !purchaseData.success) {
+  throw new Error(
+    purchaseData.message ||
+    "Unable to load purchase history."
+  );
+}
 
-            ]);
+const dashboardStats = data.stats || {};
 
 
           if (cancelled) {
@@ -2208,26 +2173,26 @@ setAuthChecking(false);
           }
 
 
-          setStats(
-            current => ({
+         setStats(
+  current => ({
+    totalContent:
+      dashboardStats.totalContent || 0,
 
-              totalContent:
-                contentSnapshot.size,
+    courses:
+      dashboardStats.courses || 0,
 
-              courses:
-                courseSnapshot.size,
+    marketReports:
+      dashboardStats.marketReports || 0,
 
-              marketReports:
-                reportSnapshot.size,
+    purchases:
+      Array.isArray(purchaseData.purchases)
+        ? purchaseData.purchases.length
+        : 0,
 
-              purchases:
-                purchaseSnapshot.size,
-
-              notifications:
-                current.notifications
-
-            })
-          );
+    notifications:
+      current.notifications
+  })
+);
 
 
         } catch (error) {

@@ -3460,9 +3460,9 @@ if (membershipDays <= 0) {
               <section className="wd-feature-grid">
 
                 {DashboardLatestContent && (
-
-                  <DashboardLatestContent
-                    onOpen={(category) => {
+<DashboardLatestContent
+  member={member}
+  onOpen={(category) => {
 
                       if (
                         category ===

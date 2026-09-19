@@ -1253,7 +1253,7 @@ function CourseForm({
 
         <div className="form-alert">
 
-          âš  {error}
+         {error}
 
         </div>
 

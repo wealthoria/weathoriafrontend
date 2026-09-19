@@ -7152,6 +7152,9 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+  .member-course-level-head h3{
+    font-size: 10px;
+  }
 
   .member-course-card {
     border-radius: 16px;
@@ -7182,5 +7185,56 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
   .member-course-price strong {
     font-size: 20px;
+  }
+}
+
+
+/* COURSE LEVEL + CATEGORY ALIGNMENT */
+
+.member-course-meta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.member-course-category {
+  margin: 0;
+  flex: 0 0 auto;
+  color: #e8473f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.member-course-level {
+  margin-left: auto;
+  text-align: right;
+  color: #777c78;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .member-course-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .member-course-category {
+    text-align: left;
+  }
+
+  .member-course-level {
+    margin-left: auto;
+    text-align: right;
   }
 }

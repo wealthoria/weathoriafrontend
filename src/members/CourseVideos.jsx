@@ -735,10 +735,9 @@ if (!memberSession?.token) {
     `Bearer ${memberSession.token}`
 },
 
-        body: JSON.stringify({
-          courseId: course.id,
-          amount: Number(course.price || 0)
-        })
+      body: JSON.stringify({
+  courseId: course.id
+})
       }
     );
 
@@ -809,28 +808,19 @@ const verifyResponse =
         "Authorization":
   `Bearer ${memberSession.token}`
       },
+    body: JSON.stringify({
+      courseId:
+        course.id,
 
-      body: JSON.stringify({
+      razorpay_order_id:
+        paymentResponse.razorpay_order_id,
 
-        courseId:
-          course.id,
+      razorpay_payment_id:
+        paymentResponse.razorpay_payment_id,
 
-        courseTitle:
-          course.title || "",
-
-        amount:
-          Number(course.price || 0),
-
-        razorpay_order_id:
-          paymentResponse.razorpay_order_id,
-
-        razorpay_payment_id:
-          paymentResponse.razorpay_payment_id,
-
-        razorpay_signature:
-          paymentResponse.razorpay_signature
-
-      })
+      razorpay_signature:
+        paymentResponse.razorpay_signature
+    })
     }
   );
 
@@ -845,55 +835,6 @@ if (!verifyResponse.ok) {
   );
 }
 
-            /* =============================================
-               4. PAYMENT SUCCESS
-            ============================================= */
-/* =====================================================
-   SAVE COURSE PURCHASE TO FIRESTORE
-===================================================== */
-
-if(window.db && memberSession?.uid) {
-
-  await window.db
-    .collection("coursePurchases")
-    .add({
-
-      userId:  memberSession.uid,
-
-      userEmail:
-        memberSession.email || "",
-
-      courseId:
-        String(course.id),
-
-      courseTitle:
-        course.title || "",
-
-      amount:
-        Number(course.price || 0),
-
-      razorpayOrderId:
-        paymentResponse.razorpay_order_id,
-
-      razorpayPaymentId:
-        paymentResponse.razorpay_payment_id,
-
-      status:
-        "paid",
-
-      paidAt:
-        new Date(),
-
-      createdAt:
-        new Date()
-
-    });
-
-  console.log(
-    "Course purchase saved to Firestore"
-  );
-
-}
 
 
 /* =====================================================

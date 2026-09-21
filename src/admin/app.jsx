@@ -1032,9 +1032,9 @@ function LoginRedirect({
   useEffect(() => {
 
     if (
-      !auth.loading &&
-      auth.isAuthenticated &&
-      path === "/members/login"
+     auth.isAuthenticated &&
+auth.isAdmin &&
+path === "/members/login"
     ) {
 
       navigate(

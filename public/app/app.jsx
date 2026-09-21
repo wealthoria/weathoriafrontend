@@ -375,10 +375,7 @@ function RootApp() {
     "/";
 
 
-  console.log(
-    "[Wealthoria] Current path:",
-    path
-  );
+
 
 
   /* =======================================================
@@ -390,10 +387,7 @@ function RootApp() {
     path.startsWith("/admin/")
   ) {
 
-    console.log(
-      "[Wealthoria] Opening Admin Portal"
-    );
-
+ 
 
     if (
       typeof AdminApp === "function"
@@ -453,9 +447,6 @@ function RootApp() {
     path.startsWith("/members/")
   ) {
 
-    console.log(
-      "[Wealthoria] Opening Members Portal"
-    );
 
 
     if (
@@ -511,9 +502,7 @@ function RootApp() {
      PUBLIC WEBSITE
      ======================================================= */
 
-  console.log(
-    "[Wealthoria] Opening Public Wealthoria"
-  );
+
 
 
   if (
@@ -621,6 +610,3 @@ else {
    DEBUG
    ========================================================= */
 
-console.log(
-  "[Wealthoria] app.jsx loaded successfully"
-);

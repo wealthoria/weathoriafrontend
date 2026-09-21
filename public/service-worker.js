@@ -34,10 +34,6 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
 
-  console.log(
-    "[Wealthoria SW] Background message received:",
-    payload
-  );
 
 
   const notificationTitle =
@@ -88,9 +84,7 @@ self.addEventListener(
   "notificationclick",
   function (event) {
 
-    console.log(
-      "[Wealthoria SW] Notification clicked"
-    );
+   
 
 
     event.notification.close();
@@ -661,6 +655,3 @@ self.addEventListener(
 );
 
 
-console.log(
-  "🔥 Wealthoria Firebase Messaging Service Worker loaded."
-);

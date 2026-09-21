@@ -724,7 +724,3 @@ setTimeout(() => {
 
 window.AdminNotifications =
   AdminNotifications;
-
-console.log(
-  "AdminNotifications loaded successfully"
-);

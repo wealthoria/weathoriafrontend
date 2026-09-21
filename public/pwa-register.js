@@ -28,10 +28,7 @@
           }
         );
 
-      console.log(
-        "[Wealthoria PWA] Service worker registered:",
-        registration.scope
-      );
+  
 
       // Watch for a new service-worker version
       registration.addEventListener(

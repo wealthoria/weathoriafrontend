@@ -1,5 +1,4 @@
 (function () {
-  console.log("🔥 NOTIFICATIONS.JS STARTED");
 
   // =========================================================
   // CONFIG
@@ -122,10 +121,7 @@
         sessionStore[currentUid]
       ) {
 
-        console.log(
-          "✅ Current member found in sessionStorage:",
-          sessionStore[currentUid].email
-        );
+   
 
         return sessionStore[currentUid];
       }
@@ -142,10 +138,7 @@
         localStore[currentUid]
       ) {
 
-        console.log(
-          "✅ Current member found in localStorage:",
-          localStore[currentUid].email
-        );
+      
 
         return localStore[currentUid];
       }
@@ -176,9 +169,7 @@
             legacySession
           );
 
-        console.log(
-          "⚠️ Using legacy sessionStorage member session."
-        );
+      
 
         return member;
       }
@@ -191,9 +182,7 @@
             legacyLocal
           );
 
-        console.log(
-          "⚠️ Using legacy localStorage member session."
-        );
+     
 
         return member;
       }
@@ -240,11 +229,7 @@
 
       script.onload = () => {
 
-        console.log(
-          "✅ Script loaded:",
-          src
-        );
-
+      
         resolve();
       };
 
@@ -290,9 +275,7 @@
       "function"
     ) {
 
-      console.log(
-        "📥 Loading Firebase Messaging SDK..."
-      );
+    
 
       await loadScript(
         FIREBASE_MESSAGING_SDK
@@ -332,10 +315,7 @@
 
   async function registerMemberFCMToken() {
 
-    console.log(
-      "🔔 Registering member FCM token..."
-    );
-
+  
 
     try {
 
@@ -360,14 +340,7 @@
       }
 
 
-      console.log(
-        "👤 Member:",
-        {
-          uid: member.uid,
-          email: member.email,
-          name: member.name
-        }
-      );
+    
 
 
       // -----------------------------------------------------
@@ -431,10 +404,7 @@
         await navigator.serviceWorker.ready;
 
 
-      console.log(
-        "✅ Service worker ready:",
-        registration
-      );
+    
 
 
       // -----------------------------------------------------
@@ -445,19 +415,13 @@
         await getMessagingInstance();
 
 
-      console.log(
-        "✅ Firebase Messaging instance created."
-      );
-
+    
 
       // -----------------------------------------------------
       // 8. Get FCM token
       // -----------------------------------------------------
 
-      console.log(
-        "📱 Requesting FCM token..."
-      );
-
+    
 
       const fcmToken =
         await messaging.getToken({
@@ -481,25 +445,14 @@
       }
 
 
-      console.log(
-        "✅ FCM token received successfully."
-      );
 
-
-      console.log(
-        "FCM token:",
-        fcmToken
-      );
 
 
       // -----------------------------------------------------
       // 9. Send token to backend
       // -----------------------------------------------------
 
-      console.log(
-        "📤 Sending FCM token to backend..."
-      );
-
+    
 
       const response =
         await fetch(
@@ -552,10 +505,6 @@
       }
 
 
-      console.log(
-        "Backend response:",
-        data
-      );
 
 
       // -----------------------------------------------------
@@ -583,20 +532,11 @@
       // 12. SUCCESS
       // -----------------------------------------------------
 
-      console.log(
-        "✅ FCM token saved successfully."
-      );
+   
+
+     
 
 
-      console.log(
-        "👤 Member UID:",
-        member.uid
-      );
-
-
-      console.log(
-        "📱 FCM token registered for this device."
-      );
 
 
       return true;
@@ -621,10 +561,7 @@
 
   async function initializeMemberForegroundNotifications() {
 
-    console.log(
-      "🔔 Initializing foreground notification listener..."
-    );
-
+  
 
     try {
 
@@ -683,10 +620,6 @@
         await navigator.serviceWorker.ready;
 
 
-      console.log(
-        "✅ Notification service worker ready:",
-        registration
-      );
 
 
       // -----------------------------------------------------
@@ -717,9 +650,7 @@
 
       } else {
 
-        console.log(
-          "ℹ️ Notification permission is not granted yet."
-        );
+       
       }
 
 
@@ -731,9 +662,7 @@
         window.memberForegroundListenerReady
       ) {
 
-        console.log(
-          "ℹ️ Foreground listener already exists."
-        );
+     
 
         return true;
       }
@@ -742,11 +671,7 @@
       messaging.onMessage(
         function (payload) {
 
-          console.log(
-            "🔔 Foreground notification received:",
-            payload
-          );
-
+      
 
           // -------------------------------------------------
           // Notification title
@@ -792,9 +717,7 @@
           );
 
 
-          console.log(
-            "✅ Dashboard notification event dispatched."
-          );
+       
 
 
           // =================================================
@@ -834,10 +757,6 @@
                 };
 
 
-              console.log(
-                "✅ Browser notification displayed."
-              );
-
 
             } catch (
               notificationError
@@ -859,10 +778,6 @@
       window.memberForegroundListenerReady =
         true;
 
-
-      console.log(
-        "✅ Foreground notification listener ready."
-      );
 
 
       return true;
@@ -888,9 +803,7 @@
   window.enableMemberNotifications =
     async function () {
 
-      console.log(
-        "🔔 enableMemberNotifications called"
-      );
+   
 
 
       try {
@@ -909,10 +822,6 @@
         }
 
 
-        console.log(
-          "Firebase loaded:",
-          firebase.SDK_VERSION
-        );
 
 
         // ---------------------------------------------------
@@ -938,27 +847,6 @@
         const member =
           getLoggedInMember();
 
-
-        console.log(
-          "Logged-in member:",
-          member
-            ? {
-
-                uid:
-                  member.uid,
-
-                email:
-                  member.email,
-
-                name:
-                  member.name,
-
-                role:
-                  member.role
-
-              }
-            : null
-        );
 
 
         if (
@@ -992,10 +880,6 @@
         }
 
 
-        console.log(
-          "Notification permission:",
-          permission
-        );
 
 
         if (
@@ -1044,10 +928,6 @@
         // 7. Success
         // ---------------------------------------------------
 
-        console.log(
-          "🎉 Notifications enabled successfully."
-        );
-
 
         alert(
           "Notifications enabled successfully! 🔔"
@@ -1090,8 +970,6 @@
   // SCRIPT LOADED
   // =========================================================
 
-  console.log(
-    "✅ Wealthoria notification system loaded."
-  );
+ 
 
 })();

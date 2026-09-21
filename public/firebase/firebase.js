@@ -30,10 +30,3 @@ window.db = firebase.firestore();
 
 window.storage = firebase.storage();
 
-console.log("Firebase initialized");
-
-console.log("Firebase Auth:", window.auth);
-
-console.log("Firestore:", window.db);
-
-console.log("Firebase Storage:", window.storage);

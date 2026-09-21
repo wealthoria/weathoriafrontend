@@ -30,7 +30,6 @@ const [errors, setErrors] = useState({});
   };
 
  const subscribeNow = async () => {
-  console.log("SUBSCRIBE BUTTON CLICKED");
   const cleanName = name.trim();
   const cleanEmail = email.trim().toLowerCase();
   const cleanPhone = phone.trim();
@@ -83,7 +82,6 @@ if (password !== confirmPassword) {
   return;
 }
      
-      console.log("RAZORPAY:", typeof window.Razorpay);
 
     if (typeof window.Razorpay !== "function") {
 
@@ -133,11 +131,7 @@ return;
         );
       }
 
-      console.log(
-        "Subscription create response:",
-        data
-      );
-
+   
       if (!response.ok || !data.success) {
         throw new Error(
           data.message ||
@@ -175,10 +169,7 @@ return;
           razorpayResponse
         ) {
           try {
-            console.log(
-              "Razorpay success:",
-              razorpayResponse
-            );
+         
 
             const finalSubscriptionId =
               razorpayResponse
@@ -251,11 +242,7 @@ return;
               );
             }
 
-            console.log(
-              "Subscription completion:",
-              completeData
-            );
-
+          
             if (
               !completeResponse.ok ||
               !completeData.success
@@ -843,6 +830,3 @@ razorpay.on("modal.close", function () {
 window.MemberSubscription =
   MemberSubscription;
 
-console.log(
-  "Member Subscription JSX loaded successfully"
-);

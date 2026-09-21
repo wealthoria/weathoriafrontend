@@ -225,10 +225,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
             setLoading(false);
             setError("");
 
-            console.log(
-              "Articles & Reports loaded:",
-              rows.length
-            );
+         
           },
 
           (err) => {

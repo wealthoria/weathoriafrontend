@@ -111,10 +111,7 @@ function CoursesList() {
                 ...doc.data()
               }));
 
-            console.log(
-              "Courses loaded from Firestore:",
-              rows
-            );
+           
 
             setCourses(rows);
 
@@ -201,10 +198,7 @@ function CoursesList() {
         .delete();
 
 
-      console.log(
-        "Course deleted:",
-        course.id
-      );
+
 
 
     } catch (error) {
@@ -1133,10 +1127,7 @@ function CourseForm({
           .update(payload);
 
 
-        console.log(
-          "Course updated:",
-          course.id
-        );
+      
 
       }
 
@@ -1166,10 +1157,6 @@ function CourseForm({
             .add(payload);
 
 
-        console.log(
-          "Course created:",
-          doc.id
-        );
 
       }
 
@@ -1764,6 +1751,3 @@ window.CourseBuilder =
   CourseBuilder;
 
 
-console.log(
-  "ADMIN COURSES LOADED"
-);

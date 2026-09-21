@@ -204,11 +204,7 @@ useEffect(() => {
     }
 
 
-    console.log(
-      "PURCHASE HISTORY MEMBER:",
-      session.uid,
-      session.email
-    );
+
 
 
     setLoading(true);
@@ -259,10 +255,7 @@ useEffect(() => {
       }
 
 
-      console.log(
-        "PURCHASE HISTORY DOC COUNT:",
-        data.purchases?.length || 0
-      );
+  
 
 
       setPurchases(
@@ -1107,5 +1100,4 @@ useEffect(() => {
 window.MemberHistoryPurchase = MemberHistoryPurchase;
 window.PurchaseHistory = MemberHistoryPurchase;
 
-console.log("PurchaseHistory loaded successfully");
 

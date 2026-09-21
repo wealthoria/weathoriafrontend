@@ -55,11 +55,6 @@ window.storage = storage;
    DEBUG
    ========================================================= */
 
-console.log("Firebase initialized successfully");
-console.log("Firebase App:", app);
-console.log("Firebase Auth:", auth);
-console.log("Firestore:", db);
-console.log("Firebase Storage:", storage);
 
 export {
   firebase,

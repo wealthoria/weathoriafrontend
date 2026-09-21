@@ -240,10 +240,7 @@ function AdminYouTube() {
       return;
     }
 
-    console.log(
-      "Editing YouTube video:",
-      video
-    );
+ 
 
     setEditingVideo(video);
 
@@ -1903,10 +1900,7 @@ function AdminYouTube() {
                           event.preventDefault();
                           event.stopPropagation();
 
-                          console.log(
-                            "EDIT CLICKED",
-                            video.id
-                          );
+                       
 
                           editVideo(
                             video
@@ -2366,7 +2360,3 @@ function AdminYouTube() {
 
 window.AdminYouTube =
   AdminYouTube;
-
-console.log(
-  "Admin YouTube loaded successfully"
-);

@@ -72,7 +72,6 @@ const submit = async (ev) => {
       created_at: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    console.log("Enquiry saved successfully");
     setDone(true);
 
   } catch (error) {

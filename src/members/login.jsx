@@ -196,10 +196,7 @@ const saveMemberSession = (
     }
 
 
-    console.log(
-      "Member session saved:",
-      session.uid
-    );
+   
 
   } catch (storageError) {
 
@@ -665,9 +662,7 @@ writeStorageObject(
         modal: {
           ondismiss: () => {
             setLoading(false);
-            console.log(
-              "Razorpay subscription activation cancelled by member."
-            );
+          
           }
         }
       };
@@ -777,10 +772,7 @@ useEffect(() => {
          again just because they returned to login page.
       ------------------------------------------------ */
 
-      console.log(
-        "Existing member session found:",
-        session.uid
-      );
+   
 
       const currentStatus = String(
         session.status || "active"
@@ -1039,10 +1031,6 @@ if (
                   true;
 
 
-                console.log(
-                  "Admin login successful:",
-                  cleanEmail
-                );
 
 
                 /*
@@ -1087,10 +1075,7 @@ if (
              * Continue with Member login.
              */
 
-            console.log(
-              "Not an Admin account. Checking Member login..."
-            );
-
+        
 
             try {
 
@@ -1130,10 +1115,7 @@ if (
            2. MEMBER LOGIN
         ================================================= */
 
-        console.log(
-          "Member login request:",
-          cleanEmail
-        );
+      
 
 
         const response =
@@ -1245,10 +1227,6 @@ if (
         }
 
 
-        console.log(
-          "Member login successful:",
-          data.uid
-        );
 
 
         /* =================================================
@@ -1273,31 +1251,6 @@ const session = {
           session,
           remember
         );
-
-
-        console.log(
-          "Member session saved:",
-          {
-            uid:
-              session.uid,
-
-            email:
-              session.email,
-
-            role:
-              session.role,
-
-            remember:
-              remember,
-
-            storage:
-              remember
-                ? "localStorage"
-                : "sessionStorage"
-
-          }
-        );
-
 
         /* =================================================
            5. CREATE LOGIN RECORD
@@ -2130,6 +2083,3 @@ window.MemberLogin =
   MemberLogin;
 
 
-console.log(
-  "MemberLogin loaded successfully"
-);

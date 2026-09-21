@@ -114,7 +114,6 @@ const loadContent = useCallback(async () => {
 }));
     setContent(items);
 
-    console.log("Firestore content loaded:", items);
 
   } catch (err) {
     console.error("Error loading content:", err);
@@ -209,10 +208,6 @@ setContent((prev) => [
   ...prev
 ]);
 
-          console.log(
-            "Content added:",
-            savedItem
-          );
 
           return savedItem;
 
@@ -273,10 +268,7 @@ const updateContent = useCallback(
         )
       );
 
-      console.log(
-        "Content updated in Firestore:",
-        firestoreId
-      );
+ 
 
     } catch (err) {
       console.error(
@@ -324,10 +316,7 @@ const deleteContent = useCallback(
         )
       );
 
-      console.log(
-        "Content deleted from Firestore:",
-        ids
-      );
+    
 
     } catch (err) {
       console.error(
@@ -521,6 +510,4 @@ Object.assign(
 );
 
 
-console.log(
-  "ADMIN STORE LOADED - FIRESTORE MODE"
-);
+

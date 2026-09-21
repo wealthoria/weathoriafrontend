@@ -500,8 +500,3 @@ window.location.replace("/admin/dashboard");
 
 window.AdminLogin =
   AdminLogin;
-
-
-console.log(
-  "Admin login loaded successfully"
-);

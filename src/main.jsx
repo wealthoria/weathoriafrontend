@@ -1,7 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 
-console.log("[Wealthoria] main.jsx starting...");
 
 // Make React available to the legacy/global-style modules
 window.React = React;
@@ -34,7 +33,6 @@ import "./app/app.jsx";
 // MEMBER PORTAL
 // ============================================================
 
-import "./members/auth.jsx";
 import "./members/login.jsx";
 import "./members/ForgotPassword.jsx";
 import "./members/CourseVideos.jsx";
@@ -65,7 +63,6 @@ import "./admin/analytics-data.jsx";
 // ============================================================
 
 import "./admin/ui.jsx";
-import "./admin/charts.jsx";
 import "./admin/shell.jsx";
 
 // ============================================================
@@ -136,7 +133,6 @@ const root = createRoot(rootElement);
 // ============================================================
 
 if (isAdminRoute) {
-  console.log("[Wealthoria] Rendering application: AdminApp");
 
   if (typeof window.AdminApp !== "function") {
     console.error(
@@ -169,9 +165,7 @@ if (isAdminRoute) {
 
   root.render(<window.AdminApp />);
 
-  console.log(
-    "[Wealthoria] Admin application rendered successfully."
-  );
+
 }
 
 // ============================================================
@@ -179,7 +173,6 @@ if (isAdminRoute) {
 // ============================================================
 
 else if (isMemberRoute) {
-  console.log("[Wealthoria] Rendering application: MembersRouter");
 
   if (typeof window.MembersRouter !== "function") {
     console.error(
@@ -212,9 +205,7 @@ else if (isMemberRoute) {
 
   root.render(<window.MembersRouter />);
 
-  console.log(
-    "[Wealthoria] Members application rendered successfully."
-  );
+ 
 }
 
 // ============================================================
@@ -222,7 +213,6 @@ else if (isMemberRoute) {
 // ============================================================
 
 else {
-  console.log("[Wealthoria] Rendering main website");
 
   const RootApp =
     window.WealthoriaRootApp ||
@@ -259,7 +249,5 @@ else {
 
   root.render(<RootApp />);
 
-  console.log(
-    "[Wealthoria] Main website rendered successfully."
-  );
+
 }

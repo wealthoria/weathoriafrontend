@@ -591,6 +591,3 @@ function ForgotPassword() {
 
 window.ForgotPassword = ForgotPassword;
 
-console.log(
-  "ForgotPassword loaded successfully"
-);

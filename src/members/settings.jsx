@@ -410,11 +410,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
         setSavingProfile(true);
 
-
-        console.log(
-          "Updating member profile:",
-          session.uid
-        );
+;
 
 
         const response =
@@ -500,9 +496,6 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
         );
 
 
-        console.log(
-          "Profile updated successfully."
-        );
 
 
       } catch (err) {
@@ -626,10 +619,6 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
         setSavingPassword(true);
 
 
-        console.log(
-          "Changing member password:",
-          session.uid
-        );
 
 
         const response =
@@ -690,10 +679,6 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
           "Password updated successfully."
         );
 
-
-        console.log(
-          "Member password updated successfully."
-        );
 
 
       } catch (err) {
@@ -1278,6 +1263,3 @@ window.Settings =
   MemberSettings;
 
 
-console.log(
-  "MemberSettings loaded successfully"
-);

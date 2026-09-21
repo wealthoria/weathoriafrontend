@@ -241,9 +241,7 @@ function CourseVideos() {
     script.async = true;
 
     script.onload = () => {
-      console.log(
-        "Razorpay Checkout SDK loaded"
-      );
+     
     };
 
     script.onerror = () => {
@@ -876,9 +874,7 @@ alert(
 
         ondismiss: function () {
 
-          console.log(
-            "Razorpay checkout closed."
-          );
+        
 
         }
 

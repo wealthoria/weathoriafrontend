@@ -83,7 +83,6 @@ function EnquiryForm() {
           : new Date()
     });
 
-    console.log("Enquiry saved successfully");
 
     setDone(true);
   } catch (error) {

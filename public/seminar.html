@@ -1142,7 +1142,7 @@ if (registrations.size >= MAX_SEATS) {
 const order = await orderResponse.json();
 if (!order.id) {
     alert("Unable to create Razorpay order.");
-    console.log(order);
+   
     return;
 }
 const options = {
@@ -1195,7 +1195,6 @@ const registerResponse = await fetch(
 );
 
 const result = await registerResponse.json();
-console.log(result);
 
 if (!registerResponse.ok) {
   alert(result.message || "Registration failed.");

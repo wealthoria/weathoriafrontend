@@ -111,9 +111,7 @@
       firebase.firestore();
 
 
-    console.log(
-      "Purchase History Firebase initialized"
-    );
+   
 
   </script>
 
@@ -940,12 +938,6 @@ useEffect(() => {
   }
 
 
-  console.log(
-    "PURCHASE HISTORY MEMBER:",
-    session.uid,
-    session.email
-  );
-
 
   setLoading(true);
   setError("");
@@ -963,11 +955,7 @@ useEffect(() => {
 
         (snapshot) => {
 
-          console.log(
-            "PURCHASE HISTORY DOC COUNT:",
-            snapshot.size
-          );
-
+         
 
           const rows =
             snapshot.docs.map(

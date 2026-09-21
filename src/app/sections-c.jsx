@@ -302,9 +302,7 @@ useEffect(() => {
 
     }
 
-    console.log(
-      "Loading YouTube videos..."
-    );
+  
 
     unsubscribe =
       window.db
@@ -374,10 +372,6 @@ data.sort((a, b) => {
   return bTime - aTime;
 });
 
-console.log(
-  "YOUTUBE FIRESTORE DATA - ORDERED:",
-  data
-);
 
 setVideos(data);
 

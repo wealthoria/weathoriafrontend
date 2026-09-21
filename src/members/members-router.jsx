@@ -200,10 +200,7 @@ const getSavedMemberSession = () => {
             "wealthoria-member"
           );
 
-          console.log(
-            "Migrated old member session:",
-            oldSession.uid
-          );
+       
 
           return {
             value:
@@ -270,10 +267,7 @@ const getSavedMemberSession = () => {
             "wealthoria-member"
           );
 
-          console.log(
-            "Migrated old sessionStorage member session:",
-            oldSession.uid
-          );
+        
 
           return {
             value:
@@ -881,10 +875,7 @@ if (
   ]);
 
 
-  console.log(
-    "MembersRouter path:",
-    path
-  );
+
 
 
   /* =========================================================
@@ -1352,6 +1343,5 @@ window.MembersRouter =
   MembersRouter;
 
 
-console.log(
-  "MembersRouter loaded successfully"
-);
+
+  

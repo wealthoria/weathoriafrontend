@@ -2049,11 +2049,7 @@ function UploadsScreen() {
                   result
                 ) => {
 
-                  console.log(
-                    "PDF uploaded:",
-                    result
-                  );
-
+              
 
                   setUploading(
                     (
@@ -4907,11 +4903,6 @@ function UploadsScreen() {
                       );
 
 
-                  console.log(
-                    "Video saved to Firestore:",
-                    docRef.id
-                  );
-
 
                   if (
                     data.refreshContent
@@ -5121,11 +5112,7 @@ function UploadsScreen() {
                       );
 
 
-                  console.log(
-                    "PDF content saved to Firestore:",
-                    docRef.id
-                  );
-
+                
 
                   if (
                     data.refreshContent

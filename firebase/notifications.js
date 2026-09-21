@@ -1,5 +1,4 @@
 (function () {
-  console.log("🔥 NOTIFICATIONS.JS STARTED");
 
   const FIREBASE_MESSAGING_SDK =
     "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js";
@@ -87,10 +86,7 @@
 
         script.onload = () => {
 
-          console.log(
-            "✅ Script loaded:",
-            src
-          );
+        
 
           resolve();
 
@@ -198,10 +194,7 @@
         window.memberForegroundListenerReady
       ) {
 
-        console.log(
-          "ℹ️ Foreground listener already exists."
-        );
-
+      
         return true;
       }
 
@@ -209,10 +202,7 @@
       messaging.onMessage(
         function (payload) {
 
-          console.log(
-            "🔔 NEW FOREGROUND NOTIFICATION:",
-            payload
-          );
+        
 
 
           const title =
@@ -247,10 +237,7 @@
           );
 
 
-          console.log(
-            "✅ Dashboard notification event sent."
-          );
-
+       
 
           // =================================================
           // BROWSER NOTIFICATION
@@ -306,9 +293,7 @@
         true;
 
 
-      console.log(
-        "✅ Foreground notification listener ready."
-      );
+   
 
 
       return true;
@@ -334,9 +319,7 @@
   window.enableMemberNotifications =
     async function () {
 
-      console.log(
-        "🔔 enableMemberNotifications called"
-      );
+    
 
 
       try {
@@ -385,10 +368,6 @@
           await Notification.requestPermission();
 
 
-        console.log(
-          "Notification permission:",
-          permission
-        );
 
 
         if (
@@ -443,11 +422,7 @@
           return;
         }
 
-
-        console.log(
-          "✅ FCM token received successfully."
-        );
-
+      
 
         const response =
           await fetch(
@@ -492,9 +467,7 @@
         }
 
 
-        console.log(
-          "✅ Notification token saved successfully."
-        );
+     
 
 
       } catch (error) {
@@ -517,8 +490,6 @@
     initializeMemberForegroundNotifications;
 
 
-  console.log(
-    "✅ Wealthoria notification system loaded."
-  );
+
 
 })();

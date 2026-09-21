@@ -769,16 +769,3 @@ window.AccessDenied =
   AccessDenied;
 
 
-console.log(
-  "ADMIN AUTH LOADED"
-);
-
-console.log(
-  "useAdminAuth:",
-  typeof window.useAdminAuth
-);
-
-console.log(
-  "AdminAuthProvider:",
-  typeof window.AdminAuthProvider
-);

@@ -1745,7 +1745,3 @@ function ReportsPage() {
 
 window.AdminReports =
   ReportsPage;
-
-console.log(
-  "Admin Reports loaded successfully"
-);

@@ -301,9 +301,7 @@ useEffect(() => {
 
     }
 
-    console.log(
-      "Loading YouTube videos..."
-    );
+  
 
     unsubscribe =
       window.db
@@ -320,10 +318,7 @@ useEffect(() => {
                 })
               );
 
-            console.log(
-              "YOUTUBE FIRESTORE DATA:",
-              data
-            );
+          
 
             setVideos(data);
 

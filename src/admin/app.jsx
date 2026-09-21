@@ -218,8 +218,7 @@ const getPath = () => {
   const navigate = useCallback((to) => {
     const target = to.startsWith("/") ? to : `/${to}`;
 
-    window.history.pushState({}, "", target);
-    setPath(target);
+    window.location.assign(target);
   }, []);
 
   const value = useMemo(

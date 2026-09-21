@@ -2,7 +2,7 @@
 
 /* global React, window */
 
-const { useState } = React;
+const { useState, useEffect } = React;
 
 const API_BASE =
   "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
@@ -14,6 +14,20 @@ function ForgotPassword() {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+
+  useEffect(() => {
+  if (resendCooldown <= 0) return;
+
+  const timer = setInterval(() => {
+    setResendCooldown((current) =>
+      current > 0 ? current - 1 : 0
+    );
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [resendCooldown]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -94,7 +108,62 @@ function ForgotPassword() {
     }
   };
 
-  /* =========================================================
+
+  const resendCode = async () => {
+  if (resendCooldown > 0 || loading) return;
+
+  setError("");
+  setMessage("");
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/members/forgot-password/send-code`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase()
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
+      throw new Error(
+        data?.message || "Unable to resend verification code."
+      );
+    }
+
+    setCode("");
+    setMessage(
+      "A new verification code has been sent to your email."
+    );
+
+    setResendCooldown(60);
+
+  } catch (error) {
+    console.error(
+      "Resend verification code error:",
+      error
+    );
+
+    setError(
+      error?.message ||
+      "Unable to resend verification code."
+    );
+
+  } finally {
+    setLoading(false);
+  }
+};
+  /* ===========
+  
+  
+  ==============================================
      VERIFY CODE
   ========================================================= */
 
@@ -400,6 +469,20 @@ function ForgotPassword() {
             >
               {loading ? "Verifying..." : "Verify Code"}
             </button>
+<button
+  type="button"
+  className="members-link"
+  style={{
+    marginTop: "12px"
+  }}
+  onClick={resendCode}
+  disabled={loading || resendCooldown > 0}
+>
+  {resendCooldown > 0
+    ? `Resend Code in ${resendCooldown}s`
+    : "Resend "}
+</button>
+
 
             <button
               type="button"

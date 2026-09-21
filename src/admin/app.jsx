@@ -921,9 +921,45 @@ function Routed() {
    Login page must NOT be inside
    AdminGuard/DataProvider.
   */
-if (route.name === "login") {
-  return null;
-}
+
+  if (
+    route.name === "login"
+  ) {
+
+    const AdminLogin =
+      getAdmin("AdminLogin");
+
+
+    if (AdminLogin) {
+      return (
+        <AdminLogin />
+      );
+    }
+
+
+    return (
+      <AdminShell
+        title="Admin Login"
+      >
+
+        <div className="page">
+
+          <h1>
+            Admin Login
+          </h1>
+
+          <p>
+            Admin login component is not loaded.
+          </p>
+
+        </div>
+
+      </AdminShell>
+    );
+  }
+
+
+  return (
     <SafeAdminGuard>
 
       <SafeAdminDataProvider>
@@ -943,7 +979,7 @@ if (route.name === "login") {
       </SafeAdminDataProvider>
 
     </SafeAdminGuard>
-  
+  );
 }
 
 

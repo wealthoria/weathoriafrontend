@@ -215,11 +215,21 @@ const getPath = () => {
     };
   }, []);
 
-  const navigate = useCallback((to) => {
-    const target = to.startsWith("/") ? to : `/${to}`;
+ const navigate = useCallback((to) => {
+  const target = to.startsWith("/") ? to : `/${to}`;
 
-    window.location.assign(target);
-  }, []);
+  const currentIsAdmin = window.location.pathname.startsWith("/admin");
+  const targetIsAdmin = target.startsWith("/admin");
+
+  if (currentIsAdmin && targetIsAdmin) {
+    window.history.pushState({}, "", target);
+    setPath(target);
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  window.location.assign(target);
+}, []);
 
   const value = useMemo(
     () => ({

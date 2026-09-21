@@ -18,21 +18,26 @@ function NavBar({ onNav }) {
         <div className="wrap nav-inner">
           <span className="mobile-logo-only"><BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} /></span>
          <nav className="nav-links">
-  {t.nav.links.map((l) =>
-    <a
-      key={l.id}
-      onClick={() => {
-        if (l.id === "Disclosure") {
-          window.location.href = "/wealthoria-disclosure.html";
-        } else {
-          go(l.id);
-        }
-      }}
-    >
-      {l.label}
-    </a>
-  )}
+ {t.nav.links.map((l) =>
+  <a
+    key={l.id}
+    href={
+      l.id === "Disclosure"
+        ? "/wealthoria-disclosure.html"
+        : `#${l.id}`
+    }
+    onClick={(e) => {
+      if (l.id === "Disclosure") {
+        return;
+      }
 
+      e.preventDefault();
+      go(l.id);
+    }}
+  >
+    {l.label}
+  </a>
+)}
 <div className="products-nav">
 
   <a
@@ -109,8 +114,26 @@ function NavBar({ onNav }) {
           <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
- {t.nav.links.map((l) => <a key={l.id} onClick={() => go(l.id)}>{l.label}</a>)}
+{t.nav.links.map((l) =>
+  <a
+    key={l.id}
+    href={
+      l.id === "Disclosure"
+        ? "/wealthoria-disclosure.html"
+        : `#${l.id}`
+    }
+    onClick={(e) => {
+      if (l.id === "Disclosure") {
+        return;
+      }
 
+      e.preventDefault();
+      go(l.id);
+    }}
+  >
+    {l.label}
+  </a>
+)}
 
 <div className="products-nav">
 

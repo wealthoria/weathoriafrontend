@@ -189,14 +189,18 @@ function ThemeProvider({ children }) {
    ROUTER
    ========================================================================= */
 function RouterProvider({ children }) {
-  const getPath = () => {
-    const pathname = window.location.pathname || "/";
+const getPath = () => {
+  const pathname = window.location.pathname || "/";
 
-    return pathname.startsWith("/admin")
-      ? pathname
-      : "/admin/dashboard";
-  };
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/members/login"
+  ) {
+    return pathname;
+  }
 
+  return "/admin/dashboard";
+};
   const [path, setPath] = useState(getPath);
 
   useEffect(() => {

@@ -330,15 +330,6 @@ function App() {
         <YouTube />
 
 
-        {/*
-          Seminars are currently disabled.
-          Keep this commented until the seminar
-          section is intentionally enabled again.
-        */}
-
-        {/*
-          <Seminars onNav={onNav} />
-        */}
 
 
         <Library />

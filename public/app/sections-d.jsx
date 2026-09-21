@@ -544,22 +544,6 @@ function Footer() {
     </div>
 
 
-    {/* JOIN BOX */}
-    <div className="nl">
-
-      <input
-        placeholder={f.newsletter}
-        aria-label={f.newsletter}
-      />
-
-      <button
-        className="btn btn-green btn-sm"
-        type="button"
-      >
-        {f.newsletterCta}
-      </button>
-
-    </div>
 
 
     {/* SOCIAL */}

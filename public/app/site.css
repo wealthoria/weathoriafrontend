@@ -1200,6 +1200,18 @@ a { color: inherit; }
 
 @media (max-width: 600px) {
 
+  .btn {
+  
+    padding: 12px 19px;}
+
+    
+  .titlehead{
+  font-size: 30px;
+}
+
+  .wrap { padding: 0px 10px; }
+
+
   .member-login-button{
     display: none!important;
   }
@@ -1837,4 +1849,12 @@ a { color: inherit; }
     max-width: 100%;
     overflow: hidden;
   }
+}
+
+
+
+/*new css */
+
+.titlehead{
+  font-size: 45px;
 }

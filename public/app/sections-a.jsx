@@ -176,7 +176,7 @@ function Hero({ onNav }) {
       <div className="wrap hero-grid">
         <Reveal>
           <span className="eyebrow">{h.eyebrow}</span>
-          <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} style={{ fontSize: "58px" }}></h1>
+          <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} ></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
             <button className="btn btn-green" onClick={() => {window.open("subscription.html", "_self");

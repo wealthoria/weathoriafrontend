@@ -515,10 +515,8 @@ document.getElementById("paymentLoading").style.display = "flex";
       })
     });
 
-    console.log("Register API Status:", registerResponse.status);
 
     const result = await registerResponse.json();
-    console.log("Register API Response:", result);
 
     if (result.success) {
      window.location.replace("/thankyou.html");

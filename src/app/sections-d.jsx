@@ -546,24 +546,6 @@ function Footer() {
     </div>
 
 
-    {/* JOIN BOX */}
-    <div className="nl">
-
-      <input
-        placeholder={f.newsletter}
-        aria-label={f.newsletter}
-      />
-
-      <button
-        className="btn btn-green btn-sm"
-        type="button"
-      >
-        {f.newsletterCta}
-      </button>
-
-    </div>
-
-
     {/* SOCIAL */}
     <div className="social">
 
@@ -599,7 +581,7 @@ function Footer() {
         <div className="footer-bar">
 
           <span>
-  Â© {new Date().getFullYear()} Wealthoria Education Pvt. Ltd. All rights reserved.
+  © {new Date().getFullYear()} Wealthoria Education Pvt. Ltd. All rights reserved.
 </span>
 
           <span>

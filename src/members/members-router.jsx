@@ -1157,34 +1157,6 @@ if (
   }
 
 
-  /* =========================================================
-     SEMINAR REGISTRATIONS
-     ========================================================= */
-
-  if (
-    path ===
-    "/members/seminar-registrations"
-  ) {
-
-    return window.SeminarRegistrations
-      ? React.createElement(
-          window.SeminarRegistrations
-        )
-      : (
-          <div
-            className="members-router-loading"
-          >
-            Loading Seminar Registrations...
-          </div>
-        );
-
-  }
-
-
-  /* =========================================================
-     SUBSCRIPTION REGISTRATION
-     ========================================================= */
-
   if (
     path ===
     "/members/subscription"

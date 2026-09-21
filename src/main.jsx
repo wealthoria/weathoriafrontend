@@ -42,7 +42,6 @@ import "./members/MemberArticles.jsx";
 
 import "./members/Newsletter.jsx";
 import "./members/MemberHistoryPurchase.jsx";
-import "./members/SeminarRegistrations.jsx";
 import "./members/WeeklyRoundup.jsx";
 import "./members/dashboard.jsx";
 import "./members/settings.jsx";

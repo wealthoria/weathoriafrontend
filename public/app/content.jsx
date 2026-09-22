@@ -31,7 +31,7 @@ const CONTENT = {
       ctaSecondary: "Courses",
       trust: "Trusted by 800+ learners across Karnataka",
       card: {
-        title: "Your learning path",
+        title: "Financial education for beginners",
         level: "Beginner",
         progress: "2 of 6 modules complete",
         modules: [
@@ -61,11 +61,10 @@ const CONTENT = {
     why: {
       eyebrow: "Why Wealthoria",
       title: "Education first. Always.",
-      sub: "We believe wealth is built on understanding, not luck. Here is what we put before everything else.",
-      items: [
+      sub: "We believe wealth is built on understanding, not luck. Here is what we put before everything else for financial literacy in India.",      items: [
         { ic: "book", t: "Knowledge before capital", d: "Learn how money and markets actually work before you invest a single rupee." },
         { ic: "trending", t: "Investing before trading", d: "We teach patient, long-term investing, never speculation or quick-flip trading." },
-        { ic: "languages", t: "Regional language learning", d: "Concepts taught in Kannada and English, so language is never a barrier to literacy." },
+       { ic: "languages", t: "Regional language learning", d: "Concepts taught in Kannada and English, so language is never a barrier to financial literacy." },
         { ic: "compass", t: "Independent decision making", d: "We don't give tips. We give you the framework to decide for yourself, with confidence." },
         { ic: "shield", t: "Risk awareness", d: "Understand risk before reward. Every lesson grounds you in what can go wrong, and why." },
         { ic: "sprout", t: "Long-term wealth creation", d: "Habits and discipline that compound over decades, not headlines that fade in days." },
@@ -74,8 +73,7 @@ const CONTENT = {
     programs: {
       eyebrow: "Learning programs",
       title: "A structured path, step by step",
-      sub: "Six focused programs that take you from the basics of money to confident, independent investing.",
-      tabs: [
+      sub: "Six focused financial education courses that take you from the basics of money to confident, independent investing.",   tabs: [
         { id: "all", label: "All" },
         { id: "foundations", label: "Foundations" },
         { id: "markets", label: "Markets" },
@@ -83,9 +81,8 @@ const CONTENT = {
       ],
       cta: "View program",
       items: [
-        { ic: "pie", cat: "markets", t: "Stock market fundamentals", d: "How shares, indices and the market really work, explained from zero.", level: "Beginner", modules: "8 modules" },
-        { ic: "layers", cat: "markets", t: "Mutual funds & SIPs", d: "Build wealth steadily through diversified funds and disciplined SIPs.", level: "Beginner", modules: "6 modules" },
-        { ic: "wallet", cat: "foundations", t: "Personal finance", d: "Budgeting, saving, debt and emergency funds, your financial foundation.", level: "Beginner", modules: "7 modules" },
+        { ic: "pie", cat: "markets", t: "Stock market fundamentals", d: "Stock market education for beginners, covering how shares, indices and the market really work from the basics.", level: "Beginner", modules: "8 modules" },        { ic: "wallet", cat: "foundations", t: "Personal finance", d: "Budgeting, saving, debt and emergency funds, your financial foundation.", level: "Beginner", modules: "7 modules" },
+      { ic: "layers", cat: "markets", t: "Mutual funds & SIPs", d: "Build wealth steadily through diversified funds and disciplined SIPs.", level: "Beginner", modules: "6 modules" },
         { ic: "target", cat: "foundations", t: "Financial planning", d: "Set goals, plan for life events, and map money to the life you want.", level: "Intermediate", modules: "5 modules" },
         { ic: "brain", cat: "mindset", t: "Investor psychology", d: "Master the emotions (fear, greed, patience) that decide real returns.", level: "Intermediate", modules: "4 modules" },
         { ic: "scale", cat: "mindset", t: "Asset allocation", d: "Balance risk across equity, debt and gold to match your goals.", level: "Advanced", modules: "5 modules" },
@@ -152,7 +149,7 @@ const CONTENT = {
     youtube: {
       eyebrow: "Watch & learn",
       title: "Free lessons on our channel",
-      sub: "Bite-sized financial education, published every week, in Kannada and English.",
+      sub: "Free investment education and bite-sized financial lessons, published every week in Kannada and English.",
       cta: "Visit our channel",
       items: [
         { t: "What is a mutual fund? Explained simply", dur: "12:40", views: "24K views", tag: "Mutual funds", feat: true },
@@ -175,8 +172,7 @@ const CONTENT = {
     library: {
       eyebrow: "Free knowledge library",
       title: "Guides, calculators & cheat-sheets",
-      sub: "Self-serve resources to keep learning between sessions, all free.",
-      items: [
+      sub: "Financial education resources to keep learning between sessions, including guides, calculators and cheat-sheets, all free.",          items: [
         { ic: "file", tag: "Guide", t: "Beginner's guide to investing", d: "A plain-language primer covering the absolute basics." },
         { ic: "calc", tag: "Calculators", t: "Explore calculators", d: "See how disciplined monthly investing compounds over time." },
         { ic: "list", tag: "Checklist", t: "Personal finance checklist", d: "The 10 money habits to set up before you invest." },
@@ -311,6 +307,8 @@ const CONTENT = {
       cta: "ಕಾರ್ಯಕ್ರಮ ನೋಡಿ",
       items: [
         { ic: "pie", cat: "markets", t: "ಷೇರು ಮಾರುಕಟ್ಟೆ ಮೂಲಾಂಶಗಳು", d: "ಷೇರುಗಳು, ಸೂಚ್ಯಂಕಗಳು ಮತ್ತು ಮಾರುಕಟ್ಟೆ ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ, ಶೂನ್ಯದಿಂದ.", level: "ಆರಂಭಿಕ", modules: "8 ಮಾಡ್ಯೂಲ್" },
+       
+       
         { ic: "layers", cat: "markets", t: "ಮ್ಯೂಚುವಲ್ ಫಂಡ್ ಮತ್ತು SIP", d: "ವೈವಿಧ್ಯಮಯ ಫಂಡ್ ಮತ್ತು ಶಿಸ್ತಿನ SIP ಮೂಲಕ ಸ್ಥಿರವಾಗಿ ಸಂಪತ್ತು ಬೆಳೆಸಿ.", level: "ಆರಂಭಿಕ", modules: "6 ಮಾಡ್ಯೂಲ್" },
         { ic: "wallet", cat: "foundations", t: "ವೈಯಕ್ತಿಕ ಹಣಕಾಸು", d: "ಬಜೆಟ್, ಉಳಿತಾಯ, ಸಾಲ ಮತ್ತು ತುರ್ತು ನಿಧಿ, ನಿಮ್ಮ ಹಣಕಾಸು ಅಡಿಪಾಯ.", level: "ಆರಂಭಿಕ", modules: "7 ಮಾಡ್ಯೂಲ್" },
         { ic: "target", cat: "foundations", t: "ಹಣಕಾಸು ಯೋಜನೆ", d: "ಗುರಿ ಹಾಕಿಕೊಳ್ಳಿ, ಜೀವನದ ಘಟನೆಗಳಿಗೆ ಯೋಜಿಸಿ, ಹಣವನ್ನು ಜೀವನಕ್ಕೆ ಹೊಂದಿಸಿ.", level: "ಮಧ್ಯಮ", modules: "5 ಮಾಡ್ಯೂಲ್" },

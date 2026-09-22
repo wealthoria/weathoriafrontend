@@ -1027,9 +1027,21 @@ alert(
           type="text"
           placeholder="Search courses..."
           value={searchQuery}
-          onChange={(e) =>
-            setSearchQuery(e.target.value)
-          }
+         onChange={(e) => {
+  const value = e.target.value;
+
+  setSearchQuery(value);
+
+  // Google Analytics - track course search
+  if (
+    typeof window.gtag === "function" &&
+    value.trim().length >= 3
+  ) {
+    window.gtag("event", "course_search", {
+      search_term: value.trim()
+    });
+  }
+}}
         />
 
 
@@ -1095,13 +1107,24 @@ alert(
                 ? "member-course-level-btn active"
                 : "member-course-level-btn"
             }
-            onClick={() =>
-              setSelectedLevel(
-                selectedLevel === level.id
-                  ? null
-                  : level.id
-              )
-            }
+        onClick={() => {
+  const newLevel =
+    selectedLevel === level.id
+      ? null
+      : level.id;
+
+  setSelectedLevel(newLevel);
+
+  // Google Analytics - track course level selection
+  if (
+    typeof window.gtag === "function" &&
+    newLevel
+  ) {
+    window.gtag("event", "course_level_selected", {
+      course_level: newLevel
+    });
+  }
+}}
           >
             {level.title.replace(" Videos", "")}
           </button>

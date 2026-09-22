@@ -61,7 +61,8 @@ const CATEGORIES = [
   "Newsletter",
   "Weekly Roundup",
   "Articles & Reports",
-  "Vedios"
+  "Vedios",
+  "Ratio Analysis"
 ];
 
 const MAX_PDF_SIZE =

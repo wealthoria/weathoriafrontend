@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { Analytics } from "@vercel/analytics/react";
 
 
 // Make React available to the legacy/global-style modules
@@ -246,7 +247,11 @@ else {
     );
   }
 
-  root.render(<RootApp />);
-
+root.render(
+  <>
+    <RootApp />
+    <Analytics />
+  </>
+);
 
 }

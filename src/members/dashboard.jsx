@@ -1428,6 +1428,9 @@ function MemberDashboard() {
   const WeeklyRoundup =
     window.WeeklyRoundup;
 
+    const RatioAnalysis =
+  window.RatioAnalysis; 
+
   const PurchaseHistory =
     window.PurchaseHistory;
 
@@ -2728,6 +2731,22 @@ if (membershipDays <= 0) {
             <b>Weekly Roundup</b>
           </button>
 
+{/* RATIO ANALYSIS */}
+
+<button
+  type="button"
+  className={
+    activePage === "ratio"
+      ? "wd-nav-item active"
+      : "wd-nav-item"
+  }
+  onClick={() => openPage("ratio")}
+>
+  <span>◈</span>
+  <b>Ratio Analysis</b>
+</button>
+
+
         </nav>
 
 
@@ -2839,6 +2858,7 @@ if (membershipDays <= 0) {
                   ? "Weekly Order Wins"
                   : activePage === "weekly"
                   ? "Weekly Roundup"
+                  : activePage === "ratio" ? "Ratio Analysis"
 
                   : activePage === "articles"
                   ? "Articles & Reports"
@@ -3089,6 +3109,24 @@ if (membershipDays <= 0) {
 
 
           ) 
+
+: activePage === "ratio" ? (
+
+  RatioAnalysis ? (
+
+    <RatioAnalysis />
+
+  ) : (
+
+    <div className="wd-page-state">
+      Ratio Analysis is loading...
+    </div>
+
+  )
+
+)
+
+
            : activePage === "articles" ? (
 
   MemberArticles ? (

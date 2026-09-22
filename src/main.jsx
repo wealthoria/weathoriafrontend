@@ -45,6 +45,9 @@ import "./members/MemberArticles.jsx";
 import "./members/Newsletter.jsx";
 import "./members/MemberHistoryPurchase.jsx";
 import "./members/WeeklyRoundup.jsx";
+import "./members/RatioAnalysis.jsx";
+
+
 import "./members/dashboard.jsx";
 import "./members/settings.jsx";
 import "./members/subscription.jsx";

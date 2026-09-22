@@ -530,11 +530,20 @@ function openVideo(video) {
           <input
             type="text"
             value={searchQuery}
-            onChange={(event) =>
-              setSearchQuery(
-                event.target.value
-              )
-            }
+          onChange={(event) => {
+  const value = event.target.value;
+  setSearchQuery(value);
+
+  // Google Analytics - track video search
+  if (
+    typeof window.gtag === "function" &&
+    value.trim().length >= 3
+  ) {
+    window.gtag("event", "video_search", {
+      search_term: value.trim()
+    });
+  }
+}}
             placeholder="Search videos..."
             aria-label="Search videos"
           />

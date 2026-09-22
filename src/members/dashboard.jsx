@@ -1700,6 +1700,20 @@ setAuthChecking(false);
      Existing unread notifications DO NOT become slides.
   ======================================================= */
 
+
+
+  // Google Analytics - dashboard view
+useEffect(() => {
+  if (
+    member?.uid &&
+    typeof window.gtag === "function"
+  ) {
+    window.gtag("event", "dashboard_viewed", {
+      user_id: member.uid
+    });
+  }
+}, [member]);
+
   useEffect(() => {
 
     if (

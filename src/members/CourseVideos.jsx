@@ -614,6 +614,13 @@ useEffect(() => {
       course_category: course.category || "",
       course_level: course.level || ""
     });
+
+    window.gtag("event", "video_player_opened", {
+  course_id: String(course.id || ""),
+  course_name: course.title || "",
+  course_category: course.category || "",
+  course_level: course.level || ""
+});
   }
 
 };

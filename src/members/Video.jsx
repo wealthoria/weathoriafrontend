@@ -457,10 +457,20 @@ function MemberVideo() {
      OPEN VIDEO
   ======================================================= */
 
-  function openVideo(video) {
-    setSelectedVideo(video);
+function openVideo(video) {
+  if (!video) return;
+
+  // Google Analytics - track member video opened
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "video_opened", {
+      content_id: String(video.id || ""),
+      content_title: video.title || "",
+      content_category: video.category || ""
+    });
   }
 
+  setSelectedVideo(video);
+}
   /* =======================================================
      CLOSE VIDEO
   ======================================================= */

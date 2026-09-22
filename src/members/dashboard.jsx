@@ -2250,6 +2250,18 @@ const logout =
   const current =
     getCurrentMemberSession();
 
+
+      // Google Analytics - track member logout
+  if (
+    typeof window.gtag === "function" &&
+    current?.session?.uid
+  ) {
+    window.gtag("event", "member_logout", {
+      user_id: current.session.uid
+    });
+  }
+
+
   try {
 
     const session =

@@ -562,13 +562,21 @@ const newsletterMonths = (() => {
                           type="button"
                           className="member-newsletter-button"
                           disabled={!newsletter.pdfUrl}
-                          onClick={() => {
-                            if (!newsletter.pdfUrl) {
-                              return;
-                            }
+                         onClick={() => {
+  if (!newsletter.pdfUrl) {
+    return;
+  }
 
-                            setSelectedPdf(newsletter);
-                          }}
+  // Google Analytics - track newsletter opened
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "newsletter_opened", {
+      content_id: String(newsletter.id || ""),
+      content_title: newsletter.title || ""
+    });
+  }
+
+  setSelectedPdf(newsletter);
+}}
                         >
                           Read Newsletter →
                         </button>

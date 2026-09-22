@@ -1301,6 +1301,20 @@ const updatedSession = {
   token: session.token
 };
 
+
+
+// Google Analytics - identify logged-in member anonymously
+if (typeof window.gtag === "function" && updatedSession.uid) {
+  window.gtag("config", "G-Q9955KR0G6", {
+    user_id: updatedSession.uid
+  });
+
+  window.gtag("event", "login", {
+    method: "member_login"
+  });
+}
+
+
 saveMemberSession(
   updatedSession,
   remember

@@ -593,18 +593,30 @@ useEffect(() => {
      OPEN COURSE
   ======================================================= */
 
-  const openCourse = (course) => {
+ const openCourse = (course) => {
 
-    setSelectedCourse(course);
+  setSelectedCourse(course);
 
-    setShowPreview(true);
+  setShowPreview(true);
 
-    setPreviewEnded(false);
+  setPreviewEnded(false);
 
-    setTimeLeft(30);
+  setTimeLeft(30);
 
-  };
+  // Google Analytics - track course opened
+  if (
+    typeof window.gtag === "function" &&
+    course
+  ) {
+    window.gtag("event", "course_viewed", {
+      course_id: String(course.id || ""),
+      course_name: course.title || "",
+      course_category: course.category || "",
+      course_level: course.level || ""
+    });
+  }
 
+};
 
   /* =======================================================
      CLOSE COURSE

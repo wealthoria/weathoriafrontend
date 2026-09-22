@@ -713,150 +713,98 @@ writeStorageObject(
 useEffect(() => {
   let cancelled = false;
 
-  const restoreExistingSession = async () => {
-    try {
-      const saved = getSavedMemberSession();
-
-      /* -----------------------------------------------
-         NO SAVED SESSION
-         → Show login form
-      ------------------------------------------------ */
-      if (!saved) {
-        if (!cancelled) {
-          setSubscriptionInactive(false);
-          setCheckingSession(false);
-        }
-        return;
-      }
-
-      let session;
-
-      try {
-        session = JSON.parse(saved.value);
-      } catch (error) {
-        console.warn("Invalid saved member session:", error);
-
-        if (saved.uid) {
-          removeMemberSession(saved.uid);
-        }
-
-        if (!cancelled) {
-          setCheckingSession(false);
-        }
-
-        return;
-      }
-
-      /* -----------------------------------------------
-         INVALID SESSION DATA
-      ------------------------------------------------ */
-      if (!session?.uid || !session?.token) {
-        console.warn("Saved member session is incomplete.");
-
-        if (session?.uid) {
-          removeMemberSession(session.uid);
-        }
-
-        if (!cancelled) {
-          setCheckingSession(false);
-        }
-
-        return;
-      }
-
-      /* -----------------------------------------------
-         IMPORTANT:
-         Restore login immediately.
-
-         Do NOT make the user enter email/password
-         again just because they returned to login page.
-      ------------------------------------------------ */
-
-   
-
-      const currentStatus = String(
-        session.status || "active"
-      )
-        .trim()
-        .toLowerCase();
-
-      const inactiveStatuses = [
-        "inactive",
-        "cancelled",
-        "canceled",
-        "deactivated",
-        "disabled",
-        "blocked",
-        "suspended"
-      ];
-
-      /* -----------------------------------------------
-         INACTIVE SUBSCRIPTION
-      ------------------------------------------------ */
-
-    const accessUntil =
-  session?.subscription?.accessUntil ||
-  session?.accessUntil ||
-  null;
-const expiryTime =
-  accessUntil &&
-  typeof accessUntil === "object" &&
-  typeof accessUntil.seconds === "number"
-    ? accessUntil.seconds * 1000
-    : accessUntil
-      ? new Date(accessUntil).getTime()
-      : 0;
-const accessActive =
-  Number.isFinite(expiryTime) &&
-  expiryTime > Date.now();
-
-if (
-  inactiveStatuses.includes(currentStatus) &&
-  !accessActive
-) {
-  if (!cancelled) {
-    const canReactivate =
-      currentStatus === "inactive" ||
-      currentStatus === "cancelled" ||
-      currentStatus === "canceled";
-
-    if (canReactivate) {
-      setSubscriptionInactive(true);
-      setCheckingSession(false);
-    } else {
-      removeMemberSession(session.uid);
-      setSubscriptionInactive(false);
-      setCheckingSession(false);
-    }
+ const restoreExistingSession = async () => {
+  try {
+    setCheckingSession(true);
+const currentUser = await new Promise((resolve) => {
+  if (!window.auth?.onAuthStateChanged) {
+    resolve(null);
+    return;
   }
 
+  let unsubscribe;
+
+  unsubscribe = window.auth.onAuthStateChanged((user) => {
+    if (unsubscribe) unsubscribe();
+    resolve(user);
+  });
+});
+
+if (!currentUser) {
+  setCheckingSession(false);
   return;
 }
 
-      /* -----------------------------------------------
-         SESSION IS AVAILABLE
-         → Go directly to dashboard.
-      ------------------------------------------------ */
+// Get fresh Firebase token
+const tokenResult =
+  await currentUser.getIdTokenResult(true);
 
-      if (!cancelled) {
-        setCheckingSession(false);
+    const claims = tokenResult?.claims || {};
 
-        window.location.replace(
-          "/members/dashboard"
-        );
-      }
+    // Admin user
+    if (claims.admin === true) {
+      setCheckingSession(false);
+      window.location.replace("/admin/dashboard");
+      return;
+    }
 
-    } catch (error) {
-      console.error(
-        "Existing member session restore failed:",
-        error
+    // Normal member
+ const savedSession = getSavedMemberSession?.();
+
+if (savedSession) {
+  try {
+    const sessionData =
+      typeof savedSession.value === "string"
+        ? JSON.parse(savedSession.value)
+        : savedSession.value;
+
+    if (sessionData?.token && sessionData?.uid) {
+      const response = await fetch(
+        `${API_BASE_URL}/api/members/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionData.token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      if (!cancelled) {
+      if (response.ok) {
         setCheckingSession(false);
+        window.location.replace("/members/dashboard");
+        return;
       }
     }
-  };
+  } catch (error) {
+    console.warn("Saved member session is invalid:", error);
+  }
+
+  // Remove invalid/deleted member session
+  try {
+    if (savedSession.uid) {
+      removeMemberSession(savedSession.uid);
+    }
+  } catch (error) {
+    console.warn("Failed to remove old member session:", error);
+  }
+}
+
+
+    // No valid session
+    setCheckingSession(false);
+
+  } catch (error) {
+    console.error(
+      "Session restore error:",
+      error
+    );
+
+    // IMPORTANT:
+    // Never leave the login page stuck on
+    // "Checking session..."
+    setCheckingSession(false);
+  }
+};
 
   restoreExistingSession();
 
@@ -955,12 +903,24 @@ if (window.auth) {
         password
       );
 
-    const adminUser = adminResult.user;
+const adminUser = adminResult.user;
 
-    if (adminUser) {
-      window.location.replace("/admin/dashboard");
-      return;
-    }
+if (adminUser) {
+  const tokenResult =
+    await adminUser.getIdTokenResult(true);
+
+  const claims =
+    tokenResult?.claims || {};
+
+  if (claims.admin === true) {
+    window.location.replace("/admin/dashboard");
+    return;
+  }
+
+  // Not an admin — sign out and continue
+  // with normal member login.
+  await window.auth.signOut();
+}
 
   } catch (adminError) {
     /*

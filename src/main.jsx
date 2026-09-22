@@ -1,7 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Analytics } from "@vercel/analytics/react";
-
+import { inject } from "@vercel/analytics";
 
 // Make React available to the legacy/global-style modules
 window.React = React;
@@ -9,6 +8,8 @@ window.ReactDOM = {
   createRoot,
 };
 
+
+inject();
 // ============================================================
 // FIREBASE
 // ============================================================
@@ -247,11 +248,5 @@ else {
     );
   }
 
-root.render(
-  <>
-    <RootApp />
-    <Analytics />
-  </>
-);
-
+root.render(<RootApp />);
 }

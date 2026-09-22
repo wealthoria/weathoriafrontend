@@ -475,10 +475,20 @@ function openVideo(video) {
      CLOSE VIDEO
   ======================================================= */
 
-  function closeVideo() {
-    setSelectedVideo(null);
+ function closeVideo() {
+  // Google Analytics - track video closed
+  if (
+    typeof window.gtag === "function" &&
+    selectedVideo
+  ) {
+    window.gtag("event", "video_closed", {
+      content_id: String(selectedVideo.id || ""),
+      content_title: selectedVideo.title || ""
+    });
   }
 
+  setSelectedVideo(null);
+}
   /* =======================================================
      RENDER
   ======================================================= */

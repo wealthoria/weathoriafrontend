@@ -481,10 +481,19 @@ function WeeklyRoundup() {
                       type="button"
                       className="member-newsletter-button"
                       disabled={!report.pdfUrl}
-                      onClick={() => {
-                        if (!report.pdfUrl) return;
-                        setSelectedPdf(report);
-                      }}
+                     onClick={() => {
+  if (!report.pdfUrl) return;
+
+  // Google Analytics - track Weekly Roundup opened
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "weekly_roundup_opened", {
+      content_id: String(report.id || ""),
+      content_title: report.title || ""
+    });
+  }
+
+  setSelectedPdf(report);
+}}
                     >
                       Read Report →
                     </button>

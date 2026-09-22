@@ -671,16 +671,25 @@ useEffect(() => {
 
       setTimeLeft((current) => {
 
-        if (current <= 1) {
+      if (current <= 1) {
+  clearInterval(timer);
+  setPreviewEnded(true);
 
-          clearInterval(timer);
+  // Google Analytics - preview completed
+  if (
+    typeof window.gtag === "function" &&
+    selectedCourse
+  ) {
+    window.gtag("event", "course_preview_completed", {
+      course_id: String(selectedCourse.id || ""),
+      course_name: selectedCourse.title || "",
+      course_category: selectedCourse.category || "",
+      course_level: selectedCourse.level || ""
+    });
+  }
 
-          setPreviewEnded(true);
-
-          return 0;
-
-        }
-
+  return 0;
+}
         return current - 1;
 
       });
@@ -843,9 +852,23 @@ if (!verifyResponse.ok) {
    UNLOCK COURSE
 ===================================================== */
 
+// Google Analytics - track successful course purchase
+if (typeof window.gtag === "function") {
+  window.gtag("event", "course_purchased", {
+    course_id: String(course.id || ""),
+    course_name: course.title || "",
+    course_category: course.category || "",
+    course_level: course.level || "",
+    value: Number(course.price || 0),
+    currency: "INR"
+  });
+}
+
 alert(
   "Payment successful. Course unlocked."
 );
+
+
 
 
             setPreviewEnded(false);

@@ -94,24 +94,30 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
      OPEN PDF
      SAME BEHAVIOUR AS ADMIN UPLOAD
   ========================================================= */
+const openPdf = (article) => {
+  if (!article) {
+    return;
+  }
 
-  const openPdf = (article) => {
-    if (!article) {
-      return;
-    }
+  if (!article.pdfUrl) {
+    console.error(
+      "PDF URL missing:",
+      article
+    );
 
-    if (!article.pdfUrl) {
-      console.error(
-        "PDF URL missing:",
-        article
-      );
+    return;
+  }
 
-      return;
-    }
+  // Google Analytics - track article/report opened
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "article_report_opened", {
+      content_id: String(article.id || ""),
+      content_title: article.title || ""
+    });
+  }
 
-    setSelectedPdf(article);
-  };
-
+  setSelectedPdf(article);
+};
   /* =========================================================
      LOAD ARTICLES & REPORTS
   ========================================================= */

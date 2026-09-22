@@ -7,44 +7,6 @@ const {
 } = React;
 
 
-const logMemberActivity = async ({
-  uid,
-  action,
-  page = "",
-  contentId = "",
-  contentTitle = ""
-}) => {
-  try {
-    if (!uid) return;
-
-    const current = getCurrentMemberSession();
-    const token = current?.session?.token;
-
-    if (!token) return;
-
-    await fetch(
-      `${DASHBOARD_API}/api/members/activity`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          action,
-          page,
-          contentId,
-          contentTitle
-        })
-      }
-    );
-  } catch (error) {
-    console.error(
-      "Member activity logging failed:",
-      error
-    );
-  }
-};
 /* =========================================================
    CONFIG
 ========================================================= */
@@ -2278,18 +2240,6 @@ const dashboardStats = data.stats || {};
       });
     }
 
-
-    // Firebase - record member page view
-const current = getCurrentMemberSession();
-
-if (current?.session?.uid && page) {
-  logMemberActivity({
-    uid: current.session.uid,
-    action: "page_view",
-    page: page
-  });
-}
-
     setMobileDrawerOpen(false);
   };
 
@@ -2314,15 +2264,6 @@ const logout =
     });
   }
 
-
-  // Firebase - record member logout
-if (current?.session?.uid) {
-  await logMemberActivity({
-    uid: current.session.uid,
-    action: "logout",
-    page: "/members/dashboard"
-  });
-}
 
   try {
 

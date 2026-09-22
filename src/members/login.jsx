@@ -8,30 +8,6 @@ const {
 } = React;
 
 
-const logMemberActivity = async ({
-  uid,
-  action,
-  page = "",
-  contentId = "",
-  contentTitle = ""
-}) => {
-  try {
-    if (!uid || !window.db) return;
-
-    await window.db.collection("member_activity").add({
-      uid,
-      action,
-      page,
-      contentId,
-      contentTitle,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (error) {
-    console.error("Member activity logging failed:", error);
-  }
-};
-
-
 /* =========================================================
    MEMBER / ADMIN LOGIN
 ========================================================= */
@@ -968,172 +944,41 @@ if (
       try {
 
         /* =================================================
-           1. CHECK ADMIN LOGIN FIRST
-        ================================================= */
+   1. ADMIN LOGIN — FIREBASE AUTH ONLY
+================================================= */
 
-        let adminLoginSuccessful =
-          false;
+if (window.auth) {
+  try {
+    const adminResult =
+      await window.auth.signInWithEmailAndPassword(
+        cleanEmail,
+        password
+      );
 
+    const adminUser = adminResult.user;
 
-        if (
-          window.auth &&
-          window.db
-        ) {
+    if (adminUser) {
+      window.location.replace("/admin/dashboard");
+      return;
+    }
 
-          try {
-
-            const adminResult =
-              await window.auth
-                .signInWithEmailAndPassword(
-                  cleanEmail,
-                  password
-                );
-
-
-            const adminUser =
-              adminResult.user;
-
-
-            const adminDoc =
-              await window.db
-                .collection("admins")
-                .doc(adminUser.uid)
-                .get();
-
-
-            /*
-             * Only accounts that actually exist
-             * in the admins collection can enter
-             * the Admin Dashboard.
-             */
-
-            if (
-              adminDoc.exists
-            ) {
-
-              const admin =
-                adminDoc.data() || {};
-
-
-              const role =
-                String(
-                  admin.role ||
-                  "admin"
-                ).toLowerCase();
-
-
-              const status =
-                String(
-                  admin.status ||
-                  "active"
-                ).toLowerCase();
-
-
-              const isAdmin =
-                admin.isAdmin !== false &&
-                (
-                  role === "admin" ||
-                  role === "administrator" ||
-                  role === "superadmin" ||
-                  role === "super_admin"
-                );
-
-
-              const isActive =
-                status !== "disabled" &&
-                status !== "inactive" &&
-                status !== "blocked" &&
-                status !== "suspended";
-
-
-              if (
-                isAdmin &&
-                isActive
-              ) {
-
-                adminLoginSuccessful =
-                  true;
-
-
-
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * Use a REAL PATH here.
-                 * Do not use window.location.hash
-                 * because that would produce:
-                 *
-                 * /members/login#/admin/dashboard
-                 */
-
-                window.location.replace(
-                  "/admin/dashboard"
-                );
-
-
-                return;
-
-              }
-
-            }
-
-
-            /*
-             * Firebase authentication succeeded,
-             * but this is not an authorized admin.
-             *
-             * Sign out before trying the member API.
-             */
-
-            await window.auth.signOut();
-
-
-          } catch (adminError) {
-
-            /*
-             * Normal members will usually fail
-             * Firebase Admin authentication.
-             *
-             * Do NOT show that error.
-             * Continue with Member login.
-             */
-
-        
-
-            try {
-
-              if (
-                window.auth &&
-                window.auth.currentUser
-              ) {
-
-                await window.auth.signOut();
-
-              }
-
-            } catch (signOutError) {
-
-              console.warn(
-                "Admin authentication cleanup failed:",
-                signOutError
-              );
-
-            }
-
-          }
-
-        }
-
-
-        if (
-          adminLoginSuccessful
-        ) {
-
-          return;
-
-        }
-
+  } catch (adminError) {
+    /*
+     * Not a Firebase admin account.
+     * Continue with normal member login.
+     */
+    try {
+      if (window.auth?.currentUser) {
+        await window.auth.signOut();
+      }
+    } catch (signOutError) {
+      console.warn(
+        "Firebase sign-out cleanup failed:",
+        signOutError
+      );
+    }
+  }
+}
 
         /* =================================================
            2. MEMBER LOGIN
@@ -1336,13 +1181,6 @@ if (typeof window.gtag === "function" && updatedSession.uid) {
   window.gtag("event", "login", {
     method: "member_login"
   });
-
-
-  await logMemberActivity({
-  uid: updatedSession.uid,
-  action: "login",
-  page: "/members/login"
-});
 }
 
 

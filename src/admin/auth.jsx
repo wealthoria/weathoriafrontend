@@ -34,7 +34,7 @@ const adminAuthInitial = {
 
 /* =========================================================
    ADMIN PROFILE
-   Firestore collection: admins
+   Firebase Authentication + custom claim
 ========================================================= */
 
 async function getAdminProfile(user) {
@@ -43,94 +43,58 @@ async function getAdminProfile(user) {
     return null;
   }
 
-  if (!window.db) {
-    throw new Error(
-      "Firestore is not initialized."
+  try {
+
+    /*
+      Force-refresh the Firebase ID token so the
+      latest custom claims are available.
+    */
+    const tokenResult =
+      await user.getIdTokenResult(true);
+
+    const claims =
+      tokenResult?.claims || {};
+
+    /*
+      Admin access comes ONLY from Firebase
+      Authentication custom claim.
+    */
+    if (claims.admin !== true) {
+      return null;
+    }
+
+    return {
+      uid: user.uid,
+      id: user.uid,
+      name: user.displayName || "Admin",
+      email: user.email || "",
+      role: "admin",
+      status: "active",
+      isAdmin: true
+    };
+
+  } catch (error) {
+
+    console.error(
+      "Unable to read Firebase Admin claim:",
+      error
     );
-  }
 
-  const doc =
-    await window.db
-      .collection("admins")
-      .doc(user.uid)
-      .get();
-
-  if (!doc.exists) {
     return null;
   }
-
-  const data =
-    doc.data() || {};
-
-  return {
-    id: doc.id,
-    uid: user.uid,
-
-    name:
-      data.name ||
-      data.fullName ||
-      user.displayName ||
-      "Admin",
-
-    email:
-      data.email ||
-      user.email ||
-      "",
-
-    role:
-      data.role ||
-      "Admin",
-
-    status:
-      data.status ||
-      "active",
-
-    isAdmin:
-      data.isAdmin !== false,
-
-    ...data
-  };
 }
 
 
 /* =========================================================
    CHECK ADMIN ACCESS
+   Firebase Authentication custom claim
 ========================================================= */
 
 function checkAdminAccess(admin) {
 
-  if (!admin) {
-    return false;
-  }
-
-  if (admin.isAdmin === false) {
-    return false;
-  }
-
-  const status =
-    String(
-      admin.status || "active"
-    ).toLowerCase();
-
-  if (
-    status === "disabled" ||
-    status === "inactive" ||
-    status === "blocked" ||
-    status === "suspended"
-  ) {
-    return false;
-  }
-
-  const role =
-    String(
-      admin.role || "admin"
-    ).toLowerCase();
-
   return (
-    role === "admin" ||
-    role === "administrator" ||
-    role === "superadmin" ||
-    role === "super_admin"
+    !!admin &&
+    admin.isAdmin === true
   );
 }
 
@@ -198,7 +162,7 @@ function AdminAuthProvider({
 
 
           /* -----------------------------------------------
-             CHECK ADMIN TABLE
+             CHECK FIREBASE ADMIN CLAIM
           ------------------------------------------------ */
 
           try {
@@ -210,45 +174,28 @@ function AdminAuthProvider({
             if (!admin) {
 
               console.warn(
-                "User exists in Firebase Auth but not in admins collection."
+                "Firebase user does not have admin access."
               );
+
+              /*
+                Sign out users who are authenticated
+                but do not have admin: true.
+              */
+              try {
+                await window.auth.signOut();
+              } catch (signOutError) {
+                console.warn(
+                  "Firebase sign-out cleanup failed:",
+                  signOutError
+                );
+              }
 
               setState({
                 ...adminAuthInitial,
-
                 loading: false,
-
                 user,
-
                 error:
-                  "This account is not registered as an Admin."
-              });
-
-              return;
-            }
-
-
-            /* ---------------------------------------------
-               CHECK ROLE
-            --------------------------------------------- */
-
-            if (!checkAdminAccess(admin)) {
-
-              console.warn(
-                "User is not authorized as Admin."
-              );
-
-              setState({
-                ...adminAuthInitial,
-
-                loading: false,
-
-                user,
-
-                admin,
-
-                error:
-                  "You do not have Admin access."
+                  "This account does not have Admin access."
               });
 
               return;
@@ -370,12 +317,15 @@ function AdminAuthProvider({
           result.user;
 
 
+        /*
+          Check Firebase custom claim.
+        */
         const admin =
           await getAdminProfile(user);
 
 
         /* -----------------------------------------------
-           USER NOT IN ADMINS TABLE
+           NOT AN ADMIN
         ------------------------------------------------ */
 
         if (!admin) {
@@ -383,14 +333,14 @@ function AdminAuthProvider({
           await window.auth.signOut();
 
           throw new Error(
-            "This account is not registered in the Admins table."
+            "This account does not have Admin access."
           );
 
         }
 
 
         /* -----------------------------------------------
-           NOT ADMIN
+           CHECK ADMIN ACCESS
         ------------------------------------------------ */
 
         if (!checkAdminAccess(admin)) {
@@ -407,24 +357,45 @@ function AdminAuthProvider({
         /* -----------------------------------------------
            SUCCESS
         ------------------------------------------------ */
-const appUser = {
-  uid: user.uid,
-  id: user.uid,
-  name: admin.name,
-  email: admin.email || user.email,
-  role: admin.role,
-  status: admin.status,
-  isAdmin: admin.isAdmin
-};
 
-setState({
-  loading: false,
-  isAuthenticated: true,
-  isAdmin: true,
-  user: appUser,
-  admin,
-  error: null
-});
+        const appUser = {
+
+          uid: user.uid,
+
+          id: user.uid,
+
+          name: admin.name,
+
+          email:
+            admin.email ||
+            user.email,
+
+          role: admin.role,
+
+          status: admin.status,
+
+          isAdmin: admin.isAdmin
+
+        };
+
+
+        setState({
+
+          loading: false,
+
+          isAuthenticated: true,
+
+          isAdmin: true,
+
+          user: appUser,
+
+          admin,
+
+          error: null
+
+        });
+
+
         return {
           user,
           admin
@@ -470,7 +441,10 @@ setState({
         });
 
 
-window.location.replace("/members/login");
+        window.location.replace(
+          "/members/login"
+        );
+
       },
       []
     );
@@ -629,6 +603,7 @@ function useRole() {
 /* =========================================================
    ADMIN GUARD
 ========================================================= */
+
 function AdminGuard({
   children
 }) {
@@ -678,7 +653,10 @@ function AdminGuard({
     !auth?.isAdmin
   ) {
 
-window.location.replace("/members/login");
+    window.location.replace(
+      "/members/login"
+    );
+
     return null;
 
   }
@@ -687,6 +665,8 @@ window.location.replace("/members/login");
   return children;
 
 }
+
+
 /* =========================================================
    ACCESS DENIED
 ========================================================= */
@@ -716,15 +696,19 @@ function AccessDenied() {
         to access this page.
       </p>
 
-      {auth?.admin?.email && (
+
+      {auth?.user?.email && (
 
         <p>
+
           Signed in as:
           {" "}
-          {auth.admin.email}
+          {auth.user.email}
+
         </p>
 
       )}
+
 
       <button
         className="btn"
@@ -767,5 +751,3 @@ window.AdminGuard =
 
 window.AccessDenied =
   AccessDenied;
-
-

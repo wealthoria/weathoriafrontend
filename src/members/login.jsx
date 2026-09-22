@@ -8,6 +8,30 @@ const {
 } = React;
 
 
+const logMemberActivity = async ({
+  uid,
+  action,
+  page = "",
+  contentId = "",
+  contentTitle = ""
+}) => {
+  try {
+    if (!uid || !window.db) return;
+
+    await window.db.collection("member_activity").add({
+      uid,
+      action,
+      page,
+      contentId,
+      contentTitle,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error("Member activity logging failed:", error);
+  }
+};
+
+
 /* =========================================================
    MEMBER / ADMIN LOGIN
 ========================================================= */
@@ -1312,6 +1336,13 @@ if (typeof window.gtag === "function" && updatedSession.uid) {
   window.gtag("event", "login", {
     method: "member_login"
   });
+
+
+  await logMemberActivity({
+  uid: updatedSession.uid,
+  action: "login",
+  page: "/members/login"
+});
 }
 
 

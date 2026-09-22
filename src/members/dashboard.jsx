@@ -2221,24 +2221,27 @@ const dashboardStats = data.stats || {};
   ======================================================= */
 
   const openPage =
-    (page) => {
+  (page) => {
 
-      setActivePage(
-        page
-      );
+    setActivePage(page);
 
+    sessionStorage.setItem(
+      "wealthoria-active-page",
+      page
+    );
 
-      sessionStorage.setItem(
-        "wealthoria-active-page",
-        page
-      );
+    // Google Analytics - track member page navigation
+    if (
+      typeof window.gtag === "function" &&
+      page
+    ) {
+      window.gtag("event", "member_page_viewed", {
+        page_name: page
+      });
+    }
 
-
-      setMobileDrawerOpen(
-        false
-      );
-
-    };
+    setMobileDrawerOpen(false);
+  };
 
 
   /* =======================================================

@@ -7071,7 +7071,7 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   top: 0;
   bottom: 0;
   width: 5px;
-  background: #ff843f;
+  background: #e7554b;
   border-radius: 18px 0 0 18px;
 }
 
@@ -7352,7 +7352,7 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
 
     margin-bottom: 7px;
 
-    color: #ff843f;
+    color: #e7554b;
 
     font-size: 10px;
     font-weight: 800;
@@ -7390,7 +7390,7 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
     border: 0;
     border-radius: 9px;
 
-    background: #ff843f;
+    background: #e7554b;
     color: #ffffff;
 
     font-family: inherit;

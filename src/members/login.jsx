@@ -709,102 +709,180 @@ writeStorageObject(
   /* =========================================================
    RESTORE EXISTING MEMBER SESSION
 ========================================================= */
-
 useEffect(() => {
   let cancelled = false;
 
- const restoreExistingSession = async () => {
-  try {
-    setCheckingSession(true);
-const currentUser = await new Promise((resolve) => {
-  if (!window.auth?.onAuthStateChanged) {
-    resolve(null);
-    return;
-  }
+  const restoreExistingSession = async () => {
+    try {
+      setCheckingSession(true);
 
-  let unsubscribe;
+      /*
+       * FIRST:
+       * Check Wealthoria member session.
+       *
+       * Do NOT depend on Firebase Auth for members.
+       */
+      const savedSession = getSavedMemberSession();
 
-  unsubscribe = window.auth.onAuthStateChanged((user) => {
-    if (unsubscribe) unsubscribe();
-    resolve(user);
-  });
-});
+      if (savedSession) {
+        let sessionData = null;
 
-if (!currentUser) {
-  setCheckingSession(false);
-  return;
-}
+        try {
+          sessionData =
+            typeof savedSession.value === "string"
+              ? JSON.parse(savedSession.value)
+              : savedSession.value;
+        } catch (error) {
+          console.warn(
+            "Invalid saved member session:",
+            error
+          );
 
-// Get fresh Firebase token
-const tokenResult =
-  await currentUser.getIdTokenResult(true);
+          if (savedSession.uid) {
+            removeMemberSession(savedSession.uid);
+          }
 
-    const claims = tokenResult?.claims || {};
+          if (!cancelled) {
+            setCheckingSession(false);
+          }
 
-    // Admin user
-    if (claims.admin === true) {
-      setCheckingSession(false);
-      window.location.replace("/admin/dashboard");
-      return;
-    }
-
-    // Normal member
- const savedSession = getSavedMemberSession?.();
-
-if (savedSession) {
-  try {
-    const sessionData =
-      typeof savedSession.value === "string"
-        ? JSON.parse(savedSession.value)
-        : savedSession.value;
-
-    if (sessionData?.token && sessionData?.uid) {
-      const response = await fetch(
-        `${API_BASE_URL}/api/members/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${sessionData.token}`,
-            "Content-Type": "application/json",
-          },
+          return;
         }
+
+        /*
+         * Validate saved member session
+         */
+        if (
+          sessionData?.uid &&
+          sessionData?.token
+        ) {
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/api/members/me`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization:
+                    `Bearer ${sessionData.token}`,
+                  "Content-Type":
+                    "application/json"
+                }
+              }
+            );
+
+            const data = await response.json();
+
+            /*
+             * Token is still valid
+             */
+            if (
+              response.ok &&
+              data?.success
+            ) {
+              if (!cancelled) {
+                setCheckingSession(false);
+
+                window.location.replace(
+                  "/members/dashboard"
+                );
+              }
+
+              return;
+            }
+
+            /*
+             * Token is no longer valid
+             */
+            if (savedSession.uid) {
+              removeMemberSession(
+                savedSession.uid
+              );
+            }
+          } catch (error) {
+            console.warn(
+              "Saved member session validation failed:",
+              error
+            );
+          }
+        }
+      }
+
+      /*
+       * SECOND:
+       * Check Firebase Auth only for ADMIN.
+       */
+      if (window.auth?.onAuthStateChanged) {
+        const currentUser =
+          await new Promise((resolve) => {
+            let unsubscribe;
+
+            unsubscribe =
+              window.auth.onAuthStateChanged(
+                (user) => {
+                  if (unsubscribe) {
+                    unsubscribe();
+                  }
+
+                  resolve(user);
+                }
+              );
+          });
+
+        if (currentUser) {
+          try {
+            const tokenResult =
+              await currentUser.getIdTokenResult(
+                true
+              );
+
+            const claims =
+              tokenResult?.claims || {};
+
+            if (claims.admin === true) {
+              if (!cancelled) {
+                setCheckingSession(false);
+
+                window.location.replace(
+                  "/admin/dashboard"
+                );
+              }
+
+              return;
+            }
+
+            /*
+             * Not an admin.
+             * Firebase member state is not used.
+             */
+            await window.auth.signOut();
+          } catch (error) {
+            console.warn(
+              "Firebase admin session check failed:",
+              error
+            );
+          }
+        }
+      }
+
+      /*
+       * No valid member or admin session.
+       * Show login page.
+       */
+      if (!cancelled) {
+        setCheckingSession(false);
+      }
+
+    } catch (error) {
+      console.error(
+        "Session restore error:",
+        error
       );
 
-      if (response.ok) {
+      if (!cancelled) {
         setCheckingSession(false);
-        window.location.replace("/members/dashboard");
-        return;
       }
     }
-  } catch (error) {
-    console.warn("Saved member session is invalid:", error);
-  }
-
-  // Remove invalid/deleted member session
-  try {
-    if (savedSession.uid) {
-      removeMemberSession(savedSession.uid);
-    }
-  } catch (error) {
-    console.warn("Failed to remove old member session:", error);
-  }
-}
-
-
-    // No valid session
-    setCheckingSession(false);
-
-  } catch (error) {
-    console.error(
-      "Session restore error:",
-      error
-    );
-
-    // IMPORTANT:
-    // Never leave the login page stuck on
-    // "Checking session..."
-    setCheckingSession(false);
-  }
-};
+  };
 
   restoreExistingSession();
 

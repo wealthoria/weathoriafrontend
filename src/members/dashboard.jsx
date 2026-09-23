@@ -1469,6 +1469,247 @@ const [member, setMember] =
     )
   );
 
+const [activationLoading, setActivationLoading] =
+  useState(false);
+
+
+  const activateSubscription = async () => {
+  setActivationLoading(true);
+
+  try {
+    const current = getCurrentMemberSession();
+
+    if (!current?.session?.token || !current?.session?.uid) {
+      throw new Error(
+        "Your login session was not found. Please login again."
+      );
+    }
+
+    const session = current.session;
+
+    if (!window.Razorpay) {
+      throw new Error(
+        "Payment system is still loading. Please try again."
+      );
+    }
+
+    // Create new Razorpay subscription
+    const createResponse = await fetch(
+      `${DASHBOARD_API}/api/subscription/reactivate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.token}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const createData =
+      await createResponse.json();
+
+    if (
+      !createResponse.ok ||
+      !createData?.success
+    ) {
+      throw new Error(
+        createData?.message ||
+        "Unable to start subscription activation."
+      );
+    }
+
+    const subscriptionId =
+      createData.subscriptionId;
+
+    const razorpayKey =
+      createData.key;
+
+    if (!subscriptionId || !razorpayKey) {
+      throw new Error(
+        "Razorpay subscription details were not received."
+      );
+    }
+
+    setActivationLoading(false);
+
+    const options = {
+      key: razorpayKey,
+
+      subscription_id:
+        subscriptionId,
+
+      name: "Wealthoria",
+
+      description:
+        "Wealthoria Premium Subscription",
+
+      prefill: {
+        name: session.name || "",
+        email: session.email || ""
+      },
+
+      theme: {
+        color: "#e8473f"
+      },
+
+      handler: async (response) => {
+        setActivationLoading(true);
+
+        try {
+          const paymentId =
+            response?.razorpay_payment_id;
+
+          const returnedSubscriptionId =
+            response?.razorpay_subscription_id ||
+            subscriptionId;
+
+          if (!paymentId) {
+            throw new Error(
+              "Razorpay payment ID was not received."
+            );
+          }
+
+          if (
+            returnedSubscriptionId !==
+            subscriptionId
+          ) {
+            throw new Error(
+              "Razorpay subscription verification failed."
+            );
+          }
+
+          // Complete subscription activation
+          const completeResponse =
+            await fetch(
+              `${DASHBOARD_API}/api/subscription/reactivate/complete`,
+              {
+                method: "POST",
+
+                headers: {
+                  Authorization:
+                    `Bearer ${session.token}`,
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  subscriptionId,
+                  paymentId
+                })
+              }
+            );
+
+          const completeData =
+            await completeResponse.json();
+
+          if (
+            !completeResponse.ok ||
+            !completeData?.success
+          ) {
+            throw new Error(
+              completeData?.message ||
+              "Payment was received, but subscription activation could not be completed."
+            );
+          }
+
+          // Update saved member session
+          const updatedSession = {
+            ...session,
+
+            status: "active",
+
+            subscription: {
+              ...(session.subscription || {}),
+
+              status: "active",
+
+              razorpaySubscriptionId:
+                completeData.razorpaySubscriptionId ||
+                subscriptionId
+            }
+          };
+
+          updateCurrentMemberSession(
+            current.storage,
+            updatedSession
+          );
+
+          setMember(updatedSession);
+
+          setMembershipDays(
+            Number(
+              completeData?.remainingDays ||
+              updatedSession?.subscription
+                ?.remainingDays ||
+              0
+            )
+          );
+
+          // Reload dashboard with active subscription
+          window.location.replace(
+            "/members/dashboard"
+          );
+
+        } catch (error) {
+          console.error(
+            "Subscription activation completion error:",
+            error
+          );
+
+          alert(
+            error?.message ||
+            "Subscription activation failed. Please contact support."
+          );
+
+          setActivationLoading(false);
+        }
+      },
+
+      modal: {
+        ondismiss: () => {
+          setActivationLoading(false);
+        }
+      }
+    };
+
+    const razorpay =
+      new window.Razorpay(options);
+
+    razorpay.on(
+      "payment.failed",
+      (response) => {
+        console.error(
+          "Razorpay activation payment failed:",
+          response?.error
+        );
+
+        alert(
+          response?.error?.description ||
+          "Payment failed. Your subscription remains inactive."
+        );
+
+        setActivationLoading(false);
+      }
+    );
+
+    razorpay.open();
+
+  } catch (error) {
+    console.error(
+      "Subscription activation error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+      "Unable to activate subscription."
+    );
+
+    setActivationLoading(false);
+  }
+};
+
+
 useEffect(() => {
 
   const updateMembershipDays = () => {
@@ -2406,15 +2647,15 @@ if (membershipDays <= 0) {
       <h2>Membership Expired</h2>
       <p>Your Wealthoria membership has expired.</p>
 
-      <button
-        type="button"
-        onClick={() => {
-          window.location.href =
-            "/members/subscription";
-        }}
-      >
-        Activate Subscription
-      </button>
+   <button
+  type="button"
+  onClick={activateSubscription}
+  disabled={activationLoading}
+>
+  {activationLoading
+    ? "Opening Payment..."
+    : "Activate Subscription"}
+</button>
     </div>
   );
 }

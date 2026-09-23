@@ -3276,8 +3276,7 @@ if (membershipDays <= 0) {
   // 1. Subscription is cancelled
   // 2. Only 1 day is remaining
   // 3. Membership has expired
- const showMembershipPanel =
-  membershipDays <= 1;
+const showMembershipPanel = true;
 
   if (!showMembershipPanel) {
     return null;

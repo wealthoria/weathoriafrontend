@@ -7300,166 +7300,165 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   }
 }
 
-/* =========================
-   MEMBERSHIP CARD
-========================= */
+/* =========================================
+   WEALTHORIA MEMBERSHIP STATUS CARD
+========================================= */
 
-.membership-card {
+.membership-status-panel {
     position: relative;
-    background: #ffffff;
-    border: 1px solid #eeeeee;
-    border-radius: 18px;
-    padding: 24px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     overflow: hidden;
+    margin: 20px 0;
+    padding: 24px 26px;
+    border-radius: 16px;
+
+    background: #ffffff;
+    border: 1px solid #e8e8e5;
+
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+
     transition: all 0.25s ease;
 }
 
-.membership-card::before {
+.membership-status-panel::before {
     content: "";
     position: absolute;
-    top: 0;
     left: 0;
-    width: 100%;
-    height: 4px;
+    top: 0;
+    bottom: 0;
+
+    width: 5px;
     background: #ff843f;
 }
 
-.membership-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.09);
+.membership-status-panel:hover {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
 }
 
-/* Header */
 
-.membership-card-header {
+/* HEADER */
+
+.membership-status-panel .wd-panel-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 22px;
+    gap: 25px;
 }
 
-.membership-card-title {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #222222;
-}
 
-.membership-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 11px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    background: #fff3ec;
-    color: #e86627;
-}
+/* LEFT CONTENT */
 
-/* Main days section */
+.membership-status-panel .wd-panel-label {
+    display: block;
 
-.membership-days-box {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: #fff8f4;
-    border-radius: 14px;
-    padding: 18px;
-    margin-bottom: 18px;
-}
+    margin-bottom: 7px;
 
-.membership-days-number {
-    font-size: 42px;
-    line-height: 1;
-    font-weight: 800;
     color: #ff843f;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.3px;
 }
 
-.membership-days-text {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+.membership-status-panel h3 {
+    margin: 0;
+
+    color: #20201d;
+
+    font-size: 21px;
+    line-height: 1.3;
+    font-weight: 700;
 }
 
-.membership-days-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #333333;
-}
+.membership-status-panel p {
+    margin: 8px 0 0;
 
-.membership-days-subtext {
-    font-size: 12px;
-    color: #888888;
-}
+    color: #777770;
 
-/* Details */
-
-.membership-details {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.membership-detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     font-size: 13px;
+    line-height: 1.5;
 }
 
-.membership-detail-label {
-    color: #888888;
-}
 
-.membership-detail-value {
-    color: #333333;
-    font-weight: 600;
-}
+/* ACTIVATE BUTTON */
 
-/* Activate button */
+.membership-status-panel button {
+    flex-shrink: 0;
 
-.membership-activate-btn {
-    width: 100%;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 18px;
+    padding: 11px 18px;
+
+    border: 0;
+    border-radius: 9px;
+
     background: #ff843f;
     color: #ffffff;
-    font-size: 14px;
+
+    font-family: inherit;
+    font-size: 12px;
     font-weight: 700;
+
     cursor: pointer;
-    transition: all 0.2s ease;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.membership-activate-btn:hover {
+.membership-status-panel button:hover {
     background: #ed7130;
+
     transform: translateY(-1px);
+
+    box-shadow: 0 5px 14px rgba(255, 132, 63, 0.25);
 }
 
-.membership-activate-btn:active {
+.membership-status-panel button:active {
     transform: translateY(0);
 }
 
-/* Mobile */
+
+/* MOBILE */
 
 @media (max-width: 600px) {
-    .membership-card {
-        padding: 18px;
-        border-radius: 15px;
+
+    .membership-status-panel {
+        padding: 20px;
+        border-radius: 14px;
     }
 
-    .membership-card-title {
-        font-size: 16px;
+    .membership-status-panel .wd-panel-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
     }
 
-    .membership-days-number {
-        font-size: 36px;
+    .membership-status-panel h3 {
+        font-size: 18px;
     }
 
-    .membership-days-box {
-        padding: 15px;
+    .membership-status-panel p {
+        font-size: 12px;
     }
+
+    .membership-status-panel button {
+        width: 100%;
+    }
+}
+
+
+/* DARK MODE */
+
+html[data-theme="dark"] .membership-status-panel {
+    background: #181b1f;
+    border-color: #30353c;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .membership-status-panel h3 {
+    color: #f3f5f7;
+}
+
+html[data-theme="dark"] .membership-status-panel p {
+    color: #a9b0b8;
 }

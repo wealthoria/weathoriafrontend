@@ -2858,7 +2858,8 @@ if (membershipDays <= 0) {
                   ? "Weekly Order Wins"
                   : activePage === "weekly"
                   ? "Weekly Roundup"
-                  : activePage === "ratio" ? "Ratio Analysis"
+                  : activePage === "ratio"
+                   ? "Ratio Analysis"
 
                   : activePage === "articles"
                   ? "Articles & Reports"
@@ -3258,52 +3259,78 @@ if (membershipDays <= 0) {
             <>
 
 {/* MEMBERSHIP STATUS */}
-<section className="wd-panel membership-status-panel">
 
-  <div className="wd-panel-head">
-    <div>
-      <span className="wd-panel-label">
-        MEMBERSHIP
-      </span>
+{(() => {
 
-      <h3>
-        {membershipDays > 0
-          ? String(
-              member?.subscription?.status || ""
-            ).toLowerCase() === "cancelled"
-            ? "Membership: Cancelled"
-            : "Membership: Active"
-          : "Membership Expired"}
-      </h3>
+  const subscriptionStatus =
+    String(
+      member?.subscription?.status || ""
+    ).toLowerCase();
 
-      <p>
-        {membershipDays > 0
-          ? `You still have access until ${getDashboardDate(
-              member?.subscription?.accessUntil ||
-              member?.accessUntil
-            )}`
-          : "Your membership access has expired."}
-      </p>
-    </div>
+  const isCancelled =
+    ["cancelled", "halted"].includes(
+      subscriptionStatus
+    );
 
-  {membershipDays > 0 ? (
-  <strong>
-    {membershipDays} days remaining
-  </strong>
-) : (
-  <button
-    type="button"
-    onClick={() => {
-      window.location.href =
-        "/members/subscription";
-    }}
-  >
-    Activate Subscription
-  </button>
-)}
-  </div>
+  // Show membership panel only when:
+  // 1. Subscription is cancelled
+  // 2. Only 1 day is remaining
+  // 3. Membership has expired
+  const showMembershipPanel =
+    isCancelled || membershipDays <= 1;
 
-</section>
+  if (!showMembershipPanel) {
+    return null;
+  }
+
+  return (
+    <section className="wd-panel membership-status-panel">
+
+      <div className="wd-panel-head">
+
+        <div>
+
+          <span className="wd-panel-label">
+            MEMBERSHIP
+          </span>
+
+          <h3>
+            {membershipDays <= 0
+              ? "Membership Expired"
+              : isCancelled
+              ? "Membership: Cancelled"
+              : "Membership Expiring Soon"}
+          </h3>
+
+          <p>
+            {membershipDays <= 0
+              ? "Your Wealthoria membership has expired."
+              : isCancelled
+              ? `You still have access until ${getDashboardDate(
+                  member?.subscription?.accessUntil ||
+                  member?.accessUntil
+                )}`
+              : "Your membership is ending soon."}
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href =
+              "/members/subscription";
+          }}
+        >
+          Activate Subscription
+        </button>
+
+      </div>
+
+    </section>
+  );
+
+})()}
 
               {/* WELCOME */}
 

@@ -3276,8 +3276,8 @@ if (membershipDays <= 0) {
   // 1. Subscription is cancelled
   // 2. Only 1 day is remaining
   // 3. Membership has expired
-  const showMembershipPanel =
-    isCancelled || membershipDays <= 1;
+ const showMembershipPanel =
+  membershipDays <= 1;
 
   if (!showMembershipPanel) {
     return null;
@@ -3315,6 +3315,7 @@ if (membershipDays <= 0) {
 
         </div>
 
+{membershipDays === 1 && (
         <button
           type="button"
           onClick={() => {
@@ -3324,6 +3325,7 @@ if (membershipDays <= 0) {
         >
           Activate Subscription
         </button>
+        )}
 
       </div>
 

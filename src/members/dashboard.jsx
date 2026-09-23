@@ -1613,21 +1613,42 @@ const [activationLoading, setActivationLoading] =
           }
 
           // Update saved member session
-          const updatedSession = {
-            ...session,
+        const updatedSession = {
+  ...session,
 
-            status: "active",
+  status: "active",
 
-            subscription: {
-              ...(session.subscription || {}),
+  subscription: {
+    ...(session.subscription || {}),
 
-              status: "active",
+    status: "active",
 
-              razorpaySubscriptionId:
-                completeData.razorpaySubscriptionId ||
-                subscriptionId
-            }
-          };
+    razorpaySubscriptionId:
+      completeData.razorpaySubscriptionId ||
+      subscriptionId,
+
+    nextBillingDate:
+      completeData.nextBillingDate ||
+      completeData.subscription?.nextBillingDate ||
+      session.subscription?.nextBillingDate ||
+      null,
+
+    accessUntil:
+      completeData.nextBillingDate ||
+      completeData.subscription?.nextBillingDate ||
+      session.subscription?.accessUntil ||
+      null,
+
+    remainingDays:
+      Number(
+        completeData.remainingDays ||
+        completeData.subscription?.remainingDays ||
+        0
+      ),
+
+    accessActive: true
+  }
+};
 
           updateCurrentMemberSession(
             current.storage,

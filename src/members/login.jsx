@@ -1245,20 +1245,15 @@ const expiryTime =
 const accessActive =
   Number.isFinite(expiryTime) &&
   expiryTime > Date.now();
-
 if (
-  (
-    loginStatus === "inactive" ||
-    loginStatus === "cancelled" ||
-    loginStatus === "canceled"
-  ) &&
-  !accessActive
+  loginStatus === "inactive" ||
+  loginStatus === "cancelled" ||
+  loginStatus === "canceled"
 ) {
   setSubscriptionInactive(true);
   setLoading(false);
   return;
 }
-
 window.location.replace(
   "/members/dashboard"
 );
@@ -1550,19 +1545,18 @@ if (checkingSession) {
             SUBSCRIPTION
           </span>
 
-          <h1>
-            Subscription Inactive
-          </h1>
+         <h1>
+  Subscription Inactive
+</h1>
 
-          <p>
-            Your subscription has been cancelled.
-          </p>
+<p>
+  Your subscription has expired.
+</p>
 
-          <p>
-            Activate your subscription to continue
-            using the Wealthoria Member Portal.
-          </p>
-
+<p>
+  Activate your subscription to continue
+  using the Wealthoria Member Portal.
+</p>
         </div>
 
         <button

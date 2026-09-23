@@ -3554,18 +3554,17 @@ const showMembershipPanel = true;
           </p>
 
         </div>
-
 {membershipDays === 1 && (
-        <button
-          type="button"
-          onClick={() => {
-            window.location.href =
-              "/members/subscription";
-          }}
-        >
-          Activate Subscription
-        </button>
-        )}
+  <button
+    type="button"
+    onClick={activateSubscription}
+    disabled={activationLoading}
+  >
+    {activationLoading
+      ? "Opening Payment..."
+      : "Activate Subscription"}
+  </button>
+)}
 
       </div>
 

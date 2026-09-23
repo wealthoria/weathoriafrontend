@@ -775,20 +775,62 @@ useEffect(() => {
             /*
              * Token is still valid
              */
-            if (
-              response.ok &&
-              data?.success
-            ) {
-              if (!cancelled) {
-                setCheckingSession(false);
+           if (
+  response.ok &&
+  data?.success
+) {
+  const restoredMember = data?.member || {};
 
-                window.location.replace(
-                  "/members/dashboard"
-                );
-              }
+  const restoredStatus = String(
+    restoredMember.status ||
+    restoredMember.subscription?.status ||
+    sessionData.status ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
 
-              return;
-            }
+  /*
+   * Expired / inactive members must stay on
+   * the login page and see Subscription Inactive.
+   */
+  if (
+    restoredStatus === "inactive" ||
+    restoredStatus === "cancelled" ||
+    restoredStatus === "canceled"
+  ) {
+    const updatedSession = {
+      ...sessionData,
+      ...restoredMember,
+      token: sessionData.token
+    };
+
+    saveMemberSession(
+      updatedSession,
+      savedSession.type === "local"
+    );
+
+    if (!cancelled) {
+      setSubscriptionInactive(true);
+      setCheckingSession(false);
+    }
+
+    return;
+  }
+
+  /*
+   * Active member → dashboard
+   */
+  if (!cancelled) {
+    setCheckingSession(false);
+
+    window.location.replace(
+      "/members/dashboard"
+    );
+  }
+
+  return;
+}
 
             /*
              * Token is no longer valid

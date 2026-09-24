@@ -76,6 +76,36 @@ function getDashboardDate(value) {
 }
 
 
+function getDashboardDateTime(value) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const date =
+      typeof value.toDate === "function"
+        ? value.toDate()
+        : new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+
+  } catch (error) {
+    return "";
+  }
+}
+
+
 function getDashboardTime(value) {
 
   if (!value) {
@@ -1068,6 +1098,9 @@ function MemberNotificationsPage({
   useState(null);
 
 
+  const [selectedNotification, setSelectedNotification] =
+  useState(null);
+
 
 const handleClearAllNotifications = async () => {
 
@@ -1102,11 +1135,11 @@ const handleClearAllNotifications = async () => {
       );
     }
 
-    setNotifications([]);
+  setNotifications([]);
 
-    setOpenNotificationId(null);
+setSelectedNotification(null);
 
-    onNotificationsRead();
+onNotificationsRead();
 
   } catch (error) {
 
@@ -1308,7 +1341,6 @@ const handleClearAllNotifications = async () => {
     );
 
   }
-
 return (
   <>
     <div className="member-notifications-page-header">
@@ -1330,77 +1362,132 @@ return (
 
     <div className="member-notification-page-list">
 
-      {notifications.map(
-        notification => {
+      {notifications.map(notification => {
 
-          const isOpen =
-            openNotificationId ===
-            notification.id;
+        const message =
+          notification.message || "";
 
-          const message =
-            notification.message || "";
+        const preview =
+          message.length > 100
+            ? message.slice(0, 100) + "..."
+            : message;
 
-          const preview =
-            message.length > 120
-              ? message.slice(0, 120) + "..."
-              : message;
+        return (
+          <div
+            key={notification.id}
+            className="member-notification-page-item"
+          >
 
-          return (
-
-            <div
-              key={notification.id}
-              className="member-notification-page-item"
-            >
-
-              <div className="member-notification-page-icon">
-                🔔
-              </div>
+            <div className="member-notification-page-icon">
+              🔔
+            </div>
 
 
-              <div className="member-notification-page-content">
+            <div className="member-notification-page-content">
 
-                <strong>
-                  {notification.title}
-                </strong>
+              <strong>
+                {notification.title || "Wealthoria"}
+              </strong>
 
-
-                <p>
-                  {isOpen
-                    ? message
-                    : preview}
-                </p>
-
-<button
-  type="button"
-  className="notification-open-button"
-  onClick={() =>
-    setOpenNotificationId(
-      isOpen
-        ? null
-        : notification.id
-    )
-  }
->
-  {isOpen ? "Close" : "Open"}
-</button>
+              <p className="member-notification-preview">
+                {preview}
+              </p>
 
 
-                <small>
+              <div className="member-notification-meta">
+
+                <span className="member-notification-date">
+                  {getDashboardDateTime(
+                    notification.createdAt
+                  )}
+                </span>
+
+                <span className="member-notification-status">
                   {notification.read
                     ? "Read"
                     : "New"}
-                </small>
+                </span>
 
               </div>
 
+
+              <button
+                type="button"
+                className="notification-open-button"
+                onClick={() =>
+                  setSelectedNotification(
+                    notification
+                  )
+                }
+              >
+                Open
+              </button>
+
             </div>
 
-          );
-
-        }
-      )}
+          </div>
+        );
+      })}
 
     </div>
+
+
+    {selectedNotification && (
+      <div
+        className="notification-modal-overlay"
+        onClick={() =>
+          setSelectedNotification(null)
+        }
+      >
+
+        <div
+          className="notification-modal"
+          onClick={(event) =>
+            event.stopPropagation()
+          }
+        >
+
+          <div className="notification-modal-icon">
+            🔔
+          </div>
+
+
+          <h3>
+            {selectedNotification.title ||
+              "Wealthoria"}
+          </h3>
+
+
+          <div className="notification-modal-date">
+            {getDashboardDateTime(
+              selectedNotification.createdAt
+            )}
+          </div>
+
+
+          <div className="notification-modal-divider" />
+
+
+          <p>
+            {selectedNotification.message || ""}
+          </p>
+
+
+          <button
+            type="button"
+            className="notification-modal-close"
+            onClick={() =>
+              setSelectedNotification(null)
+            }
+          >
+            Close
+          </button>
+
+        </div>
+
+      </div>
+    )}
+
   </>
 );
 }

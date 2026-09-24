@@ -3169,37 +3169,33 @@ if (membershipDays <= 0) {
             </button>
 
 
-            {/* HEADER NOTIFICATIONS */}
+          {/* HEADER NOTIFICATIONS */}
 
-            <button
-              type="button"
-              className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
-          onClick={async () => {
-  if (
-    "Notification" in window &&
-    Notification.permission !== "granted" &&
-    typeof window.enableMemberNotifications === "function"
-  ) {
-    await window.enableMemberNotifications();
-  }
+<button
+  type="button"
+  className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
+  onClick={() => openPage("notifications")}
+>
+  🔔 
 
-  openPage("notifications");
-}}
-            >
+  {unreadNotifications > 0 && (
+    <span className="member-header-notification-badge">
+      {unreadNotifications}
+    </span>
+  )}
+</button>
 
-              🔔 Notifications
+{/* NOTIFICATION MUTE */}
 
-
-              {unreadNotifications > 0 && (
-
-                <span className="member-header-notification-badge">
-                  {unreadNotifications}
-                </span>
-
-              )}
-
-            </button>
-
+<button
+  type="button"
+  className="member-header-button notification-mute-icon"
+  onClick={toggleNotificationMute}
+  title={notificationMuted ? "Unmute notifications" : "Mute notifications"}
+  aria-label={notificationMuted ? "Unmute notifications" : "Mute notifications"}
+>
+  {notificationMuted ? "🔕" : "🔔"}
+</button>
 
             <button
               type="button"
@@ -3257,28 +3253,8 @@ if (membershipDays <= 0) {
         ================================================= */}
 
         <div className="wd-content">
- {/* NOTIFICATION STATUS */}
 
-{notificationStatus === "enabled" && (
-  <div className="notification-success">
-
-    <span>
-      {notificationMuted
-        ? "🔕 Notifications are muted"
-        : "🔔 You will receive Wealthoria notifications"}
-    </span>
-
-    <button
-      type="button"
-      onClick={toggleNotificationMute}
-    >
-      {notificationMuted
-        ? "🔔 Unmute"
-        : "🔕 Mute"}
-    </button>
-
-  </div>
-)}
+          
           {/* SETTINGS */}
 
           {activePage === "settings" ? (

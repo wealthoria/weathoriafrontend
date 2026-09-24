@@ -3168,23 +3168,23 @@ if (membershipDays <= 0) {
         {/* READ NOTIFICATIONS + PUSH CONTROL */}
 
 <div className="member-header-notification-control">
+<button
+  type="button"
+  className="member-header-notification-read"
+  onClick={() => openPage("notifications")}
+  title="Read notifications"
+  aria-label="Read notifications"
+>
+  <span className="read-message-icon">
+    <span className="read-message-icon-line"></span>
+  </span>
 
-  {/* READ MESSAGES */}
-  <button
-    type="button"
-    className="member-header-notification-read"
-    onClick={() => openPage("notifications")}
-    title="Read notifications"
-    aria-label="Read notifications"
-  >
-    💬
-
-    {unreadNotifications > 0 && (
-      <span className="member-header-notification-badge">
-        {unreadNotifications}
-      </span>
-    )}
-  </button>
+  {unreadNotifications > 0 && (
+    <span className="member-header-notification-badge">
+      {unreadNotifications}
+    </span>
+  )}
+</button>
 
   {/* PUSH NOTIFICATION ON/OFF */}
   <button

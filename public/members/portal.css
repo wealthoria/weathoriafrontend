@@ -7464,45 +7464,44 @@ html[data-theme="dark"] .membership-status-panel p {
 }
 
 
-.member-header-notification-control {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.member-header-notification-text,
-.member-header-notification-bell {
+.member-header-notification-read {
+  position: relative;
+  width: 36px;
+  height: 36px;
   border: none;
   background: transparent;
-  cursor: pointer;
-}
-
-.member-header-notification-text {
-  padding: 8px 4px;
-  font: inherit;
-}
-
-.member-header-notification-bell {
-  position: relative;
-  padding: 6px;
-  font-size: 20px;
-  line-height: 1;
-}
-
-.member-header-notification-badge {
-  position: absolute;
-  top: -4px;
-  right: -5px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: #ef4444;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.read-message-icon {
+  width: 21px;
+  height: 16px;
+  border: 2px solid #ff843f;
+  border-radius: 4px;
+  position: relative;
+  display: block;
+}
+
+.read-message-icon::before,
+.read-message-icon::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  width: 10px;
+  height: 2px;
+  background: #ff843f;
+}
+
+.read-message-icon::before {
+  left: 1px;
+  transform: rotate(30deg);
+}
+
+.read-message-icon::after {
+  right: 1px;
+  transform: rotate(-30deg);
 }

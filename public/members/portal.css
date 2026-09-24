@@ -7462,3 +7462,9 @@ html[data-theme="dark"] .membership-status-panel h3 {
 html[data-theme="dark"] .membership-status-panel p {
     color: #a9b0b8;
 }
+
+
+.notification-enabled {
+  border-color: #22c55e;
+  color: #22c55e;
+}

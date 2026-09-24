@@ -1785,10 +1785,6 @@ const [notificationStatus, setNotificationStatus] =
   useState("checking");
 
 
-  const [notificationMuted, setNotificationMuted] = useState(
-  () =>
-    localStorage.getItem("wealthoria-notifications-muted") === "true"
-);
 
 useEffect(() => {
   if (!("Notification" in window)) {
@@ -1806,20 +1802,6 @@ useEffect(() => {
 
 }, []);
 
-
-
-const toggleNotificationMute = () => {
-  setNotificationMuted((current) => {
-    const next = !current;
-
-    localStorage.setItem(
-      "wealthoria-notifications-muted",
-      String(next)
-    );
-
-    return next;
-  });
-};
 
   /* =======================================================
      NOTIFICATIONS
@@ -3169,34 +3151,41 @@ if (membershipDays <= 0) {
             </button>
 
 
-          {/* HEADER NOTIFICATIONS */}
+       {/* HEADER NOTIFICATIONS */}
 
 <button
   type="button"
-  className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
-  onClick={() => openPage("notifications")}
+  className={
+    notificationStatus === "enabled"
+      ? "member-header-button wd-mobile-header-action wd-mobile-notification-action notification-enabled"
+      : "member-header-button wd-mobile-header-action wd-mobile-notification-action"
+  }
+  onClick={async () => {
+
+    if (
+      notificationStatus !== "enabled" &&
+      typeof window.enableMemberNotifications === "function"
+    ) {
+      await window.enableMemberNotifications();
+
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        setNotificationStatus("enabled");
+      }
+    }
+
+    openPage("notifications");
+  }}
 >
   🔔 
-
   {unreadNotifications > 0 && (
     <span className="member-header-notification-badge">
       {unreadNotifications}
     </span>
   )}
 </button>
-
-{/* NOTIFICATION MUTE */}
-
-<button
-  type="button"
-  className="member-header-button notification-mute-icon"
-  onClick={toggleNotificationMute}
-  title={notificationMuted ? "Unmute notifications" : "Mute notifications"}
-  aria-label={notificationMuted ? "Unmute notifications" : "Mute notifications"}
->
-  {notificationMuted ? "🔕" : "🔔"}
-</button>
-
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"

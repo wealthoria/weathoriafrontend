@@ -51,28 +51,26 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
     loadMembers();
 
   }, []);
-
 const loadMembers = async () => {
   try {
     setLoadingMembers(true);
     setError("");
 
-   const user = auth.currentUser;
+    const user = auth.currentUser;
 
-if (!user) {
-  throw new Error("Admin authentication required.");
-}
+    if (!user) {
+      throw new Error("Admin authentication required.");
+    }
 
-const token = await user.getIdToken(true);
+    const token = await user.getIdToken(true);
 
-const response = await fetch(
-  `${API_BASE_URL}/api/admin/notifications/send`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    const response = await fetch(
+      `${API_BASE_URL}/api/admin/notifications/members`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
 
@@ -233,32 +231,31 @@ const response = await fetch(
 
       try {
 
-        const response =
-          await fetch(
-            `${API_BASE_URL}/api/admin/notifications/send`,
-            {
-              method: "POST",
+     const user = auth.currentUser;
 
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
+if (!user) {
+  throw new Error("Admin authentication required.");
+}
 
-              body:
-                JSON.stringify({
+const token = await user.getIdToken(true);
 
-                  userIds,
+const response = await fetch(
+  `${API_BASE_URL}/api/admin/notifications/send`,
+  {
+    method: "POST",
 
-                  title:
-                    title.trim(),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
 
-                  message:
-                    message.trim()
-
-                })
-            }
-          );
-
+    body: JSON.stringify({
+      userIds,
+      title: title.trim(),
+      message: message.trim(),
+    }),
+  }
+);
 
         const data =
           await response.json();

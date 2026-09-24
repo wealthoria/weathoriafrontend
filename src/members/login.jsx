@@ -1287,15 +1287,30 @@ const expiryTime =
 const accessActive =
   Number.isFinite(expiryTime) &&
   expiryTime > Date.now();
-if (
-  loginStatus === "inactive" ||
-  loginStatus === "cancelled" ||
-  loginStatus === "canceled"
-) {
+if (loginStatus === "inactive") {
   setSubscriptionInactive(true);
   setLoading(false);
   return;
 }
+
+if (
+  loginStatus === "cancelled" ||
+  loginStatus === "canceled"
+) {
+  if (accessActive) {
+    // Cancelled but membership is still valid
+    window.location.replace(
+      "/members/dashboard"
+    );
+    return;
+  }
+
+  // Cancelled and access period has ended
+  setSubscriptionInactive(true);
+  setLoading(false);
+  return;
+}
+
 window.location.replace(
   "/members/dashboard"
 );

@@ -92,7 +92,7 @@ function NavBar({ onNav }) {
 
  <a
   className="btn btn-green member-login-button"
-  href="comingbacksoon.html"
+ href="/members/login"
   aria-label="Member Login"
 >
   <Icon name="user" size={17} />
@@ -220,7 +220,12 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} className="titlehead"></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => {window.open("comingbacksoon.html", "_self");
+            <button className="btn btn-green"onClick={() => {
+  if (window.membersNavigate) {
+    window.membersNavigate("/members/subscription");
+  } else {
+    window.location.href = "/members/subscription";
+  }
 }}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
 
 {h.ctaSecondary && (

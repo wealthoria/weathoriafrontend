@@ -148,7 +148,7 @@ return;
         name: "Wealthoria",
 
         description:
-          "₹999 Yearly Premium Membership",
+          "₹99 Monthly Premium Membership",
 
         prefill: {
           name: cleanName,
@@ -158,7 +158,7 @@ return;
 
         notes: {
           plan:
-            "Wealthoria Premium - Yearly"
+            "Wealthoria Premium - Monthly"
         },
 
         theme: {

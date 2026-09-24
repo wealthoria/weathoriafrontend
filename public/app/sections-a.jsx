@@ -179,8 +179,19 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} ></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => {window.open("subscription.html", "_self");
-}}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
+           <button
+  className="btn btn-green"
+  onClick={() => {
+    if (window.membersNavigate) {
+      window.membersNavigate("/members/subscription");
+    } else {
+      window.location.href = "/members/subscription";
+    }
+  }}
+>
+  {h.ctaPrimary}
+  <Icon name="arrow" size={18} />
+</button>
 
 {h.ctaSecondary && (
   <button className="btn btn-outline" onClick={() => window.open("courses-coming-soon.html", "_self")}>

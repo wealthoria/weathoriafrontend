@@ -5713,22 +5713,17 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   flex-direction: column;
 
   gap: 12px;
-}
-
-.member-notification-page-item {
-  display: flex;
-
-  gap: 12px;
-
-  padding: 16px;
-
-  border: 1px solid #e5e7eb;
-
-  border-radius: 12px;
-
+}.member-notification-page-item {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 16px 18px;
+  border: 1px solid #e5e5e5;
+  border-radius: 18px;
   background: #ffffff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
 }
-
 .member-notification-page-icon {
   width: 40px;
   height: 40px;
@@ -7760,154 +7755,84 @@ html[data-theme="dark"] .membership-status-panel p {
 }
 
 /* =========================================================
-   MEMBER NOTIFICATIONS
-========================================================= */
-
-.member-notifications-page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.member-notifications-page-header h2 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.clear-all-notifications-button {
-  border: none;
-  background: transparent;
-  color: #e8473f;
-  font-size: 17px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 6px 0;
-}
-
-.clear-all-notifications-button:hover {
-  text-decoration: underline;
-}
-
-
-/* LIST */
+   MEMBER NOTIFICATIONS - COMPACT CARD
+   ========================================================= */
 
 .member-notification-page-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
-
-
-/* CARD */
 
 .member-notification-page-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-
   width: 100%;
   box-sizing: border-box;
-
-  padding: 20px;
-
-  background: #ffffff;
-
+  padding: 16px 18px;
   border: 1px solid #e5e5e5;
   border-radius: 18px;
-
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
 }
-
-
-/* ICON */
-
-.member-notification-page-icon {
-  flex: 0 0 52px;
-
-  width: 52px;
-  height: 52px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: #fff0ef;
-
-  font-size: 26px;
-}
-
-
-/* CONTENT */
 
 .member-notification-page-content {
-  flex: 1;
+  width: 100%;
+}
+
+.member-notification-page-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
   min-width: 0;
 }
-
-.member-notification-page-content strong {
-  display: block;
-
-  margin-bottom: 7px;
-
+.member-notification-page-top strong {
   font-size: 18px;
+  line-height: 1.25;
   font-weight: 700;
-
   color: #171717;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.member-notification-preview {
-  margin: 0 0 12px;
-
-  font-size: 15px;
-  line-height: 1.55;
-
-  color: #444;
-
-  word-break: break-word;
+.member-notification-page-date {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 40%;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #999;
+  text-align: right;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
+.member-notification-page-content p {
+  margin: 6px 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #555;
+}
 
-/* DATE + STATUS */
-
-.member-notification-meta {
+.member-notification-page-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  gap: 12px;
-
-  margin-bottom: 10px;
+  margin-top: 6px;
 }
 
-.member-notification-date {
+.member-notification-page-status {
   font-size: 12px;
-  color: #888;
+  color: #999;
 }
-
-.member-notification-status {
-  font-size: 12px;
-  color: #aaa;
-}
-
-
-/* OPEN */
 
 .notification-open-button {
   border: none;
   background: transparent;
-
   padding: 0;
-
-  color: #e8473f;
-
   font-size: 14px;
   font-weight: 600;
-
+  color: #d9534f;
   cursor: pointer;
 }
 
@@ -7916,182 +7841,17 @@ html[data-theme="dark"] .membership-status-panel p {
 }
 
 
-/* =========================================================
-   NOTIFICATION POPUP
-========================================================= */
-
-.notification-modal-overlay {
-  position: fixed;
-  inset: 0;
-
-  z-index: 99999;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background: rgba(0, 0, 0, 0.48);
-  backdrop-filter: blur(4px);
-}
-
-.notification-modal {
-  width: min(460px, 100%);
-  max-height: 80vh;
-
-  overflow-y: auto;
-
-  box-sizing: border-box;
-
-  padding: 28px 26px;
-
-  background: #ffffff;
-
-  border-radius: 20px;
-
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.25);
-
-  text-align: center;
-}
-
-.notification-modal-icon {
-  width: 58px;
-  height: 58px;
-
-  margin: 0 auto 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: #fff0ef;
-
-  font-size: 28px;
-}
-
-.notification-modal h3 {
-  margin: 0;
-
-  font-size: 21px;
-  line-height: 1.35;
-
-  color: #171717;
-}
-
-.notification-modal-date {
-  margin-top: 8px;
-
-  font-size: 12px;
-
-  color: #888;
-}
-
-.notification-modal-divider {
-  width: 100%;
-  height: 1px;
-
-  margin: 18px 0;
-
-  background: #e5e5e5;
-}
-
-.notification-modal p {
-  margin: 0;
-
-  text-align: left;
-
-  font-size: 15px;
-  line-height: 1.7;
-
-  color: #333;
-
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.notification-modal-close {
-  width: 100%;
-
-  margin-top: 24px;
-
-  padding: 12px 18px;
-
-  border: none;
-  border-radius: 10px;
-
-  background: #e8473f;
-  color: #ffffff;
-
-  font-size: 15px;
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.notification-modal-close:hover {
-  opacity: 0.9;
-}
-
-
-/* MOBILE */
-
 @media (max-width: 600px) {
-
-  .member-notifications-page-header h2 {
-    font-size: 24px;
-  }
-
-  .clear-all-notifications-button {
-    font-size: 15px;
-  }
-
   .member-notification-page-item {
-    padding: 16px;
-    gap: 12px;
-    border-radius: 16px;
+    padding: 14px 15px;
   }
 
-  .member-notification-page-icon {
-    flex: 0 0 46px;
-
-    width: 46px;
-    height: 46px;
-
-    font-size: 23px;
+  .member-notification-page-top strong {
+    font-size: 16px;
   }
 
-  .member-notification-page-content strong {
-    font-size: 17px;
-  }
-
-  .member-notification-preview {
-    font-size: 14px;
-  }
-
-  .member-notification-meta {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .notification-modal-overlay {
-    padding: 16px;
-  }
-
-  .notification-modal {
-    padding: 24px 20px;
-    border-radius: 18px;
-  }
-
-  .notification-modal h3 {
-    font-size: 19px;
-  }
-
-  .notification-modal p {
-    font-size: 14px;
+  .member-notification-page-date {
+    font-size: 10px;
+    max-width: 45%;
   }
 }

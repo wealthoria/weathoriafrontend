@@ -1373,59 +1373,64 @@ return (
             : message;
 
         return (
-          <div
-            key={notification.id}
-            className="member-notification-page-item"
-          >
+         <div
+  key={notification.id}
+  className="member-notification-page-item"
+>
+  <div className="member-notification-page-content">
 
-            <div className="member-notification-page-icon">
-              🔔
-            </div>
+    <div className="member-notification-page-top">
+      <strong>
+        {notification.title}
+      </strong>
 
+      <small className="member-notification-page-date">
+        {notification.createdAt
+          ? new Date(
+              notification.createdAt._seconds
+                ? notification.createdAt._seconds * 1000
+                : notification.createdAt
+            ).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            })
+          : ""}
+      </small>
+    </div>
 
-            <div className="member-notification-page-content">
+    <p>
+      {isOpen
+        ? message
+        : preview}
+    </p>
 
-              <strong>
-                {notification.title || "Wealthoria"}
-              </strong>
+    <div className="member-notification-page-bottom">
 
-              <p className="member-notification-preview">
-                {preview}
-              </p>
+      <small className="member-notification-page-status">
+        {notification.read
+          ? "Read"
+          : "New"}
+      </small>
 
+      <button
+        type="button"
+        className="notification-open-button"
+        onClick={() =>
+          setOpenNotificationId(
+            isOpen
+              ? null
+              : notification.id
+          )
+        }
+      >
+        {isOpen ? "Close" : "Open"}
+      </button>
 
-              <div className="member-notification-meta">
+    </div>
 
-                <span className="member-notification-date">
-                  {getDashboardDateTime(
-                    notification.createdAt
-                  )}
-                </span>
-
-                <span className="member-notification-status">
-                  {notification.read
-                    ? "Read"
-                    : "New"}
-                </span>
-
-              </div>
-
-
-              <button
-                type="button"
-                className="notification-open-button"
-                onClick={() =>
-                  setSelectedNotification(
-                    notification
-                  )
-                }
-              >
-                Open
-              </button>
-
-            </div>
-
-          </div>
+  </div>
+</div>
         );
       })}
 

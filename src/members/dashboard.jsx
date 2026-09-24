@@ -1784,6 +1784,27 @@ const [authChecking, setAuthChecking] =
 const [notificationStatus, setNotificationStatus] =
   useState("checking");
 
+const [notificationMuted, setNotificationMuted] = useState(
+  () =>
+    localStorage.getItem(
+      "wealthoria-notifications-muted"
+    ) === "true"
+);
+
+const toggleNotificationMute = () => {
+  setNotificationMuted((current) => {
+    const next = !current;
+
+    localStorage.setItem(
+      "wealthoria-notifications-muted",
+      String(next)
+    );
+
+    return next;
+  });
+};
+
+
 useEffect(() => {
   if (!("Notification" in window)) {
     setNotificationStatus("unsupported");
@@ -3269,11 +3290,23 @@ if (membershipDays <= 0) {
     </div>
   )}
 
-  {notificationStatus === "enabled" && (
-    <div className="notification-success">
-      🔔 Notifications are enabled. You'll receive Wealthoria updates on this device.
+ {notificationStatus === "enabled" && (
+  <div className="notification-success">
+    <div className="notification-success-content">
+      <strong>
+        🔔 Notifications are enabled
+      </strong>
+
+      <button
+        type="button"
+        onClick={toggleNotificationMute}
+        className="notification-mute-button"
+      >
+        {notificationMuted ? "Unmute" : "Mute"}
+      </button>
     </div>
-  )}
+  </div>
+)}
 
   {notificationStatus === "blocked" && (
     <div className="notification-blocked">

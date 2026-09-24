@@ -7544,3 +7544,49 @@ html[data-theme="dark"] .membership-status-panel p {
   text-align: center;
   z-index: 5;
 }
+
+
+.notification-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-control-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.notification-bell-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 21px;
+  padding: 4px;
+  line-height: 1;
+}
+
+.notification-success-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-mute-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8473f;
+  padding: 5px 8px;
+}
+
+.notification-mute-button:hover {
+  text-decoration: underline;
+}

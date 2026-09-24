@@ -1060,9 +1060,67 @@ function MemberNotificationsPage({
   const [notifications, setNotifications] =
     useState([]);
 
+
   const [loading, setLoading] =
     useState(true);
 
+    const [openNotificationId, setOpenNotificationId] =
+  useState(null);
+
+
+
+const handleClearAllNotifications = async () => {
+
+  const confirmed = window.confirm(
+    "Are you sure you want to clear all notifications?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      `${DASHBOARD_API}/api/members/notifications/clear-all`,
+      {
+        method: "POST",
+        headers: {
+          Authorization:
+            `Bearer ${member.token}`
+        }
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (!response.ok || !data?.success) {
+      throw new Error(
+        data?.message ||
+        "Unable to clear notifications."
+      );
+    }
+
+    setNotifications([]);
+
+    setOpenNotificationId(null);
+
+    onNotificationsRead();
+
+  } catch (error) {
+
+    console.error(
+      "❌ Clear notifications error:",
+      error
+    );
+
+    alert(
+      "Unable to clear notifications. Please try again."
+    );
+
+  }
+};
 
   useEffect(() => {
 
@@ -1251,55 +1309,103 @@ function MemberNotificationsPage({
 
   }
 
+return (
+  <>
+    <div className="member-notifications-page-header">
 
-  return (
+      <h2>Notifications</h2>
 
-    <div className="member-notification-page-list">
-
-      {notifications.map(
-        notification => (
-
-          <div
-            key={notification.id}
-            className="member-notification-page-item"
-          >
-
-            <div className="member-notification-page-icon">
-
-              🔔
-
-            </div>
-
-
-            <div className="member-notification-page-content">
-
-              <strong>
-                {notification.title}
-              </strong>
-
-
-              <p>
-                {notification.message}
-              </p>
-
-
-              <small>
-                {notification.read
-                  ? "Read"
-                  : "New"}
-              </small>
-
-            </div>
-
-          </div>
-
-        )
+      {notifications.length > 0 && (
+        <button
+          type="button"
+          className="clear-all-notifications-button"
+          onClick={handleClearAllNotifications}
+        >
+          Clear All
+        </button>
       )}
 
     </div>
 
-  );
 
+    <div className="member-notification-page-list">
+
+      {notifications.map(
+        notification => {
+
+          const isOpen =
+            openNotificationId ===
+            notification.id;
+
+          const message =
+            notification.message || "";
+
+          const preview =
+            message.length > 120
+              ? message.slice(0, 120) + "..."
+              : message;
+
+          return (
+
+            <div
+              key={notification.id}
+              className="member-notification-page-item"
+            >
+
+              <div className="member-notification-page-icon">
+                🔔
+              </div>
+
+
+              <div className="member-notification-page-content">
+
+                <strong>
+                  {notification.title}
+                </strong>
+
+
+                <p>
+                  {isOpen
+                    ? message
+                    : preview}
+                </p>
+
+
+                {message.length > 120 && (
+                  <button
+                    type="button"
+                    className="notification-open-button"
+                    onClick={() =>
+                      setOpenNotificationId(
+                        isOpen
+                          ? null
+                          : notification.id
+                      )
+                    }
+                  >
+                    {isOpen ? "Close" : "Open"}
+                  </button>
+                )}
+
+
+                <small>
+                  {notification.read
+                    ? "Read"
+                    : "New"}
+                </small>
+
+              </div>
+
+            </div>
+
+          );
+
+        }
+      )}
+
+    </div>
+  </>
+);
 }
 
 

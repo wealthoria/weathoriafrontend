@@ -16,7 +16,10 @@
 
   function getLoggedInMember() {
 
+    
+
     let member = null;
+
 
     const localMember =
       localStorage.getItem("wealthoria-member");

@@ -3152,42 +3152,27 @@ if (membershipDays <= 0) {
 
 
        {/* HEADER NOTIFICATIONS */}
+{/* HEADER NOTIFICATIONS */}
+
 <button
   type="button"
-  className={
-    notificationStatus === "enabled"
-      ? "member-header-button wd-mobile-header-action wd-mobile-notification-action notification-enabled"
-      : "member-header-button wd-mobile-header-action wd-mobile-notification-action"
-  }
-  onClick={async () => {
-    if (
-      "Notification" in window &&
-      Notification.permission === "default" &&
-      typeof window.enableMemberNotifications === "function"
-    ) {
-      await window.enableMemberNotifications();
-
-      if (Notification.permission === "granted") {
-        setNotificationStatus("enabled");
-      } else if (Notification.permission === "denied") {
-        setNotificationStatus("blocked");
-      }
-    } else if (
-      "Notification" in window &&
-      Notification.permission === "granted"
-    ) {
-      setNotificationStatus("enabled");
-    } else if (
-      "Notification" in window &&
-      Notification.permission === "denied"
-    ) {
-      setNotificationStatus("blocked");
-    }
-
+  className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
+  onClick={() => {
+    toggleNotificationMute();
     openPage("notifications");
   }}
+  title={
+    notificationMuted
+      ? "Unmute notifications"
+      : "Mute notifications"
+  }
+  aria-label={
+    notificationMuted
+      ? "Unmute notifications"
+      : "Mute notifications"
+  }
 >
-  🔔 Notifications
+  {notificationMuted ? "🔕" : "🔔"} Notifications
 
   {unreadNotifications > 0 && (
     <span className="member-header-notification-badge">
@@ -3195,6 +3180,7 @@ if (membershipDays <= 0) {
     </span>
   )}
 </button>
+
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"

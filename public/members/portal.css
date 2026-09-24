@@ -7659,18 +7659,35 @@ html[data-theme="dark"] .membership-status-panel p {
   font-size: 11px;
   color: #999;
 }
-
 .notification-open-button {
-  border: none;
-  background: transparent;
-  padding: 0;
+  border: 1px solid #e8473f;
+  background: #e8473f;
+  color: #ffffff;
+
+  padding: 7px 14px;
   margin: 0;
-  font-size: 13px;
+
+  border-radius: 7px;
+
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 600;
-  color: #d9534f;
+
+  line-height: 1;
   cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .notification-open-button:hover {
-  text-decoration: underline;
+  background: #d83d36;
+  border-color: #d83d36;
+  transform: translateY(-1px);
+}
+
+.notification-open-button:active {
+  transform: translateY(0);
 }

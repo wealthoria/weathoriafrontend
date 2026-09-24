@@ -3169,56 +3169,45 @@ if (membershipDays <= 0) {
             </button>
 
 
+{/* HEADER NOTIFICATIONS */}
 
-{/* NOTIFICATIONS + MUTE/UNMUTE */}
-<button
-  type="button"
-  className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
-  onClick={async () => {
+<div className="member-header-notification-control">
 
-    // First-time permission request
-    if (
-      "Notification" in window &&
-      Notification.permission === "default" &&
-      typeof window.enableMemberNotifications === "function"
-    ) {
-      await window.enableMemberNotifications();
+  {/* NOTIFICATIONS TEXT → OPEN NOTIFICATIONS PAGE */}
+  <button
+    type="button"
+    className="member-header-notification-text"
+    onClick={() => openPage("notifications")}
+  >
+    Notifications
+  </button>
 
-      if (Notification.permission === "granted") {
-        setNotificationStatus("enabled");
-      } else if (Notification.permission === "denied") {
-        setNotificationStatus("blocked");
-      }
-
-      openPage("notifications");
-      return;
+  {/* BELL → MUTE / UNMUTE */}
+  <button
+    type="button"
+    className="member-header-notification-bell"
+    onClick={toggleNotificationMute}
+    title={
+      notificationMuted
+        ? "Unmute notifications"
+        : "Mute notifications"
     }
+    aria-label={
+      notificationMuted
+        ? "Unmute notifications"
+        : "Mute notifications"
+    }
+  >
+    {notificationMuted ? "🔕" : "🔔"}
 
-    // Already enabled → toggle mute/unmute
-    toggleNotificationMute();
+    {unreadNotifications > 0 && (
+      <span className="member-header-notification-badge">
+        {unreadNotifications}
+      </span>
+    )}
+  </button>
 
-    // Open notifications page
-    openPage("notifications");
-  }}
-  title={
-    notificationMuted
-      ? "Unmute notifications"
-      : "Mute notifications"
-  }
-  aria-label={
-    notificationMuted
-      ? "Unmute notifications"
-      : "Mute notifications"
-  }
->
-  {notificationMuted ? "🔕" : "🔔"}
-
-  {unreadNotifications > 0 && (
-    <span className="member-header-notification-badge">
-      {unreadNotifications}
-    </span>
-  )}
-</button>
+</div>
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"

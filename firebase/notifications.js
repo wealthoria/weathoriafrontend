@@ -244,7 +244,8 @@
           // =================================================
 if (
   "Notification" in window &&
-  Notification.permission === "granted"
+  Notification.permission === "granted" &&
+  localStorage.getItem("wealthoria-notifications-muted") !== "true"
 ) {
   try {
     const notification = new Notification(title, {

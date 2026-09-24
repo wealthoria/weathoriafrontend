@@ -3171,12 +3171,33 @@ if (membershipDays <= 0) {
 
 
 {/* NOTIFICATIONS + MUTE/UNMUTE */}
-
 <button
   type="button"
   className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
-  onClick={() => {
+  onClick={async () => {
+
+    // First-time permission request
+    if (
+      "Notification" in window &&
+      Notification.permission === "default" &&
+      typeof window.enableMemberNotifications === "function"
+    ) {
+      await window.enableMemberNotifications();
+
+      if (Notification.permission === "granted") {
+        setNotificationStatus("enabled");
+      } else if (Notification.permission === "denied") {
+        setNotificationStatus("blocked");
+      }
+
+      openPage("notifications");
+      return;
+    }
+
+    // Already enabled → toggle mute/unmute
     toggleNotificationMute();
+
+    // Open notifications page
     openPage("notifications");
   }}
   title={
@@ -3190,7 +3211,7 @@ if (membershipDays <= 0) {
       : "Mute notifications"
   }
 >
-  {notificationMuted ? "🔕" : "🔔"} Notifications
+  {notificationMuted ? "🔕" : "🔔"}
 
   {unreadNotifications > 0 && (
     <span className="member-header-notification-badge">

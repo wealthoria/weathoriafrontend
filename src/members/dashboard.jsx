@@ -3164,99 +3164,71 @@ if (membershipDays <= 0) {
                 : "☾ Dark"}
 
             </button>
-{/* NOTIFICATIONS */}
 
-<div className="member-header-notification-control">
+            {/* NOTIFICATION BELL ONLY */}
 
-  {/* NOTIFICATIONS TEXT → OPEN PAGE */}
-  <button
-    type="button"
-    className="member-header-notification-text"
-    onClick={() => openPage("notifications")}
-  >
-    Notifications
-  </button>
+<button
+  type="button"
+  className="member-header-notification-bell"
+  onClick={async () => {
 
-  {/* BELL → ENABLE / MUTE / UNMUTE */}
-  <button
-    type="button"
-    className="member-header-notification-bell"
-    onClick={async () => {
+    // Permission not decided yet
+    if (
+      "Notification" in window &&
+      Notification.permission === "default" &&
+      typeof window.enableMemberNotifications === "function"
+    ) {
+      await window.enableMemberNotifications();
 
-      // Browser/PWA permission not decided yet
-      if (
-        "Notification" in window &&
-        Notification.permission === "default" &&
-        typeof window.enableMemberNotifications ===
-          "function"
-      ) {
-        await window.enableMemberNotifications();
-
-        if (Notification.permission === "granted") {
-          localStorage.setItem(
-            "wealthoria-notifications-muted",
-            "false"
-          );
-
-          setNotificationStatus("enabled");
-        }
-
-        return;
-      }
-
-      // Already allowed → toggle mute/unmute
-      if (
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
-        const currentMuted =
-          localStorage.getItem(
-            "wealthoria-notifications-muted"
-          ) === "true";
-
+      if (Notification.permission === "granted") {
         localStorage.setItem(
           "wealthoria-notifications-muted",
-          String(!currentMuted)
+          "false"
         );
 
-        return;
+        setNotificationMuted(false);
+        setNotificationStatus("enabled");
       }
 
-      // Permission denied
-      if (
-        "Notification" in window &&
-        Notification.permission === "denied"
-      ) {
-        return;
-      }
-    }}
-    title={
-      notificationStatus === "enabled"
-        ? "Mute / Unmute notifications"
-        : "Enable notifications"
+      return;
     }
-    aria-label={
-      notificationStatus === "enabled"
-        ? "Mute / Unmute notifications"
-        : "Enable notifications"
+
+    // Permission already granted → toggle mute/unmute
+    if (
+      "Notification" in window &&
+      Notification.permission === "granted"
+    ) {
+      toggleNotificationMute();
+      return;
     }
-  >
-    {notificationStatus === "enabled" &&
-    localStorage.getItem(
-      "wealthoria-notifications-muted"
-    ) === "true"
-      ? "🔕"
-      : "🔔"}
 
-    {unreadNotifications > 0 && (
-      <span className="member-header-notification-badge">
-        {unreadNotifications}
-      </span>
-    )}
-  </button>
+    // Permission denied → do nothing
+    if (
+      "Notification" in window &&
+      Notification.permission === "denied"
+    ) {
+      return;
+    }
+  }}
+  title={
+    notificationMuted
+      ? "Notifications muted"
+      : "Notifications enabled"
+  }
+  aria-label={
+    notificationMuted
+      ? "Notifications muted"
+      : "Notifications enabled"
+  }
+>
+  {notificationMuted ? "🔕" : "🔔"}
 
-</div>
-
+  {unreadNotifications > 0 && (
+    <span className="member-header-notification-badge">
+      {unreadNotifications}
+    </span>
+  )}
+</button>
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"

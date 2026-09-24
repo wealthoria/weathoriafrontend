@@ -1800,27 +1800,33 @@ const toggleNotificationMute = () => {
       String(next)
     );
 
-    // Tell the service worker
-    if (
-      "serviceWorker" in navigator
-    ) {
+    // Sync mute state with service worker
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready
         .then((registration) => {
           if (registration.active) {
             registration.active.postMessage({
-              type:
-                "SET_NOTIFICATION_MUTE",
+              type: "SET_NOTIFICATION_MUTE",
               muted: next
             });
+
+            console.log(
+              "🔔 Notification mute state sent:",
+              next
+            );
           }
         })
-        .catch(() => {});
+        .catch((error) => {
+          console.error(
+            "Service worker sync error:",
+            error
+          );
+        });
     }
 
     return next;
   });
 };
-
 useEffect(() => {
   if (!("Notification" in window)) {
     setNotificationStatus("unsupported");

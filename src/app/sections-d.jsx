@@ -490,14 +490,12 @@ function FAQ() {
 function Footer() {
   const { t } = useApp();
   const f = t.footer;
-
-  const socials = [
-    ["youtube", "#"],
-    ["instagram", "#"],
-    ["whatsapp", "#"],
-    ["linkedin", "#"]
+ const socials = [
+    ["youtube", "youtube.com/channel/UCsa97EbW0qSUlf8-MdSC-ZA"],
+    ["instagram", "https://www.instagram.com/wealthoria_edu?stkn=NG1neTF4eDVkd3ly"],
+    ["whatsapp", "https://wa.me/90197 59001"],
+    ["linkedin", "https://www.linkedin.com/in/wealthoria-education-988411413/"]
   ];
-
   return (
     <footer className="footer">
 

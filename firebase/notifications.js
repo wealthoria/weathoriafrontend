@@ -244,12 +244,10 @@
           // =================================================
 
           if (
-  "Notification" in window &&
-  Notification.permission === "granted" &&
-  localStorage.getItem(
-    "wealthoria-notifications-muted"
-  ) !== "true"
-) {
+            "Notification" in window &&
+            Notification.permission ===
+              "granted"
+          ) {
 
             try {
 

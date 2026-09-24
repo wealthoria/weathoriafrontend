@@ -1784,27 +1784,6 @@ const [authChecking, setAuthChecking] =
 const [notificationStatus, setNotificationStatus] =
   useState("checking");
 
-  const [notificationMuted, setNotificationMuted] = useState(
-  () =>
-    localStorage.getItem("wealthoria-notifications-muted") ===
-    "true"
-);
-
-const toggleNotificationMute = () => {
-  setNotificationMuted((current) => {
-    const next = !current;
-
-    localStorage.setItem(
-      "wealthoria-notifications-muted",
-      String(next)
-    );
-
-    return next;
-  });
-};
-
-  
-
 useEffect(() => {
   if (!("Notification" in window)) {
     setNotificationStatus("unsupported");
@@ -2149,7 +2128,7 @@ useEffect(() => {
 
 
             script.src =
-              "/firebase/notifications.js?v=25";
+              "/firebase/notifications.js?v=24";
 
 
             script.async = true;
@@ -3165,86 +3144,39 @@ if (membershipDays <= 0) {
 
             </button>
 
-        {/* READ NOTIFICATIONS + PUSH CONTROL */}
 
-<div className="member-header-notification-control">
-<button
-  type="button"
-  className="member-header-notification-read"
-  onClick={() => openPage("notifications")}
-  title="Read notifications"
-  aria-label="Read notifications"
->
-  <span className="read-message-icon">
-    <span className="read-message-icon-line"></span>
-  </span>
+            {/* HEADER NOTIFICATIONS */}
 
-  {unreadNotifications > 0 && (
-    <span className="member-header-notification-badge">
-      {unreadNotifications}
-    </span>
-  )}
-</button>
+            <button
+              type="button"
+              className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
+          onClick={async () => {
+  if (
+    "Notification" in window &&
+    Notification.permission !== "granted" &&
+    typeof window.enableMemberNotifications === "function"
+  ) {
+    await window.enableMemberNotifications();
+  }
 
-  {/* PUSH NOTIFICATION ON/OFF */}
-  <button
-    type="button"
-    className="member-header-notification-bell"
-    onClick={async () => {
+  openPage("notifications");
+}}
+            >
 
-      // First time → browser/PWA permission
-      if (
-        "Notification" in window &&
-        Notification.permission === "default" &&
-        typeof window.enableMemberNotifications === "function"
-      ) {
-        await window.enableMemberNotifications();
+              🔔 Notifications
 
-        if (Notification.permission === "granted") {
-          localStorage.setItem(
-            "wealthoria-notifications-muted",
-            "false"
-          );
 
-          setNotificationMuted(false);
-          setNotificationStatus("enabled");
-        }
+              {unreadNotifications > 0 && (
 
-        return;
-      }
+                <span className="member-header-notification-badge">
+                  {unreadNotifications}
+                </span>
 
-      // Already allowed → mute/unmute
-      if (
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
-        toggleNotificationMute();
-        return;
-      }
+              )}
 
-      // Denied → do nothing
-      if (
-        "Notification" in window &&
-        Notification.permission === "denied"
-      ) {
-        return;
-      }
-    }}
-    title={
-      notificationMuted
-        ? "Push notifications muted"
-        : "Push notifications enabled"
-    }
-    aria-label={
-      notificationMuted
-        ? "Push notifications muted"
-        : "Push notifications enabled"
-    }
-  >
-    {notificationMuted ? "🔕" : "🔔"}
-  </button>
+            </button>
 
-</div>
+
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"
@@ -3593,7 +3525,6 @@ if (membershipDays <= 0) {
   // 3. Membership has expired
 const showMembershipPanel =
   isCancelled || membershipDays <= 1;
-
   if (!showMembershipPanel) {
     return null;
   }

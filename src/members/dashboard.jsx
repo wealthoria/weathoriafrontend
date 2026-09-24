@@ -3165,70 +3165,86 @@ if (membershipDays <= 0) {
 
             </button>
 
-            {/* NOTIFICATION BELL ONLY */}
+        {/* READ NOTIFICATIONS + PUSH CONTROL */}
 
-<button
-  type="button"
-  className="member-header-notification-bell"
-  onClick={async () => {
+<div className="member-header-notification-control">
 
-    // Permission not decided yet
-    if (
-      "Notification" in window &&
-      Notification.permission === "default" &&
-      typeof window.enableMemberNotifications === "function"
-    ) {
-      await window.enableMemberNotifications();
+  {/* READ MESSAGES */}
+  <button
+    type="button"
+    className="member-header-notification-read"
+    onClick={() => openPage("notifications")}
+    title="Read notifications"
+    aria-label="Read notifications"
+  >
+    💬
 
-      if (Notification.permission === "granted") {
-        localStorage.setItem(
-          "wealthoria-notifications-muted",
-          "false"
-        );
+    {unreadNotifications > 0 && (
+      <span className="member-header-notification-badge">
+        {unreadNotifications}
+      </span>
+    )}
+  </button>
 
-        setNotificationMuted(false);
-        setNotificationStatus("enabled");
+  {/* PUSH NOTIFICATION ON/OFF */}
+  <button
+    type="button"
+    className="member-header-notification-bell"
+    onClick={async () => {
+
+      // First time → browser/PWA permission
+      if (
+        "Notification" in window &&
+        Notification.permission === "default" &&
+        typeof window.enableMemberNotifications === "function"
+      ) {
+        await window.enableMemberNotifications();
+
+        if (Notification.permission === "granted") {
+          localStorage.setItem(
+            "wealthoria-notifications-muted",
+            "false"
+          );
+
+          setNotificationMuted(false);
+          setNotificationStatus("enabled");
+        }
+
+        return;
       }
 
-      return;
-    }
+      // Already allowed → mute/unmute
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        toggleNotificationMute();
+        return;
+      }
 
-    // Permission already granted → toggle mute/unmute
-    if (
-      "Notification" in window &&
-      Notification.permission === "granted"
-    ) {
-      toggleNotificationMute();
-      return;
+      // Denied → do nothing
+      if (
+        "Notification" in window &&
+        Notification.permission === "denied"
+      ) {
+        return;
+      }
+    }}
+    title={
+      notificationMuted
+        ? "Push notifications muted"
+        : "Push notifications enabled"
     }
-
-    // Permission denied → do nothing
-    if (
-      "Notification" in window &&
-      Notification.permission === "denied"
-    ) {
-      return;
+    aria-label={
+      notificationMuted
+        ? "Push notifications muted"
+        : "Push notifications enabled"
     }
-  }}
-  title={
-    notificationMuted
-      ? "Notifications muted"
-      : "Notifications enabled"
-  }
-  aria-label={
-    notificationMuted
-      ? "Notifications muted"
-      : "Notifications enabled"
-  }
->
-  {notificationMuted ? "🔕" : "🔔"}
+  >
+    {notificationMuted ? "🔕" : "🔔"}
+  </button>
 
-  {unreadNotifications > 0 && (
-    <span className="member-header-notification-badge">
-      {unreadNotifications}
-    </span>
-  )}
-</button>
+</div>
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"

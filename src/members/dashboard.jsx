@@ -3152,16 +3152,14 @@ if (membershipDays <= 0) {
 
 
        {/* HEADER NOTIFICATIONS */}
-
 <button
   type="button"
   className={
     notificationStatus === "enabled"
-      ? "member-header-button wd-mobile-header-action wd-mobile-notification-action notification-enabled"
-      : "member-header-button wd-mobile-header-action wd-mobile-notification-action"
+      ? "member-header-button notification-enabled"
+      : "member-header-button"
   }
   onClick={async () => {
-
     if (
       notificationStatus !== "enabled" &&
       typeof window.enableMemberNotifications === "function"
@@ -3179,7 +3177,8 @@ if (membershipDays <= 0) {
     openPage("notifications");
   }}
 >
-  🔔 
+  🔔 Notifications
+
   {unreadNotifications > 0 && (
     <span className="member-header-notification-badge">
       {unreadNotifications}

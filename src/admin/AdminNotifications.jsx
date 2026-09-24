@@ -1,5 +1,5 @@
 ﻿import React from "react";
-
+import { auth } from "../firebase";
 /* global React, window */
 
 const {
@@ -52,56 +52,49 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
   }, []);
 
+const loadMembers = async () => {
+  try {
+    setLoadingMembers(true);
+    setError("");
 
-  const loadMembers = async () => {
+   const user = auth.currentUser;
 
-    try {
+if (!user) {
+  throw new Error("Admin authentication required.");
+}
 
-      setLoadingMembers(true);
-      setError("");
+const token = await user.getIdToken(true);
 
-      const response =
-        await fetch(
-          `${API_BASE_URL}/api/admin/notifications/members`
-        );
-
-      const data =
-        await response.json();
-
-      if (
-        !response.ok ||
-        !data?.success
-      ) {
-        throw new Error(
-          data?.message ||
-          "Unable to load members."
-        );
+const response = await fetch(
+  `${API_BASE_URL}/api/admin/notifications/send`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
       }
+    );
 
-      setMembers(
-        data.members || []
+    const data = await response.json();
+
+    if (!response.ok || !data?.success) {
+      throw new Error(
+        data?.message || "Unable to load members."
       );
-
-    } catch (error) {
-
-      console.error(
-        "Load members error:",
-        error
-      );
-
-      setError(
-        error.message ||
-        "Unable to load members."
-      );
-
-    } finally {
-
-      setLoadingMembers(false);
-
     }
 
-  };
+    setMembers(data.members || []);
+  } catch (error) {
+    console.error("Load members error:", error);
 
+    setError(
+      error.message || "Unable to load members."
+    );
+  } finally {
+    setLoadingMembers(false);
+  }
+};
 
   /* =========================================================
      SELECT MEMBERS

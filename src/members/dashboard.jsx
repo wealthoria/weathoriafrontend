@@ -2661,24 +2661,9 @@ if (!membershipLoaded) {
     </div>
   );
 }
-
 if (membershipDays <= 0) {
-  return (
-    <div className="wd-page-state">
-      <h2>Membership Expired</h2>
-      <p>Your Wealthoria membership has expired.</p>
-
-   <button
-  type="button"
-  onClick={activateSubscription}
-  disabled={activationLoading}
->
-  {activationLoading
-    ? "Opening Payment..."
-    : "Activate Subscription"}
-</button>
-    </div>
-  );
+  window.location.replace("/members/login");
+  return null;
 }
 
   /* =======================================================

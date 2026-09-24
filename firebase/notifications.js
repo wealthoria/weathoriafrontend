@@ -242,28 +242,78 @@
           // =================================================
           // BROWSER NOTIFICATION
           // =================================================
-if (
+
+          if (
   "Notification" in window &&
   Notification.permission === "granted" &&
-  localStorage.getItem("wealthoria-notifications-muted") !== "true"
+  localStorage.getItem(
+    "wealthoria-notifications-muted"
+  ) !== "true"
 ) {
-  try {
-    const notification = new Notification(title, {
-      body: body,
-      icon: "/icons/icon-192.png"
-    });
 
-    notification.onclick = function () {
-      window.focus();
-      notification.close();
-    };
-  } catch (error) {
-    console.error(
-      "❌ Browser notification error:",
-      error
-    );
+            try {
+
+              const notification =
+                new Notification(
+                  title,
+                  {
+                    body:
+                      body,
+
+                    icon:
+                      "/icons/icon-192.png"
+                  }
+                );
+
+
+              notification.onclick =
+                function () {
+
+                  window.focus();
+
+                  notification.close();
+
+                };
+
+
+            } catch (error) {
+
+              console.error(
+                "❌ Browser notification error:",
+                error
+              );
+
+            }
+
+          }
+
+        }
+      );
+
+
+      window.memberForegroundListenerReady =
+        true;
+
+
+   
+
+
+      return true;
+
+    } catch (error) {
+
+      console.error(
+        "❌ Foreground listener error:",
+        error
+      );
+
+      return false;
+
+    }
+
   }
-}
+
+
   // =========================================================
   // ENABLE MEMBER NOTIFICATIONS
   // =========================================================

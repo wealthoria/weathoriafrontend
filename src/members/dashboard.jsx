@@ -3169,8 +3169,8 @@ if (membershipDays <= 0) {
             </button>
 
 
-       {/* HEADER NOTIFICATIONS */}
-{/* HEADER NOTIFICATIONS */}
+
+{/* NOTIFICATIONS + MUTE/UNMUTE */}
 
 <button
   type="button"
@@ -3198,7 +3198,6 @@ if (membershipDays <= 0) {
     </span>
   )}
 </button>
-
             <button
               type="button"
               className="wd-header-button wd-mobile-header-action wd-mobile-settings-action"

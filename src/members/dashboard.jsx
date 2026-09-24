@@ -3156,22 +3156,32 @@ if (membershipDays <= 0) {
   type="button"
   className={
     notificationStatus === "enabled"
-      ? "member-header-button notification-enabled"
-      : "member-header-button"
+      ? "member-header-button wd-mobile-header-action wd-mobile-notification-action notification-enabled"
+      : "member-header-button wd-mobile-header-action wd-mobile-notification-action"
   }
   onClick={async () => {
     if (
-      notificationStatus !== "enabled" &&
+      "Notification" in window &&
+      Notification.permission === "default" &&
       typeof window.enableMemberNotifications === "function"
     ) {
       await window.enableMemberNotifications();
 
-      if (
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
+      if (Notification.permission === "granted") {
         setNotificationStatus("enabled");
+      } else if (Notification.permission === "denied") {
+        setNotificationStatus("blocked");
       }
+    } else if (
+      "Notification" in window &&
+      Notification.permission === "granted"
+    ) {
+      setNotificationStatus("enabled");
+    } else if (
+      "Notification" in window &&
+      Notification.permission === "denied"
+    ) {
+      setNotificationStatus("blocked");
     }
 
     openPage("notifications");

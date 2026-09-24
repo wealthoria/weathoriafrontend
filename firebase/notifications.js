@@ -242,14 +242,7 @@
           // =================================================
           // BROWSER NOTIFICATION
           // =================================================
-
-         const notificationsMuted =
-  localStorage.getItem(
-    "wealthoria-notifications-muted"
-  ) === "true";
-
 if (
-  !notificationsMuted &&
   "Notification" in window &&
   Notification.permission === "granted"
 ) {
@@ -264,37 +257,12 @@ if (
       notification.close();
     };
   } catch (error) {
-    console.error("❌ Browser notification error:", error);
+    console.error(
+      "❌ Browser notification error:",
+      error
+    );
   }
 }
-
-        }
-      );
-
-
-      window.memberForegroundListenerReady =
-        true;
-
-
-   
-
-
-      return true;
-
-    } catch (error) {
-
-      console.error(
-        "❌ Foreground listener error:",
-        error
-      );
-
-      return false;
-
-    }
-
-  }
-
-
   // =========================================================
   // ENABLE MEMBER NOTIFICATIONS
   // =========================================================

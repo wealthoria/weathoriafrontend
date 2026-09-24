@@ -1370,22 +1370,19 @@ return (
                     : preview}
                 </p>
 
-
-                {message.length > 120 && (
-                  <button
-                    type="button"
-                    className="notification-open-button"
-                    onClick={() =>
-                      setOpenNotificationId(
-                        isOpen
-                          ? null
-                          : notification.id
-                      )
-                    }
-                  >
-                    {isOpen ? "Close" : "Open"}
-                  </button>
-                )}
+<button
+  type="button"
+  className="notification-open-button"
+  onClick={() =>
+    setOpenNotificationId(
+      isOpen
+        ? null
+        : notification.id
+    )
+  }
+>
+  {isOpen ? "Close" : "Open"}
+</button>
 
 
                 <small>

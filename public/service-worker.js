@@ -28,52 +28,126 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 
+
+// =========================================================
+// NOTIFICATION MUTE STATE
+// =========================================================
+
+const NOTIFICATION_DB_NAME =
+  "wealthoria-notification-settings";
+
+const NOTIFICATION_STORE_NAME =
+  "settings";
+
+function getNotificationMuteState() {
+  return new Promise((resolve) => {
+    const request = indexedDB.open(
+      NOTIFICATION_DB_NAME,
+      1
+    );
+
+    request.onupgradeneeded = function () {
+      const db = request.result;
+
+      if (
+        !db.objectStoreNames.contains(
+          NOTIFICATION_STORE_NAME
+        )
+      ) {
+        db.createObjectStore(
+          NOTIFICATION_STORE_NAME
+        );
+      }
+    };
+
+    request.onsuccess = function () {
+      const db = request.result;
+
+      const transaction =
+        db.transaction(
+          NOTIFICATION_STORE_NAME,
+          "readonly"
+        );
+
+      const store =
+        transaction.objectStore(
+          NOTIFICATION_STORE_NAME
+        );
+
+      const getRequest =
+        store.get("muted");
+
+      getRequest.onsuccess = function () {
+        resolve(
+          getRequest.result === true
+        );
+      };
+
+      getRequest.onerror = function () {
+        resolve(false);
+      };
+    };
+
+    request.onerror = function () {
+      resolve(false);
+    };
+  });
+}
+
+
 /* =========================================================================
    BACKGROUND PUSH NOTIFICATION
    ========================================================================= */
+messaging.onBackgroundMessage(
+  async function (payload) {
 
-messaging.onBackgroundMessage(function (payload) {
+    // Check whether the member has muted notifications
+    const isMuted =
+      await getNotificationMuteState();
 
+    // If muted, DO NOT show browser/PWA notification
+    if (isMuted) {
+      console.log(
+        "[Wealthoria] Notification muted - push suppressed."
+      );
 
-
-  const notificationTitle =
-    payload.notification?.title ||
-    payload.data?.title ||
-    "Wealthoria";
-
-
-  const notificationBody =
-    payload.notification?.body ||
-    payload.data?.body ||
-    "You have a new notification.";
-
-
-  const notificationOptions = {
-
-    body: notificationBody,
-
-    icon: "/icons/icon-192.png",
-
-    badge: "/icons/icon-192.png",
-
-    tag: "wealthoria-notification",
-
-    renotify: true,
-
-    data: {
-      url:
-        payload.data?.url ||
-        "/members/dashboard"
+      return;
     }
 
-  };
+    const notificationTitle =
+      payload.notification?.title ||
+      payload.data?.title ||
+      "Wealthoria";
 
+    const notificationBody =
+      payload.notification?.body ||
+      payload.data?.body ||
+      "You have a new notification.";
 
-  return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
-  );
-});
+    const notificationOptions = {
+      body: notificationBody,
+
+      icon: "/icons/icon-192.png",
+
+      badge: "/icons/icon-192.png",
+
+      tag: "wealthoria-notification",
+
+      renotify: true,
+
+      data: {
+        url:
+          payload.data?.url ||
+          "/members/dashboard"
+      }
+    };
+
+    return self.registration.showNotification(
+      notificationTitle,
+      notificationOptions
+    );
+  }
+);
 
 
 /* =========================================================================
@@ -642,16 +716,72 @@ self.addEventListener(
   "message",
   function (event) {
 
+    // Service worker update
     if (
       event.data ===
       "SKIP_WAITING"
     ) {
-
       self.skipWaiting();
+      return;
+    }
 
+    // Notification mute/unmute
+    if (
+      event.data &&
+      event.data.type ===
+        "SET_NOTIFICATION_MUTE"
+    ) {
+
+      const muted =
+        event.data.muted === true;
+
+      const request =
+        indexedDB.open(
+          NOTIFICATION_DB_NAME,
+          1
+        );
+
+      request.onupgradeneeded =
+        function () {
+
+          const db =
+            request.result;
+
+          if (
+            !db.objectStoreNames.contains(
+              NOTIFICATION_STORE_NAME
+            )
+          ) {
+            db.createObjectStore(
+              NOTIFICATION_STORE_NAME
+            );
+          }
+        };
+
+      request.onsuccess =
+        function () {
+
+          const db =
+            request.result;
+
+          const transaction =
+            db.transaction(
+              NOTIFICATION_STORE_NAME,
+              "readwrite"
+            );
+
+          const store =
+            transaction.objectStore(
+              NOTIFICATION_STORE_NAME
+            );
+
+          store.put(
+            muted,
+            "muted"
+          );
+        };
     }
 
   }
 );
-
 

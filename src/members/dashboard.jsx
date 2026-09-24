@@ -1800,10 +1800,26 @@ const toggleNotificationMute = () => {
       String(next)
     );
 
+    // Tell the service worker
+    if (
+      "serviceWorker" in navigator
+    ) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          if (registration.active) {
+            registration.active.postMessage({
+              type:
+                "SET_NOTIFICATION_MUTE",
+              muted: next
+            });
+          }
+        })
+        .catch(() => {});
+    }
+
     return next;
   });
 };
-
 
 useEffect(() => {
   if (!("Notification" in window)) {

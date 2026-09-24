@@ -1784,7 +1784,25 @@ const [authChecking, setAuthChecking] =
 const [notificationStatus, setNotificationStatus] =
   useState("checking");
 
+const [notificationMuted, setNotificationMuted] = useState(
+  () =>
+    localStorage.getItem(
+      "wealthoria-notifications-muted"
+    ) === "true"
+);
 
+const toggleNotificationMute = () => {
+  setNotificationMuted((current) => {
+    const next = !current;
+
+    localStorage.setItem(
+      "wealthoria-notifications-muted",
+      String(next)
+    );
+
+    return next;
+  });
+};
 
 useEffect(() => {
   if (!("Notification" in window)) {

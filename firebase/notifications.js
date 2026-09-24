@@ -243,47 +243,30 @@
           // BROWSER NOTIFICATION
           // =================================================
 
-          if (
-            "Notification" in window &&
-            Notification.permission ===
-              "granted"
-          ) {
+         const notificationsMuted =
+  localStorage.getItem(
+    "wealthoria-notifications-muted"
+  ) === "true";
 
-            try {
+if (
+  !notificationsMuted &&
+  "Notification" in window &&
+  Notification.permission === "granted"
+) {
+  try {
+    const notification = new Notification(title, {
+      body: body,
+      icon: "/icons/icon-192.png"
+    });
 
-              const notification =
-                new Notification(
-                  title,
-                  {
-                    body:
-                      body,
-
-                    icon:
-                      "/icons/icon-192.png"
-                  }
-                );
-
-
-              notification.onclick =
-                function () {
-
-                  window.focus();
-
-                  notification.close();
-
-                };
-
-
-            } catch (error) {
-
-              console.error(
-                "❌ Browser notification error:",
-                error
-              );
-
-            }
-
-          }
+    notification.onclick = function () {
+      window.focus();
+      notification.close();
+    };
+  } catch (error) {
+    console.error("❌ Browser notification error:", error);
+  }
+}
 
         }
       );

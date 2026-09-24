@@ -1784,6 +1784,12 @@ const [authChecking, setAuthChecking] =
 const [notificationStatus, setNotificationStatus] =
   useState("checking");
 
+
+  const [notificationMuted, setNotificationMuted] = useState(
+  () =>
+    localStorage.getItem("wealthoria-notifications-muted") === "true"
+);
+
 useEffect(() => {
   if (!("Notification" in window)) {
     setNotificationStatus("unsupported");
@@ -2925,26 +2931,6 @@ if (membershipDays <= 0) {
           </button>
 
 
-          {/* PURCHASE HISTORY */}
-
-          <button
-            type="button"
-            className={
-              activePage === "purchase"
-                ? "wd-nav-item active"
-                : "wd-nav-item"
-            }
-            onClick={() => openPage("purchase")}
-          >
-            <span>▣</span>
-            <b>Purchase History</b>
-
-            {stats.purchases > 0 && (
-              <em>
-                {stats.purchases}
-              </em>
-            )}
-          </button>
 
 
           {/* VIDEOS */}
@@ -2992,6 +2978,28 @@ if (membershipDays <= 0) {
   <span>◈</span>
   <b>Ratio Analysis</b>
 </button>
+
+
+          {/* PURCHASE HISTORY */}
+
+          <button
+            type="button"
+            className={
+              activePage === "purchase"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() => openPage("purchase")}
+          >
+            <span>▣</span>
+            <b>Purchase History</b>
+
+            {stats.purchases > 0 && (
+              <em>
+                {stats.purchases}
+              </em>
+            )}
+          </button>
 
 
         </nav>
@@ -3233,54 +3241,74 @@ if (membershipDays <= 0) {
         ================================================= */}
 
         <div className="wd-content">
+ 
+
  {/* NOTIFICATION PERMISSION */}
 
-  {notificationStatus === "not-enabled" && (
-    <div className="notification-banner">
-      <div className="notification-banner-content">
-        <div>
-          <strong>🔔 Stay updated with Wealthoria</strong>
-          <p>
-            Enable notifications to receive important updates,
-            webinar reminders and new content.
-          </p>
-        </div>
+{notificationStatus === "not-enabled" && (
+  <div className="notification-banner">
+    <div className="notification-banner-content">
 
-        <button
-          type="button"
-          onClick={async () => {
-            if (
-              typeof window.enableMemberNotifications === "function"
-            ) {
-              await window.enableMemberNotifications();
+      <div>
+        <strong>🔔 Stay updated with Wealthoria</strong>
 
-              if (
-                "Notification" in window &&
-                Notification.permission === "granted"
-              ) {
-                setNotificationStatus("enabled");
-              }
-            }
-          }}
-        >
-          Enable Notifications
-        </button>
+        <p>
+          You will receive important updates,
+          webinar reminders and new content notifications.
+        </p>
       </div>
-    </div>
-  )}
 
-  {notificationStatus === "enabled" && (
-    <div className="notification-success">
-      🔔 Notifications are enabled. You'll receive Wealthoria updates on this device.
-    </div>
-  )}
+      <button
+        type="button"
+        onClick={async () => {
+          if (
+            typeof window.enableMemberNotifications === "function"
+          ) {
+            await window.enableMemberNotifications();
 
-  {notificationStatus === "blocked" && (
-    <div className="notification-blocked">
-      🔕 Notifications are blocked. Please enable them in your browser/device settings.
-    </div>
-  )}
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              setNotificationStatus("enabled");
+            }
+          }
+        }}
+      >
+        Enable Notifications
+      </button>
 
+    </div>
+  </div>
+)}
+
+{notificationStatus === "enabled" && (
+  <div className="notification-success">
+
+    <span>
+      {notificationMuted
+        ? "🔕 Notifications are muted"
+        : "🔔 You will receive Wealthoria notifications"}
+    </span>
+
+    <button
+      type="button"
+      onClick={toggleNotificationMute}
+    >
+      {notificationMuted
+        ? "🔔 Unmute"
+        : "🔕 Mute"}
+    </button>
+
+  </div>
+)}
+
+{notificationStatus === "blocked" && (
+  <div className="notification-blocked">
+    🔕 Notifications are blocked.
+    Please enable them in your browser/device settings.
+  </div>
+)}
           {/* SETTINGS */}
 
           {activePage === "settings" ? (
@@ -3525,7 +3553,7 @@ if (membershipDays <= 0) {
   // 3. Membership has expired
 const showMembershipPanel =
   isCancelled || membershipDays <= 1;
-  
+
   if (!showMembershipPanel) {
     return null;
   }

@@ -1341,160 +1341,141 @@ onNotificationsRead();
     );
 
   }
-return (
-  <>
-    <div className="member-notifications-page-header">
+  const formatNotificationDate = (createdAt) => {
+    if (!createdAt) return "";
 
-      <h2>Notifications</h2>
+    let timestamp = null;
 
-      {notifications.length > 0 && (
-        <button
-          type="button"
-          className="clear-all-notifications-button"
-          onClick={handleClearAllNotifications}
-        >
-          Clear All
-        </button>
-      )}
+    if (createdAt?._seconds) {
+      timestamp = createdAt._seconds * 1000;
+    } else if (createdAt?.seconds) {
+      timestamp = createdAt.seconds * 1000;
+    } else if (typeof createdAt === "string") {
+      timestamp = new Date(createdAt).getTime();
+    }
 
-    </div>
+    if (!timestamp || Number.isNaN(timestamp)) {
+      return "";
+    }
 
+    return new Date(timestamp).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
 
-    <div className="member-notification-page-list">
+  return (
+    <>
+      <div className="member-notifications-page-header">
 
-      {notifications.map(notification => {
+        <h2>Notifications</h2>
 
-        const message =
-          notification.message || "";
-
-        const preview =
-          message.length > 100
-            ? message.slice(0, 100) + "..."
-            : message;
-
-        return (
-         <div
-  key={notification.id}
-  className="member-notification-page-item"
->
-  <div className="member-notification-page-content">
-
-    <div className="member-notification-page-top">
-      <strong>
-        {notification.title}
-      </strong>
-
-      <small className="member-notification-page-date">
-        {notification.createdAt
-          ? new Date(
-              notification.createdAt._seconds
-                ? notification.createdAt._seconds * 1000
-                : notification.createdAt
-            ).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric"
-            })
-          : ""}
-      </small>
-    </div>
-
-    <p>
-      {isOpen
-        ? message
-        : preview}
-    </p>
-
-    <div className="member-notification-page-bottom">
-
-      <small className="member-notification-page-status">
-        {notification.read
-          ? "Read"
-          : "New"}
-      </small>
-
-      <button
-        type="button"
-        className="notification-open-button"
-        onClick={() =>
-          setOpenNotificationId(
-            isOpen
-              ? null
-              : notification.id
-          )
-        }
-      >
-        {isOpen ? "Close" : "Open"}
-      </button>
-
-    </div>
-
-  </div>
-</div>
-        );
-      })}
-
-    </div>
-
-
-    {selectedNotification && (
-      <div
-        className="notification-modal-overlay"
-        onClick={() =>
-          setSelectedNotification(null)
-        }
-      >
-
-        <div
-          className="notification-modal"
-          onClick={(event) =>
-            event.stopPropagation()
-          }
-        >
-
-          <div className="notification-modal-icon">
-            🔔
-          </div>
-
-
-          <h3>
-            {selectedNotification.title ||
-              "Wealthoria"}
-          </h3>
-
-
-          <div className="notification-modal-date">
-            {getDashboardDateTime(
-              selectedNotification.createdAt
-            )}
-          </div>
-
-
-          <div className="notification-modal-divider" />
-
-
-          <p>
-            {selectedNotification.message || ""}
-          </p>
-
-
+        {notifications.length > 0 && (
           <button
             type="button"
-            className="notification-modal-close"
-            onClick={() =>
-              setSelectedNotification(null)
-            }
+            className="clear-all-notifications-button"
+            onClick={handleClearAllNotifications}
           >
-            Close
+            Clear All
           </button>
-
-        </div>
+        )}
 
       </div>
-    )}
 
-  </>
-);
+
+      <div className="member-notification-page-list">
+
+        {notifications.map((notification) => {
+
+          const isOpen =
+            openNotificationId === notification.id;
+
+          const message =
+            notification.message || "";
+
+          const title =
+            notification.title || "Notification";
+
+          const displayTitle =
+            title.length > 25
+              ? title.slice(0, 25) + "..."
+              : title;
+
+          const preview =
+            message.length > 80
+              ? message.slice(0, 80) + "..."
+              : message;
+
+          return (
+            <div
+              key={notification.id}
+              className="member-notification-page-item"
+            >
+
+              <div className="member-notification-page-content">
+
+                {/* TITLE + DATE */}
+                <div className="member-notification-page-top">
+
+                  <strong
+                    title={title}
+                  >
+                    {displayTitle}
+                  </strong>
+
+                  <small className="member-notification-page-date">
+                    {formatNotificationDate(
+                      notification.createdAt
+                    )}
+                  </small>
+
+                </div>
+
+
+                {/* MESSAGE */}
+                <p>
+                  {isOpen
+                    ? message
+                    : preview}
+                </p>
+
+
+                {/* READ + OPEN */}
+                <div className="member-notification-page-bottom">
+
+                  <small className="member-notification-page-status">
+                    {notification.read
+                      ? "Read"
+                      : "New"}
+                  </small>
+
+                  <button
+                    type="button"
+                    className="notification-open-button"
+                    onClick={() =>
+                      setOpenNotificationId(
+                        isOpen
+                          ? null
+                          : notification.id
+                      )
+                    }
+                  >
+                    {isOpen ? "Close" : "Open"}
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+          );
+
+        })}
+
+      </div>
+    </>
+  );
 }
 
 

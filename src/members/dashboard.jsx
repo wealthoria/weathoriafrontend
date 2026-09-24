@@ -1366,22 +1366,23 @@ onNotificationsRead();
   };
 
   return (
-    <>
-      <div className="member-notifications-page-header">
+    <><div className="member-notifications-page-header">
+  <div className="member-notifications-page-title">
+    <span className="member-notifications-page-title-icon">
+      🔔
+    </span>
+  </div>
 
-        <h2>Notifications</h2>
-
-        {notifications.length > 0 && (
-          <button
-            type="button"
-            className="clear-all-notifications-button"
-            onClick={handleClearAllNotifications}
-          >
-            Clear All
-          </button>
-        )}
-
-      </div>
+  {notifications.length > 0 && (
+    <button
+      type="button"
+      className="clear-all-notifications-button"
+      onClick={handleClearAllNotifications}
+    >
+      Clear All
+    </button>
+  )}
+</div>
 
 
       <div className="member-notification-page-list">

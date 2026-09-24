@@ -7691,3 +7691,58 @@ html[data-theme="dark"] .membership-status-panel p {
 .notification-open-button:active {
   transform: translateY(0);
 }
+
+
+.member-notifications-page-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 14px;
+}
+
+.member-notifications-page-title {
+  display: flex;
+  align-items: center;
+}
+
+.member-notifications-page-title-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e1e1e1;
+  border-radius: 12px;
+  background: #ffffff;
+  font-size: 21px;
+  box-sizing: border-box;
+}
+
+.clear-all-notifications-button {
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  color: #222222;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-all-notifications-button:hover {
+  background: #f5f5f5;
+  border-color: #cfcfcf;
+}
+
+.clear-all-notifications-button:active {
+  transform: scale(0.97);
+}
+@media (max-width: 600px) {
+  .notification-open-button {
+    padding: 6px 12px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+}

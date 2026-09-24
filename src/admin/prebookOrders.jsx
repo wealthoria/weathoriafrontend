@@ -703,6 +703,36 @@ function PrebookOrders() {
     }
   };
 
+  const deleteOrder = async (order) => {
+  if (!order?.id) return;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to permanently delete order ${
+      order.bookingId || order.id
+    }?\n\nThis cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const ref = window.db.collection("bookOrders").doc(order.id);
+
+    await ref.delete();
+
+    setSelected((prev) =>
+      prev?.id === order.id ? null : prev
+    );
+
+    alert("Order deleted successfully.");
+  } catch (error) {
+    console.error("Delete order error:", error);
+    alert(
+      error?.message ||
+        "Unable to delete the order. Please try again."
+    );
+  }
+};
+
 
   /* =======================================================
      SEND PRE-BOOK EMAIL
@@ -1814,7 +1844,8 @@ const reprintShippingLabel = async (order) => {
                   "Delivery Status",
                   "Label",
                   "View",
-                  "Send Email"
+                  "Send Email",
+                  "Delete"
                 ].map(
                   (heading, index) => (
                     <th
@@ -2195,6 +2226,28 @@ const reprintShippingLabel = async (order) => {
                             Send Email
                           </button>
                         </td>
+
+
+                        <td style={{ padding: "12px 14px" }}>
+  <button
+    type="button"
+    onClick={() => deleteOrder(order)}
+    style={{
+      height: 34,
+      padding: "0 11px",
+      border: "1px solid #f1c7c3",
+      borderRadius: 7,
+      background: "#fff",
+      color: "#b42318",
+      fontSize: 11,
+      fontWeight: 750,
+      cursor: "pointer",
+      whiteSpace: "nowrap"
+    }}
+  >
+    Delete
+  </button>
+</td>
 
                       </tr>
                     );

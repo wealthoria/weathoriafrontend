@@ -95,22 +95,26 @@ function Generatelables() {
       const pageWidth = 210;
       const pageHeight = 297;
 
-      // Narrow 4 × 12 A4 label layout
-      const columns = 6;
-      const rows = 16;
+      // Compact label matching the requested reference.
+      const columns = 7;
+      const rows = 22;
       const labelsPerPage = columns * rows;
 
-      const marginX = 2;
-      const marginY = 2;
+      const labelWidth = 25;
+      const labelHeight = 9.55;
+
+      // Small cutting gap between labels.
       const gapX = 2;
+      const gapY = 1.5;
 
-      const labelWidth = 30;
+      const totalWidth =
+        columns * labelWidth + (columns - 1) * gapX;
 
-      const labelHeight = 17;
+      const totalHeight =
+        rows * labelHeight + (rows - 1) * gapY;
 
-      const availableHeight = pageHeight - marginY * 2;
-
-      const gapY = 0;
+      const marginX = (pageWidth - totalWidth) / 2;
+      const marginY = (pageHeight - totalHeight) / 2;
 
       for (let index = 0; index < quantity; index += 1) {
         const position = index % labelsPerPage;
@@ -128,57 +132,63 @@ function Generatelables() {
         const y =
           marginY + row * (labelHeight + gapY);
 
-        const paddingX = 1.5;
-        const left = x + paddingX;
-        const right = x + labelWidth - paddingX;
-        const contentWidth = labelWidth - paddingX * 2;
+        // ONE small padding for the whole label.
+        const padding = 1.2;
+        const left = x + padding;
+        const right = x + labelWidth - padding;
 
-        // Border
-        pdf.setDrawColor(140, 140, 140);
-        pdf.setLineWidth(0.25);
-        pdf.setLineDashPattern([1.2, 1.2], 0);
+        // Label border
+        pdf.setDrawColor(145, 145, 145);
+        pdf.setLineWidth(0.16);
+        pdf.setLineDashPattern([1.0, 1.0], 0);
         pdf.rect(x, y, labelWidth, labelHeight);
         pdf.setLineDashPattern([], 0);
 
-        // Company title
+        // Tiny company title
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(3.3);
+        pdf.setFontSize(2.15);
         pdf.text(
           "WEALTHORIA EDUCATION PRIVATE LIMITED",
           left,
-          y + 3.0,
-          { maxWidth: contentWidth }
+          y + 2.0
         );
 
         // Divider
         pdf.setDrawColor(100, 100, 100);
-        pdf.setLineWidth(0.15);
-        pdf.line(left, y + 4.1, right, y + 4.1);
+        pdf.setLineWidth(0.10);
+        pdf.line(left, y + 2.65, right, y + 2.65);
 
         // Return message
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(2.5);
+        pdf.setFontSize(1.95);
         pdf.text(
           "IF UNDELIVERED, PLEASE RETURN TO:",
           left,
-          y + 6.6,
-          { maxWidth: contentWidth }
+          y + 3.85
         );
 
-        // Return address
+        // Address — exactly two lines
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(4.7);
+        pdf.setFontSize(2.05);
 
-        const returnAddressLines = [
-          "Wealthoria Education Private Limited",
+        pdf.text(
           "No.2687/1, D-1, 2nd Floor, 5th Cross,",
-          "Kalidasa Road, V V Mohalla, Mysore - 570002",
-          "Phone: 9019759001"
-        ];
+          left,
+          y + 5.45
+        );
 
-        pdf.text(returnAddressLines, left, y + 9.1, {
-          maxWidth: contentWidth
-        });
+        pdf.text(
+          "Kalidasa Road, V V Mohalla, Mysore - 570002",
+          left,
+          y + 6.95
+        );
+
+        // Phone — immediately after address, with tiny bottom padding
+        pdf.text(
+          "Phone: 9019759001",
+          left,
+          y + 8.35
+        );
       }
 
       const today = new Date()
@@ -256,7 +266,7 @@ function Generatelables() {
                 color: "#667085"
               }}
             >
-              Return address labels · 36 compact labels per A4
+              Return address labels · 132 compact labels per A4
             </div>
           </div>
 

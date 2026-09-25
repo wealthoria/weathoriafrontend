@@ -7746,3 +7746,51 @@ html[data-theme="dark"] .membership-status-panel p {
     border-radius: 6px;
   }
 }
+
+
+
+/* course page*/
+
+.wd-course-coming-soon {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.wd-course-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.wd-course-tablet,
+.wd-course-mobile {
+  display: none;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .wd-course-desktop {
+    display: none;
+  }
+
+  .wd-course-tablet {
+    display: block;
+  }
+
+  .wd-course-mobile {
+    display: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .wd-course-desktop,
+  .wd-course-tablet {
+    display: none;
+  }
+
+  .wd-course-mobile {
+    display: block;
+  }
+}

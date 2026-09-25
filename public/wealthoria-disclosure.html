@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+
 <title>Educational Content and Regulatory Disclosure &middot; Wealthoria</title>
 <meta name="description" content="Educational content and regulatory disclosure of Wealthoria Education Private Limited.">
 
@@ -339,6 +343,106 @@ html[data-lang="kn"] .L[data-lang="en"]{display:none}
   var b=e.target.closest ? e.target.closest('.langsw button') : null;
   if(b){ setLang(b.getAttribute('data-set')); }
  });
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+
+  /* Disable right-click */
+  document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+  });
+
+  /* Disable text selection */
+  document.addEventListener("selectstart", function (e) {
+    e.preventDefault();
+  });
+
+  /* Disable drag */
+  document.addEventListener("dragstart", function (e) {
+    e.preventDefault();
+  });
+
+  /* Disable copy/cut */
+  document.addEventListener("copy", function (e) {
+    e.preventDefault();
+  });
+
+  document.addEventListener("cut", function (e) {
+    e.preventDefault();
+  });
+
+  /* Disable common browser shortcuts */
+  document.addEventListener("keydown", function (e) {
+    const key = e.key.toLowerCase();
+
+    /* Ctrl/Cmd + S */
+    if ((e.ctrlKey || e.metaKey) && key === "s") {
+      e.preventDefault();
+      return;
+    }
+
+    /* Ctrl/Cmd + U */
+    if ((e.ctrlKey || e.metaKey) && key === "u") {
+      e.preventDefault();
+      return;
+    }
+
+    /* Ctrl/Cmd + C */
+    if ((e.ctrlKey || e.metaKey) && key === "c") {
+      e.preventDefault();
+      return;
+    }
+
+    /* Ctrl/Cmd + X */
+    if ((e.ctrlKey || e.metaKey) && key === "x") {
+      e.preventDefault();
+      return;
+    }
+
+    /* F12 */
+    if (e.key === "F12") {
+      e.preventDefault();
+      return;
+    }
+
+    /* Ctrl/Cmd + Shift + I */
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      e.shiftKey &&
+      key === "i"
+    ) {
+      e.preventDefault();
+      return;
+    }
+
+    /* Ctrl/Cmd + Shift + J */
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      e.shiftKey &&
+      key === "j"
+    ) {
+      e.preventDefault();
+      return;
+    }
+
+    /* Ctrl/Cmd + Shift + C */
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      e.shiftKey &&
+      key === "c"
+    ) {
+      e.preventDefault();
+      return;
+    }
+  });
+
+  /* Prevent image dragging */
+  document.querySelectorAll("img").forEach(function (img) {
+    img.setAttribute("draggable", "false");
+  });
+
 })();
 </script>
 </body>

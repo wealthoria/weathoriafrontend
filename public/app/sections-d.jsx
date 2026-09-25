@@ -490,7 +490,7 @@ function Footer() {
   const f = t.footer;
 
   const socials = [
-    ["youtube", "youtube.com/channel/UCsa97EbW0qSUlf8-MdSC-ZA"],
+    ["youtube", "https://www.youtube.com/@Wealthoria_edu/featured"],
     ["instagram", "https://www.instagram.com/wealthoria_edu?stkn=NG1neTF4eDVkd3ly"],
     ["whatsapp", "https://wa.me/90197 59001"],
     ["linkedin", "https://www.linkedin.com/in/wealthoria-education-988411413/"]

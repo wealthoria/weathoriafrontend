@@ -37,7 +37,7 @@ import "./app/app.jsx";
 
 import "./members/login.jsx";
 import "./members/ForgotPassword.jsx";
-import "./members/CourseVideos.jsx";
+import "./members/Course.jsx";
 import "./members/Video.jsx";
 import "./members/MemberArticles.jsx";
 

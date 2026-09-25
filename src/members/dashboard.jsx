@@ -3010,7 +3010,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("dashboard")}
           >
-            <span>⌂</span>
+<span className="wd-nav-icon">⌂</span>
             <b>Dashboard</b>
           </button>
 
@@ -3032,7 +3032,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("articles")}
           >
-            <span>◈</span>
+           <span className="wd-nav-icon">◈</span>
             <b>Articles & Reports</b>
           </button>
 
@@ -3048,7 +3048,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("calculator")}
           >
-            <span>=</span>
+<span className="wd-nav-icon">=</span>
             <b>Calculators</b>
           </button>
 
@@ -3064,7 +3064,8 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("courses")}
           >
-            <span>▶</span>
+          <span className="wd-nav-icon">▶</span>
+
             <b>Courses</b>
           </button>
 
@@ -3080,8 +3081,8 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("newsletter")}
           >
-            <span>✉</span>
-            <b>Weekly Order Wins</b>
+            <span>✉</span><span className="wd-nav-icon">✉</span>
+              <b>Weekly Order Wins</b>
           </button>
 
 
@@ -3096,7 +3097,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("notifications")}
           >
-            <span>♢</span>
+            <span className="wd-nav-icon">♢</span>
             <b>Notifications</b>
 
             {unreadNotifications > 0 && (
@@ -3118,7 +3119,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("purchase")}
           >
-            <span>▣</span>
+          <span className="wd-nav-icon">▣</span>
             <b>Purchase History</b>
 
             {stats.purchases > 0 && (
@@ -3140,7 +3141,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("videos")}
           >
-            <span>▶</span>
+           <span className="wd-nav-icon">▶</span>
             <b>Videos</b>
           </button>
 
@@ -3156,7 +3157,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("weekly")}
           >
-            <span>↗</span>
+           <span className="wd-nav-icon">↗</span>
             <b>Weekly Roundup</b>
           </button>
 
@@ -3171,7 +3172,7 @@ if (membershipDays <= 0) {
   }
   onClick={() => openPage("ratio")}
 >
-  <span>◈</span>
+ <span className="wd-nav-icon">◈</span>
   <b>Ratio Analysis</b>
 </button>
 
@@ -3186,7 +3187,7 @@ if (membershipDays <= 0) {
           className="wd-nav-item wd-sidebar-logout"
           onClick={logout}
         >
-          <span>↪</span>
+          <span className="wd-nav-icon">↪</span>
           <b>Logout</b>
         </button>
 

@@ -332,3 +332,16 @@ color: #ec5b3e;
   object-fit: contain;
   flex: 0 0 auto;
 }
+
+
+
+
+
+.wd-nav-item:hover .wd-nav-icon {
+  transform: translateY(-3px) scale(1.15);
+  color: #ef4444;
+}
+
+.wd-nav-item.active .wd-nav-icon {
+  color: #ef4444;
+}

@@ -4387,6 +4387,13 @@ const showMembershipPanel =
           )}
 
         </div>
+ <footer className="wd-dashboard-footer">
+          <span>
+            © 2026 Wealthoria Education Pvt. Ltd. All rights reserved.
+          </span>
+        </footer>
+
+
 
 
       </main>

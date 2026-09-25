@@ -390,3 +390,66 @@ color: #ec5b3e;
 .wd-nav-item.active .wd-nav-icon {
   color: #ef4444;
 }
+
+
+/* =========================================================
+   DASHBOARD COPYRIGHT FOOTER
+========================================================= */
+
+.wd-dashboard-footer {
+  position: relative;
+  width: 100%;
+  margin-top: 40px;
+  padding: 18px 24px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f7f7f7;
+  border-top: 1px solid #e5e5e5;
+
+  color: #777;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+
+  overflow: hidden;
+}
+
+/* subtle animated line */
+.wd-dashboard-footer::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -30%;
+  width: 30%;
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ef4444,
+    transparent
+  );
+
+  animation: dashboardFooterLine 5s linear infinite;
+}
+
+@keyframes dashboardFooterLine {
+  0% {
+    left: -30%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+/* DARK MODE */
+html[data-theme="dark"] .wd-dashboard-footer {
+  background: #15171b;
+  border-top-color: #30353c;
+  color: #8f949c;
+}

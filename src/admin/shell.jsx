@@ -187,6 +187,13 @@ const NAV = [
   icon: "courses"
 },
 
+
+{
+  to: "/admin/generate-label",
+  label: "Generate Labels",
+  icon: "print"
+},
+
   {
     to: "/admin/notifications",
     label: "Send Push Notification",

@@ -100,6 +100,9 @@ import "./admin/dashboard.jsx";
 import "./admin/reports.jsx";
 import "./admin/enquiries.jsx";
 import "./admin/prebookOrders.jsx";
+import "./admin/Generatelable.jsx";
+
+
 
 import PrebookForm from "./components/PrebookForm";
 

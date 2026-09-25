@@ -356,6 +356,10 @@ if (path === "/admin/prebook-orders") {
   return { name: "prebook-orders" };
 }
 
+if (path === "/admin/generate-label") {
+  return { name: "generate-label" };
+}
+
   if (
     path === "/admin/notifications"
   ) {
@@ -779,6 +783,27 @@ case "prebook-orders": {
         </div>
       )}
 
+    </AdminShell>
+  );
+}
+
+
+
+
+case "generate-label": {
+  const AdminGeneratelables =
+    getAdmin("AdminGeneratelables");
+
+  return (
+    <AdminShell title="Generate Labels">
+      {AdminGeneratelables ? (
+        <AdminGeneratelables />
+      ) : (
+        <div className="page">
+          <h1>Generate Labels</h1>
+          <p>Generate Labels page is not loaded.</p>
+        </div>
+      )}
     </AdminShell>
   );
 }

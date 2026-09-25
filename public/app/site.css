@@ -1893,31 +1893,14 @@ a { color: inherit; }
 /* =========================================================
    WEALTHORIA BACK TO TOP
    ========================================================= */
-
 .wealthoria-back-to-top {
   position: fixed;
-  right: 28px;
-  bottom: 28px;
+  right: 24px;
+  bottom: 24px;
   z-index: 9999;
 
-  width: 68px;
-  height: 68px;
-
-  padding: 0;
-  margin: 0;
-
-  border: 0;
-  background: transparent;
-
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  transition:
-    transform 0.3s ease,
-    filter 0.3s ease;
+  width: 42px;
+  height: 42px;
 }
 
 .wealthoria-back-to-top img {
@@ -1945,10 +1928,10 @@ a { color: inherit; }
 }
 
 @media (max-width: 600px) {
-  .wealthoria-back-to-top {
-    right: 16px;
-    bottom: 18px;
-    width: 56px;
-    height: 56px;
+ .wealthoria-back-to-top {
+    right: 14px;
+    bottom: 16px;
+    width: 38px;
+    height: 38px;
   }
 }

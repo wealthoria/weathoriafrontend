@@ -383,6 +383,7 @@ function PrebookOrders() {
   const [labelGenerating, setLabelGenerating] = useState(false);
   const [labelNotice, setLabelNotice] = useState("");
   const [showDuplicates, setShowDuplicates] = useState(false);
+  const [selectedLabelOrders, setSelectedLabelOrders] = useState([]);
 
   const ORDERS_PER_PAGE = 50;
 
@@ -440,6 +441,65 @@ function PrebookOrders() {
   }, []);
 
 
+
+  const exportOrdersToExcel = async () => {
+  try {
+    if (!filteredOrders.length) {
+      alert("No orders available to export.");
+      return;
+    }
+
+    // Load Excel library
+    if (!window.XLSX) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+
+        script.src =
+          "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+
+        script.onload = resolve;
+        script.onerror = reject;
+
+        document.head.appendChild(script);
+      });
+    }
+
+    const excelData = filteredOrders.map((order) => ({
+      Name: order.customer?.name || "",
+      "Email ID": order.customer?.email || "",
+      "Phone Number": order.customer?.phone || "",
+      "Book ID": order.bookingId || ""
+    }));
+
+    const worksheet =
+      window.XLSX.utils.json_to_sheet(excelData);
+
+    worksheet["!cols"] = [
+      { wch: 28 },
+      { wch: 35 },
+      { wch: 20 },
+      { wch: 22 }
+    ];
+
+    const workbook =
+      window.XLSX.utils.book_new();
+
+    window.XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Pre-book Orders"
+    );
+
+    window.XLSX.writeFile(
+      workbook,
+      "Wealthoria_Prebook_Orders.xlsx"
+    );
+
+  } catch (error) {
+    console.error("Excel export error:", error);
+    alert("Unable to export Excel.");
+  }
+};
 
 /* =======================================================
    DUPLICATE DETECTION
@@ -649,6 +709,10 @@ useEffect(() => {
     (order) => order.labelGenerated === true
   ).length;
 
+  const selectedCurrentPageOrders = paginatedOrders.filter((order) =>
+    selectedLabelOrders.includes(order.id)
+  );
+
 
   /* =======================================================
      COUNTS
@@ -709,113 +773,6 @@ useEffect(() => {
    Name | Email | Phone Number | Book ID
 ======================================================= */
 
-const exportOrdersToExcel = async () => {
-  try {
-    if (!filteredOrders.length) {
-      alert(
-        showDuplicates
-          ? "No duplicate orders available to export."
-          : "No orders available to export."
-      );
-      return;
-    }
-
-    /* Load SheetJS only when Export Excel is clicked */
-    if (!window.XLSX) {
-      await new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(
-          'script[data-wealthoria-xlsx="true"]'
-        );
-
-        if (existingScript) {
-          existingScript.addEventListener("load", resolve);
-          existingScript.addEventListener("error", reject);
-          return;
-        }
-
-        const script = document.createElement("script");
-
-        script.src =
-          "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
-
-        script.async = true;
-        script.dataset.wealthoriaXlsx = "true";
-
-        script.onload = resolve;
-
-        script.onerror = () => {
-          reject(
-            new Error(
-              "Unable to load Excel export library."
-            )
-          );
-        };
-
-        document.head.appendChild(script);
-      });
-    }
-
-    if (!window.XLSX) {
-      throw new Error(
-        "Excel export library is not available."
-      );
-    }
-
-    const excelRows = filteredOrders.map((order) => {
-      const customer = order.customer || {};
-
-      return {
-        "Name": customer.name || "",
-        "Email": customer.email || "",
-        "Phone Number": customer.phone || "",
-        "Book ID": order.bookingId || ""
-      };
-    });
-
-    const worksheet =
-      window.XLSX.utils.json_to_sheet(excelRows);
-
-    worksheet["!cols"] = [
-      { wch: 28 },
-      { wch: 36 },
-      { wch: 18 },
-      { wch: 22 }
-    ];
-
-    const workbook =
-      window.XLSX.utils.book_new();
-
-    window.XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Pre-book Orders"
-    );
-
-    const today = new Date()
-      .toISOString()
-      .slice(0, 10);
-
-    const fileName = showDuplicates
-      ? `wealthoria-duplicate-orders-${today}.xlsx`
-      : `wealthoria-prebook-orders-${today}.xlsx`;
-
-    window.XLSX.writeFile(
-      workbook,
-      fileName
-    );
-
-  } catch (error) {
-    console.error(
-      "Excel export error:",
-      error
-    );
-
-    alert(
-      error?.message ||
-      "Unable to export Excel file."
-    );
-  }
-};
 
   const icon = (name, size = 17) =>
     MIcon ? (
@@ -1595,7 +1552,7 @@ const reprintShippingLabel = async (order) => {
                 color: "#344054"
               }}
             >
-              {pageEligibleLabelCount} labels to generate
+              {selectedCurrentPageOrders.length} labels selected
             </div>
             <div
               style={{
@@ -1698,24 +1655,54 @@ const reprintShippingLabel = async (order) => {
           </button>
 
 
+
+<button
+  type="button"
+  onClick={exportOrdersToExcel}
+  disabled={!filteredOrders.length}
+  style={{
+    height: 42,
+    padding: "0 15px",
+    border: "1px solid #dfe3e8",
+    borderRadius: 10,
+    background: "#fff",
+    color: "#344054",
+    fontSize: 13,
+    fontWeight: 750,
+    cursor: filteredOrders.length
+      ? "pointer"
+      : "not-allowed",
+    whiteSpace: "nowrap"
+  }}
+>
+  Export Excel
+</button>
+
           <button
             type="button"
-            onClick={() => generateShippingLabelsPDF(paginatedOrders)}
-            disabled={labelGenerating || pageEligibleLabelCount === 0}
+            onClick={() => {
+              if (!selectedCurrentPageOrders.length) {
+                alert("Please select at least one order.");
+                return;
+              }
+
+              generateShippingLabelsPDF(selectedCurrentPageOrders);
+            }}
+            disabled={labelGenerating || selectedCurrentPageOrders.length === 0}
             style={{
               height: 42,
               padding: "0 16px",
               border: "none",
               borderRadius: 10,
               background:
-                labelGenerating || pageEligibleLabelCount === 0
+                labelGenerating || selectedCurrentPageOrders.length === 0
                   ? "#d0d5dd"
                   : "rgb(232 95 78)",
               color: "#fff",
               fontSize: 13,
               fontWeight: 750,
               cursor:
-                labelGenerating || pageEligibleLabelCount === 0
+                labelGenerating || selectedCurrentPageOrders.length === 0
                   ? "not-allowed"
                   : "pointer",
               whiteSpace: "nowrap"
@@ -1723,7 +1710,7 @@ const reprintShippingLabel = async (order) => {
           >
             {labelGenerating
               ? "Generating..."
-              : `Generate Labels (${pageEligibleLabelCount})`}
+              : `Generate Selected Labels (${selectedCurrentPageOrders.length})`}
           </button>
         </div>
       </div>
@@ -2104,6 +2091,7 @@ const reprintShippingLabel = async (order) => {
               >
 
                 {[
+                  "Select",
                   "Row",
                   "Booking ID",
                   "Name",
@@ -2147,7 +2135,7 @@ const reprintShippingLabel = async (order) => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={12}
                     style={{
                       padding: 50,
                       textAlign:
@@ -2163,7 +2151,7 @@ const reprintShippingLabel = async (order) => {
               ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={12}
                     style={{
                       padding: 50,
                       textAlign:
@@ -2206,6 +2194,36 @@ return (
         : "transparent"
     }}
   >
+
+                        {/* SELECT FOR SHIPPING LABEL */}
+                        <td
+                          style={{
+                            padding: "14px",
+                            textAlign: "center"
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedLabelOrders.includes(order.id)}
+                            disabled={
+                              labelGenerating ||
+                              String(order.shippingStatus || "").trim().toLowerCase() === "shipped" ||
+                              String(order.shippingStatus || "").trim().toLowerCase() === "delivered"
+                            }
+                            onChange={(e) => {
+                              setSelectedLabelOrders((prev) =>
+                                e.target.checked
+                                  ? [...prev, order.id]
+                                  : prev.filter((id) => id !== order.id)
+                              );
+                            }}
+                            style={{
+                              width: 17,
+                              height: 17,
+                              cursor: "pointer"
+                            }}
+                          />
+                        </td>
 
                         {/* PAGE ROW */}
                         <td

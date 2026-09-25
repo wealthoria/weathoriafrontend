@@ -331,9 +331,51 @@ color: #ec5b3e;
   height: 30px;
   object-fit: contain;
   flex: 0 0 auto;
-}.wd-nav-icon {
+}
+
+.wd-nav-icon {
   display: inline-block;
   animation: sidebarIconFloat 3s ease-in-out infinite;
+}
+
+.wd-nav-item:nth-of-type(1) .wd-nav-icon {
+  animation-delay: 0s;
+}
+
+.wd-nav-item:nth-of-type(2) .wd-nav-icon {
+  animation-delay: 0.2s;
+}
+
+.wd-nav-item:nth-of-type(3) .wd-nav-icon {
+  animation-delay: 0.4s;
+}
+
+.wd-nav-item:nth-of-type(4) .wd-nav-icon {
+  animation-delay: 0.6s;
+}
+
+.wd-nav-item:nth-of-type(5) .wd-nav-icon {
+  animation-delay: 0.8s;
+}
+
+.wd-nav-item:nth-of-type(6) .wd-nav-icon {
+  animation-delay: 1s;
+}
+
+.wd-nav-item:nth-of-type(7) .wd-nav-icon {
+  animation-delay: 1.2s;
+}
+
+.wd-nav-item:nth-of-type(8) .wd-nav-icon {
+  animation-delay: 1.4s;
+}
+
+.wd-nav-item:nth-of-type(9) .wd-nav-icon {
+  animation-delay: 1.6s;
+}
+
+.wd-nav-item:nth-of-type(10) .wd-nav-icon {
+  animation-delay: 1.8s;
 }
 
 @keyframes sidebarIconFloat {
@@ -347,5 +389,5 @@ color: #ec5b3e;
 }
 
 .wd-nav-item.active .wd-nav-icon {
-  color: #ff843f;
+  color: #ef4444;
 }

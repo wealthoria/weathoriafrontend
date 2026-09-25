@@ -8190,3 +8190,223 @@ html[data-theme="dark"] .membership-status-panel p {
     opacity: 1;
   }
 }
+
+
+
+
+/*member router css*/
+/* =========================================================
+   MEMBER ACCESS - PULSE ANIMATION
+   ========================================================= */
+
+.members-router-loading {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f7f8f6;
+
+  z-index: 99999;
+}
+
+.member-access-pulse-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Pulse container */
+.member-access-pulse {
+  position: relative;
+
+  width: 110px;
+  height: 110px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Expanding rings */
+.pulse-ring {
+  position: absolute;
+
+  width: 72px;
+  height: 72px;
+
+  border-radius: 50%;
+
+  border: 2px solid rgba(255, 132, 63, 0.35);
+
+  animation: memberAccessPulse 2.2s ease-out infinite;
+}
+
+.pulse-ring-1 {
+  animation-delay: 0s;
+}
+
+.pulse-ring-2 {
+  animation-delay: 0.7s;
+}
+
+.pulse-ring-3 {
+  animation-delay: 1.4s;
+}
+
+/* Logo circle */
+.member-access-logo {
+  position: relative;
+  z-index: 5;
+
+  width: 68px;
+  height: 68px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 28px rgba(255, 132, 63, 0.16),
+    0 0 0 1px rgba(255, 132, 63, 0.08);
+
+  animation: memberAccessFloat 2s ease-in-out infinite;
+}
+
+.member-access-logo img {
+  width: 38px;
+  height: 38px;
+
+  object-fit: contain;
+}
+
+/* Text */
+.member-access-title {
+  margin-top: 25px;
+
+  font-size: 19px;
+  line-height: 1.4;
+
+  font-weight: 500;
+
+  color: #171717;
+}
+
+/* Animated dots */
+.member-access-dots {
+  display: inline-flex;
+}
+
+.member-access-dots span {
+  display: inline-block;
+
+  width: 5px;
+
+  animation: memberAccessDot 1.2s ease-in-out infinite;
+}
+
+.member-access-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.member-access-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.member-access-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes memberAccessPulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.8;
+  }
+
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes memberAccessFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes memberAccessDot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .member-access-pulse {
+    width: 100px;
+    height: 100px;
+  }
+
+  .member-access-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .member-access-logo img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .member-access-title {
+    margin-top: 22px;
+    font-size: 18px;
+  }
+}
+
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring,
+  .member-access-logo,
+  .member-access-dots span {
+    animation: none;
+  }
+}

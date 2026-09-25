@@ -881,29 +881,41 @@ if (
   /* =========================================================
      ACCESS CHECKING SCREEN
      ========================================================= */
+if (
+  checkingAccess &&
+  !isLoginRoute &&
+  !isForgotPasswordRoute
+) {
+  return (
+    <div className="members-router-loading">
+      <div className="member-access-pulse-loader">
 
-  if (
-    checkingAccess &&
-    !isLoginRoute &&
-    !isForgotPasswordRoute
-  ) {
+        <div className="member-access-pulse">
+          <span className="pulse-ring pulse-ring-1"></span>
+          <span className="pulse-ring pulse-ring-2"></span>
+          <span className="pulse-ring pulse-ring-3"></span>
 
-    return (
-      <div
-        className="members-router-loading"
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}
-      >
-        Checking member access...
+          <div className="member-access-logo">
+            <img
+              src="/assets/logo-mark.png"
+              alt="Wealthoria"
+            />
+          </div>
+        </div>
+
+        <div className="member-access-title">
+          Checking member access
+          <span className="member-access-dots">
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </span>
+        </div>
+
       </div>
-    );
-
-  }
-
+    </div>
+  );
+}
 
   /* =========================================================
      INACTIVE / BLOCKED MEMBER

@@ -111,8 +111,7 @@ function Generatelables() {
 
       const availableHeight = pageHeight - marginY * 2;
 
-      const gapY =
-        (availableHeight - labelHeight * rows) / (rows - 1);
+      const gapY = 0;
 
       for (let index = 0; index < quantity; index += 1) {
         const position = index % labelsPerPage;

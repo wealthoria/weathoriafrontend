@@ -133,7 +133,7 @@ function Generatelables() {
           marginY + row * (labelHeight + gapY);
 
         // ONE small padding for the whole label.
-        const padding = 1.2;
+        const padding = 1.0;
         const left = x + padding;
         const right = x + labelWidth - padding;
 
@@ -160,7 +160,7 @@ function Generatelables() {
 
         // Return message
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(1.95);
+        pdf.setFontSize(1.55);
         pdf.text(
           "IF UNDELIVERED, PLEASE RETURN TO:",
           left,
@@ -169,7 +169,7 @@ function Generatelables() {
 
         // Address — exactly two lines
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(2.05);
+        pdf.setFontSize(1.65);
 
         pdf.text(
           "No.2687/1, D-1, 2nd Floor, 5th Cross,",

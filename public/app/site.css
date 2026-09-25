@@ -1887,3 +1887,68 @@ a { color: inherit; }
 .titlehead{
   font-size: 45px;
 }
+
+
+
+/* =========================================================
+   WEALTHORIA BACK TO TOP
+   ========================================================= */
+
+.wealthoria-back-to-top {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 9999;
+
+  width: 68px;
+  height: 68px;
+
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  background: transparent;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.wealthoria-back-to-top img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.wealthoria-back-to-top:hover {
+  transform: translateY(-6px);
+}
+
+.wealthoria-back-to-top:hover img {
+  filter: drop-shadow(0 8px 18px rgba(255, 132, 63, 0.35));
+  transform: scale(1.05);
+}
+
+.wealthoria-back-to-top:active {
+  transform: translateY(-2px) scale(0.96);
+}
+
+@media (max-width: 600px) {
+  .wealthoria-back-to-top {
+    right: 16px;
+    bottom: 18px;
+    width: 56px;
+    height: 56px;
+  }
+}

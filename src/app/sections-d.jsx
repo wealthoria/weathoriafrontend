@@ -480,6 +480,8 @@ function FAQ() {
       </div>
 
     </section>
+
+    
   );
 }
 
@@ -563,6 +565,26 @@ function Footer() {
 
 </div>
 
+
+
+
+    {/* BACK TO TOP */}
+    <button
+      type="button"
+      className="wealthoria-back-to-top"
+      onClick={() => {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }}
+      aria-label="Back to top"
+    >
+      <img
+        src="/assets/back-to-top.png"
+        alt="Back to top"
+      />
+    </button>
 
         <p
           style={{

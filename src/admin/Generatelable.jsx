@@ -95,19 +95,18 @@ function Generatelables() {
       const pageWidth = 210;
       const pageHeight = 297;
 
-      // Extra-compact 3 × 12 A4 label layout
-      const columns = 3;
-      const rows = 12;
+      // Narrow 4 × 12 A4 label layout
+      const columns = 6;
+      const rows = 16;
       const labelsPerPage = columns * rows;
 
       const marginX = 2;
       const marginY = 2;
       const gapX = 2;
 
-      const labelWidth =
-        (pageWidth - marginX * 2 - gapX * (columns - 1)) / columns;
+      const labelWidth = 30;
 
-      const labelHeight = 23;
+      const labelHeight = 17;
 
       const availableHeight = pageHeight - marginY * 2;
 
@@ -129,7 +128,7 @@ function Generatelables() {
         const y =
           marginY + row * (labelHeight + gapY);
 
-        const paddingX = 1.6;
+        const paddingX = 1.5;
         const left = x + paddingX;
         const right = x + labelWidth - paddingX;
         const contentWidth = labelWidth - paddingX * 2;
@@ -143,42 +142,41 @@ function Generatelables() {
 
         // Company title
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(4.5);
+        pdf.setFontSize(3.3);
         pdf.text(
           "WEALTHORIA EDUCATION PRIVATE LIMITED",
           left,
-          y + 3.3,
+          y + 3.0,
           { maxWidth: contentWidth }
         );
 
         // Divider
         pdf.setDrawColor(100, 100, 100);
         pdf.setLineWidth(0.15);
-        pdf.line(left, y + 4.5, right, y + 4.5);
+        pdf.line(left, y + 4.1, right, y + 4.1);
 
         // Return message
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(5.2);
+        pdf.setFontSize(2.5);
         pdf.text(
           "IF UNDELIVERED, PLEASE RETURN TO:",
           left,
-          y + 7.2,
+          y + 6.6,
           { maxWidth: contentWidth }
         );
 
         // Return address
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(5.2);
+        pdf.setFontSize(4.7);
 
         const returnAddressLines = [
           "Wealthoria Education Private Limited",
-          "No.2687/1, D-1, 2nd Floor",
-          "5th Cross, Kalidasa Road",
-          "V V Mohalla, Mysore - 570002",
+          "No.2687/1, D-1, 2nd Floor, 5th Cross,",
+          "Kalidasa Road, V V Mohalla, Mysore - 570002",
           "Phone: 9019759001"
         ];
 
-        pdf.text(returnAddressLines, left, y + 10.2, {
+        pdf.text(returnAddressLines, left, y + 9.1, {
           maxWidth: contentWidth
         });
       }

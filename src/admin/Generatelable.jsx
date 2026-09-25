@@ -95,9 +95,9 @@ function Generatelables() {
       const pageWidth = 210;
       const pageHeight = 297;
 
-      // Same 3 × 6 A4 label layout
+      // Extra-compact 3 × 12 A4 label layout
       const columns = 3;
-      const rows = 6;
+      const rows = 12;
       const labelsPerPage = columns * rows;
 
       const marginX = 2;
@@ -107,7 +107,7 @@ function Generatelables() {
       const labelWidth =
         (pageWidth - marginX * 2 - gapX * (columns - 1)) / columns;
 
-      const labelHeight = 43;
+      const labelHeight = 23;
 
       const availableHeight = pageHeight - marginY * 2;
 
@@ -129,7 +129,7 @@ function Generatelables() {
         const y =
           marginY + row * (labelHeight + gapY);
 
-        const paddingX = 2;
+        const paddingX = 1.6;
         const left = x + paddingX;
         const right = x + labelWidth - paddingX;
         const contentWidth = labelWidth - paddingX * 2;
@@ -143,18 +143,18 @@ function Generatelables() {
 
         // Company title
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(6);
+        pdf.setFontSize(4.5);
         pdf.text(
           "WEALTHORIA EDUCATION PRIVATE LIMITED",
           left,
-          y + 4.2,
+          y + 3.3,
           { maxWidth: contentWidth }
         );
 
         // Divider
         pdf.setDrawColor(100, 100, 100);
         pdf.setLineWidth(0.15);
-        pdf.line(left, y + 5.8, right, y + 5.8);
+        pdf.line(left, y + 4.5, right, y + 4.5);
 
         // Return message
         pdf.setFont("helvetica", "bold");
@@ -162,13 +162,13 @@ function Generatelables() {
         pdf.text(
           "IF UNDELIVERED, PLEASE RETURN TO:",
           left,
-          y + 9.5,
+          y + 7.2,
           { maxWidth: contentWidth }
         );
 
         // Return address
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(6.2);
+        pdf.setFontSize(5.2);
 
         const returnAddressLines = [
           "Wealthoria Education Private Limited",
@@ -178,7 +178,7 @@ function Generatelables() {
           "Phone: 9019759001"
         ];
 
-        pdf.text(returnAddressLines, left, y + 13.5, {
+        pdf.text(returnAddressLines, left, y + 10.2, {
           maxWidth: contentWidth
         });
       }
@@ -258,7 +258,7 @@ function Generatelables() {
                 color: "#667085"
               }}
             >
-              Return address labels · 18 labels per A4
+              Return address labels · 36 compact labels per A4
             </div>
           </div>
 

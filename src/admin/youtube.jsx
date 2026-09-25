@@ -106,11 +106,9 @@ function AdminYouTube() {
       return;
     }
 
-    const unsubscribe =
-  window.db
-    .collection("youtube_videos")
-    .where("published", "==", true)
-    .onSnapshot(
+    const unsubscribe = window.db
+      .collection("youtube_videos")
+      .onSnapshot(
         (snapshot) => {
           const data = snapshot.docs.map(
             (doc) => ({

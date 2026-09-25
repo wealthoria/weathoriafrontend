@@ -305,9 +305,10 @@ useEffect(() => {
   
 
     unsubscribe =
-      window.db
-        .collection("youtube_videos")
-        .onSnapshot(
+     window.db
+  .collection("youtube_videos")
+  .where("published", "==", true)
+  .onSnapshot(
 
           (snapshot) => {
 

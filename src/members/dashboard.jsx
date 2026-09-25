@@ -3081,7 +3081,7 @@ if (membershipDays <= 0) {
             }
             onClick={() => openPage("newsletter")}
           >
-            <span>✉</span><span className="wd-nav-icon">✉</span>
+           <span className="wd-nav-icon">✉</span>
               <b>Weekly Order Wins</b>
           </button>
 

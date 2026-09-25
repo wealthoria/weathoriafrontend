@@ -8517,3 +8517,42 @@ html[data-theme="dark"] .member-video-month-header h3 {
 html[data-theme="dark"] .member-video-month-count {
   color: #a8abb2;
 }
+
+/* =========================================================
+   VIDEOS - DARK MODE CARD CONTENT
+========================================================= */
+
+html[data-theme="dark"] .member-video-card {
+  background: #17191d;
+  border-color: #30353c;
+  color: #f3f5f7;
+}
+
+html[data-theme="dark"] .member-video-body {
+  background: #17191d;
+}
+
+html[data-theme="dark"] .member-video-body h3 {
+  color: #f3f5f7;
+}
+
+html[data-theme="dark"] .member-video-body p {
+  color: #a9b0b8;
+}
+
+html[data-theme="dark"] .member-video-meta {
+  color: #858d97;
+}
+
+html[data-theme="dark"] .member-video-meta span:first-child {
+  color: #ef4444;
+}
+
+html[data-theme="dark"] .member-video-open {
+  background: #3a201c;
+  color: #ff8b82;
+}
+
+html[data-theme="dark"] .member-video-open:hover {
+  background: #4a2722;
+}

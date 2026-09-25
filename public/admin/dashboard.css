@@ -392,16 +392,12 @@ color: #ec5b3e;
 }
 
 
-/* =========================================================
-   DASHBOARD COPYRIGHT FOOTER
-========================================================= */
-
 .wd-dashboard-footer {
-  position: relative;
-  width: 100%;
-  margin-top: 40px;
-  padding: 18px 24px;
-  box-sizing: border-box;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
 
   display: flex;
   align-items: center;
@@ -415,25 +411,18 @@ color: #ec5b3e;
   font-weight: 500;
   letter-spacing: 0.02em;
 
+  z-index: 1000;
   overflow: hidden;
 }
 
-/* subtle animated line */
 .wd-dashboard-footer::before {
   content: "";
   position: absolute;
-  top: -1px;
+  top: 0;
   left: -30%;
   width: 30%;
   height: 2px;
-
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #ef4444,
-    transparent
-  );
-
+  background: #ef4444;
   animation: dashboardFooterLine 5s linear infinite;
 }
 
@@ -447,7 +436,6 @@ color: #ec5b3e;
   }
 }
 
-/* DARK MODE */
 html[data-theme="dark"] .wd-dashboard-footer {
   background: #15171b;
   border-top-color: #30353c;

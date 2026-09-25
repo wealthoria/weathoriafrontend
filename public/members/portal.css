@@ -2053,6 +2053,71 @@ html[data-theme="dark"] .member-dashboard textarea::placeholder {
   font-size: 20px;
   color: #222522;
 }
+/* =========================================================
+   DARK THEME - PURCHASE HISTORY
+   ========================================================= */
+
+[data-theme="dark"] .member-purchase-history-page {
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .purchase-history-card {
+  background: #17191d;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #f5f5f5;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .purchase-history-card h3,
+[data-theme="dark"] .purchase-history-price,
+[data-theme="dark"] .purchase-history-detail strong {
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .purchase-history-course-label,
+[data-theme="dark"] .purchase-history-date,
+[data-theme="dark"] .purchase-history-results {
+  color: #a8abb2;
+}
+
+[data-theme="dark"] .purchase-history-details {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .purchase-history-detail {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .purchase-history-detail span {
+  color: #a8abb2;
+}
+
+[data-theme="dark"] .purchase-history-filter-input {
+  background: #17191d;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .purchase-history-filter-input::placeholder {
+  color: #777b83;
+}
+
+[data-theme="dark"] .purchase-history-filter-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .purchase-history-empty,
+[data-theme="dark"] .purchase-history-error {
+  background: #17191d;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .purchase-history-status {
+  background: rgba(24, 134, 75, 0.16);
+  color: #5fd58d;
+}
 
 
 /* =========================================================

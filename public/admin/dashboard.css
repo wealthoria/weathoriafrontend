@@ -394,7 +394,7 @@ color: #ec5b3e;
 
 .wd-dashboard-footer {
   position: fixed;
-  left: 0;
+  left: 252px;
   right: 0;
   bottom: 0;
   height: 48px;
@@ -403,15 +403,16 @@ color: #ec5b3e;
   align-items: center;
   justify-content: center;
 
-  background: #f7f7f7;
-  border-top: 1px solid #e5e5e5;
+  box-sizing: border-box;
 
-  color: #777;
+  background: var(--wd-card);
+  border-top: 1px solid var(--wd-border);
+
+  color: var(--wd-muted);
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.02em;
 
-  z-index: 1000;
+  z-index: 850;
   overflow: hidden;
 }
 
@@ -422,7 +423,9 @@ color: #ec5b3e;
   left: -30%;
   width: 30%;
   height: 2px;
+
   background: #ef4444;
+
   animation: dashboardFooterLine 5s linear infinite;
 }
 
@@ -436,8 +439,20 @@ color: #ec5b3e;
   }
 }
 
-html[data-theme="dark"] .wd-dashboard-footer {
-  background: #15171b;
-  border-top-color: #30353c;
-  color: #8f949c;
+/* COLLAPSED SIDEBAR */
+.wd-sidebar-collapsed .wd-dashboard-footer {
+  left: 72px;
+}
+
+/* MOBILE */
+@media (max-width: 820px) {
+  .wd-dashboard-footer {
+    left: 0;
+    right: 0;
+  }
+}
+
+/* Keep content above the fixed footer */
+.wd-main {
+  padding-bottom: 48px;
 }

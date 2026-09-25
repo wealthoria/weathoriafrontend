@@ -7750,47 +7750,127 @@ html[data-theme="dark"] .membership-status-panel p {
 
 
 /* course page*/
-
-.wd-course-coming-soon {
+.wd-courses-page {
   width: 100%;
-  margin: 0;
-  padding: 0;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  box-sizing: border-box;
 }
 
-.wd-course-image {
+.wd-courses-card {
   width: 100%;
-  height: auto;
+  max-width: 720px;
+  background: #ffffff;
+  border: 1px solid #e7e7e7;
+  border-radius: 20px;
+  padding: 48px 50px;
+  text-align: center;
+  box-sizing: border-box;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.wd-courses-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff1eb;
+  color: #ff5b35;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.wd-courses-card h1 {
+  margin: 0 0 16px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+.wd-courses-card > p {
+  max-width: 590px;
+  margin: 0 auto;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #666;
+}
+
+.wd-courses-info {
+  max-width: 500px;
+  margin: 30px auto 0;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  background: #fafafa;
+  border: 1px solid #eeeeee;
+  border-radius: 14px;
+}
+
+.wd-courses-info > span {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #fff1eb;
+  font-size: 19px;
+}
+
+.wd-courses-info strong {
   display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #222;
 }
 
-.wd-course-tablet,
-.wd-course-mobile {
-  display: none;
+.wd-courses-info small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #777;
 }
 
-/* Tablet */
-@media (max-width: 1024px) {
-  .wd-course-desktop {
-    display: none;
-  }
-
-  .wd-course-tablet {
-    display: block;
-  }
-
-  .wd-course-mobile {
-    display: none;
-  }
+.wd-courses-status {
+  display: inline-flex;
+  margin-top: 28px;
+  padding: 9px 16px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-/* Mobile */
-@media (max-width: 640px) {
-  .wd-course-desktop,
-  .wd-course-tablet {
-    display: none;
+@media (max-width: 600px) {
+  .wd-courses-page {
+    min-height: 450px;
+    padding: 24px 16px;
   }
 
-  .wd-course-mobile {
-    display: block;
+  .wd-courses-card {
+    padding: 36px 22px;
+    border-radius: 16px;
+  }
+
+  .wd-courses-card h1 {
+    font-size: 25px;
+  }
+
+  .wd-courses-card > p {
+    font-size: 14px;
+  }
+
+  .wd-courses-info {
+    padding: 15px;
   }
 }

@@ -2,35 +2,36 @@ import React from "react";
 
 const CourseVideos = () => {
   return (
-    <section className="wd-course-coming-soon">
+    <section className="wd-courses-page">
+      <div className="wd-courses-card">
 
-      {/* Desktop */}
-      <img
-        src="/assets/course-desktop.png"
-        alt="Wealthoria Courses Coming Soon"
-        className="wd-course-image wd-course-desktop"
-      />
+        <div className="wd-courses-icon">
+          ▶
+        </div>
 
-      {/* Tablet */}
-      <img
-        src="/assets/course-tablet.png"
-        alt="Wealthoria Courses Coming Soon"
-        className="wd-course-image wd-course-tablet"
-      />
+        <h1>Courses</h1>
 
-      {/* Mobile */}
-      <img
-        src="/assets/course-mobile.png"
-        alt="Wealthoria Courses Coming Soon"
-        className="wd-course-image wd-course-mobile"
-      />
+        <p>
+          Courses are charged per lesson, giving you the freedom to choose
+          exactly what you want to learn. Simply select and purchase the
+          lessons that are relevant to you.
+        </p>
 
-      <p className="wd-course-description">
-        Courses are charged per lesson, giving you the freedom to choose
-        exactly what you want to learn. Simply select and purchase the
-        lessons that are relevant to you.
-      </p>
+        <div className="wd-courses-info">
+          <span>🎓</span>
+          <div>
+            <strong>Learn at your own pace</strong>
+            <small>
+              Select only the lessons that are relevant to you.
+            </small>
+          </div>
+        </div>
 
+        <div className="wd-courses-status">
+          Courses are coming soon.
+        </div>
+
+      </div>
     </section>
   );
 };

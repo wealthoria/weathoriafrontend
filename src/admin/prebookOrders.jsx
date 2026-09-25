@@ -382,6 +382,7 @@ function PrebookOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [labelGenerating, setLabelGenerating] = useState(false);
   const [labelNotice, setLabelNotice] = useState("");
+  const [showDuplicates, setShowDuplicates] = useState(false);
 
   const ORDERS_PER_PAGE = 50;
 
@@ -439,14 +440,102 @@ function PrebookOrders() {
   }, []);
 
 
+
+/* =======================================================
+   DUPLICATE DETECTION
+   Duplicate if EMAIL or PHONE appears more than once
+======================================================= */
+
+const duplicateInfo = useMemo(() => {
+  const emailMap = new Map();
+  const phoneMap = new Map();
+
+  orders.forEach((order) => {
+    const customer = order.customer || {};
+
+    const email = String(customer.email || "")
+      .trim()
+      .toLowerCase();
+
+    const phone = String(customer.phone || "")
+      .replace(/\D/g, "");
+
+    if (email) {
+      if (!emailMap.has(email)) {
+        emailMap.set(email, []);
+      }
+      emailMap.get(email).push(order.id);
+    }
+
+    if (phone) {
+      if (!phoneMap.has(phone)) {
+        phoneMap.set(phone, []);
+      }
+      phoneMap.get(phone).push(order.id);
+    }
+  });
+
+  const duplicateOrderIds = new Set();
+  const duplicateDetails = new Map();
+
+  emailMap.forEach((ids, email) => {
+    if (ids.length > 1) {
+      ids.forEach((id) => {
+        duplicateOrderIds.add(id);
+
+        const existing = duplicateDetails.get(id) || {
+          emails: [],
+          phones: []
+        };
+
+        if (!existing.emails.includes(email)) {
+          existing.emails.push(email);
+        }
+
+        duplicateDetails.set(id, existing);
+      });
+    }
+  });
+
+  phoneMap.forEach((ids, phone) => {
+    if (ids.length > 1) {
+      ids.forEach((id) => {
+        duplicateOrderIds.add(id);
+
+        const existing = duplicateDetails.get(id) || {
+          emails: [],
+          phones: []
+        };
+
+        if (!existing.phones.includes(phone)) {
+          existing.phones.push(phone);
+        }
+
+        duplicateDetails.set(id, existing);
+      });
+    }
+  });
+
+  return {
+    duplicateOrderIds,
+    duplicateDetails
+  };
+}, [orders]);
+
   /* =======================================================
      FILTER
   ======================================================= */
+const filteredOrders = useMemo(() => {
+  const query = search.trim().toLowerCase();
 
-  const filteredOrders = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  return orders.filter((order) => {
 
-    return orders.filter((order) => {
+    if (
+      showDuplicates &&
+      !duplicateInfo.duplicateOrderIds.has(order.id)
+    ) {
+      return false;
+    }
       const paymentStatus = String(
         order.paymentStatus || ""
       ).toLowerCase();
@@ -498,12 +587,16 @@ function PrebookOrders() {
 
       return searchable.includes(query);
     });
-  }, [
-    orders,
-    search,
-    paymentFilter,
-    shippingFilter
-  ]);
+  },  [
+  orders,
+  search,
+  paymentFilter,
+  shippingFilter,
+  showDuplicates,
+  duplicateInfo
+]);
+
+
 
   /* =======================================================
      PAGINATION — 50 RECORDS PER PAGE
@@ -513,10 +606,14 @@ function PrebookOrders() {
     1,
     Math.ceil(filteredOrders.length / ORDERS_PER_PAGE)
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, paymentFilter, shippingFilter]);
+useEffect(() => {
+  setCurrentPage(1);
+}, [
+  search,
+  paymentFilter,
+  shippingFilter,
+  showDuplicates
+]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -604,6 +701,121 @@ function PrebookOrders() {
     };
   }, [orders]);
 
+
+
+  /* =======================================================
+   EXPORT PRE-BOOK ORDERS TO EXCEL
+   Columns:
+   Name | Email | Phone Number | Book ID
+======================================================= */
+
+const exportOrdersToExcel = async () => {
+  try {
+    if (!filteredOrders.length) {
+      alert(
+        showDuplicates
+          ? "No duplicate orders available to export."
+          : "No orders available to export."
+      );
+      return;
+    }
+
+    /* Load SheetJS only when Export Excel is clicked */
+    if (!window.XLSX) {
+      await new Promise((resolve, reject) => {
+        const existingScript = document.querySelector(
+          'script[data-wealthoria-xlsx="true"]'
+        );
+
+        if (existingScript) {
+          existingScript.addEventListener("load", resolve);
+          existingScript.addEventListener("error", reject);
+          return;
+        }
+
+        const script = document.createElement("script");
+
+        script.src =
+          "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+
+        script.async = true;
+        script.dataset.wealthoriaXlsx = "true";
+
+        script.onload = resolve;
+
+        script.onerror = () => {
+          reject(
+            new Error(
+              "Unable to load Excel export library."
+            )
+          );
+        };
+
+        document.head.appendChild(script);
+      });
+    }
+
+    if (!window.XLSX) {
+      throw new Error(
+        "Excel export library is not available."
+      );
+    }
+
+    const excelRows = filteredOrders.map((order) => {
+      const customer = order.customer || {};
+
+      return {
+        "Name": customer.name || "",
+        "Email": customer.email || "",
+        "Phone Number": customer.phone || "",
+        "Book ID": order.bookingId || ""
+      };
+    });
+
+    const worksheet =
+      window.XLSX.utils.json_to_sheet(excelRows);
+
+    worksheet["!cols"] = [
+      { wch: 28 },
+      { wch: 36 },
+      { wch: 18 },
+      { wch: 22 }
+    ];
+
+    const workbook =
+      window.XLSX.utils.book_new();
+
+    window.XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Pre-book Orders"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    const fileName = showDuplicates
+      ? `wealthoria-duplicate-orders-${today}.xlsx`
+      : `wealthoria-prebook-orders-${today}.xlsx`;
+
+    window.XLSX.writeFile(
+      workbook,
+      fileName
+    );
+
+  } catch (error) {
+    console.error(
+      "Excel export error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+      "Unable to export Excel file."
+    );
+  }
+};
 
   const icon = (name, size = 17) =>
     MIcon ? (
@@ -1396,6 +1608,63 @@ const reprintShippingLabel = async (order) => {
             </div>
           </div>
 
+
+
+<button
+  type="button"
+  onClick={exportOrdersToExcel}
+  disabled={filteredOrders.length === 0}
+  style={{
+    height: 42,
+    padding: "0 15px",
+    border: "1px solid #dfe3e8",
+    borderRadius: 10,
+    background:
+      filteredOrders.length === 0
+        ? "#f2f4f7"
+        : "#fff",
+    color:
+      filteredOrders.length === 0
+        ? "#98a2b3"
+        : "#344054",
+    fontSize: 13,
+    fontWeight: 750,
+    cursor:
+      filteredOrders.length === 0
+        ? "not-allowed"
+        : "pointer",
+    whiteSpace: "nowrap"
+  }}
+>
+  Export Excel
+</button>
+
+<button
+  type="button"
+  onClick={() => setShowDuplicates((value) => !value)}
+  style={{
+    height: 42,
+    padding: "0 15px",
+    border: showDuplicates
+      ? "1px solid #e6c84f"
+      : "1px solid #dfe3e8",
+    borderRadius: 10,
+    background: showDuplicates
+      ? "#fff8d8"
+      : "#fff",
+    color: showDuplicates
+      ? "#7a5f00"
+      : "#344054",
+    fontSize: 13,
+    fontWeight: 750,
+    cursor: "pointer",
+    whiteSpace: "nowrap"
+  }}
+>
+  {showDuplicates
+    ? "Show All Orders"
+    : `Duplicates (${duplicateInfo.duplicateOrderIds.size})`}
+</button>
           <button
             type="button"
             onClick={resetLabelCountsForCurrentPage}
@@ -1427,6 +1696,7 @@ const reprintShippingLabel = async (order) => {
           >
             Reset Count
           </button>
+
 
           <button
             type="button"
@@ -1912,23 +2182,30 @@ const reprintShippingLabel = async (order) => {
                 paginatedOrders.map(
                   (order, pageIndex) => {
                     const customer =
-                      order.customer ||
-                      {};
+  order.customer ||
+  {};
 
-                    const product =
-                      order.product ||
-                      {};
+const product =
+  order.product ||
+  {};
 
-                    const pageRow = pageIndex + 1;
+const pageRow = pageIndex + 1;
 
-                    return (
-                      <tr
-                        key={order.id}
-                        style={{
-                          borderBottom:
-                            "1px solid #edf0f3"
-                        }}
-                      >
+const isDuplicate =
+  duplicateInfo.duplicateOrderIds.has(order.id);
+
+return (
+  <tr
+    key={order.id}
+    style={{
+      borderBottom:
+        "1px solid #edf0f3",
+
+      background: isDuplicate
+        ? "#fff8d8"
+        : "transparent"
+    }}
+  >
 
                         {/* PAGE ROW */}
                         <td

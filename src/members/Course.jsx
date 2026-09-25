@@ -22,4 +22,6 @@ const CourseVideos = () => {
   );
 };
 
+window.CourseVideos = CourseVideos;
+
 export default CourseVideos;

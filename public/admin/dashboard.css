@@ -332,10 +332,9 @@ color: #ec5b3e;
   object-fit: contain;
   flex: 0 0 auto;
 }
-
 .wd-nav-icon {
   display: inline-block;
-  animation: sidebarIconFloat 3s ease-in-out infinite;
+  animation: sidebarIconFloat 4.5s ease-in-out infinite;
 }
 
 .wd-nav-item:nth-of-type(1) .wd-nav-icon {
@@ -343,39 +342,39 @@ color: #ec5b3e;
 }
 
 .wd-nav-item:nth-of-type(2) .wd-nav-icon {
-  animation-delay: 0.2s;
+  animation-delay: 0.3s;
 }
 
 .wd-nav-item:nth-of-type(3) .wd-nav-icon {
-  animation-delay: 0.4s;
-}
-
-.wd-nav-item:nth-of-type(4) .wd-nav-icon {
   animation-delay: 0.6s;
 }
 
+.wd-nav-item:nth-of-type(4) .wd-nav-icon {
+  animation-delay: 0.9s;
+}
+
 .wd-nav-item:nth-of-type(5) .wd-nav-icon {
-  animation-delay: 0.8s;
-}
-
-.wd-nav-item:nth-of-type(6) .wd-nav-icon {
-  animation-delay: 1s;
-}
-
-.wd-nav-item:nth-of-type(7) .wd-nav-icon {
   animation-delay: 1.2s;
 }
 
+.wd-nav-item:nth-of-type(6) .wd-nav-icon {
+  animation-delay: 1.5s;
+}
+
+.wd-nav-item:nth-of-type(7) .wd-nav-icon {
+  animation-delay: 1.8s;
+}
+
 .wd-nav-item:nth-of-type(8) .wd-nav-icon {
-  animation-delay: 1.4s;
+  animation-delay: 2.1s;
 }
 
 .wd-nav-item:nth-of-type(9) .wd-nav-icon {
-  animation-delay: 1.6s;
+  animation-delay: 2.4s;
 }
 
 .wd-nav-item:nth-of-type(10) .wd-nav-icon {
-  animation-delay: 1.8s;
+  animation-delay: 2.7s;
 }
 
 @keyframes sidebarIconFloat {
@@ -384,7 +383,7 @@ color: #ec5b3e;
   }
 
   50% {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
   }
 }
 

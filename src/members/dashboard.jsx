@@ -2833,9 +2833,14 @@ if (!member) {
 
 if (!membershipLoaded) {
   return (
-    <div className="wd-page-state">
-      Loading membership...
-    </div>
+  <div className="wd-page-state">
+  <span className="membership-loading-animation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </span>
+  Loading membership...
+</div>
   );
 }
 if (membershipDays <= 0) {

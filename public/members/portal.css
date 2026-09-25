@@ -8452,3 +8452,68 @@ html[data-theme="dark"] .membership-status-panel p {
   border-color: rgba(255, 255, 255, 0.12);
   color: #f5f5f5;
 }
+
+/* =========================================================
+   DARK THEME - VIDEO FILTERS
+   Same style as Purchase History
+========================================================= */
+
+[data-theme="dark"] .member-video-search {
+  background: #17191d;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .member-video-search input {
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .member-video-search input::placeholder {
+  color: #777b83;
+}
+
+[data-theme="dark"] .member-video-search-clear {
+  background: rgba(255, 255, 255, 0.05);
+  color: #a8abb2;
+}
+
+[data-theme="dark"] .member-video-date-field label {
+  color: #a8abb2;
+}
+
+[data-theme="dark"] .member-video-date-field input {
+  background: #17191d;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .member-video-date-field input::placeholder {
+  color: #777b83;
+}
+
+[data-theme="dark"] .member-video-date-field input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .member-video-date-clear {
+  background: #17191d;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f5f5f5;
+}
+
+/* =========================================================
+   VIDEOS - DARK MODE MONTH HEADER
+========================================================= */
+
+html[data-theme="dark"] .member-video-month-header {
+  border-bottom-color: #30353c;
+}
+
+html[data-theme="dark"] .member-video-month-header h3 {
+  color: #f3f5f7;
+}
+
+html[data-theme="dark"] .member-video-month-count {
+  color: #a8abb2;
+}

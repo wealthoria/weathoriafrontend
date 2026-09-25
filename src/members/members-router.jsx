@@ -888,19 +888,17 @@ if (
 ) {
   return (
     <div className="members-router-loading">
-      <div className="member-access-pulse-loader">
+      <div className="member-access-loader">
 
-        <div className="member-access-pulse">
-          <span className="pulse-ring pulse-ring-1"></span>
-          <span className="pulse-ring pulse-ring-2"></span>
-          <span className="pulse-ring pulse-ring-3"></span>
+        <div className="member-access-logo-loader">
+          <img
+            src="/assets/logo-mark.png"
+            alt="Wealthoria"
+          />
 
-          <div className="member-access-logo">
-            <img
-              src="/assets/logo-mark.png"
-              alt="Wealthoria"
-            />
-          </div>
+          <span className="orbit-dot orbit-dot-1"></span>
+          <span className="orbit-dot orbit-dot-2"></span>
+          <span className="orbit-dot orbit-dot-3"></span>
         </div>
 
         <div className="member-access-title">

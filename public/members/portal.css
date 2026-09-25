@@ -8195,10 +8195,6 @@ html[data-theme="dark"] .membership-status-panel p {
 
 
 /*member router css*/
-/* =========================================================
-   MEMBER ACCESS - PULSE ANIMATION
-   ========================================================= */
-
 .members-router-loading {
   position: fixed;
   inset: 0;
@@ -8210,109 +8206,90 @@ html[data-theme="dark"] .membership-status-panel p {
   justify-content: center;
 
   background: #f7f8f6;
-
   z-index: 99999;
 }
 
-.member-access-pulse-loader {
+.member-access-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
 }
 
-/* Pulse container */
-.member-access-pulse {
+/* Logo loader */
+.member-access-logo-loader {
   position: relative;
 
-  width: 110px;
-  height: 110px;
+  width: 82px;
+  height: 82px;
 
   display: flex;
   align-items: center;
   justify-content: center;
+
+  animation: logoFloat 2s ease-in-out infinite;
 }
 
-/* Expanding rings */
-.pulse-ring {
+.member-access-logo-loader img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+
+  z-index: 2;
+}
+
+/* Small orbiting dots */
+.orbit-dot {
   position: absolute;
 
-  width: 72px;
-  height: 72px;
+  width: 7px;
+  height: 7px;
 
   border-radius: 50%;
+  background: #ff843f;
 
-  border: 2px solid rgba(255, 132, 63, 0.35);
-
-  animation: memberAccessPulse 2.2s ease-out infinite;
+  box-shadow: 0 2px 8px rgba(255, 132, 63, 0.25);
 }
 
-.pulse-ring-1 {
-  animation-delay: 0s;
+.orbit-dot-1 {
+  top: 4px;
+  left: 38px;
+
+  animation: orbitDot1 1.8s linear infinite;
 }
 
-.pulse-ring-2 {
-  animation-delay: 0.7s;
+.orbit-dot-2 {
+  right: 5px;
+  bottom: 17px;
+
+  animation: orbitDot2 1.8s linear infinite;
 }
 
-.pulse-ring-3 {
-  animation-delay: 1.4s;
-}
+.orbit-dot-3 {
+  left: 5px;
+  bottom: 17px;
 
-/* Logo circle */
-.member-access-logo {
-  position: relative;
-  z-index: 5;
-
-  width: 68px;
-  height: 68px;
-
-  border-radius: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 8px 28px rgba(255, 132, 63, 0.16),
-    0 0 0 1px rgba(255, 132, 63, 0.08);
-
-  animation: memberAccessFloat 2s ease-in-out infinite;
-}
-
-.member-access-logo img {
-  width: 38px;
-  height: 38px;
-
-  object-fit: contain;
+  animation: orbitDot3 1.8s linear infinite;
 }
 
 /* Text */
 .member-access-title {
-  margin-top: 25px;
+  margin-top: 24px;
 
   font-size: 19px;
-  line-height: 1.4;
-
   font-weight: 500;
-
   color: #171717;
 }
 
-/* Animated dots */
 .member-access-dots {
   display: inline-flex;
 }
 
 .member-access-dots span {
+  width: 5px;
   display: inline-block;
 
-  width: 5px;
-
-  animation: memberAccessDot 1.2s ease-in-out infinite;
+  animation: loadingDot 1.2s ease-in-out infinite;
 }
 
 .member-access-dots span:nth-child(1) {
@@ -8328,85 +8305,100 @@ html[data-theme="dark"] .membership-status-panel p {
 }
 
 
-/* =========================================================
-   ANIMATIONS
-   ========================================================= */
+/* Animations */
 
-@keyframes memberAccessPulse {
-  0% {
-    transform: scale(0.55);
-    opacity: 0.8;
-  }
-
-  70% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-
-  100% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-}
-
-@keyframes memberAccessFloat {
+@keyframes logoFloat {
   0%,
   100% {
     transform: translateY(0);
   }
 
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-5px);
   }
 }
 
-@keyframes memberAccessDot {
+@keyframes orbitDot1 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  33% {
+    transform: translate(29px, 22px);
+  }
+
+  66% {
+    transform: translate(-29px, 22px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes orbitDot2 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  33% {
+    transform: translate(-29px, -22px);
+  }
+
+  66% {
+    transform: translate(-29px, 22px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes orbitDot3 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  33% {
+    transform: translate(29px, -22px);
+  }
+
+  66% {
+    transform: translate(29px, 22px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes loadingDot {
   0%,
   60%,
   100% {
+    opacity: 0.25;
     transform: translateY(0);
-    opacity: 0.3;
   }
 
   30% {
-    transform: translateY(-4px);
     opacity: 1;
+    transform: translateY(-4px);
   }
 }
 
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
 @media (max-width: 600px) {
-  .member-access-pulse {
-    width: 100px;
-    height: 100px;
+  .member-access-logo-loader {
+    width: 76px;
+    height: 76px;
   }
 
-  .member-access-logo {
-    width: 64px;
-    height: 64px;
-  }
-
-  .member-access-logo img {
-    width: 36px;
-    height: 36px;
+  .member-access-logo-loader img {
+    width: 44px;
+    height: 44px;
   }
 
   .member-access-title {
-    margin-top: 22px;
     font-size: 18px;
-  }
-}
-
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .pulse-ring,
-  .member-access-logo,
-  .member-access-dots span {
-    animation: none;
+    margin-top: 22px;
   }
 }

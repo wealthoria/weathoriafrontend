@@ -442,64 +442,6 @@ function PrebookOrders() {
 
 
 
-  const exportOrdersToExcel = async () => {
-  try {
-    if (!filteredOrders.length) {
-      alert("No orders available to export.");
-      return;
-    }
-
-    // Load Excel library
-    if (!window.XLSX) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-
-        script.src =
-          "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
-
-        script.onload = resolve;
-        script.onerror = reject;
-
-        document.head.appendChild(script);
-      });
-    }
-
-    const excelData = filteredOrders.map((order) => ({
-      Name: order.customer?.name || "",
-      "Email ID": order.customer?.email || "",
-      "Phone Number": order.customer?.phone || "",
-      "Book ID": order.bookingId || ""
-    }));
-
-    const worksheet =
-      window.XLSX.utils.json_to_sheet(excelData);
-
-    worksheet["!cols"] = [
-      { wch: 28 },
-      { wch: 35 },
-      { wch: 20 },
-      { wch: 22 }
-    ];
-
-    const workbook =
-      window.XLSX.utils.book_new();
-
-    window.XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Pre-book Orders"
-    );
-
-    window.XLSX.writeFile(
-      workbook,
-      "Wealthoria_Prebook_Orders.xlsx"
-    );
-
-  } catch (error) {
-    console.error("Excel export error:", error);
-    alert("Unable to export Excel.");
-  }
-};
 
 /* =======================================================
    DUPLICATE DETECTION
@@ -773,6 +715,113 @@ useEffect(() => {
    Name | Email | Phone Number | Book ID
 ======================================================= */
 
+const exportOrdersToExcel = async () => {
+  try {
+    if (!filteredOrders.length) {
+      alert(
+        showDuplicates
+          ? "No duplicate orders available to export."
+          : "No orders available to export."
+      );
+      return;
+    }
+
+    /* Load SheetJS only when Export Excel is clicked */
+    if (!window.XLSX) {
+      await new Promise((resolve, reject) => {
+        const existingScript = document.querySelector(
+          'script[data-wealthoria-xlsx="true"]'
+        );
+
+        if (existingScript) {
+          existingScript.addEventListener("load", resolve);
+          existingScript.addEventListener("error", reject);
+          return;
+        }
+
+        const script = document.createElement("script");
+
+        script.src =
+          "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+
+        script.async = true;
+        script.dataset.wealthoriaXlsx = "true";
+
+        script.onload = resolve;
+
+        script.onerror = () => {
+          reject(
+            new Error(
+              "Unable to load Excel export library."
+            )
+          );
+        };
+
+        document.head.appendChild(script);
+      });
+    }
+
+    if (!window.XLSX) {
+      throw new Error(
+        "Excel export library is not available."
+      );
+    }
+
+    const excelRows = filteredOrders.map((order) => {
+      const customer = order.customer || {};
+
+      return {
+        "Name": customer.name || "",
+        "Email": customer.email || "",
+        "Phone Number": customer.phone || "",
+        "Book ID": order.bookingId || ""
+      };
+    });
+
+    const worksheet =
+      window.XLSX.utils.json_to_sheet(excelRows);
+
+    worksheet["!cols"] = [
+      { wch: 28 },
+      { wch: 36 },
+      { wch: 18 },
+      { wch: 22 }
+    ];
+
+    const workbook =
+      window.XLSX.utils.book_new();
+
+    window.XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Pre-book Orders"
+    );
+
+    const today = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    const fileName = showDuplicates
+      ? `wealthoria-duplicate-orders-${today}.xlsx`
+      : `wealthoria-prebook-orders-${today}.xlsx`;
+
+    window.XLSX.writeFile(
+      workbook,
+      fileName
+    );
+
+  } catch (error) {
+    console.error(
+      "Excel export error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+      "Unable to export Excel file."
+    );
+  }
+};
 
   const icon = (name, size = 17) =>
     MIcon ? (
@@ -1078,9 +1127,9 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
 
     /* =====================================================
        SELECT ORDERS
-       - Only the orders selected with checkboxes are generated.
+       - Generate Page Labels always generates the current page again.
+       - Reprint intentionally generates one existing label again.
        - Shipped/delivered orders are always excluded.
-       - Quantity entered in the order creates that many labels.
        ===================================================== */
 
     const sourceOrders = Array.isArray(ordersToPrint)
@@ -1100,33 +1149,13 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
       return shippingStatus !== "shipped" && shippingStatus !== "delivered";
     });
 
-    /* =====================================================
-       CREATE ONE LABEL FOR EACH QUANTITY ENTERED
-       Example:
-       Quantity 1 = 1 label
-       Quantity 2 = 2 labels
-       Quantity 5 = 5 labels
-       ===================================================== */
-
-    const labelOrders = [];
-
-    eligibleRows.forEach(({ order }) => {
-      const enteredQuantity = Number(order.product?.quantity);
-      const quantity =
-        Number.isFinite(enteredQuantity) && enteredQuantity > 0
-          ? Math.floor(enteredQuantity)
-          : 1;
-
-      for (let i = 0; i < quantity; i += 1) {
-        labelOrders.push(order);
-      }
-    });
+    const labelOrders = eligibleRows.map(({ order }) => order);
 
     if (!labelOrders.length) {
       alert(
         reprint
           ? "No eligible order is available for reprint."
-          : "No eligible orders are selected. Shipped and delivered orders are excluded."
+          : "No eligible orders are available on this page. Shipped and delivered orders are excluded."
       );
       return;
     }
@@ -1137,12 +1166,11 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
 
     if (!reprint) {
       const confirmed = window.confirm(
-        `Generate ${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"}?\n\n` +
-        `Selected order rows: ${rowRangeText}\n` +
+        `Generate ${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"} for the current page?\n\n` +
+        `Page rows: ${rowRangeText}\n` +
         `${totalLabelPages} A4 page${totalLabelPages === 1 ? "" : "s"} will be created (18 labels per A4 page).\n\n` +
-        `The number of labels is based on the quantity entered for each selected order.`
+        `You can generate this page again later.`
       );
-
       if (!confirmed) return;
     }
 
@@ -1243,7 +1271,7 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
       pdf.rect(x, y, labelWidth, labelHeight);
       pdf.setLineDashPattern([], 0);
 
-      /* Company title — same as existing label */
+      /* Company */
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(6);
       pdf.text(
@@ -1313,39 +1341,6 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
         left + 2,
         pinY + 4
       );
-
-      /* =====================================================
-         RETURN ADDRESS
-         Same label size is preserved.
-         The return address is printed in the bottom area.
-         ===================================================== */
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(2.7);
-
-      pdf.text(
-        "IF UNDELIVERED, PLEASE RETURN TO: WEALTHORIA EDUCATION PRIVATE LIMITED",
-        left,
-        y + 40.7,
-        { maxWidth: contentWidth }
-      );
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(2.6);
-
-      pdf.text(
-        "No.2687/1, D-1, 2nd Floor, 5th Cross, Kalidasa Road",
-        left,
-        y + 41.7,
-        { maxWidth: contentWidth }
-      );
-
-      pdf.text(
-        "V V Mohalla, Mysore - 570002 | Phone: 9019759001",
-        left,
-        y + 42.7,
-        { maxWidth: contentWidth }
-      );
     });
 
     /* =====================================================
@@ -1364,34 +1359,26 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
 
     /* =====================================================
        RECORD LABEL GENERATION
-       Record each selected order once, even when quantity > 1.
+       Every generation is recorded so the row always shows that a
+       label exists and when it was last generated.
        ===================================================== */
 
     if (window.db?.batch) {
       const labelBatchId =
         `LBL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
       const generatedAt = new Date().toISOString();
 
-      const uniqueLabelOrders = [
-        ...new Map(
-          labelOrders.map((order) => [order.id, order])
-        ).values()
-      ];
-
-      for (let i = 0; i < uniqueLabelOrders.length; i += 400) {
-        const chunk = uniqueLabelOrders.slice(i, i + 400);
+      for (let i = 0; i < labelOrders.length; i += 400) {
+        const chunk = labelOrders.slice(i, i + 400);
         const batch = window.db.batch();
 
         chunk.forEach((order) => {
           const ref = window.db.collection("bookOrders").doc(order.id);
-
           batch.update(ref, {
             labelGenerated: true,
             labelGeneratedAt: generatedAt,
             labelBatchId,
-            labelGenerationCount:
-              Number(order.labelGenerationCount || 0) + 1
+            labelGenerationCount: Number(order.labelGenerationCount || 0) + 1
           });
         });
 
@@ -1400,19 +1387,17 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
 
       setLabelNotice(
         reprint
-          ? `Reprinted row ${pageRowNumbers[0]} with ${labelOrders.length} label${labelOrders.length === 1 ? "" : "s"}.`
-          : `Generated ${labelOrders.length} label${labelOrders.length === 1 ? "" : "s"} for selected rows ${rowRangeText}.`
+          ? `Reprinted page row ${pageRowNumbers[0]}.`
+          : `Page ${currentPage}: generated rows ${rowRangeText}. You can generate this page again anytime.`
       );
 
       alert(
         `${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"} generated successfully.\n\n` +
-        `Selected rows: ${rowRangeText}\n` +
+        `${reprint ? "Row" : "Page rows"}: ${rowRangeText}\n` +
         `Batch: ${labelBatchId}`
       );
     } else {
-      alert(
-        "PDF generated, but Firestore is not available to record the label status."
-      );
+      alert("PDF generated, but Firestore is not available to record the label status.");
     }
   } catch (error) {
     console.error(
@@ -1432,7 +1417,6 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
 /* =======================================================
    RESET LABEL GENERATION COUNT FOR CURRENT PAGE
 ======================================================= */
-
 
 const resetLabelCountsForCurrentPage = async () => {
   const resettableOrders = paginatedOrders.filter((order) => {

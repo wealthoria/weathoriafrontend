@@ -94,14 +94,14 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
      OPEN PDF
      SAME BEHAVIOUR AS ADMIN UPLOAD
   ========================================================= */
-const openPdf = (article) => {
+const openPdf = async (article) => {
   if (!article) {
     return;
   }
 
-  if (!article.pdfUrl) {
+  if (!article.pdfPath) {
     console.error(
-      "PDF URL missing:",
+      "PDF path missing:",
       article
     );
 
@@ -116,7 +116,62 @@ const openPdf = (article) => {
     });
   }
 
-  setSelectedPdf(article);
+  try {
+    const current =
+      window.localStorage.getItem(
+        "wealthoria-current-member"
+      );
+
+    const member =
+      current
+        ? JSON.parse(current)
+        : null;
+
+    const token =
+      member?.session?.token;
+
+    if (!token) {
+      return;
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/members/content-pdf-url/${article.id}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+          "Content-Type":
+            "application/json"
+        }
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (
+      !response.ok ||
+      !data?.success ||
+      !data?.url
+    ) {
+      throw new Error(
+        data?.message ||
+        "Unable to open PDF."
+      );
+    }
+
+    setSelectedPdf({
+      ...article,
+      pdfUrl: data.url
+    });
+
+  } catch (error) {
+    console.error(
+      "Article PDF error:",
+      error
+    );
+  }
 };
   /* =========================================================
      LOAD ARTICLES & REPORTS
@@ -175,9 +230,12 @@ const openPdf = (article) => {
                       : [],
 
                   pdfUrl:
-                    data.pdfUrl ||
-                    "",
+  data.pdfUrl ||
+  "",
 
+pdfPath:
+  data.pdfPath ||
+  "",
                   thumbnailUrl:
                     data.thumbnailUrl ||
                     "",
@@ -827,9 +885,7 @@ const openPdf = (article) => {
               {/* PDF */}
 
               <iframe
-                src={`${getFileUrl(
-                  selectedPdf.pdfUrl
-                )}#toolbar=0&navpanes=0`}
+               src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
                 title={selectedPdf.title}
                 className="member-pdf-frame"
               />

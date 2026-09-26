@@ -710,6 +710,8 @@ writeStorageObject(
    RESTORE EXISTING MEMBER SESSION
 ========================================================= */
 useEffect(() => {
+
+    console.log("LOGIN PAGE SESSION RESTORE RUNNING");
   let cancelled = false;
 
   const restoreExistingSession = async () => {

@@ -2797,10 +2797,7 @@ if (!membershipLoaded) {
 </div>
   );
 }
-if (membershipDays <= 0) {
-  window.location.replace("/members/login");
-  return null;
-}
+
 
   /* =======================================================
      RENDER

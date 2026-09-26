@@ -752,10 +752,7 @@ useEffect(() => {
         /*
          * Validate saved member session
          */
-        if (
-          sessionData?.uid &&
-          sessionData?.token
-        ) {
+       if (sessionData?.token) {
 
           const controller = new AbortController();
 

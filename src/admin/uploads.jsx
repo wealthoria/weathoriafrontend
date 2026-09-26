@@ -270,6 +270,19 @@ function getFileUrl(fileUrl) {
    UPLOAD FILE TO NODE BACKEND
    ========================================================= */
 
+
+async function getAdminToken() {
+  const currentUser = window.auth?.currentUser;
+
+  if (!currentUser) {
+    throw new Error(
+      "Admin session not found. Please login again."
+    );
+  }
+
+  return currentUser.getIdToken(true);
+}
+
 async function uploadFile(
   file,
   fieldName,
@@ -290,6 +303,7 @@ async function uploadFile(
     file
   );
 
+  const token = await getAdminToken();
   return new Promise(
     (
       resolve,
@@ -303,6 +317,15 @@ async function uploadFile(
         `${API_BASE_URL}${endpoint}`
       );
 
+
+      
+
+  xhr.setRequestHeader(
+  "Authorization",
+  `Bearer ${token}`
+  );
+
+      
       xhr.upload.onprogress =
         (event) => {
           if (

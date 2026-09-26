@@ -854,7 +854,9 @@ function UsersScreen() {
 
               member.subscriptionAmount,
 
-              member.razorpaySubscriptionId
+              member.razorpaySubscriptionId,
+
+              member.razorpayPaymentId
 
             ]
               .map(
@@ -1616,7 +1618,7 @@ function UsersScreen() {
                   setSearch(event.target.value)
                 }
                 placeholder={
-                  "Search name, email, phone number, member ID or subscription..."
+                  "Search name, email, phone number, member ID, payment ID or subscription..."
                 }
                 aria-label="Search members"
                 style={{

@@ -153,9 +153,13 @@ function RatioAnalysis() {
                         ? data.tags
                         : [],
 
-                    pdfUrl:
-                      data.pdfUrl ||
-                      "",
+                   pdfUrl:
+  data.pdfUrl ||
+  "",
+
+pdfPath:
+  data.pdfPath ||
+  "",
 
                     thumbnailUrl:
                       data.thumbnailUrl ||
@@ -481,10 +485,11 @@ function RatioAnalysis() {
                       type="button"
                       className="member-newsletter-button"
                       disabled={!report.pdfUrl}
-                     onClick={() => {
-  if (!report.pdfUrl) return;
+             onClick={async () => {
+  if (!report.pdfPath) {
+    return;
+  }
 
-  // Google Analytics - track Ratio Analysis opened
   if (typeof window.gtag === "function") {
     window.gtag("event", "ratio_analysis_opened", {
       content_id: String(report.id || ""),
@@ -492,7 +497,62 @@ function RatioAnalysis() {
     });
   }
 
-  setSelectedPdf(report);
+  try {
+    const current =
+      window.localStorage.getItem(
+        "wealthoria-current-member"
+      );
+
+    const member =
+      current
+        ? JSON.parse(current)
+        : null;
+
+    const token =
+      member?.session?.token;
+
+    if (!token) {
+      return;
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/members/content-pdf-url/${report.id}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+          "Content-Type":
+            "application/json"
+        }
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (
+      !response.ok ||
+      !data?.success ||
+      !data?.url
+    ) {
+      throw new Error(
+        data?.message ||
+        "Unable to open PDF."
+      );
+    }
+
+    setSelectedPdf({
+      ...report,
+      pdfUrl: data.url
+    });
+
+  } catch (error) {
+    console.error(
+      "Ratio Analysis PDF error:",
+      error
+    );
+  }
 }}
                     >
                       Read Report →
@@ -554,9 +614,7 @@ function RatioAnalysis() {
 
 
             <iframe
-              src={`${getFileUrl(
-                selectedPdf.pdfUrl
-              )}#toolbar=0&navpanes=0`}
+             src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
               title={selectedPdf.title}
               className="member-pdf-frame"
             />

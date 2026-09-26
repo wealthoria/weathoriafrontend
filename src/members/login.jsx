@@ -930,7 +930,10 @@ try {
     }
   };
 
+ if (!window.__wealthoriaSessionRestoreStarted) {
+  window.__wealthoriaSessionRestoreStarted = true;
   restoreExistingSession();
+}
 
   return () => {
     cancelled = true;

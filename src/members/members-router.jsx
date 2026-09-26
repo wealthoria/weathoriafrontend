@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -645,20 +645,32 @@ const removeMemberSession = (
 
         try {
 
-          const response =
-            await fetch(
-              "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/members/me",
-              {
-                method: "GET",
-                headers: {
-                  Authorization:
-                    `Bearer ${session.token}`,
+          const controller = new AbortController();
+          const accessTimeout = window.setTimeout(() => {
+            controller.abort();
+          }, 15000);
 
-                  "Content-Type":
-                    "application/json"
+          let response;
+
+          try {
+            response =
+              await fetch(
+                "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/members/me",
+                {
+                  method: "GET",
+                  headers: {
+                    Authorization:
+                      `Bearer ${session.token}`,
+
+                    "Content-Type":
+                      "application/json"
+                  },
+                  signal: controller.signal
                 }
-              }
-            );
+              );
+          } finally {
+            window.clearTimeout(accessTimeout);
+          }
 
 
           let data = null;

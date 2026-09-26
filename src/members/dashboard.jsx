@@ -1,4 +1,4 @@
-﻿
+
 import React from "react";
 const {
   useState,
@@ -2066,73 +2066,27 @@ useEffect(() => {
   ======================================================= */
 useEffect(() => {
 
-  const loadMember = async () => {
+  const current = getCurrentMemberSession();
 
-    const current = getCurrentMemberSession();
+  if (!current?.session?.uid || !current?.session?.token) {
+    setMember(null);
+    setAuthChecking(false);
 
-    if (!current?.session?.uid || !current?.session?.token) {
-      setMember(null);
-      setAuthChecking(false);
-
-      if (window.membersNavigate) {
-        window.membersNavigate("/members/login");
-      } else {
-        window.location.replace("/members/login");
-      }
-
-      return;
+    if (window.membersNavigate) {
+      window.membersNavigate("/members/login");
+    } else {
+      window.location.replace("/members/login");
     }
 
-    try {
+    return;
+  }
 
-      const response = await fetch(
-        `${DASHBOARD_API}/api/members/me`,
-        {
-          method: "GET",
-          headers: {
-            Authorization:
-              `Bearer ${current.session.token}`
-          }
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.success || !data?.member) {
-        throw new Error(
-          data?.message ||
-          "Unable to load member details."
-        );
-      }
-
-      const updatedSession = {
-        ...current.session,
-        ...data.member
-      };
-
-      updateCurrentMemberSession(
-        current.storage,
-        updatedSession
-      );
-setMember(updatedSession);
-setMembershipLoaded(true);
-setAuthChecking(false);
-
-    } catch (error) {
-
-      console.error(
-        "Member session refresh failed:",
-        error
-      );
-
-    setMember(current.session);
-setMembershipLoaded(true);
-setAuthChecking(false);
-    }
-
-  };
-
-  loadMember();
+  // MembersRouter already verified /api/members/me before rendering
+  // the dashboard. Reusing that verified session avoids a second
+  // Firestore request and prevents the dashboard from blocking.
+  setMember(current.session);
+  setMembershipLoaded(true);
+  setAuthChecking(false);
 
 }, []);
   /* =======================================================

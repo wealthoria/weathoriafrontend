@@ -126,12 +126,20 @@ function getDashboardTime(value) {
       return value.toDate().getTime();
     }
 
-    const time =
-      new Date(value).getTime();
+  if (value?._seconds) {
+  return value._seconds * 1000;
+}
 
-    return Number.isNaN(time)
-      ? 0
-      : time;
+if (value?.seconds) {
+  return value.seconds * 1000;
+}
+
+const time =
+  new Date(value).getTime();
+
+return Number.isNaN(time)
+  ? 0
+  : time;
 
   } catch (error) {
 

@@ -158,8 +158,12 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                         : [],
 
                     pdfUrl:
-                      data.pdfUrl ||
-                      "",
+  data.pdfUrl ||
+  "",
+
+pdfPath:
+  data.pdfPath ||
+  "",
 
                     thumbnailUrl:
                       data.thumbnailUrl ||
@@ -562,12 +566,11 @@ const newsletterMonths = (() => {
                           type="button"
                           className="member-newsletter-button"
                           disabled={!newsletter.pdfUrl}
-                         onClick={() => {
-  if (!newsletter.pdfUrl) {
+                        onClick={async () => {
+  if (!newsletter.pdfPath) {
     return;
   }
 
-  // Google Analytics - track newsletter opened
   if (typeof window.gtag === "function") {
     window.gtag("event", "newsletter_opened", {
       content_id: String(newsletter.id || ""),
@@ -575,9 +578,63 @@ const newsletterMonths = (() => {
     });
   }
 
-  setSelectedPdf(newsletter);
-}}
-                        >
+  try {
+    const current =
+      window.localStorage.getItem(
+        "wealthoria-current-member"
+      );
+
+    const member =
+      current
+        ? JSON.parse(current)
+        : null;
+
+    const token =
+      member?.session?.token;
+
+    if (!token) {
+      return;
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/members/content-pdf-url/${newsletter.id}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+          "Content-Type":
+            "application/json"
+        }
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (
+      !response.ok ||
+      !data?.success ||
+      !data?.url
+    ) {
+      throw new Error(
+        data?.message ||
+        "Unable to open PDF."
+      );
+    }
+
+    setSelectedPdf({
+      ...newsletter,
+      pdfUrl: data.url
+    });
+
+  } catch (error) {
+    console.error(
+      "Newsletter PDF error:",
+      error
+    );
+  }
+}}             >
                           Read Newsletter →
                         </button>
 
@@ -640,9 +697,7 @@ const newsletterMonths = (() => {
 
 
             <iframe
-              src={`${getFileUrl(
-                selectedPdf.pdfUrl
-              )}#toolbar=0&navpanes=0`}
+             src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
               title={selectedPdf.title}
               className="member-pdf-frame"
             />

@@ -756,99 +756,102 @@ useEffect(() => {
           sessionData?.uid &&
           sessionData?.token
         ) {
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/api/members/me`,
-              {
-                method: "GET",
-                headers: {
-                  Authorization:
-                    `Bearer ${sessionData.token}`,
-                  "Content-Type":
-                    "application/json"
-                }
-              }
-            );
 
-            const data = await response.json();
+          const controller = new AbortController();
 
-            /*
-             * Token is still valid
-             */
-           if (
-  response.ok &&
-  data?.success
-) {
-  const restoredMember = data?.member || {};
+const timeoutId = window.setTimeout(() => {
+  controller.abort();
+}, 15000);
 
-  const restoredStatus = String(
-    restoredMember.status ||
-    restoredMember.subscription?.status ||
-    sessionData.status ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
+let response;
 
-  /*
-   * Expired / inactive members must stay on
-   * the login page and see Subscription Inactive.
-   */
-  if (
-    restoredStatus === "inactive" ||
-    restoredStatus === "cancelled" ||
-    restoredStatus === "canceled"
-  ) {
-    const updatedSession = {
-      ...sessionData,
-      ...restoredMember,
-      token: sessionData.token
-    };
+try {
+  response = await fetch(
+    `${API_BASE_URL}/api/members/me`,
+    {
+      method: "GET",
+      headers: {
+        Authorization:
+          `Bearer ${sessionData.token}`,
+        "Content-Type":
+          "application/json"
+      },
+      signal: controller.signal
+    }
+  );
 
-    saveMemberSession(
-      updatedSession,
-      savedSession.type === "local"
-    );
+  const data = await response.json();
+
+  if (response.ok && data?.success) {
+    const restoredMember = data?.member || {};
+
+    const restoredStatus = String(
+      restoredMember.status ||
+      restoredMember.subscription?.status ||
+      sessionData.status ||
+      ""
+    ).trim().toLowerCase();
+
+    if (
+      restoredStatus === "inactive" ||
+      restoredStatus === "cancelled" ||
+      restoredStatus === "canceled"
+    ) {
+      const updatedSession = {
+        ...sessionData,
+        ...restoredMember,
+        token: sessionData.token
+      };
+
+      saveMemberSession(
+        updatedSession,
+        savedSession.type === "local"
+      );
+
+      if (!cancelled) {
+        setSubscriptionInactive(true);
+        setCheckingSession(false);
+      }
+
+      return;
+    }
 
     if (!cancelled) {
-      setSubscriptionInactive(true);
       setCheckingSession(false);
+      window.location.replace(
+        "/members/dashboard"
+      );
     }
 
     return;
   }
 
-  /*
-   * Active member → dashboard
-   */
+  if (savedSession.uid) {
+    removeMemberSession(savedSession.uid);
+  }
+
+} catch (error) {
+  console.warn(
+    "Saved member session validation failed:",
+    error
+  );
+
+  if (savedSession.uid) {
+    removeMemberSession(savedSession.uid);
+  }
+
   if (!cancelled) {
     setCheckingSession(false);
-
-    window.location.replace(
-      "/members/dashboard"
-    );
   }
 
   return;
+
+} finally {
+  window.clearTimeout(timeoutId);
 }
 
-            /*
-             * Token is no longer valid
-             */
-            if (savedSession.uid) {
-              removeMemberSession(
-                savedSession.uid
-              );
-            }
-          } catch (error) {
-            console.warn(
-              "Saved member session validation failed:",
-              error
-            );
-          }
         }
       }
-
       /*
        * SECOND:
        * Check Firebase Auth only for ADMIN.
@@ -914,7 +917,9 @@ useEffect(() => {
         setCheckingSession(false);
       }
 
-    } catch (error) {
+    } 
+    
+    catch (error) {
       console.error(
         "Session restore error:",
         error

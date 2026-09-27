@@ -580,27 +580,29 @@ if (token) {
   }
 
   try {
-    const current =
-      window.localStorage.getItem(
-        "wealthoria-current-member"
-      );
-let member = null;
+    const currentUid =
+  localStorage.getItem("wealthoria-current-member");
 
-if (current) {
-  try {
-    member = JSON.parse(current);
-  } catch {
-    member = {
-      session: {
-        token: current
-      }
-    };
-  }
+const sessionsData =
+  localStorage.getItem("wealthoria-member-sessions");
+
+let sessions = {};
+
+try {
+  sessions = sessionsData
+    ? JSON.parse(sessionsData)
+    : {};
+} catch {
+  sessions = {};
 }
 
-    const token =
-      member?.session?.token;
+const member =
+  currentUid
+    ? sessions[currentUid]
+    : null;
 
+const token =
+  member?.token;
     if (!token) {
       return;
     }

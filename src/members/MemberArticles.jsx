@@ -184,20 +184,21 @@ const token =
         }
       }
     );
-const responseText = await response.text();
 
-if (!response.ok) {
+    const data = await response.json();
+
+if (
+  !response.ok ||
+  !data?.success ||
+  !data?.url
+) {
   throw new Error(
-    responseText || "Unable to open PDF."
+    data?.message ||
+    "Unable to open PDF."
   );
 }
 
-const pdfUrl = responseText.trim();
-
-if (!pdfUrl) {
-  throw new Error("PDF URL is empty.");
-}
-
+const pdfUrl = data.url;
 setSelectedPdf({
   ...article,
   pdfUrl

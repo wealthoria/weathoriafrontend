@@ -579,25 +579,33 @@ const newsletterMonths = (() => {
   }
 
   try {
-    const current =
-      window.localStorage.getItem(
-        "wealthoria-current-member"
-      );
-let member = null;
+   const currentUid =
+  window.localStorage.getItem(
+    "wealthoria-current-member"
+  );
 
-if (current) {
-  try {
-    member = JSON.parse(current);
-  } catch {
-    member = {
-      session: {
-        token: current
-      }
-    };
-  }
+const sessionsData =
+  window.localStorage.getItem(
+    "wealthoria-member-sessions"
+  );
+
+let sessions = {};
+
+try {
+  sessions = sessionsData
+    ? JSON.parse(sessionsData)
+    : {};
+} catch {
+  sessions = {};
 }
 
-const token = member?.session?.token;
+const member =
+  currentUid
+    ? sessions[currentUid]
+    : null;
+
+const token =
+  member?.token;
 
     const response = await fetch(
       `${API_BASE_URL}/api/members/content-pdf-url/${newsletter.id}`,

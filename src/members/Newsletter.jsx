@@ -584,10 +584,19 @@ const newsletterMonths = (() => {
         "wealthoria-current-member"
       );
 
-    const member =
-      current
-        ? JSON.parse(current)
-        : null;
+ let member = null;
+
+if (current) {
+  try {
+    member = JSON.parse(current);
+  } catch {
+    member = {
+      session: {
+        token: current
+      }
+    };
+  }
+}
 
     const token =
       member?.session?.token;

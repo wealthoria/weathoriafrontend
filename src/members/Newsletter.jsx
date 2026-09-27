@@ -583,8 +583,7 @@ const newsletterMonths = (() => {
       window.localStorage.getItem(
         "wealthoria-current-member"
       );
-
- let member = null;
+let member = null;
 
 if (current) {
   try {
@@ -598,12 +597,7 @@ if (current) {
   }
 }
 
-    const token =
-      member?.session?.token;
-
-    if (!token) {
-      return;
-    }
+const token = member?.session?.token;
 
     const response = await fetch(
       `${API_BASE_URL}/api/members/content-pdf-url/${newsletter.id}`,

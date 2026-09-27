@@ -140,18 +140,33 @@ const openPdf = async (article) => {
   }
 
   try {
-    const current =
-      window.localStorage.getItem(
-        "wealthoria-current-member"
-      );
+    const currentUid =
+  window.localStorage.getItem(
+    "wealthoria-current-member"
+  );
 
-    const member =
-      current
-        ? JSON.parse(current)
-        : null;
+const sessionsData =
+  window.localStorage.getItem(
+    "wealthoria-member-sessions"
+  );
 
-    const token =
-      member?.session?.token;
+let sessions = {};
+
+try {
+  sessions = sessionsData
+    ? JSON.parse(sessionsData)
+    : {};
+} catch {
+  sessions = {};
+}
+
+const member =
+  currentUid
+    ? sessions[currentUid]
+    : null;
+
+const token =
+  member?.token;
 
     if (!token) {
       return;
@@ -271,24 +286,33 @@ pdfPath:
               });
 
 
-              const current = localStorage.getItem(
-  "wealthoria-current-member"
-);
+            const currentUid =
+  localStorage.getItem(
+    "wealthoria-current-member"
+  );
 
-let member = null;
+const sessionsData =
+  localStorage.getItem(
+    "wealthoria-member-sessions"
+  );
 
-if (current) {
-  try {
-    member = JSON.parse(current);
-  } catch {
-    member = {
-      session: {
-        token: current
-      }
-    };
-  }
+let sessions = {};
+
+try {
+  sessions = sessionsData
+    ? JSON.parse(sessionsData)
+    : {};
+} catch {
+  sessions = {};
 }
-const token = member?.session?.token;
+
+const member =
+  currentUid
+    ? sessions[currentUid]
+    : null;
+
+const token =
+  member?.token;
 
 if (token) {
   const articlesWithFreshThumbnails =

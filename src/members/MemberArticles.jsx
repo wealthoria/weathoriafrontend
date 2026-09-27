@@ -47,6 +47,29 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
     return API_BASE_URL + "/" + fileUrl;
   };
 
+
+
+  const getFreshThumbnailUrl = async (contentId, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/api/members/content-thumbnail-url/${contentId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data?.success || !data?.url) {
+    throw new Error(
+      data?.message || "Unable to load thumbnail."
+    );
+  }
+
+  return data.url;
+};
   /* =========================================================
      FORMAT DATE
   ========================================================= */
@@ -146,25 +169,25 @@ const openPdf = async (article) => {
         }
       }
     );
+const responseText = await response.text();
 
-    const data =
-      await response.json();
+if (!response.ok) {
+  throw new Error(
+    responseText || "Unable to open PDF."
+  );
+}
 
-    if (
-      !response.ok ||
-      !data?.success ||
-      !data?.url
-    ) {
-      throw new Error(
-        data?.message ||
-        "Unable to open PDF."
-      );
-    }
+const pdfUrl = responseText.trim();
 
-    setSelectedPdf({
-      ...article,
-      pdfUrl: data.url
-    });
+if (!pdfUrl) {
+  throw new Error("PDF URL is empty.");
+}
+
+setSelectedPdf({
+  ...article,
+  pdfUrl
+});
+
 
   } catch (error) {
     console.error(
@@ -206,7 +229,7 @@ const openPdf = async (article) => {
           "published"
         )
         .onSnapshot(
-          (snapshot) => {
+  async (snapshot) => {
             const rows =
               snapshot.docs.map((doc) => {
                 const data =
@@ -247,6 +270,52 @@ pdfPath:
                 };
               });
 
+
+              const current = localStorage.getItem(
+  "wealthoria-current-member"
+);
+
+const member = current
+  ? JSON.parse(current)
+  : null;
+
+const token = member?.session?.token;
+
+if (token) {
+  const articlesWithFreshThumbnails =
+    await Promise.all(
+      articles.map(async (article) => {
+        if (!article.thumbnailUrl) {
+          return article;
+        }
+
+        try {
+          const freshThumbnailUrl =
+            await getFreshThumbnailUrl(
+              article.id,
+              token
+            );
+
+          return {
+            ...article,
+            thumbnailUrl: freshThumbnailUrl
+          };
+        } catch (error) {
+          console.error(
+            "Thumbnail refresh failed:",
+            article.id,
+            error
+          );
+
+          return article;
+        }
+      })
+    );
+
+  setArticles(articlesWithFreshThumbnails);
+} else {
+  setArticles(articles);
+}
             /* NEWEST FIRST */
 
             rows.sort((a, b) => {
@@ -285,7 +354,7 @@ pdfPath:
               );
             });
 
-            setArticles(rows);
+           setLoading(false);
             setLoading(false);
             setError("");
 
@@ -596,9 +665,7 @@ pdfPath:
                   {article.thumbnailUrl ? (
 
                     <img
-                      src={getFileUrl(
-                        article.thumbnailUrl
-                      )}
+                     src={article.thumbnailUrl}
                       alt={article.title}
                       onError={(event) => {
                         console.error(

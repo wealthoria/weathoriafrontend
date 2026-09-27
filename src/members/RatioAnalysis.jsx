@@ -38,8 +38,32 @@ function RatioAnalysis() {
 
     return API_BASE_URL + "/" + fileUrl;
   };
+const getFreshThumbnailUrl = async (contentId, token) => {
+  const response = await fetch(
+    `${API_BASE_URL}/api/members/content-thumbnail-url/${contentId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
 
+  const data = await response.json();
 
+  if (
+    !response.ok ||
+    !data?.success ||
+    !data?.url
+  ) {
+    throw new Error(
+      data?.message ||
+      "Unable to load thumbnail."
+    );
+  }
+
+  return data.url;
+};
   const formatDate = (value) => {
 
     if (!value) {
@@ -126,7 +150,7 @@ function RatioAnalysis() {
         )
         .onSnapshot(
 
-          (snapshot) => {
+         async (snapshot) => {
 
             const rows =
               snapshot.docs.map(
@@ -175,7 +199,51 @@ pdfPath:
               );
 
 
-            setReports(rows);
+      const current = localStorage.getItem(
+  "wealthoria-current-member"
+);
+
+const member = current
+  ? JSON.parse(current)
+  : null;
+
+const token = member?.session?.token;
+
+if (token) {
+  const reportsWithFreshThumbnails =
+    await Promise.all(
+      rows.map(async (report) => {
+        if (!report.thumbnailUrl) {
+          return report;
+        }
+
+        try {
+          const freshThumbnailUrl =
+            await getFreshThumbnailUrl(
+              report.id,
+              token
+            );
+
+          return {
+            ...report,
+            thumbnailUrl: freshThumbnailUrl
+          };
+        } catch (error) {
+          console.error(
+            "Thumbnail refresh failed:",
+            report.id,
+            error
+          );
+
+          return report;
+        }
+      })
+    );
+
+  setReports(reportsWithFreshThumbnails);
+} else {
+  setReports(rows);
+}
 
             setLoading(false);
 
@@ -450,7 +518,7 @@ pdfPath:
                     <div className="member-newsletter-icon">
                       {report.thumbnailUrl ? (
                         <img
-                          src={getFileUrl(report.thumbnailUrl)}
+                         src={report.thumbnailUrl}
                           alt={report.title}
                         />
                       ) : (

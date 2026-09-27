@@ -140,6 +140,7 @@ const getFreshThumbnailUrl = async (contentId, token) => {
         .collection("content")
         .where(
           "category",
+
           "==",
          "Ratio Analysis"
         )
@@ -579,11 +580,19 @@ if (token) {
       window.localStorage.getItem(
         "wealthoria-current-member"
       );
+let member = null;
 
-    const member =
-      current
-        ? JSON.parse(current)
-        : null;
+if (current) {
+  try {
+    member = JSON.parse(current);
+  } catch {
+    member = {
+      session: {
+        token: current
+      }
+    };
+  }
+}
 
     const token =
       member?.session?.token;

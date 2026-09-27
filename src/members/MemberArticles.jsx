@@ -293,7 +293,7 @@ const token = member?.session?.token;
 if (token) {
   const articlesWithFreshThumbnails =
     await Promise.all(
-      articles.map(async (article) => {
+      rows.map(async (article) => {
         if (!article.thumbnailUrl) {
           return article;
         }

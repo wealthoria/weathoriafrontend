@@ -1,6 +1,6 @@
 
 import React from "react";
-import { takePendingPage } from "./memberContent.js";
+import { takePendingPage, queueNotificationLink } from "./memberContent.js";
 const {
   useState,
   useEffect,
@@ -1093,7 +1093,8 @@ window.DashboardLatestContent =
 
 function MemberNotificationsPage({
   member,
-  onNotificationsRead
+  onNotificationsRead,
+  onOpenLink
 }) {
 
   const [notifications, setNotifications] =
@@ -1464,6 +1465,18 @@ onNotificationsRead();
                   >
                     {isOpen ? "Close" : "Open"}
                   </button>
+
+                  {notification.url && onOpenLink && (
+                    <button
+                      type="button"
+                      className="notification-open-button"
+                      onClick={() => onOpenLink(notification.url)}
+                    >
+                      {notification.url.includes("content=")
+                        ? "View PDF"
+                        : "Go to page"}
+                    </button>
+                  )}
 
                 </div>
 
@@ -2278,7 +2291,7 @@ useEffect(() => {
 
 
             script.src =
-              "/firebase/notifications.js?v=25";
+              "/firebase/notifications.js?v=26";
 
 
             script.async = true;
@@ -2865,7 +2878,16 @@ if (!membershipLoaded) {
   key={notification.id}
   className="member-notification-slide"
   onClick={() => {
-    if (notification.url) {
+    if (!notification.url) return;
+
+    const page = queueNotificationLink(notification.url);
+
+    if (page) {
+      openPage(page);
+      setNotificationSlides(
+        current => current.filter(item => item.id !== notification.id)
+      );
+    } else {
       window.location.href = notification.url;
     }
   }}
@@ -3608,6 +3630,15 @@ if (!membershipLoaded) {
 
               <MemberNotificationsPage
                 member={member}
+                onOpenLink={(url) => {
+                  const page = queueNotificationLink(url);
+
+                  if (page) {
+                    openPage(page);
+                  } else if (url) {
+                    window.location.href = url;
+                  }
+                }}
                 onNotificationsRead={() => {
 
                   setUnreadNotifications(

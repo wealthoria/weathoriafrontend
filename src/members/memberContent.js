@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /* =========================================================
    MEMBER CONTENT HELPERS
@@ -143,18 +143,63 @@ export function takePendingPage() {
   return NOTIFICATION_PAGES.includes(page) ? page : "";
 }
 
+const PENDING_EVENT = "wealthoria:pending-content";
+
+// In-app click on a notification (list item or popup slide).
+// Queues the PDF and returns the page to switch to ("" if the
+// link is not a member-dashboard link).
+export function queueNotificationLink(url) {
+  try {
+    const parsed = new URL(String(url || ""), window.location.origin);
+
+    const isWealthoria =
+      parsed.origin === window.location.origin ||
+      parsed.hostname.endsWith("wealthoria.in");
+
+    if (!isWealthoria || !parsed.pathname.startsWith("/members")) return "";
+
+    const page = parsed.searchParams.get("open");
+    if (!page || !NOTIFICATION_PAGES.includes(page)) return "";
+
+    const contentId = parsed.searchParams.get("content");
+
+    if (contentId) {
+      window.sessionStorage.setItem(PENDING_CONTENT_KEY, contentId);
+    } else {
+      window.sessionStorage.removeItem(PENDING_CONTENT_KEY);
+    }
+
+    // Lets an already-open page react (it will not remount).
+    window.dispatchEvent(new Event(PENDING_EVENT));
+
+    return page;
+  } catch {
+    return "";
+  }
+}
+
 // Content pages: opens the notification's item once the list is loaded.
 export function usePendingContent(items, open) {
+  const latest = useRef({ items, open });
+  latest.current = { items, open };
+
   useEffect(() => {
-    const pendingId = window.sessionStorage.getItem(PENDING_CONTENT_KEY);
+    const tryOpen = () => {
+      const { items: list, open: openItem } = latest.current;
+      const pendingId = window.sessionStorage.getItem(PENDING_CONTENT_KEY);
 
-    if (!pendingId || !Array.isArray(items) || items.length === 0) return;
+      if (!pendingId || !Array.isArray(list) || list.length === 0) return;
 
-    const item = items.find((entry) => String(entry.id) === pendingId);
-    if (!item) return;
+      const item = list.find((entry) => String(entry.id) === pendingId);
+      if (!item) return;
 
-    window.sessionStorage.removeItem(PENDING_CONTENT_KEY);
-    open(item);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      window.sessionStorage.removeItem(PENDING_CONTENT_KEY);
+      openItem(item);
+    };
+
+    tryOpen();
+    window.addEventListener(PENDING_EVENT, tryOpen);
+
+    return () => window.removeEventListener(PENDING_EVENT, tryOpen);
   }, [items]);
 }

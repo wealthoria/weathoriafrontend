@@ -708,7 +708,10 @@
                     title,
 
                   message:
-                    body
+                    body,
+
+                  url:
+                    payload?.data?.url || ""
 
                 }
 

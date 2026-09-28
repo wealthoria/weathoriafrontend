@@ -619,65 +619,90 @@ function PrebookOrders() {
      RECEIVER CITY | RECEIVER STATE | RECEIVER PINCODE |
      DROP OFF PINCODE | SENDER MOBILE NO | RECEIVER MOBILE NO
   ======================================================= */
-
-  const exportPageCourierFormat = async () => {
-    try {
-      if (!paginatedOrders.length) {
-        alert("No orders on this page to export.");
-        return;
-      }
-
-      await loadXLSX();
-
-      let truncatedCount = 0;
-
-      const rows = paginatedOrders.map((order) => {
-        const customer = order.customer || {};
-        const addr = order.shippingAddress || {};
-
-        const fullAddress = [addr.address, addr.landmark].filter(Boolean).join(", ");
-        const { line1, line2, truncated } = splitAddress30(fullAddress, 30);
-        if (truncated) truncatedCount += 1;
-
-        const pincode = String(addr.pincode || "").trim();
-
-        return {
-          "RECEIVER NAME": customer.name || addr.name || "",
-          "RECEIVER ADD LINE 1": line1,
-          "RECEIVER ADD LINE 2": line2,
-          "RECEIVER CITY": addr.city || "",
-          "RECEIVER STATE": addr.state || "",
-          "RECEIVER PINCODE": pincode,
-          "DROP OFF PINCODE": pincode,
-          "SENDER MOBILE NO": "",
-          "RECEIVER MOBILE NO": cleanPhone10(customer.phone || addr.phone)
-        };
-      });
-
-      const ws = window.XLSX.utils.json_to_sheet(rows);
-      ws["!cols"] = [
-        { wch: 28 }, { wch: 32 }, { wch: 32 }, { wch: 18 },
-        { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 18 }
-      ];
-
-      const wb = window.XLSX.utils.book_new();
-      window.XLSX.utils.book_append_sheet(wb, ws, "Courier Export");
-
-      const today = new Date().toISOString().slice(0, 10);
-      window.XLSX.writeFile(wb, `wealthoria-courier-page-${currentPage}-${today}.xlsx`);
-
-      if (truncatedCount > 0) {
-        alert(
-          `${truncatedCount} address${truncatedCount === 1 ? "" : "es"} were longer than 60 characters ` +
-            `(30 + 30) and were shortened. Please check them in the file.`
-        );
-      }
-    } catch (err) {
-      console.error("Courier export error:", err);
-      alert(err?.message || "Unable to export Excel file.");
+const exportPageCourierFormat = async () => {
+  try {
+    if (!paginatedOrders.length) {
+      alert("No orders on this page to export.");
+      return;
     }
-  };
 
+    await loadXLSX();
+
+    const rows = paginatedOrders.map((order) => {
+      const customer = order.customer || {};
+      const addr = order.shippingAddress || {};
+
+      // Complete address
+      const fullAddress = String(
+        [addr.address, addr.landmark]
+          .filter(Boolean)
+          .join(", ")
+      ).trim();
+
+      // Split complete address into exactly 30 + 30 characters
+      const addressLine1 = fullAddress.slice(0, 30);
+      const addressLine2 = fullAddress.slice(30, 60);
+
+      return {
+        "RECEIVER NAME": customer.name || addr.name || "",
+
+        "RECEIVER ADD LINE 1": addressLine1,
+
+        "RECEIVER ADD LINE 2": addressLine2,
+
+        "RECEIVER CITY": addr.city || "",
+
+        "RECEIVER STATE": addr.state || "",
+
+        "RECEIVER PINCODE": addr.pincode || "",
+
+        "DROP OFF PINCODE": "570002",
+
+        "SENDER MOBILE NO": "",
+
+        "RECEIVER MOBILE NO": cleanPhone10(
+          customer.phone || addr.phone || ""
+        )
+      };
+    });
+
+    const ws = window.XLSX.utils.json_to_sheet(rows);
+
+    ws["!cols"] = [
+      { wch: 28 }, // RECEIVER NAME
+      { wch: 32 }, // RECEIVER ADD LINE 1
+      { wch: 32 }, // RECEIVER ADD LINE 2
+      { wch: 18 }, // RECEIVER CITY
+      { wch: 18 }, // RECEIVER STATE
+      { wch: 18 }, // RECEIVER PINCODE
+      { wch: 18 }, // DROP OFF PINCODE
+      { wch: 20 }, // SENDER MOBILE NO
+      { wch: 20 }  // RECEIVER MOBILE NO
+    ];
+
+    const wb = window.XLSX.utils.book_new();
+
+    window.XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      "ArticleDetails"
+    );
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    window.XLSX.writeFile(
+      wb,
+      `wealthoria-courier-${today}.xlsx`
+    );
+
+  } catch (err) {
+    console.error("Courier export error:", err);
+    alert(
+      err?.message ||
+      "Unable to export Excel file."
+    );
+  }
+};
   const icon = (name, size = 17) => (MIcon ? <MIcon name={name} size={size} /> : null);
 
   /* =======================================================

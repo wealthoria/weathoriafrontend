@@ -577,8 +577,19 @@ function PrebookOrders() {
 
       const excelRows = filteredOrders.map((order) => {
         const customer = order.customer || {};
+                const address = (customer.address || "").slice(0, 60);
+
         return {
           "RECEIVER NAME": customer.name || "",
+
+            "RECEIVER ADD LINE 1": address.slice(0, 30),
+            "RECEIVER ADD LINE 2": address.slice(30, 60),
+           "RECEIVER CITY":customer.city||"",
+           "RECEIVER STATE":customer.state||"",
+           "RECEIVER PINCODE":customer.pincode||"",
+           "DROP OFF PINCODE":"5700002",
+           "SENDER MOBILE NO":9019759001,
+           "RECEIVER MOBILE NO":customer.phone,
           "Phone Number": customer.phone || "",
           "Book ID": order.bookingId || ""
         };

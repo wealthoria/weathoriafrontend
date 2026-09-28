@@ -537,6 +537,10 @@ setTimeout(() => {
                           : ""
                       }
 
+                      {member.hasNotificationToken
+                        ? " 🔔"
+                        : " (no device)"}
+
                     </option>
 
                   )
@@ -607,6 +611,9 @@ setTimeout(() => {
                           {
                             member.email
                           }
+                          {member.hasNotificationToken
+                            ? " · 🔔 notifications on"
+                            : " · no device"}
                         </small>
                       </span>
 

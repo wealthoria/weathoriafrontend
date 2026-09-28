@@ -9,28 +9,31 @@ const {
 
 function AdminNotifications() {
 
-const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+  const API_BASE_URL =
+    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
-  const [members, setMembers] =
-    useState([]);
+  const { useAdminData } = window;
 
-  const [sendMode, setSendMode] =
-    useState("single");
+  const data = useAdminData();
 
-  const [selectedMember, setSelectedMember] =
-    useState("");
+  
 
-  const [selectedMembers, setSelectedMembers] =
-    useState([]);
+  const [members, setMembers] = useState([]);
 
-  const [title, setTitle] =
-    useState("");
+  const [sendMode, setSendMode] = useState("single");
 
-  const [message, setMessage] =
-    useState("");
+  const [selectedMember, setSelectedMember] = useState("");
+  const [selectedMembers, setSelectedMembers] = useState([]);
 
-  const [loadingMembers, setLoadingMembers] =
-    useState(true);
+  const [title, setTitle] = useState("");
+
+  const [message, setMessage] = useState("");
+
+const [contentItems, setContentItems] = useState([]);
+const [selectedContent, setSelectedContent] = useState("");
+
+
+  const [loadingMembers, setLoadingMembers] = useState(true);
 
   const [sending, setSending] =
     useState(false);
@@ -119,6 +122,25 @@ const loadMembers = async () => {
 
   };
 
+
+
+
+useEffect(() => {
+  const loadContent = () => {
+    try {
+      const items =
+        Array.isArray(window.ADMIN_CONTENT)
+          ? window.ADMIN_CONTENT
+          : [];
+
+      setContentItems(items);
+    } catch (error) {
+      console.error("Load notification content error:", error);
+    }
+  };
+
+  loadContent();
+}, []);
 
   /* =========================================================
      SEND NOTIFICATION
@@ -249,11 +271,12 @@ const response = await fetch(
       Authorization: `Bearer ${token}`,
     },
 
-    body: JSON.stringify({
-      userIds,
-      title: title.trim(),
-      message: message.trim(),
-    }),
+body: JSON.stringify({
+  userIds,
+  title: title.trim(),
+  message: message.trim(),
+  contentId: selectedContent || null,
+}),
   }
 );
 
@@ -677,6 +700,54 @@ setTimeout(() => {
           </div>
 
 
+
+<div className="admin-notifications-field">
+
+  <label>
+    Content to Open
+  </label>
+
+  <select
+    value={selectedContent}
+    onChange={(event) =>
+      setSelectedContent(event.target.value)
+    }
+    disabled={sending}
+  >
+
+    <option value="">
+      No content
+    </option>
+
+    {contentItems
+      .filter(
+        (item) =>
+          item.status !== "draft"
+      )
+      .map((item) => {
+
+        const isVideo =
+          String(item.type || "")
+            .toLowerCase() === "video";
+
+        return (
+          <option
+            key={item.id}
+            value={item.id}
+          >
+            {isVideo ? "🎥 " : "📄 "}
+            {item.title ||
+              item.name ||
+              "Untitled"}
+          </option>
+        );
+
+      })}
+
+  </select>
+
+</div>
+
           <button
             type="submit"
 
@@ -712,5 +783,4 @@ setTimeout(() => {
 }
 
 
-window.AdminNotifications =
-  AdminNotifications;
+window.AdminNotifications = AdminNotifications;

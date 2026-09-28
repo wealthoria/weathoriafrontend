@@ -1400,16 +1400,11 @@ onNotificationsRead();
           const isOpen =
             openNotificationId === notification.id;
 
-          const message =
-            notification.message || "";
+          const message =   notification.message || "";
 
-          const title =
-            notification.title || "Notification";
+          const title = notification.title || "Notification";
 
-          const displayTitle =
-            title.length > 25
-              ? title.slice(0, 25) + "..."
-              : title;
+          const displayTitle = title.length > 25 ? title.slice(0, 25) + "...": title;
 
           const preview =
             message.length > 80
@@ -1443,11 +1438,7 @@ onNotificationsRead();
 
 
                 {/* MESSAGE */}
-                <p>
-                  {isOpen
-                    ? message
-                    : preview}
-                </p>
+                <p>{isOpen ? message : preview}</p>
 
 
                 {/* READ + OPEN */}
@@ -2378,6 +2369,8 @@ useEffect(() => {
           message:
             notification.message ||
             "You have a new notification.",
+              url:
+    notification.url || "",
 
           read:
             false
@@ -2833,11 +2826,15 @@ if (!membershipLoaded) {
           {notificationSlides.map(
             notification => (
 
-              <div
-                key={notification.id}
-                className="member-notification-slide"
-              >
-
+           <div
+  key={notification.id}
+  className="member-notification-slide"
+  onClick={() => {
+    if (notification.url) {
+      window.location.href = notification.url;
+    }
+  }}
+>
                 <div className="member-notification-slide-icon">
                   🔔
                 </div>

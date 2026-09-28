@@ -225,19 +225,20 @@
           // =================================================
 
           window.dispatchEvent(
-            new CustomEvent(
-              "wealthoria:notification",
-              {
-                detail: {
-                  title:
-                    title,
+  new CustomEvent(
+    "wealthoria:notification",
+    {
+      detail: {
+        title: title,
 
-                  message:
-                    body
-                }
-              }
-            )
-          );
+        message: body,
+
+        url:
+          payload.data?.url || ""
+      }
+    }
+  )
+);
 
 
        
@@ -268,14 +269,21 @@
                 );
 
 
-              notification.onclick =
-                function () {
+             notification.onclick =
+  function () {
 
-                  window.focus();
+    window.focus();
 
-                  notification.close();
+    notification.close();
 
-                };
+    const targetUrl =
+      payload.data?.url || "";
+
+    if (targetUrl) {
+      window.location.href = targetUrl;
+    }
+
+  };
 
 
             } catch (error) {

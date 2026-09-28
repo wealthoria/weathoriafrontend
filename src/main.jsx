@@ -15,6 +15,7 @@ inject();
 // ============================================================
 
 import "./firebase.js";
+import { captureNotificationLink } from "./members/memberContent.js";
 
 // ============================================================
 // MAIN WEBSITE
@@ -120,6 +121,12 @@ const pathname = window.location.pathname || "/";
 
 const isAdminRoute = pathname.startsWith("/admin");
 const isMemberRoute = pathname.startsWith("/members");
+
+// Remember a push-notification link (?open=&content=) so it still
+// works after the member passes through the login page.
+if (isMemberRoute) {
+  captureNotificationLink();
+}
 
 // ============================================================
 // ROOT ELEMENT

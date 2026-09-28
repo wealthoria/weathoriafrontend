@@ -1,4 +1,5 @@
-﻿import React from "react";
+﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
+import React from "react";
 
 /* global React, window */
 
@@ -8,6 +9,30 @@ function RatioAnalysis() {
 
   const [reports, setReports] = useState([]);
   const [selectedPdf, setSelectedPdf] = useState(null);
+
+  // Opens a PDF through the backend (membership is checked there).
+  const openReport = async (report) => {
+    if (!report?.id) return;
+
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "ratio_analysis_opened", {
+        content_id: String(report.id || ""),
+        content_title: report.title || ""
+      });
+    }
+
+    try {
+      const pdfUrl = await fetchSecurePdfUrl(report.id);
+      setSelectedPdf({ ...report, pdfUrl });
+    } catch (error) {
+      console.error("Ratio Analysis PDF error:", error);
+      alert(error.message || "Unable to open PDF.");
+    }
+  };
+
+  // Opens the PDF a push notification points to.
+  usePendingContent(reports, openReport);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -566,86 +591,8 @@ if (token) {
                     <button
                       type="button"
                       className="member-newsletter-button"
-                      disabled={!report.pdfUrl}
-             onClick={async () => {
-  if (!report.pdfPath) {
-    return;
-  }
-
-  if (typeof window.gtag === "function") {
-    window.gtag("event", "ratio_analysis_opened", {
-      content_id: String(report.id || ""),
-      content_title: report.title || ""
-    });
-  }
-
-  try {
-    const currentUid =
-  localStorage.getItem("wealthoria-current-member");
-
-const sessionsData =
-  localStorage.getItem("wealthoria-member-sessions");
-
-let sessions = {};
-
-try {
-  sessions = sessionsData
-    ? JSON.parse(sessionsData)
-    : {};
-} catch {
-  sessions = {};
-}
-
-const member =
-  currentUid
-    ? sessions[currentUid]
-    : null;
-
-const token =
-  member?.token;
-    if (!token) {
-      return;
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/members/content-pdf-url/${report.id}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization:
-            `Bearer ${token}`,
-          "Content-Type":
-            "application/json"
-        }
-      }
-    );
-
-    const data =
-      await response.json();
-
-    if (
-      !response.ok ||
-      !data?.success ||
-      !data?.url
-    ) {
-      throw new Error(
-        data?.message ||
-        "Unable to open PDF."
-      );
-    }
-
-    setSelectedPdf({
-      ...report,
-      pdfUrl: data.url
-    });
-
-  } catch (error) {
-    console.error(
-      "Ratio Analysis PDF error:",
-      error
-    );
-  }
-}}
+                      disabled={!(report.pdfPath || report.pdfUrl)}
+             onClick={() => openReport(report)}
                     >
                       Read Report →
                     </button>

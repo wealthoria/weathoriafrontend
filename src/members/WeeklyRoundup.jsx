@@ -1,4 +1,5 @@
-﻿import React from "react";
+﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
+import React from "react";
 
 /* global React, window */
 
@@ -8,6 +9,30 @@ function WeeklyRoundup() {
 
   const [reports, setReports] = useState([]);
   const [selectedPdf, setSelectedPdf] = useState(null);
+
+  // Opens a PDF through the backend (membership is checked there).
+  const openReport = async (report) => {
+    if (!report?.id) return;
+
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "weekly_roundup_opened", {
+        content_id: String(report.id || ""),
+        content_title: report.title || ""
+      });
+    }
+
+    try {
+      const pdfUrl = await fetchSecurePdfUrl(report.id);
+      setSelectedPdf({ ...report, pdfUrl });
+    } catch (error) {
+      console.error("Weekly Roundup PDF error:", error);
+      alert(error.message || "Unable to open PDF.");
+    }
+  };
+
+  // Opens the PDF a push notification points to.
+  usePendingContent(reports, openReport);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -480,20 +505,8 @@ function WeeklyRoundup() {
                     <button
                       type="button"
                       className="member-newsletter-button"
-                      disabled={!report.pdfUrl}
-                     onClick={() => {
-  if (!report.pdfUrl) return;
-
-  // Google Analytics - track Weekly Roundup opened
-  if (typeof window.gtag === "function") {
-    window.gtag("event", "weekly_roundup_opened", {
-      content_id: String(report.id || ""),
-      content_title: report.title || ""
-    });
-  }
-
-  setSelectedPdf(report);
-}}
+                      disabled={!(report.pdfPath || report.pdfUrl)}
+                     onClick={() => openReport(report)}
                     >
                       Read Report →
                     </button>

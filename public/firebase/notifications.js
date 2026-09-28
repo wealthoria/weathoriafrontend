@@ -5,7 +5,7 @@
   // =========================================================
 
   const FIREBASE_MESSAGING_SDK =
-    "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js";
+    "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging-compat.js";
 
   const VAPID_KEY =
     "BEoUv-g5znqXgkiql7pW95Ucw67PDIgJWNGYLkFVo4vu8ZxZEp0DSk0ggnl1piEktPvsBfJKqATvsAJO-GUFvpc";
@@ -669,7 +669,7 @@
 
 
       messaging.onMessage(
-        function (payload) {
+        async function (payload) {
 
       
 
@@ -732,31 +732,27 @@
 
             try {
 
-              const notification =
-                new Notification(
-                  title,
-                  {
+              // Android Chrome refuses `new Notification()` from a page;
+              // the service worker's showNotification works everywhere.
+              const data = payload?.data || {};
 
-                    body:
-                      body,
-
-                    icon:
-                      "/icons/icon-192.png"
-
+              await registration.showNotification(
+                title,
+                {
+                  body,
+                  icon: "/icons/icon-192.png",
+                  badge: "/icons/icon-192.png",
+                  tag: data.tag || `wealthoria-${Date.now()}`,
+                  renotify: true,
+                  requireInteraction: true,
+                  silent: false,
+                  vibrate: [200, 100, 200],
+                  timestamp: Date.now(),
+                  data: {
+                    url: data.url || "/members/dashboard"
                   }
-                );
-
-
-              notification.onclick =
-                function () {
-
-                  window.focus();
-
-                  notification.close();
-
-                };
-
-
+                }
+              );
 
             } catch (
               notificationError

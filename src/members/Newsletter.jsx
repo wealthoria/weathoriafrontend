@@ -1,4 +1,5 @@
-﻿import React from "react";
+﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
+import React from "react";
 
 /* global React, window */
 
@@ -9,6 +10,30 @@ function Newsletter() {
   const [newsletters, setNewsletters] = useState([]);
 
   const [selectedPdf, setSelectedPdf] = useState(null);
+
+  // Opens a PDF through the backend (membership is checked there).
+  const openNewsletter = async (newsletter) => {
+    if (!newsletter?.id) return;
+
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "newsletter_opened", {
+        content_id: String(newsletter.id || ""),
+        content_title: newsletter.title || ""
+      });
+    }
+
+    try {
+      const pdfUrl = await fetchSecurePdfUrl(newsletter.id);
+      setSelectedPdf({ ...newsletter, pdfUrl });
+    } catch (error) {
+      console.error("Newsletter PDF error:", error);
+      alert(error.message || "Unable to open PDF.");
+    }
+  };
+
+  // Opens the PDF a push notification points to.
+  usePendingContent(newsletters, openNewsletter);
+
 
   const [loading, setLoading] =  useState(true);
 
@@ -565,87 +590,8 @@ const newsletterMonths = (() => {
                         <button
                           type="button"
                           className="member-newsletter-button"
-                          disabled={!newsletter.pdfUrl}
-                        onClick={async () => {
-  if (!newsletter.pdfPath) {
-    return;
-  }
-
-  if (typeof window.gtag === "function") {
-    window.gtag("event", "newsletter_opened", {
-      content_id: String(newsletter.id || ""),
-      content_title: newsletter.title || ""
-    });
-  }
-
-  try {
-   const currentUid =
-  window.localStorage.getItem(
-    "wealthoria-current-member"
-  );
-
-const sessionsData =
-  window.localStorage.getItem(
-    "wealthoria-member-sessions"
-  );
-
-let sessions = {};
-
-try {
-  sessions = sessionsData
-    ? JSON.parse(sessionsData)
-    : {};
-} catch {
-  sessions = {};
-}
-
-const member =
-  currentUid
-    ? sessions[currentUid]
-    : null;
-
-const token =
-  member?.token;
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/members/content-pdf-url/${newsletter.id}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization:
-            `Bearer ${token}`,
-          "Content-Type":
-            "application/json"
-        }
-      }
-    );
-
-    const data =
-      await response.json();
-
-    if (
-      !response.ok ||
-      !data?.success ||
-      !data?.url
-    ) {
-      throw new Error(
-        data?.message ||
-        "Unable to open PDF."
-      );
-    }
-
-    setSelectedPdf({
-      ...newsletter,
-      pdfUrl: data.url
-    });
-
-  } catch (error) {
-    console.error(
-      "Newsletter PDF error:",
-      error
-    );
-  }
-}}             >
+                          disabled={!(newsletter.pdfPath || newsletter.pdfUrl)}
+                        onClick={() => openNewsletter(newsletter)}             >
                           Read Newsletter →
                         </button>
 

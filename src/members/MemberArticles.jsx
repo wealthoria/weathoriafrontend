@@ -2,6 +2,7 @@
 
 /* global React, window */
 import React from "react";
+import { usePendingContent } from "./memberContent.js";
 
 
 const { useState, useEffect } = React;
@@ -169,6 +170,7 @@ const token =
   member?.token;
 
     if (!token) {
+      alert("Please log in again to open this PDF.");
       return;
     }
 
@@ -210,8 +212,12 @@ setSelectedPdf({
       "Article PDF error:",
       error
     );
+    alert(error.message || "Unable to open PDF.");
   }
 };
+
+  // Opens the PDF a push notification points to.
+  usePendingContent(articles, openPdf);
   /* =========================================================
      LOAD ARTICLES & REPORTS
   ========================================================= */

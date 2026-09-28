@@ -2,6 +2,8 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/firestore";
 import "firebase/compat/storage";
+// Push notifications: same Firebase version as the rest of the app.
+import "firebase/compat/messaging";
 
 /* =========================================================
    WEALTHORIA FIREBASE CONFIGURATION

@@ -1,22 +1,24 @@
 /* =========================================================================
    Wealthoria — Firebase Messaging Service Worker
+
+   Same Firebase version as the app (package.json -> firebase 12.16.0).
    ========================================================================= */
 
 importScripts(
-  "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"
+  "https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"
 );
 
 importScripts(
-  "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"
+  "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging-compat.js"
 );
 
 
 /* =========================================================================
-   FIREBASE CONFIG
+   FIREBASE CONFIG (must match src/firebase.js)
    ========================================================================= */
 
 firebase.initializeApp({
-  apiKey: "AIzaSyDYeZggBR1oP8r8yjuNMYYs5VSOX3yfnE",
+  apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
   authDomain: "wealthoria-6fc11.firebaseapp.com",
   projectId: "wealthoria-6fc11",
   storageBucket: "wealthoria-6fc11.firebasestorage.app",
@@ -29,49 +31,92 @@ const messaging = firebase.messaging();
 
 
 /* =========================================================================
+   BUILD THE POPUP
+   Used for background pushes here, and by the page for foreground pushes
+   (see public/firebase/notifications.js), so both look the same.
+   ========================================================================= */
+
+function buildWealthoriaNotification(payload) {
+
+  const data = payload?.data || {};
+
+  const title =
+    data.title ||
+    payload?.notification?.title ||
+    "Wealthoria";
+
+  const body =
+    data.body ||
+    payload?.notification?.body ||
+    "You have a new notification.";
+
+  return {
+    title,
+    options: {
+      body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+
+      // One popup per notification (a shared tag would replace the previous one).
+      tag: data.tag || `wealthoria-${Date.now()}`,
+      renotify: true,
+
+      // Heads-up popup on phones: sound + vibration, stays until tapped.
+      requireInteraction: true,
+      silent: false,
+      vibrate: [200, 100, 200],
+      timestamp: Date.now(),
+
+      data: {
+        url: data.url || "/members/dashboard"
+      }
+    }
+  };
+}
+
+
+/* =========================================================================
    BACKGROUND PUSH NOTIFICATION
    ========================================================================= */
 
 messaging.onBackgroundMessage(function (payload) {
 
+  // Older messages that carry a `notification` block are already shown
+  // by Firebase itself; showing them again would create a duplicate.
+  if (payload?.notification) {
+    return;
+  }
 
-
-  const notificationTitle =
-    payload.notification?.title ||
-    payload.data?.title ||
-    "Wealthoria";
-
-
-  const notificationBody =
-    payload.notification?.body ||
-    payload.data?.body ||
-    "You have a new notification.";
-
-
-  const notificationOptions = {
-
-    body: notificationBody,
-
-    icon: "/icons/icon-192.png",
-
-    badge: "/icons/icon-192.png",
-
-    tag: "wealthoria-notification",
-
-    renotify: true,
-
-    data: {
-      url:
-        payload.data?.url ||
-        "/members/dashboard"
-    }
-
-  };
-
+  const notification =
+    buildWealthoriaNotification(payload);
 
   return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
+    notification.title,
+    notification.options
+  );
+});
+
+
+/* =========================================================================
+   FOREGROUND POPUP REQUEST FROM THE PAGE
+   Android Chrome cannot show `new Notification()` from a page, so the page
+   asks the service worker to show it.
+   ========================================================================= */
+
+self.addEventListener("message", function (event) {
+
+  if (event.data?.type !== "WEALTHORIA_SHOW_NOTIFICATION") {
+    return;
+  }
+
+  const notification =
+    buildWealthoriaNotification(event.data.payload);
+
+  event.waitUntil(
+    self.registration.showNotification(
+      notification.title,
+      notification.options
+    )
   );
 });
 
@@ -84,63 +129,56 @@ self.addEventListener(
   "notificationclick",
   function (event) {
 
-   
-
-
     event.notification.close();
 
+    const targetUrl = new URL(
+      event.notification?.data?.url || "/members/dashboard",
+      self.location.origin
+    ).href;
 
-    const targetUrl =
-      event.notification?.data?.url ||
-      "/members/dashboard";
+    const isSiteUrl =
+      targetUrl.startsWith(self.location.origin);
 
+    event.waitUntil((async function () {
 
-    event.waitUntil(
+      const clientList = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true
+      });
 
-      clients
-        .matchAll({
-          type: "window",
-          includeUncontrolled: true
-        })
+      // Wealthoria already open: reuse that tab.
+      for (const client of clientList) {
 
-        .then(function (clientList) {
+        if (
+          new URL(client.url).origin === self.location.origin &&
+          "focus" in client
+        ) {
 
-          // ---------------------------------------------------
-          // If Wealthoria is already open, focus it
-          // ---------------------------------------------------
+          await client.focus();
 
-          for (
-            const client of clientList
-          ) {
+          if (!isSiteUrl) {
+            // Content link (video/PDF) on another site: open it separately.
+            return clients.openWindow ? clients.openWindow(targetUrl) : undefined;
+          }
 
-            if (
-              client.url.includes(
-                "wealthoria.in"
-              ) &&
-              "focus" in client
-            ) {
-
-              return client.focus();
+          if ("navigate" in client && client.url !== targetUrl) {
+            try {
+              await client.navigate(targetUrl);
+            } catch (error) {
+              // Navigation can be refused for uncontrolled tabs; focus is enough.
             }
           }
 
+          return;
+        }
+      }
 
-          // ---------------------------------------------------
-          // Otherwise open Wealthoria
-          // ---------------------------------------------------
+      // Otherwise open Wealthoria.
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
 
-          if (
-            clients.openWindow
-          ) {
-
-            return clients.openWindow(
-              targetUrl
-            );
-          }
-
-        })
-
-    );
+    })());
   }
 );
 
@@ -150,7 +188,7 @@ self.addEventListener(
    ========================================================================= */
 
 const CACHE_VERSION =
-  "wealthoria-v6";
+  "wealthoria-v7";
 
 const PRECACHE =
   `${CACHE_VERSION}-precache`;

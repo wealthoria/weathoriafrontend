@@ -1,5 +1,6 @@
 
 import React from "react";
+import { takePendingPage } from "./memberContent.js";
 const {
   useState,
   useEffect,
@@ -1770,13 +1771,32 @@ const [activationLoading, setActivationLoading] =
 
                 body: JSON.stringify({
                   subscriptionId,
-                  paymentId
+                  paymentId,
+                  razorpay_signature:
+                    response?.razorpay_signature
                 })
               }
             );
 
           const completeData =
             await completeResponse.json();
+
+          // 202 = payment received, Razorpay still confirming.
+          // Activation finishes automatically; reload shortly.
+          if (
+            completeResponse.status === 202 &&
+            completeData?.pending
+          ) {
+            alert(
+              "Payment received! Your membership is being activated. The page will refresh in a moment."
+            );
+
+            setTimeout(() => {
+              window.location.replace("/members/dashboard");
+            }, 15000);
+
+            return;
+          }
 
           if (
             !completeResponse.ok ||
@@ -2258,7 +2278,7 @@ useEffect(() => {
 
 
             script.src =
-              "/firebase/notifications.js?v=24";
+              "/firebase/notifications.js?v=25";
 
 
             script.async = true;
@@ -2639,6 +2659,21 @@ const dashboardStats = data.stats || {};
 
     setMobileDrawerOpen(false);
   };
+
+  /* =======================================================
+     OPEN THE PAGE A PUSH NOTIFICATION POINTS TO
+     (see memberContent.js; the PDF itself is opened by
+     the page once its list has loaded)
+  ======================================================= */
+
+  useEffect(() => {
+    const page = takePendingPage();
+
+    if (page) {
+      openPage(page);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   /* =======================================================

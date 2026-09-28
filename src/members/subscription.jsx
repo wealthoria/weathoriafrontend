@@ -165,6 +165,13 @@ return;
           color: "#ff843f"
         },
 
+        modal: {
+          // Checkout closed without paying: let the user try again.
+          ondismiss: function () {
+            setLoading(false);
+          }
+        },
+
         handler: async function (
           razorpayResponse
         ) {
@@ -221,7 +228,10 @@ return;
                       subscriptionId:
                         finalSubscriptionId,
                       paymentId:
-                        finalPaymentId
+                        finalPaymentId,
+                      razorpay_signature:
+                        razorpayResponse
+                          .razorpay_signature
                     })
                 }
               );
@@ -243,6 +253,23 @@ return;
             }
 
           
+            /*
+             * 202 = payment received, Razorpay is still confirming it.
+             * The membership activates automatically (webhook), so this
+             * is NOT an error.
+             */
+            if (
+              completeResponse.status === 202 &&
+              completeData.pending
+            ) {
+              alert(
+                "Payment received! Your membership is being activated and will be ready in a few minutes. You can log in shortly."
+              );
+
+              goToLogin();
+              return;
+            }
+
             if (
               !completeResponse.ok ||
               !completeData.success
@@ -281,18 +308,14 @@ return;
     razorpay.on(
   "payment.failed",
   function (paymentResponse) {
+    // Razorpay shows the error and lets the user retry with another
+    // method inside the same checkout, so do not reload the page here.
     console.error(
       "Payment failed:",
       paymentResponse?.error
     );
-
-    window.location.reload();
   }
 );
-
-razorpay.on("modal.close", function () {
-  window.location.reload();
-});
 
       razorpay.open();
 

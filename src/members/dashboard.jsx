@@ -2291,7 +2291,7 @@ useEffect(() => {
 
 
             script.src =
-              "/firebase/notifications.js?v=26";
+              "/firebase/notifications.js?v=27";
 
 
             script.async = true;

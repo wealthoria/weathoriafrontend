@@ -300,6 +300,71 @@
 
 
   // =========================================================
+  // SERVICE WORKER (needed for push)
+  // =========================================================
+  //
+  // Waiting on navigator.serviceWorker.ready hangs forever
+  // if the service worker never installed. Register it if
+  // needed and give up after 15 seconds with a clear message.
+  //
+  // =========================================================
+
+  let lastPushError = "";
+
+  async function getPushServiceWorker() {
+
+    let registration =
+      await navigator.serviceWorker.getRegistration("/");
+
+    if (!registration) {
+      registration =
+        await navigator.serviceWorker.register(
+          "/service-worker.js",
+          { scope: "/" }
+        );
+    }
+
+    if (registration.active) {
+      return registration;
+    }
+
+    const worker =
+      registration.installing || registration.waiting;
+
+    await new Promise(function (resolve, reject) {
+
+      const timer = setTimeout(function () {
+        reject(new Error(
+          "The app's background service did not start. Close Wealthoria completely, open it again and retry."
+        ));
+      }, 15000);
+
+      if (!worker) {
+        clearTimeout(timer);
+        resolve();
+        return;
+      }
+
+      worker.addEventListener("statechange", function () {
+        if (worker.state === "activated") {
+          clearTimeout(timer);
+          resolve();
+        }
+
+        if (worker.state === "redundant") {
+          clearTimeout(timer);
+          reject(new Error(
+            "The app's background service failed to install. Close Wealthoria completely, open it again and retry."
+          ));
+        }
+      });
+    });
+
+    return registration;
+  }
+
+
+  // =========================================================
   // GET FCM TOKEN AND SAVE TO BACKEND
   // =========================================================
   //
@@ -353,6 +418,8 @@
           "⚠️ Member authentication token is missing."
         );
 
+        lastPushError = "Your login has expired. Please log out and log in again.";
+
         return false;
       }
 
@@ -401,7 +468,7 @@
 
 
       const registration =
-        await navigator.serviceWorker.ready;
+        await getPushServiceWorker();
 
 
     
@@ -440,6 +507,8 @@
         console.error(
           "❌ Firebase did not return an FCM token."
         );
+
+        lastPushError = "The phone did not provide a notification address. Please try again.";
 
         return false;
       }
@@ -513,6 +582,10 @@
 
       if (!response.ok) {
 
+        lastPushError =
+          data?.message ||
+          `Server error (${response.status}). Please log out, log in again and retry.`;
+
         console.error(
           "❌ Failed to save FCM token.",
           {
@@ -548,6 +621,9 @@
         "❌ FCM token registration failed:",
         error
       );
+
+      lastPushError =
+        error?.message || "Unknown error.";
 
       return false;
     }
@@ -617,7 +693,7 @@
 
 
       const registration =
-        await navigator.serviceWorker.ready;
+        await getPushServiceWorker();
 
 
 
@@ -916,7 +992,8 @@
         if (!saved) {
 
           alert(
-            "Unable to save the notification token. Please check the browser permissions and try again."
+            "Unable to enable notifications on this device:\n" +
+            (lastPushError || "Please check the notification permission and try again.")
           );
 
           return;

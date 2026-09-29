@@ -16,8 +16,12 @@ function NavBar({ onNav }) {
     <React.Fragment>
       <header className="nav">
         <div className="wrap nav-inner">
-          <span className="mobile-logo-only"><BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} /></span>
-         <nav className="nav-links">
+<span className="mobile-logo-only">
+  <BrandLockup
+    markHeight={32}
+    href="/Wealthoria.html"
+  />
+</span>         <nav className="nav-links">
  {t.nav.links.map((l) =>
   <a
     key={l.id}

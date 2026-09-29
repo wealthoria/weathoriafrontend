@@ -29,7 +29,7 @@ import "./app/calculators.jsx";
 import "./app/sections-c.jsx";
 import "./app/sections-d.jsx";
 import "./app/intro-video.jsx";
-
+import "./app/privacy-policy.jsx";
 import "./app/anim.jsx";
 import "./app/EnquiryForm.jsx";
 import "./app/app.jsx";

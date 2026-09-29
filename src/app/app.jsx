@@ -296,6 +296,10 @@ function App() {
   };
 
 
+  const isPrivacyPolicy =
+  window.location.pathname === "/privacy-policy.html";
+
+const PrivacyPolicy = window.PrivacyPolicy;
   /* =======================================================
      RENDER
      ======================================================= */
@@ -307,55 +311,33 @@ function App() {
       <NavBar
         onNav={onNav}
       />
+{isPrivacyPolicy ? (
+  typeof PrivacyPolicy === "function" ? (
+    <PrivacyPolicy />
+  ) : (
+    <main className="privacy-page">
+      <p>Privacy Policy is loading...</p>
+    </main>
+  )
+) : (
+  <main>
+    <Hero onNav={onNav} />
 
-      <main>
-
-        <Hero
-          onNav={onNav}
-        />
-
-        <Ticker />
-<IntroVideo />
-        <Metrics />
-
-        <Narrative />
-
-        <Why />
-
-        <Programs
-          onNav={onNav}
-        />
-
-        <Process />
-
-        <Founder />
-
-        <Testimonials />
-
-        <YouTube />
-
-
-        {/*
-          Seminars are currently disabled.
-          Keep this commented until the seminar
-          section is intentionally enabled again.
-        */}
-
-        {/*
-          <Seminars onNav={onNav} />
-        */}
-
-
-        <Library />
-
-
-        <EnquiryForm />
-
-
-        <FAQ />
-
-      </main>
-
+    <Ticker />
+    <IntroVideo />
+    <Metrics />
+    <Narrative />
+    <Why />
+    <Programs onNav={onNav} />
+    <Process />
+    <Founder />
+    <Testimonials />
+    <YouTube />
+    <Library />
+    <EnquiryForm />
+    <FAQ />
+  </main>
+)}
 
       <Footer />
       
@@ -467,6 +449,7 @@ function RootApp() {
     console.error(
       "[Wealthoria] MembersRouter is not loaded."
     );
+
 
 
     return (

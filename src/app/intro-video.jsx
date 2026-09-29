@@ -3,8 +3,46 @@ import React from "react";
 import "./intro-video.css";
 
 function IntroVideo() {
+const sectionRef = React.useRef(null);
+
+const [previewPlaying, setPreviewPlaying] = React.useState(false);
+const [previewDismissed, setPreviewDismissed] = React.useState(false);
+
+React.useEffect(() => {
+  const section = sectionRef.current;
+  if (!section) return;
+
+  const observer = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+      if (!previewDismissed) {
+        setPreviewPlaying(true);
+      }
+    } else {
+      setPreviewPlaying(false);
+      setPreviewDismissed(false);
+    }
+  }, { threshold: [0, 0.35] });
+
+  observer.observe(section);
+
+  return () => observer.disconnect();
+}, [previewDismissed]);
+
+React.useEffect(() => {
+  if (!previewPlaying) return;
+
+  const timer = setTimeout(() => {
+    setPreviewPlaying(false);
+    setPreviewDismissed(true);
+  }, 30000);
+
+  return () => clearTimeout(timer);
+}, [previewPlaying]);
+
+
+
   return (
-    <section className="intro-video-section">
+ <section ref={sectionRef} className="intro-video-section">
 
       <div className="intro-video-container">
 
@@ -49,45 +87,66 @@ function IntroVideo() {
 
           </div>
         </div>
-
-        {/* RIGHT SIDE: Temporary video placeholder */}
-       
 <div className="intro-video-card">
+  {previewPlaying ? (
+   <iframe
+  className="intro-video-player"
+  src="https://www.youtube.com/embed/VFrp6G43jyw?autoplay=1&mute=1&controls=0&playsinline=1&enablejsapi=1"
+  title="Wealthoria fast preview"
+  allow="autoplay; encrypted-media"
+  onLoad={(event) => {
+    const iframe = event.currentTarget;
 
-  <img
-    className="intro-video-thumbnail"
-   src="https://img.youtube.com/vi/VFrp6G43jyw/hqdefault.jpg"
-    alt="Watch the Wealthoria website introduction"
-  />
+    const setFastSpeed = () => {
+      iframe.contentWindow?.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: "setPlaybackRate",
+          args: [10],
+        }),
+        "https://www.youtube.com"
+      );
+    };
 
-  <div className="intro-video-overlay">
+    setFastSpeed();
+    setTimeout(setFastSpeed, 1000);
+  }}
+/>
+  ) : (
+    <>
+      <img
+        className="intro-video-thumbnail"
+        src="https://img.youtube.com/vi/VFrp6G43jyw/hqdefault.jpg"
+        alt="Watch the Wealthoria introduction"
+      />
 
-    <span className="intro-video-label">
-      WEALTHORIA · QUICK TOUR
-    </span>
+      <div className="intro-video-overlay">
+        <span className="intro-video-label">
+          WEALTHORIA · QUICK TOUR
+        </span>
 
-    <button
-      type="button"
-      className="intro-video-play-button"
-      aria-label="Watch the Wealthoria introduction"
-      onClick={() =>
-        window.open(
-         "https://youtu.be/VFrp6G43jyw?si=JceeSurc_qM3_BOl",
-          "_blank",
-          "noopener,noreferrer"
-        )
-      }
-    >
-      <span className="intro-video-play-icon">▶</span>
-    </button>
+        <button
+          type="button"
+          className="intro-video-play-button"
+          aria-label="Watch the full Wealthoria video on YouTube"
+          onClick={() =>
+            window.open(
+              "https://youtu.be/VFrp6G43jyw",
+              "_blank",
+              "noopener,noreferrer"
+            )
+          }
+        >
+          <span className="intro-video-play-icon">▶</span>
+        </button>
 
-    <div className="intro-video-caption">
-      <strong>How to Use Wealthoria</strong>
-      <span>Discover what's inside</span>
-    </div>
-
-  </div>
-
+        <div className="intro-video-caption">
+          <strong>Discover Wealthoria</strong>
+          <span>Watch the full video on YouTube</span>
+        </div>
+      </div>
+    </>
+  )}
 </div>
 
       </div>

@@ -28,6 +28,7 @@ function AdminNotifications() {
   
 
   const [members, setMembers] = useState([]);
+  const [excludedCount, setExcludedCount] = useState(0);
 
   const [sendMode, setSendMode] = useState("single");
 
@@ -96,6 +97,7 @@ const loadMembers = async () => {
     }
 
     setMembers(data.members || []);
+    setExcludedCount(Number(data.excludedCount) || 0);
   } catch (error) {
     console.error("Load members error:", error);
 
@@ -263,7 +265,8 @@ if (!user) {
 const totals = {
   emailSentCount: 0,
   sentCount: 0,
-  devicesReached: 0
+  devicesReached: 0,
+  skippedNotActive: 0
 };
 
 let pendingIds = userIds;
@@ -307,6 +310,7 @@ for (let round = 1; pendingIds.length > 0 && round <= 20; round++) {
   totals.emailSentCount += data.emailSentCount || 0;
   totals.sentCount += data.sentCount || 0;
   totals.devicesReached += data.devicesReached || 0;
+  totals.skippedNotActive += data.skippedNotActive || 0;
 
   const remaining = Array.isArray(data.remainingUserIds)
     ? data.remainingUserIds
@@ -329,7 +333,10 @@ for (let round = 1; pendingIds.length > 0 && round <= 20; round++) {
 setSuccess(
   `Email sent to ${totals.emailSentCount} member(s). ` +
   `Push notification sent to ${totals.sentCount} member(s) ` +
-  `(${totals.devicesReached} device(s)).`
+  `(${totals.devicesReached} device(s)).` +
+  (totals.skippedNotActive
+    ? ` Skipped ${totals.skippedNotActive} member(s) without an active membership.`
+    : "")
 );
 
 setTitle("");
@@ -397,6 +404,14 @@ setTimeout(() => {
                Send a push notification and email
   to your members.
 
+            </p>
+
+            <p style={{ fontSize: 13, opacity: 0.75, marginTop: 6 }}>
+              Only members with an active membership are listed
+              (including cancelled members until their paid period ends).
+              {excludedCount > 0
+                ? ` ${excludedCount} member(s) without an active membership are hidden.`
+                : ""}
             </p>
 
           </div>

@@ -619,16 +619,28 @@ function PrebookOrders() {
      RECEIVER CITY | RECEIVER STATE | RECEIVER PINCODE |
      DROP OFF PINCODE | SENDER MOBILE NO | RECEIVER MOBILE NO
   ======================================================= */
+
 const exportPageCourierFormat = async () => {
   try {
-    if (!paginatedOrders.length) {
-      alert("No orders on this page to export.");
+    if (!orders.length) {
+      alert("No orders to export.");
       return;
     }
 
     await loadXLSX();
 
-   const rows = orders.map((order) => {
+    // Sort by Book ID in ascending order
+    const sortedOrders = [...orders].sort((a, b) => {
+      const idA = String(a.bookingId || "");
+      const idB = String(b.bookingId || "");
+
+      return idA.localeCompare(idB, undefined, {
+        numeric: true,
+        sensitivity: "base"
+      });
+    });
+
+    const rows = sortedOrders.map((order) => {
       const customer = order.customer || {};
       const addr = order.shippingAddress || {};
 
@@ -663,8 +675,8 @@ const exportPageCourierFormat = async () => {
         "RECEIVER MOBILE NO": cleanPhone10(
           customer.phone || addr.phone || ""
         ),
-        
-         "Book ID": order.bookingId || ""
+
+        "Book ID": order.bookingId || ""
       };
     });
 
@@ -679,7 +691,8 @@ const exportPageCourierFormat = async () => {
       { wch: 18 }, // RECEIVER PINCODE
       { wch: 18 }, // DROP OFF PINCODE
       { wch: 20 }, // SENDER MOBILE NO
-      { wch: 20 }  // RECEIVER MOBILE NO
+      { wch: 20 }, // RECEIVER MOBILE NO
+      { wch: 18 }  // Book ID
     ];
 
     const wb = window.XLSX.utils.book_new();
@@ -699,12 +712,15 @@ const exportPageCourierFormat = async () => {
 
   } catch (err) {
     console.error("Courier export error:", err);
+
     alert(
       err?.message ||
       "Unable to export Excel file."
     );
   }
 };
+
+
   const icon = (name, size = 17) => (MIcon ? <MIcon name={name} size={size} /> : null);
 
   /* =======================================================

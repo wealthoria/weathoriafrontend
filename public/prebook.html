@@ -308,14 +308,27 @@
       </div>
 
       <div class="field">
-        <label for="bookAddress">Address *</label>
-        <textarea id="bookAddress"></textarea>
-      </div>
+  <label for="bookAddress">Address Line 1 *</label>
+  <input
+    type="text"
+    id="bookAddress"
+    maxlength="30"
+    required
+    placeholder="House number, street name (max 30 characters)"
+  >
+</div>
 
-      <div class="field">
-        <label for="bookLandmark">Landmark</label>
-        <input type="text" id="bookLandmark">
-      </div>
+<div class="field">
+  <label for="bookAddress2">Address Line 2</label>
+  <input
+    type="text"
+    id="bookAddress2"
+    maxlength="30"
+    placeholder="Area, locality (max 30 characters)"
+  >
+</div>
+
+     
 
       <div class="row">
 
@@ -382,15 +395,27 @@
           >
         </div>
 
-        <div class="field">
-          <label for="bookBillingAddress">Address *</label>
-          <textarea id="bookBillingAddress"></textarea>
-        </div>
+       <div class="field">
+  <label for="bookBillingAddress">Address Line 1 *</label>
+  <input
+    type="text"
+    id="bookBillingAddress"
+    maxlength="30"
+    required
+    placeholder="House number, street name (max 30 characters)"
+  >
+</div>
 
-        <div class="field">
-          <label for="bookBillingLandmark">Landmark</label>
-          <input type="text" id="bookBillingLandmark">
-        </div>
+<div class="field">
+  <label for="bookBillingAddress2">Address Line 2</label>
+  <input
+    type="text"
+    id="bookBillingAddress2"
+    maxlength="30"
+    placeholder="Area, locality (max 30 characters)"
+  >
+</div>
+
 
         <div class="row">
 
@@ -511,10 +536,11 @@ async function handlePay() {
   const phone = value("bookPhone");
 
   const deliveryName = value("bookDeliveryName");
-  const deliveryPhone = value("bookDeliveryPhone");
 
-  const address = value("bookAddress");
-  const landmark = value("bookLandmark");
+  const deliveryPhone = value("bookDeliveryPhone");
+    const address = value("bookAddress");
+    const address2 = value("bookAddress2");
+
   const city = value("bookCity");
   const state = value("bookState");
   const pincode = value("bookPincode");
@@ -555,6 +581,11 @@ async function handlePay() {
     return;
   }
 
+  if (address.length > 30 || address2.length > 30) {
+    showError("Address Line 1 and Address Line 2 can have at most 30 characters each.");
+    return;
+  }
+
   if (!city) {
     showError("Please enter the delivery city.");
     return;
@@ -589,7 +620,7 @@ async function handlePay() {
       phone: deliveryPhone,
 
       address: address,
-      landmark: landmark,
+      address2: address2,
 
       city: city,
       state: state,
@@ -610,8 +641,6 @@ async function handlePay() {
     const billingAddressText =
       value("bookBillingAddress");
 
-    const billingLandmark =
-      value("bookBillingLandmark");
 
     const billingCity =
       value("bookBillingCity");
@@ -638,6 +667,14 @@ async function handlePay() {
 
     if (!billingAddressText) {
       showError("Please enter the billing address.");
+      return;
+    }
+
+    const billingAddress2 =
+      value("bookBillingAddress2");
+
+    if (billingAddressText.length > 30 || billingAddress2.length > 30) {
+      showError("Billing Address Line 1 and Line 2 can have at most 30 characters each.");
       return;
     }
 
@@ -668,7 +705,7 @@ async function handlePay() {
       phone: billingPhone,
 
       address: billingAddressText,
-      landmark: billingLandmark,
+address2: billingAddress2,
 
       city: billingCity,
       state: billingState,
@@ -699,6 +736,24 @@ async function handlePay() {
         },
 
         body: JSON.stringify({
+          // Saved before payment, so the order is kept even if
+          // the browser never returns from the payment app (UPI).
+          customer: {
+            name: name,
+            email: email,
+            phone: phone
+          },
+          shippingAddress: {
+            name: deliveryName,
+            phone: deliveryPhone,
+            address: address,
+            address2: address2,
+            city: city,
+            state: state,
+            pincode: pincode,
+            country: "India"
+          },
+          billingAddress: billingAddress,
           source: "website"
         })
       }
@@ -803,25 +858,21 @@ async function handlePay() {
                     phone: phone
 
                   },
+shippingAddress: {
+  name: deliveryName,
+  phone: deliveryPhone,
 
-                  shippingAddress: {
+  address: address,
+  address2: address2,
 
-                    name: deliveryName,
-                    phone: deliveryPhone,
+  city: city,
+  state: state,
+  pincode: pincode,
 
-                    address: address,
-                    landmark: landmark,
+  country: "India"
+},
 
-                    city: city,
-                    state: state,
-                    pincode: pincode,
-
-                    country: "India"
-
-                  },
-
-                  billingAddress:
-                    billingAddress,
+                  billingAddress: billingAddress,
 
                   source: "website"
 

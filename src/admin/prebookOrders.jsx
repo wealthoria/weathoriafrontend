@@ -644,16 +644,23 @@ const exportPageCourierFormat = async () => {
       const customer = order.customer || {};
       const addr = order.shippingAddress || {};
 
-      // Complete address
-      const fullAddress = String(
-        [addr.address, addr.landmark]
-          .filter(Boolean)
-          .join(", ")
-      ).trim();
+      // New orders: the customer typed Address Line 1 and
+      // Line 2 (max 30 characters each), so use them as typed.
+      const typedLine1 = String(addr.address || "").trim();
+      const typedLine2 = String(addr.landmark || "").trim();
 
-      // Split complete address into exactly 30 + 30 characters
-      const addressLine1 = fullAddress.slice(0, 30);
-      const addressLine2 = fullAddress.slice(30, 60);
+      let addressLine1 = typedLine1;
+      let addressLine2 = typedLine2;
+
+      // Older orders: one long address -> join and split 30 + 30.
+      if (typedLine1.length > 30 || typedLine2.length > 30) {
+        const fullAddress = [typedLine1, typedLine2]
+          .filter(Boolean)
+          .join(", ");
+
+        addressLine1 = fullAddress.slice(0, 30);
+        addressLine2 = fullAddress.slice(30, 60);
+      }
 
       return {
         "RECEIVER NAME": customer.name || addr.name || "",

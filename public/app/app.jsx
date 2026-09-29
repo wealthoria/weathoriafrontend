@@ -31,6 +31,7 @@ const {
   FAQ,
   Footer,
   SiteAnimations,
+  IntroVideo,
 
   EnquiryForm,
 
@@ -60,6 +61,8 @@ function checkPublicDependencies() {
     ["Founder", Founder],
     ["Testimonials", Testimonials],
     ["YouTube", YouTube],
+    ["IntroVideo", IntroVideo],
+   
     ["Library", Library],
     ["EnquiryForm", EnquiryForm],
     ["FAQ", FAQ],
@@ -344,7 +347,7 @@ function App() {
 
 
       <Footer />
-
+ <IntroVideo />
 
       <SiteAnimations />
 

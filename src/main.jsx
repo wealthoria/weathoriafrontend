@@ -28,6 +28,8 @@ import "./app/sections-b.jsx";
 import "./app/calculators.jsx";
 import "./app/sections-c.jsx";
 import "./app/sections-d.jsx";
+import "./app/intro-video.jsx";
+
 import "./app/anim.jsx";
 import "./app/EnquiryForm.jsx";
 import "./app/app.jsx";

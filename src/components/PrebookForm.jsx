@@ -342,12 +342,16 @@ export default function PrebookForm() {
                 razorpay_signature:
                   paymentResponse.razorpay_signature,
 
-                name: form.name.trim(),
-                email: form.email.trim(),
-                phone: form.phone.replace(/\D/g, ""),
+                // The server expects the customer as one object.
+                customer: {
+                  name: form.name.trim(),
+                  email: form.email.trim(),
+                  phone: form.phone.replace(/\D/g, ""),
+                },
 
                 shippingAddress,
                 billingAddress,
+                source: "website",
               }),
             });
 

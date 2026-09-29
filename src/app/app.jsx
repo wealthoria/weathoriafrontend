@@ -37,7 +37,8 @@ const {
   EnquiryForm,
 
   MembersRouter,
-  AdminApp
+  AdminApp,
+  IntroVideo
 
 } = window;
 
@@ -66,6 +67,9 @@ function checkPublicDependencies() {
     ["EnquiryForm", EnquiryForm],
     ["FAQ", FAQ],
     ["Footer", Footer],
+    ["IntroVideo", IntroVideo],
+
+
     ["SiteAnimations", SiteAnimations]
   ];
 
@@ -354,6 +358,7 @@ function App() {
 
 
       <Footer />
+      <IntroVideo />
 
 
       <SiteAnimations />

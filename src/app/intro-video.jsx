@@ -8,11 +8,7 @@ function IntroVideo() {
 
         {/* LEFT SIDE */}
         <div className="intro-video-content">
-          <div className="intro-video-badge">
-            <span className="badge-dot"></span>
-            A QUICK LOOK INSIDE
-          </div>
-
+         
           <h2>
             Your journey to financial knowledge
             starts with{" "}

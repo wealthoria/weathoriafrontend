@@ -315,7 +315,7 @@ function App() {
         />
 
         <Ticker />
-
+<IntroVideo />
         <Metrics />
 
         <Narrative />
@@ -358,7 +358,7 @@ function App() {
 
 
       <Footer />
-      <IntroVideo />
+      
 
 
       <SiteAnimations />

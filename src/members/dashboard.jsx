@@ -2236,6 +2236,50 @@ useEffect(() => {
 
 
   /* =======================================================
+     ONLINE STATUS
+     Tells the server "still here" once a minute while the
+     app is on screen, so the admin panel shows who is online.
+  ======================================================= */
+
+  useEffect(() => {
+    if (!member?.uid) {
+      return;
+    }
+
+    const sendHeartbeat = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      const current = getCurrentMemberSession();
+      const token = current?.session?.token;
+
+      if (!token) {
+        return;
+      }
+
+      fetch(`${DASHBOARD_API}/api/members/heartbeat`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      }).catch(() => {});
+    };
+
+    sendHeartbeat();
+
+    const timer = window.setInterval(sendHeartbeat, 60000);
+    document.addEventListener("visibilitychange", sendHeartbeat);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", sendHeartbeat);
+    };
+  }, [member?.uid]);
+
+
+  /* =======================================================
      START FCM AUTOMATICALLY AFTER LOGIN
   ======================================================= */
 

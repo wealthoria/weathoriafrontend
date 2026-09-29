@@ -213,6 +213,9 @@ function getSubscriptionRevenueDate(row) {
 }
 
 function isSuccessfulSubscription(row) {
+  // The paid count from Razorpay is the most reliable signal.
+  if (Number(row?.paidCount) > 0) return true;
+
   const status = getSubscriptionStatus(row);
   return [
     "active",
@@ -220,7 +223,9 @@ function isSuccessfulSubscription(row) {
     "completed",
     "cancelled",
     "halted",
-    "paused"
+    "paused",
+    // Expired subscriptions were paid before they ended.
+    "expired"
   ].includes(status);
 }
 
@@ -231,6 +236,82 @@ function getSubscriptionAmount(row) {
     row?.price,
     row?.planAmount
   );
+}
+
+const MONTH_MS = 30 * 86400000;
+const ONLINE_WINDOW_MS = 3 * 60 * 1000;
+const ACCESS_SUBSCRIPTION_STATUSES = ["active", "cancelled", "halted"];
+const BLOCKED_MEMBER_STATUSES = ["deleted", "deactivated", "disabled", "blocked", "suspended"];
+
+/*
+   Every monthly payment of a subscription, with its date.
+   A subscription record keeps only its latest billing period,
+   so earlier charges are placed one month apart before it.
+*/
+function getSubscriptionCharges(row) {
+  if (!isSuccessfulSubscription(row)) return [];
+
+  const amount = getSubscriptionAmount(row);
+  const paidCount = Math.floor(Number(row?.paidCount) || 0);
+  const periodEnd = safeTimestamp(row?.nextBillingDate);
+
+  if (paidCount > 0 && periodEnd) {
+    return Array.from({ length: paidCount }, (_, k) => ({
+      time: periodEnd - (k + 1) * MONTH_MS,
+      amount
+    }));
+  }
+
+  return [{ time: safeTimestamp(getSubscriptionRevenueDate(row)), amount }];
+}
+
+// memberId / email -> end of the latest paid period (ms)
+function buildPaidUntil(subscriptions) {
+  const byId = new Map();
+  const byEmail = new Map();
+
+  (subscriptions || []).forEach((row) => {
+    if (!ACCESS_SUBSCRIPTION_STATUSES.includes(getSubscriptionStatus(row))) return;
+
+    const until = safeTimestamp(row?.nextBillingDate);
+    if (!until) return;
+
+    const id = String(row?.memberId || "").trim();
+    const email = String(row?.email || "").trim().toLowerCase();
+
+    if (id) byId.set(id, Math.max(byId.get(id) || 0, until));
+    if (email) byEmail.set(email, Math.max(byEmail.get(email) || 0, until));
+  });
+
+  return { byId, byEmail };
+}
+
+/*
+   A member counts as active while their paid period runs
+   (auto-renewing, or cancelled until the paid month ends).
+   Same rule as login, PDFs and notifications.
+*/
+function memberHasAccess(member, paidUntil, now = Date.now()) {
+  const status = String(member?.status || "").trim().toLowerCase();
+  if (BLOCKED_MEMBER_STATUSES.includes(status)) return false;
+
+  const id = String(member?.id || member?.uid || "").trim();
+  const email = String(member?.email || "").trim().toLowerCase();
+
+  const until = Math.max(
+    (id && paidUntil.byId.get(id)) || 0,
+    (email && paidUntil.byEmail.get(email)) || 0
+  );
+
+  return until > now;
+}
+
+// Online = the member app reported in during the last 3 minutes.
+function isMemberOnline(member) {
+  if (String(member?.lastLoginStatus || '').toLowerCase() === 'offline') return false;
+
+  const lastSeen = safeTimestamp(member?.lastSeenAt);
+  return lastSeen > 0 && Date.now() - lastSeen < ONLINE_WINDOW_MS;
 }
 
 function uniqueMembersByIdentity(rows) {
@@ -665,6 +746,11 @@ function BackendDashboardActivity({ members }) {
 
     if (!t) return "—";
 
+    const minutes = Math.floor((Date.now() - t) / 60000);
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return minutes + " min ago";
+    if (minutes < 24 * 60) return Math.floor(minutes / 60) + " h ago";
+
     return new Date(t).toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
@@ -711,9 +797,7 @@ function BackendDashboardActivity({ members }) {
             .charAt(0)
             .toUpperCase();
 
-          const isOnline =
-            String(member.lastLoginStatus || "").toLowerCase() ===
-            "online";
+          const isOnline = isMemberOnline(member);
 
           return (
             <div
@@ -1015,9 +1099,11 @@ function ControlPanel() {
 
   const paidSubscriptions = subscriptions.filter(isSuccessfulSubscription);
 
-  const subscriptionRevenue = paidSubscriptions.reduce(
-    (sum, subscription) =>
-      sum + getSubscriptionAmount(subscription),
+  // Every monthly payment, not just the first one.
+  const subscriptionCharges = subscriptions.flatMap(getSubscriptionCharges);
+
+  const subscriptionRevenue = subscriptionCharges.reduce(
+    (sum, charge) => sum + charge.amount,
     0
   );
 
@@ -1051,25 +1137,13 @@ function ControlPanel() {
       0
     );
 
-  const currentSubscriptionRevenue = paidSubscriptions
-    .filter((subscription) =>
-      inCurrentPeriod(getSubscriptionRevenueDate(subscription))
-    )
-    .reduce(
-      (sum, subscription) =>
-        sum + getSubscriptionAmount(subscription),
-      0
-    );
+  const currentSubscriptionRevenue = subscriptionCharges
+    .filter((charge) => inCurrentPeriod(charge.time))
+    .reduce((sum, charge) => sum + charge.amount, 0);
 
-  const previousSubscriptionRevenue = paidSubscriptions
-    .filter((subscription) =>
-      inPreviousPeriod(getSubscriptionRevenueDate(subscription))
-    )
-    .reduce(
-      (sum, subscription) =>
-        sum + getSubscriptionAmount(subscription),
-      0
-    );
+  const previousSubscriptionRevenue = subscriptionCharges
+    .filter((charge) => inPreviousPeriod(charge.time))
+    .reduce((sum, charge) => sum + charge.amount, 0);
 
   const currentRevenue =
     currentCourseRevenue + currentSubscriptionRevenue;
@@ -1084,9 +1158,14 @@ function ControlPanel() {
         )
       : null;
 
-  const activeSubscriptionCount = subscriptions.filter(
-    (subscription) => getSubscriptionStatus(subscription) === "active"
-  ).length;
+  const nowMs = Date.now();
+
+  // Auto-renewing subscriptions whose paid period is still running.
+  const activeSubscriptionCount = subscriptions.filter((subscription) => {
+    if (getSubscriptionStatus(subscription) !== "active") return false;
+    const until = safeTimestamp(subscription.nextBillingDate);
+    return !until || until > nowMs;
+  }).length;
 
   const cancelledSubscriptionCount = subscriptions.filter(
     (subscription) => getSubscriptionStatus(subscription) === "cancelled"
@@ -1096,11 +1175,11 @@ function ControlPanel() {
     (subscription) => getSubscriptionStatus(subscription) === "halted"
   ).length;
 
-  const activeMemberCount = uniqueMembers.filter(
-    (member) =>
-      !["inactive", "deactivated", "disabled", "blocked", "suspended"].includes(
-        String(member.status || "").trim().toLowerCase()
-      )
+  // Members whose paid period is running (not just status "active").
+  const paidUntil = buildPaidUntil(subscriptions);
+
+  const activeMemberCount = uniqueMembers.filter((member) =>
+    memberHasAccess(member, paidUntil, nowMs)
   ).length;
 
   const deactivatedMemberCount = uniqueMembers.filter(
@@ -1141,16 +1220,11 @@ function ControlPanel() {
           : sum;
       }, 0);
 
-      const subscriptionRevenueValue = paidSubscriptions.reduce(
-        (sum, subscription) => {
-          const t = safeTimestamp(
-            getSubscriptionRevenueDate(subscription)
-          );
-
-          return t >= start.getTime() && t < end.getTime()
-            ? sum + getSubscriptionAmount(subscription)
-            : sum;
-        },
+      const subscriptionRevenueValue = subscriptionCharges.reduce(
+        (sum, charge) =>
+          charge.time >= start.getTime() && charge.time < end.getTime()
+            ? sum + charge.amount
+            : sum,
         0
       );
 
@@ -1172,7 +1246,7 @@ function ControlPanel() {
       });
     }
     return rows;
-  }, [days, paidPurchases, paidSubscriptions, uniqueMembers]);
+  }, [days, paidPurchases, subscriptionCharges, uniqueMembers]);
 
   const revenueChartData = useMemo(
     () => aggregateRevenueSeries(dateSeries, grain),

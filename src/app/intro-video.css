@@ -1,522 +1,486 @@
-
-/* =========================================
-   WEALTHORIA INTRO VIDEO SECTION
-========================================= */
+/* ========================================
+   WEALTHORIA INTRO — DESIGN REFINEMENT
+======================================== */
 
 .intro-video-section {
-  position: relative;
-  overflow: hidden;
-  padding: 80px 24px;
-  background: #eef0ea;
+  padding: 64px 24px;
+  background: var(--intro-section-bg, #eef0ea);
+  color: var(--intro-text, #142b27);
 }
 
-/* Main two-column container */
 .intro-video-container {
-  width: 100%;
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
-
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   align-items: center;
-  gap: 64px;
+  gap: 48px;
 }
 
-/* =========================================
-   LEFT SIDE — INTRODUCTION
-========================================= */
-
-.intro-video-content {
-  min-width: 0;
-}
-
-/* Intro badge */
-.intro-video-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-
-  padding: 9px 14px;
-  margin-bottom: 24px;
-
-  border: 1px solid #ffd0bb;
-  border-radius: 30px;
-
-  background: #ffe5d8;
-  color: #b74720;
-
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.2px;
-}
-
-/* Orange badge dot */
-.badge-dot {
-  width: 7px;
-  height: 7px;
-  flex-shrink: 0;
-
-  border-radius: 50%;
-  background: #ed6438;
-}
-
-/* Main heading */
+/* Improve text contrast */
 .intro-video-content h2 {
-  max-width: 560px;
-  margin: 0;
-
-  color: #142b27;
-
-  font-size: 30px;
+  color: var(--intro-text, #142b27);
+  font-size: clamp(30px, 3vw, 44px);
   line-height: 1.12;
-  letter-spacing: -1.8px;
-  font-weight: 800;
+  letter-spacing: -1.2px;
 }
 
-/* Highlight Wealthoria */
-.intro-video-content h2 .intro-highlight {
-  color: #ed6438;
-}
-
-/* Description */
 .intro-video-content p {
-  max-width: 470px;
-  margin: 20px 0 0;
-
-  color: #58645e;
-
-  font-size: 16px;
+  color: var(--intro-muted, #5d6c66);
   line-height: 1.8;
 }
 
-/* Benefits list */
-.intro-video-benefits {
-  display: grid;
-  gap: 14px;
-  margin-top: 28px;
-}
-
-/* Individual benefit */
 .intro-benefit {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-
-  color: #263a34;
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--intro-text, #142b27);
 }
 
-/* Check mark circle */
-.benefit-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-
-  border-radius: 50%;
-  background: #ffe5d8;
-  color: #ed6438;
-
-  font-size: 13px;
-  font-weight: 800;
-}
-
-/* =========================================
-   RIGHT SIDE — VIDEO PLACEHOLDER
-========================================= */
-
+/* Smaller square video box */
 .intro-video-card {
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  justify-self: end;
   position: relative;
-  isolation: isolate;
   overflow: hidden;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 0;
-  min-height: 300px;
-  padding: 32px;
-
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
-
-  background:
-    radial-gradient(
-      circle at 80% 85%,
-      rgba(255, 132, 63, 0.22),
-      transparent 35%
-    ),
-    linear-gradient(145deg, #203c36, #0d211e);
-
-  box-shadow: 0 24px 60px rgba(20, 43, 39, 0.16);
-
-  transition:
-    transform 250ms ease,
-    box-shadow 250ms ease;
+  border-radius: 20px;
+  background: #102a26;
+  border: 1px solid var(--intro-video-border, #dce3dc);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
 }
 
-/* Decorative orange glow */
-.intro-video-card::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-
-  top: -90px;
-  right: -70px;
-
-  width: 200px;
-  height: 200px;
-
-  border-radius: 50%;
-  background: rgba(255, 132, 63, 0.12);
-  filter: blur(35px);
+.intro-video-player {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
-/* Placeholder heading */
-.intro-video-card h3 {
-  margin: 0;
-
-  color: #ffffff;
-  text-align: center;
-
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.5;
+/* Dark theme */
+:is(.dark, [data-theme="dark"], body.dark) .intro-video-section {
+  --intro-section-bg: #0b1715;
+  --intro-text: #f4f7f5;
+  --intro-muted: #b5c3bd;
+  --intro-video-border: #29423b;
 }
 
-/* Desktop hover effect */
-@media (hover: hover) {
-  .intro-video-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 30px 70px rgba(20, 43, 39, 0.22);
-  }
-}
-
-/* =========================================
-   TABLET
-========================================= */
-
-@media (max-width: 900px) {
-  .intro-video-section {
-    padding: 64px 24px;
-  }
-
-  .intro-video-container {
-    gap: 32px;
-  }
-
-  .intro-video-content h2 {
-    font-size: clamp(32px, 4.5vw, 42px);
-    letter-spacing: -1.2px;
-  }
-
-  .intro-video-card {
-    min-height: 260px;
-    padding: 24px;
-  }
-}
-
-/* =========================================
-   MOBILE
-========================================= */
-
-@media (max-width: 700px) {
+/* Mobile layout */
+@media (max-width: 768px) {
   .intro-video-section {
     padding: 48px 20px;
   }
 
   .intro-video-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 32px;
   }
 
-  .intro-video-content h2 {
-    max-width: 100%;
-    font-size: clamp(32px, 8vw, 42px);
-    letter-spacing: -1.1px;
-  }
-
-  .intro-video-content p {
-    font-size: 15px;
-    line-height: 1.75;
-  }
-
-  .intro-video-benefits {
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  .intro-benefit {
-    font-size: 13px;
-  }
-
   .intro-video-card {
-    min-height: 230px;
-    border-radius: 18px;
-  }
-}
-
-/* Small mobile screens */
-@media (max-width: 380px) {
-  .intro-video-section {
-    padding: 36px 16px;
+    width: 100%;
+    max-width: 380px;
+    justify-self: center;
   }
 
   .intro-video-content h2 {
-    font-size: 30px;
-  }
-
-  .intro-video-card {
-    min-height: 200px;
-    padding: 20px;
-  }
-}
-
-/* Respect reduced-motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  .intro-video-card {
-    transition: none;
-  }
-
-  .intro-video-card:hover {
-    transform: none;
+    font-size: 32px;
   }
 }
 
 
+/* ========================================
+   WEALTHORIA INTRO — PREMIUM ANIMATIONS
+======================================== */
 
-/* Video thumbnail card */
-.intro-video-card {
+/* Smooth entrance for the whole section */
+.intro-video-section {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
-
-  width: 100%;
-  min-width: 0;
-  aspect-ratio: 16 / 9;
-  min-height: 0;
-  padding: 0;
-
-  display: block;
-
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 22px;
-  background: #142b27;
-
-  box-shadow: 0 24px 60px rgba(20, 43, 39, 0.18);
+  animation: intro-section-appear 0.8s ease-out both;
 }
 
-/* Actual YouTube thumbnail */
-.intro-video-thumbnail {
-  display: block;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-  object-position: center;
-
-  transition: transform 350ms ease;
+/* Left content enters from the left */
+.intro-video-content {
+  animation: intro-content-enter 0.9s cubic-bezier(.2, .7, .2, 1) both;
 }
 
-/* Dark gradient over the image */
-.intro-video-overlay {
-  position: absolute;
-  inset: 0;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  padding: 24px;
-
-  background: linear-gradient(
-    180deg,
-    rgba(9, 24, 21, 0.12) 0%,
-    rgba(9, 24, 21, 0.08) 35%,
-    rgba(9, 24, 21, 0.88) 100%
-  );
+/* Badge gently fades in */
+.intro-video-badge {
+  animation: intro-badge-enter 0.7s ease-out 0.15s both;
 }
 
-/* Small top label */
-.intro-video-label {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-
-  padding: 8px 11px;
-
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-
-  background: rgba(15, 35, 31, 0.72);
-  color: #ffffff;
-
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
+/* Heading appears smoothly */
+.intro-video-content h2 {
+  animation: intro-heading-enter 0.8s ease-out 0.2s both;
 }
 
-/* Play button */
+/* Orange Wealthoria highlight */
+.intro-highlight {
+  display: inline-block;
+  color: #ff6338;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.intro-highlight:hover {
+  color: #ff843f;
+  text-shadow: 0 0 18px rgba(255, 132, 63, 0.3);
+}
+
+/* Paragraph fades upward */
+.intro-video-content p {
+  animation: intro-content-enter 0.8s ease-out 0.3s both;
+}
+
+/* Benefits appear one after another */
+.intro-benefit {
+  animation: intro-benefit-enter 0.6s ease-out both;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.intro-benefit:nth-child(1) {
+  animation-delay: 0.35s;
+}
+
+.intro-benefit:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.intro-benefit:nth-child(3) {
+  animation-delay: 0.65s;
+}
+
+.intro-benefit:hover {
+  transform: translateX(6px);
+}
+
+/* Orange checkmark interaction */
+.benefit-check {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.intro-benefit:hover .benefit-check {
+  transform: scale(1.12);
+  box-shadow: 0 0 14px rgba(255, 132, 63, 0.25);
+}
+
+/* Video card entrance and gentle floating motion */
+.intro-video-card {
+  transform-origin: center;
+  animation:
+    intro-video-enter 1s cubic-bezier(.2, .7, .2, 1) 0.15s both,
+    intro-video-float 5s ease-in-out 1.2s infinite;
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.intro-video-card:hover {
+  box-shadow: 0 28px 65px rgba(255, 132, 63, 0.13);
+  border-color: rgba(255, 132, 63, 0.55);
+}
+
+/* Play button, if present over the thumbnail */
 .intro-video-play-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 76px;
-  height: 76px;
-  padding: 0;
-
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-
-  background: #ff843f;
-  color: #ffffff;
-
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-
-  cursor: pointer;
-
-  transition:
-    transform 200ms ease,
-    background 200ms ease,
-    box-shadow 200ms ease;
+  animation: intro-play-pulse 2.2s ease-in-out infinite;
+  transition: transform 0.25s ease, background 0.25s ease;
 }
 
-/* Play triangle */
-.intro-video-play-icon {
-  margin-left: 5px;
-  font-size: 27px;
-  line-height: 1;
+.intro-video-play-button:hover {
+  transform: scale(1.1);
 }
 
-/* Video title */
-.intro-video-caption {
-  position: absolute;
-  right: 22px;
-  bottom: 20px;
-  left: 22px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-
-  color: #ffffff;
+/* Keyframes */
+@keyframes intro-section-appear {
+  from { opacity: 0.75; }
+  to   { opacity: 1; }
 }
 
-.intro-video-caption strong {
-  font-size: 19px;
-  line-height: 1.35;
-}
-
-.intro-video-caption span {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-}
-
-/* Desktop hover */
-@media (hover: hover) {
-  .intro-video-card:hover .intro-video-thumbnail {
-    transform: scale(1.04);
+@keyframes intro-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
   }
-
-  .intro-video-play-button:hover {
-    transform: scale(1.08);
-    background: #f36d2e;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.32);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Keyboard accessibility */
-.intro-video-play-button:focus-visible {
-  outline: 3px solid #ffffff;
-  outline-offset: 5px;
-}
-
-/* Mobile adjustments */
-@media (max-width: 700px) {
-  .intro-video-card {
-    border-radius: 17px;
+@keyframes intro-badge-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-
-  .intro-video-play-button {
-    width: 62px;
-    height: 62px;
-  }
-
-  .intro-video-play-icon {
-    font-size: 23px;
-  }
-
-  .intro-video-label {
-    top: 12px;
-    left: 12px;
-    font-size: 9px;
-  }
-
-  .intro-video-caption {
-    right: 16px;
-    bottom: 15px;
-    left: 16px;
-  }
-
-  .intro-video-caption strong {
-    font-size: 16px;
-  }
-
-  .intro-video-caption span {
-    font-size: 12px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
+@keyframes intro-heading-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes intro-benefit-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes intro-video-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes intro-video-float {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+
+@keyframes intro-play-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 132, 63, 0.25); }
+  50%      { box-shadow: 0 0 0 10px rgba(255, 132, 63, 0); }
+}
+
+/* Respect visitors who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .intro-video-thumbnail,
+  .intro-video-section,
+  .intro-video-content,
+  .intro-video-badge,
+  .intro-video-content h2,
+  .intro-video-content p,
+  .intro-benefit,
+  .intro-video-card,
   .intro-video-play-button {
-    transition: none;
+    animation: none !important;
+    transition: none !important;
   }
 }
 
 
-.intro-video-player {
-  display: block;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
+
+/* ==========================================
+   WEALTHORIA — PREMIUM MOTION DESIGN
+========================================== */
+
+/* Smooth section entrance */
+.intro-video-section {
+  animation: wealthoria-section-in 0.9s ease-out both;
 }
 
-.intro-full-video-button {
-  position: absolute;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  z-index: 5;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 30px;
-  background: #ff843f;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
+/* Text slides in with a soft reveal */
+.intro-video-content {
+  animation: wealthoria-text-in 1s cubic-bezier(.16, 1, .3, 1) both;
 }
 
-.intro-full-video-button:hover {
-  background: #ed6c28;
+.intro-video-badge {
+  animation: wealthoria-badge-in 0.8s cubic-bezier(.16, 1, .3, 1) both;
 }
 
-.intro-video-player {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 0;
+/* Heading reveals with a slight delay */
+.intro-video-content h2 {
+  animation: wealthoria-heading-in 1s cubic-bezier(.16, 1, .3, 1) 0.12s both;
 }
 
+/* Orange highlight gets a subtle animated glow */
+.intro-highlight {
+  position: relative;
+  color: #ff6338;
+  animation: wealthoria-highlight-glow 3s ease-in-out 1s infinite;
+}
+
+/* Description appears after the heading */
+.intro-video-content p {
+  animation: wealthoria-text-in 0.9s ease-out 0.3s both;
+}
+
+/* Benefits reveal one by one */
+.intro-benefit {
+  animation: wealthoria-benefit-in 0.7s cubic-bezier(.16, 1, .3, 1) both;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.intro-benefit:nth-child(1) {
+  animation-delay: 0.35s;
+}
+
+.intro-benefit:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.intro-benefit:nth-child(3) {
+  animation-delay: 0.65s;
+}
+
+/* Interactive benefit hover */
+.intro-benefit:hover {
+  transform: translateX(7px);
+}
+
+.benefit-check {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.intro-benefit:hover .benefit-check {
+  transform: rotate(-8deg) scale(1.13);
+  box-shadow: 0 0 18px rgba(255, 99, 56, 0.3);
+}
+
+/* Video card enters, then floats gently */
+.intro-video-card {
+  animation:
+    wealthoria-video-in 1.1s cubic-bezier(.16, 1, .3, 1) 0.15s both,
+    wealthoria-video-float 6s ease-in-out 1.3s infinite;
+  transition:
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+}
+
+/* Soft orange glow on hover */
+.intro-video-card:hover {
+  border-color: rgba(255, 132, 63, 0.8);
+  box-shadow:
+    0 25px 60px rgba(20, 43, 39, 0.2),
+    0 0 28px rgba(255, 132, 63, 0.13);
+}
+
+/* Thumbnail zooms very slightly on hover */
+.intro-video-thumbnail {
+  transition: transform 0.7s cubic-bezier(.2, .7, .2, 1);
+}
+
+.intro-video-card:hover .intro-video-thumbnail {
+  transform: scale(1.045);
+}
+
+/* Play button has a soft breathing ring */
+.intro-video-play-button {
+  animation: wealthoria-play-ring 2.4s ease-out infinite;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.intro-video-play-button:hover {
+  transform: scale(1.12);
+  background: #ff6338;
+}
+
+/* ==========================================
+   ANIMATION KEYFRAMES
+========================================== */
+
+@keyframes wealthoria-section-in {
+  from { opacity: 0.65; }
+  to   { opacity: 1; }
+}
+
+@keyframes wealthoria-text-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wealthoria-badge-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes wealthoria-heading-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes wealthoria-benefit-in {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes wealthoria-video-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes wealthoria-video-float {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+
+@keyframes wealthoria-highlight-glow {
+  0%, 100% {
+    text-shadow: 0 0 0 rgba(255, 99, 56, 0);
+  }
+  50% {
+    text-shadow: 0 0 18px rgba(255, 99, 56, 0.2);
+  }
+}
+
+@keyframes wealthoria-play-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 132, 63, 0.28);
+  }
+  60% {
+    box-shadow: 0 0 0 12px rgba(255, 132, 63, 0);
+  }
+}
+
+/* Accessibility: respect reduced-motion settings */
+@media (prefers-reduced-motion: reduce) {
+  .intro-video-section,
+  .intro-video-content,
+  .intro-video-badge,
+  .intro-video-content h2,
+  .intro-video-content p,
+  .intro-highlight,
+  .intro-benefit,
+  .intro-video-card,
+  .intro-video-play-button {
+    animation: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+}

@@ -628,7 +628,7 @@ const exportPageCourierFormat = async () => {
 
     await loadXLSX();
 
-    const rows = paginatedOrders.map((order) => {
+   const rows = orders.map((order) => {
       const customer = order.customer || {};
       const addr = order.shippingAddress || {};
 

@@ -662,7 +662,9 @@ const exportPageCourierFormat = async () => {
 
         "RECEIVER MOBILE NO": cleanPhone10(
           customer.phone || addr.phone || ""
-        )
+        ),
+        
+         "Book ID": order.bookingId || ""
       };
     });
 

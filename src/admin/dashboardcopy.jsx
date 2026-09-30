@@ -598,7 +598,6 @@ function aggregateRevenueSeries(rows, grain) {
         revenue: 0,
         courseRevenue: 0,
         subscriptionRevenue: 0,
-        subscriptionCount: 0,
         signups: 0,
         date: date.toISOString()
       });
@@ -608,7 +607,6 @@ function aggregateRevenueSeries(rows, grain) {
     group.revenue += Number(row.revenue || 0);
     group.courseRevenue += Number(row.courseRevenue || 0);
     group.subscriptionRevenue += Number(row.subscriptionRevenue || 0);
-    group.subscriptionCount += Number(row.subscriptionCount || 0);
     group.signups += Number(row.signups || 0);
 
     if (index === source.length - 1) {
@@ -1230,14 +1228,6 @@ function ControlPanel() {
         0
       );
 
-      const subscriptionCountValue = subscriptionCharges.reduce(
-        (sum, charge) =>
-          charge.time >= start.getTime() && charge.time < end.getTime()
-            ? sum + 1
-            : sum,
-        0
-      );
-
       const signupValue = uniqueMembers.filter((member) => {
         const t = safeTimestamp(getCreatedValue(member));
         return t >= start.getTime() && t < end.getTime();
@@ -1252,7 +1242,6 @@ function ControlPanel() {
         revenue: courseRevenueValue + subscriptionRevenueValue,
         courseRevenue: courseRevenueValue,
         subscriptionRevenue: subscriptionRevenueValue,
-        subscriptionCount: subscriptionCountValue,
         signups: signupValue
       });
     }
@@ -1676,14 +1665,6 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                           Subscriptions
                         </div>
                         <b>{fmtINR0(selectedRevenuePoint.item.subscriptionRevenue)}</b>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 10, opacity: 0.58 }}>
-                          Paid subscriptions
-                        </div>
-                        <b>
-                          {Number(selectedRevenuePoint.item.subscriptionCount || 0).toLocaleString("en-IN")}
-                        </b>
                       </div>
                     </div>
                   </div>

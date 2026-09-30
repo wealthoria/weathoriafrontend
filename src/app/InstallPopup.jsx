@@ -18,6 +18,24 @@ const { useState, useEffect } = React;
 
 const DISMISS_KEY = "wl-install-dismissed";
 
+/* Capture the browser's install event as early as possible (this runs when
+   the bundle loads), so it is never missed. Chrome/Edge on Android only fire
+   it when the app is NOT installed. */
+if (typeof window !== "undefined" && !window.__wlInstallListening) {
+  window.__wlInstallListening = true;
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    window.__wlInstallEvent = e;
+    window.dispatchEvent(new Event("wl-install-change"));
+  });
+
+  window.addEventListener("appinstalled", function () {
+    window.__wlInstallEvent = null;
+    window.dispatchEvent(new Event("wl-install-change"));
+  });
+}
+
 function isStandalone() {
   try {
     return (
@@ -40,11 +58,15 @@ function isIos() {
 function isPhone() {
   const ua = navigator.userAgent || "";
   const phoneUA = /android.*mobile|iphone|ipod/i.test(ua);
-  let small = true;
+  const uaDataMobile =
+    !!(navigator.userAgentData && navigator.userAgentData.mobile === true);
+  let coarseAndSmall = false;
   try {
-    small = window.matchMedia("(max-width: 820px)").matches;
+    coarseAndSmall =
+      window.matchMedia("(pointer: coarse)").matches &&
+      window.matchMedia("(max-width: 820px)").matches;
   } catch (e) {}
-  return phoneUA && small;
+  return phoneUA || uaDataMobile || coarseAndSmall;
 }
 
 function wasDismissed() {
@@ -86,6 +108,19 @@ const TEXT = {
   }
 };
 
+function installState() {
+  return {
+    phone: isPhone(),
+    installedOrStandalone: isStandalone(),
+    dismissedThisVisit: wasDismissed(),
+    hasInstallEvent: !!window.__wlInstallEvent,
+    iphone: isIos()
+  };
+}
+
+// Type  __wlInstallDebug()  in the phone's browser console to see why the popup is hidden.
+window.__wlInstallDebug = installState;
+
 function InstallPopup() {
   const app = typeof window.useApp === "function" ? window.useApp() : null;
   const tx = TEXT[app && app.lang === "kn" ? "kn" : "en"];
@@ -99,6 +134,10 @@ function InstallPopup() {
     const refresh = () => setTick((n) => n + 1);
     window.addEventListener("wl-install-change", refresh);
     window.addEventListener("appinstalled", refresh);
+    refresh(); // covers an event that arrived before this listener attached
+    try {
+      console.info("[Wealthoria install popup]", installState());
+    } catch (e) {}
     return () => {
       window.removeEventListener("wl-install-change", refresh);
       window.removeEventListener("appinstalled", refresh);

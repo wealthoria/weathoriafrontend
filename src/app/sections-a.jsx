@@ -1,6 +1,5 @@
 /* global React, window */
 import React from "react";
-import InstallButton from "./InstallButton.jsx";
 
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
@@ -97,7 +96,6 @@ const isLegalPage =
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
-            <InstallButton className="pwa-install-nav" />
         
 
     {/*
@@ -190,7 +188,6 @@ const isLegalPage =
 </div>
 
         <div className="drawer-foot">
-          <InstallButton className="btn-block" onDone={() => setOpen(false)} />
           <a className="btn btn-outline btn-block drawer-member-login" href="/members/login"><Icon name="lock" size={16} />Member login</a>
         {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
         </div>

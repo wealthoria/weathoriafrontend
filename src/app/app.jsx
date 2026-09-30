@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import InstallPopup from "./InstallPopup.jsx";
 
 /* global React, window, localStorage, document */
 
@@ -331,6 +332,8 @@ const PrivacyPolicy = window.PrivacyPolicy;
       <NavBar
         onNav={onNav}
       />
+
+      <InstallPopup />
 
       {isPrivacyPolicy ? (
         typeof PrivacyPolicy === "function" ? (

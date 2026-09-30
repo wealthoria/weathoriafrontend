@@ -2039,15 +2039,18 @@ a { color: inherit; }
    PWA INSTALL UI (phones only, only when the app is not installed)
    ========================================================================= */
 
-/* horizontal bar right below the nav bar (home page) */
+/* install bar fixed at the bottom of the screen (home page) */
 .pwa-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9990;
   display: flex; align-items: center; gap: 10px;
   width: 100%; box-sizing: border-box;
-  padding: 8px 12px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
   background: var(--canvas-soft); color: var(--ink);
-  box-shadow: inset 0 -1px 0 var(--hair);
+  box-shadow: 0 -2px 12px rgba(0,0,0,.12), inset 0 1px 0 var(--hair);
 }
-.pwa-bar-icon { border-radius: 8px; flex: 0 0 auto; }
+/* keep the last content and the back-to-top button clear of the bar */
+body.has-pwa-bar { padding-bottom: 64px; }
+body.has-pwa-bar .wealthoria-back-to-top { bottom: 78px; }
 .pwa-bar-text {
   flex: 1 1 auto; min-width: 0;
   font-size: 14px; font-weight: 600; line-height: 1.25;

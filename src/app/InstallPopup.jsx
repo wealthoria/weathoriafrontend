@@ -8,9 +8,9 @@ const { useState, useEffect } = React;
 
    1. InstallIcon  - small download icon in the top bar. Renders together with
                      the nav bar (no waiting for the browser).
-   2. InstallPopup - (name kept) a slim horizontal bar right BELOW the nav bar
-                     when the HOME page opens:  [icon] text [Install app] [X]
-                     X closes it for good (remembered on this phone). Also hosts the small
+   2. InstallPopup - (name kept) a slim horizontal bar fixed at the BOTTOM of the screen
+                     when the HOME page opens:  text [Install app] [X]
+                     X closes it until the page is reopened. Also hosts the small
                      "how to install" sheet used when the browser gives no
                      native prompt (iPhone, or Chrome that has not offered yet).
 
@@ -22,7 +22,7 @@ const { useState, useEffect } = React;
 const DISMISS_KEY = "wl-install-dismissed";
 const INSTALLED_KEY = "wl-pwa-installed-at";
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-const BUILD = "install-v6";
+const BUILD = "install-v7";
 
 function urlFlag(name) {
   try {
@@ -77,18 +77,15 @@ function isHomePage() {
   }
 }
 
+// Closing the bar hides it only until the page is reloaded or reopened.
+let dismissedThisLoad = false;
+
 function wasDismissed() {
-  try {
-    return localStorage.getItem(DISMISS_KEY) === "1";
-  } catch (e) {
-    return false;
-  }
+  return dismissedThisLoad;
 }
 
 function rememberDismiss() {
-  try {
-    localStorage.setItem(DISMISS_KEY, "1");
-  } catch (e) {}
+  dismissedThisLoad = true;
 }
 
 function markInstalled() {
@@ -258,6 +255,11 @@ function InstallPopup() {
   const showBar = canInstall && isHomePage() && !wasDismissed();
   const debugPanel = urlFlag("installdebug") ? <InstallDebug /> : null;
 
+  useEffect(() => {
+    document.body.classList.toggle("has-pwa-bar", !!showBar);
+    return () => document.body.classList.remove("has-pwa-bar");
+  }, [showBar]);
+
   const closeBar = () => {
     rememberDismiss();
     rerender();
@@ -271,13 +273,6 @@ function InstallPopup() {
 
       {showBar && (
         <div className="pwa-bar" role="region" aria-label={tx.install}>
-          <img
-            className="pwa-bar-icon"
-            src="/icons/icon-192-any.png"
-            alt=""
-            width="32"
-            height="32"
-          />
           <span className="pwa-bar-text">{tx.bar}</span>
           <button
             type="button"

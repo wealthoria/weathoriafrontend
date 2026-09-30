@@ -1,51 +1,35 @@
-/* global React, window, sessionStorage, navigator, document */
+/* global React, window, sessionStorage, localStorage, navigator, document */
 import React from "react";
 
 const { useState, useEffect } = React;
 
 /* =========================================================================
-   PWA INSTALL POPUP
-   - Phones only (Android + iPhone). Never on laptop/desktop/tablet.
-   - Popup opens automatically ONLY on the home page, only if the app is NOT
-     installed. A small install icon in the top bar (InstallIcon) covers every
-     other page and the case where the popup was cancelled.
-   - Never shown inside the installed app.
-   - Buttons: Install / Cancel.
-   - After Cancel it stays hidden for that visit (comes back next time the
-     site is opened in a new session).
-   - Android (Chrome/Edge): Install opens the browser's native install prompt.
-   - iPhone (Safari): no native prompt exists, so Install shows the
-     "Share -> Add to Home Screen" steps.
+   PWA INSTALL UI  (phones only, only while the app is NOT installed)
+
+   1. InstallIcon  - small download icon in the top bar. Renders together with
+                     the nav bar (no waiting for the browser).
+   2. InstallPopup - (name kept) a slim horizontal bar right BELOW the nav bar
+                     when the HOME page opens:  [icon] text [Install app] [X]
+                     X closes it for this visit. Also hosts the small
+                     "how to install" sheet used when the browser gives no
+                     native prompt (iPhone, or Chrome that has not offered yet).
+
+   Android Chrome/Edge: Install opens the native install prompt.
+   Otherwise: shows the 2-3 manual steps for that phone.
+   Installed app (standalone) or recently-installed: nothing is shown.
    ========================================================================= */
 
 const DISMISS_KEY = "wl-install-dismissed";
-const BUILD = "install-v3";
+const INSTALLED_KEY = "wl-pwa-installed-at";
+const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+const BUILD = "install-v4";
 
-/* Test helpers (only when the address has ?installdebug=1 or ?installtest=1) */
 function urlFlag(name) {
   try {
     return new URLSearchParams(window.location.search).get(name) === "1";
   } catch (e) {
     return false;
   }
-}
-
-/* Capture the browser's install event as early as possible (this runs when
-   the bundle loads), so it is never missed. Chrome/Edge on Android only fire
-   it when the app is NOT installed. */
-if (typeof window !== "undefined" && !window.__wlInstallListening) {
-  window.__wlInstallListening = true;
-
-  window.addEventListener("beforeinstallprompt", function (e) {
-    e.preventDefault();
-    window.__wlInstallEvent = e;
-    window.dispatchEvent(new Event("wl-install-change"));
-  });
-
-  window.addEventListener("appinstalled", function () {
-    window.__wlInstallEvent = null;
-    window.dispatchEvent(new Event("wl-install-change"));
-  });
 }
 
 function isStandalone() {
@@ -63,8 +47,7 @@ function isStandalone() {
 }
 
 function isIos() {
-  const ua = navigator.userAgent || "";
-  return /iphone|ipod/i.test(ua);
+  return /iphone|ipod/i.test(navigator.userAgent || "");
 }
 
 function isPhone() {
@@ -108,32 +91,78 @@ function rememberDismiss() {
   } catch (e) {}
 }
 
-const TEXT = {
-  en: {
-    title: "Install Wealthoria",
-    body: "Add Wealthoria to your home screen to open it quickly, like an app.",
-    install: "Install",
-    cancel: "Cancel",
-    stepsTitle: "Add to Home Screen",
-    step1: "Tap the Share button in Safari.",
-    step2: "Scroll down and tap Add to Home Screen.",
-    step3: "Tap Add.",
-    done: "Got it",
-    noPrompt: "Your browser is not offering install right now. Use the browser menu (\u22EE) and tap Install app / Add to Home screen."
-  },
-  kn: {
-    title: "Wealthoria ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
-    body: "ಆ್ಯಪ್‌ನಂತೆ ಬೇಗ ತೆರೆಯಲು Wealthoria ಅನ್ನು ನಿಮ್ಮ ಹೋಮ್ ಸ್ಕ್ರೀನ್‌ಗೆ ಸೇರಿಸಿ.",
-    install: "ಇನ್‌ಸ್ಟಾಲ್",
-    cancel: "ರದ್ದುಮಾಡಿ",
-    stepsTitle: "ಹೋಮ್ ಸ್ಕ್ರೀನ್‌ಗೆ ಸೇರಿಸಿ",
-    step1: "Safari ನಲ್ಲಿ Share ಬಟನ್ ಒತ್ತಿ.",
-    step2: "ಕೆಳಗೆ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ, Add to Home Screen ಒತ್ತಿ.",
-    step3: "Add ಒತ್ತಿ.",
-    done: "ಸರಿ",
-    noPrompt: "ಬ್ರೌಸರ್ ಈಗ ಇನ್‌ಸ್ಟಾಲ್ ಆಯ್ಕೆ ನೀಡುತ್ತಿಲ್ಲ. ಬ್ರೌಸರ್ ಮೆನು (\u22EE) ಒತ್ತಿ, Install app / Add to Home screen ಆಯ್ಕೆಮಾಡಿ."
+function markInstalled() {
+  try {
+    localStorage.setItem(INSTALLED_KEY, String(Date.now()));
+  } catch (e) {}
+}
+
+function clearInstalled() {
+  try {
+    localStorage.removeItem(INSTALLED_KEY);
+  } catch (e) {}
+}
+
+function installedRecently() {
+  try {
+    const t = Number(localStorage.getItem(INSTALLED_KEY) || 0);
+    return t > 0 && Date.now() - t < THIRTY_DAYS;
+  } catch (e) {
+    return false;
   }
-};
+}
+
+/* -------------------------------------------------------------------------
+   Runs once when the bundle loads (before any React render).
+   ------------------------------------------------------------------------- */
+if (typeof window !== "undefined" && !window.__wlInstallListening) {
+  window.__wlInstallListening = true;
+
+  // Chrome/Edge fire this ONLY when the app is not installed.
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    window.__wlInstallEvent = e;
+    clearInstalled(); // proof it is not installed (e.g. user uninstalled it)
+    window.dispatchEvent(new Event("wl-install-change"));
+  });
+
+  window.addEventListener("appinstalled", function () {
+    window.__wlInstallEvent = null;
+    markInstalled();
+    window.dispatchEvent(new Event("wl-install-change"));
+  });
+
+  // Opened from the home-screen icon: remember it (browser tabs share this).
+  if (isStandalone()) markInstalled();
+
+  // Chrome on Android can tell us if this site's app is installed.
+  try {
+    if (navigator.getInstalledRelatedApps) {
+      navigator
+        .getInstalledRelatedApps()
+        .then(function (apps) {
+          if (apps && apps.length > 0) {
+            window.__wlRelatedInstalled = true;
+            window.dispatchEvent(new Event("wl-install-change"));
+          }
+        })
+        .catch(function () {});
+    }
+  } catch (e) {}
+}
+
+function isInstalled() {
+  if (isStandalone()) return true;
+  if (window.__wlInstallEvent) return false; // browser says: not installed
+  if (window.__wlRelatedInstalled) return true;
+  return installedRecently();
+}
+
+/* Phone + app not installed. No waiting for the browser event. */
+function canInstallHere() {
+  if (urlFlag("installtest")) return true; // ?installtest=1 forces it on
+  return isPhone() && !isInstalled();
+}
 
 function installState() {
   return {
@@ -142,24 +171,45 @@ function installState() {
     isPhone: isPhone(),
     isHomePage: isHomePage(),
     runningAsInstalledApp: isStandalone(),
-    cancelledThisVisit: wasDismissed(),
+    rememberedAsInstalled: installedRecently(),
     browserOfferedInstall: !!window.__wlInstallEvent,
+    cancelledThisVisit: wasDismissed(),
     iphone: isIos(),
-    forcedByInstalltest: urlFlag("installtest")
+    forcedByInstalltest: urlFlag("installtest"),
+    showInstallUi: canInstallHere()
   };
 }
 
-// Type  __wlInstallDebug()  in the phone's browser console to see why the popup is hidden.
+// Type  __wlInstallDebug()  in the browser console to see why it is hidden.
 window.__wlInstallDebug = installState;
 
-/* Re-render whenever the browser's install state changes. */
+/* One place that starts an install (used by the icon and the bar button). */
+async function runInstall() {
+  const ev = window.__wlInstallEvent;
+  if (ev) {
+    let outcome = "";
+    try {
+      ev.prompt();
+      const choice = await ev.userChoice;
+      outcome = choice && choice.outcome;
+    } catch (e) {}
+    window.__wlInstallEvent = null; // the event can only be used once
+    if (outcome === "accepted") markInstalled();
+    window.dispatchEvent(new Event("wl-install-change"));
+    return;
+  }
+  // No native prompt available: show the manual steps.
+  window.dispatchEvent(new Event("wl-install-steps"));
+}
+
+/* Re-render whenever the install state changes. */
 function useInstallRefresh() {
   const [, setTick] = useState(0);
   useEffect(() => {
     const refresh = () => setTick((n) => n + 1);
     window.addEventListener("wl-install-change", refresh);
     window.addEventListener("appinstalled", refresh);
-    refresh(); // covers an event that arrived before this listener attached
+    refresh(); // covers a change that happened before this listener attached
     return () => {
       window.removeEventListener("wl-install-change", refresh);
       window.removeEventListener("appinstalled", refresh);
@@ -168,17 +218,42 @@ function useInstallRefresh() {
   return () => setTick((n) => n + 1);
 }
 
-/* Phone + not installed + can actually be installed.
-   Android only gets the browser event when the app is NOT installed.
-   iPhone has no event, so we rely on "not running as an installed app". */
-function canInstallHere() {
-  if (urlFlag("installtest")) return true; // ?installtest=1 forces the UI to show
-  return (
-    isPhone() &&
-    !isStandalone() &&
-    (!!window.__wlInstallEvent || isIos())
-  );
-}
+const TEXT = {
+  en: {
+    bar: "Get the Wealthoria app",
+    install: "Install app",
+    close: "Close",
+    stepsTitle: "Install Wealthoria",
+    iosSteps: [
+      "Tap the Share button in Safari.",
+      "Scroll down and tap Add to Home Screen.",
+      "Tap Add."
+    ],
+    androidSteps: [
+      "Tap the \u22EE menu at the top of Chrome.",
+      "Tap Install app (or Add to Home screen).",
+      "Tap Install."
+    ],
+    done: "Got it"
+  },
+  kn: {
+    bar: "Wealthoria ಆ್ಯಪ್ ಪಡೆಯಿರಿ",
+    install: "ಇನ್‌ಸ್ಟಾಲ್ ಆ್ಯಪ್",
+    close: "ಮುಚ್ಚಿ",
+    stepsTitle: "Wealthoria ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+    iosSteps: [
+      "Safari ನಲ್ಲಿ Share ಬಟನ್ ಒತ್ತಿ.",
+      "ಕೆಳಗೆ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ, Add to Home Screen ಒತ್ತಿ.",
+      "Add ಒತ್ತಿ."
+    ],
+    androidSteps: [
+      "Chrome ನ ಮೇಲ್ಭಾಗದ \u22EE ಮೆನು ಒತ್ತಿ.",
+      "Install app (ಅಥವಾ Add to Home screen) ಒತ್ತಿ.",
+      "Install ಒತ್ತಿ."
+    ],
+    done: "ಸರಿ"
+  }
+};
 
 /* On-screen status panel: open  yoursite/?installdebug=1  on the phone. */
 function InstallDebug() {
@@ -188,7 +263,7 @@ function InstallDebug() {
   return (
     <pre
       style={{
-        position: "fixed", left: 8, right: 8, top: 8, zIndex: 10001,
+        position: "fixed", left: 8, right: 8, bottom: 8, zIndex: 10001,
         margin: 0, padding: "10px 12px", borderRadius: 10,
         background: "rgba(0,0,0,.88)", color: "#7CFC9A",
         font: "12px/1.5 monospace", whiteSpace: "pre-wrap", pointerEvents: "none"
@@ -200,153 +275,129 @@ function InstallDebug() {
 }
 
 /* =========================================================================
-   POPUP  - opens automatically ONLY on the home page (once per visit).
-   Also opens the iPhone steps when the top install icon is tapped.
+   BAR BELOW THE NAV  (home page only)  +  "how to install" sheet
    ========================================================================= */
 function InstallPopup() {
   const app = typeof window.useApp === "function" ? window.useApp() : null;
   const tx = TEXT[app && app.lang === "kn" ? "kn" : "en"];
 
   const rerender = useInstallRefresh();
-  const [open, setOpen] = useState(false);
-  const [showSteps, setShowSteps] = useState(false);
-  const [notice, setNotice] = useState(false);
+  const [sheet, setSheet] = useState(false);
 
-  const nativeEvent = window.__wlInstallEvent || null;
-  const installable = canInstallHere();
-  const autoShow = installable && isHomePage() && !wasDismissed();
-
-  // Automatic popup: home page only, ~1 second after opening.
   useEffect(() => {
-    if (!autoShow) return undefined;
-    const timer = setTimeout(() => setOpen(true), 1200);
-    return () => clearTimeout(timer);
-  }, [autoShow]);
-
-  // Top-icon tap on iPhone asks us to show the "Add to Home Screen" steps.
-  useEffect(() => {
-    const showManual = () => {
-      setShowSteps(true);
-      setOpen(true);
-    };
-    window.addEventListener("wl-install-steps", showManual);
-    return () => window.removeEventListener("wl-install-steps", showManual);
+    const open = () => setSheet(true);
+    window.addEventListener("wl-install-steps", open);
+    return () => window.removeEventListener("wl-install-steps", open);
   }, []);
 
+  const canInstall = canInstallHere();
+  const showBar = canInstall && isHomePage() && !wasDismissed();
   const debugPanel = urlFlag("installdebug") ? <InstallDebug /> : null;
 
-  if (!open || !installable) return debugPanel;
-
-  const close = () => {
+  const closeBar = () => {
     rememberDismiss();
-    setOpen(false);
-    setShowSteps(false);
-    setNotice(false);
     rerender();
   };
 
-  const install = async () => {
-    if (nativeEvent) {
-      try {
-        nativeEvent.prompt();
-        await nativeEvent.userChoice;
-      } catch (e) {}
-      // The event can only be used once.
-      window.__wlInstallEvent = null;
-      close();
-      window.dispatchEvent(new Event("wl-install-change"));
-      return;
-    }
-    if (isIos()) {
-      setShowSteps(true);
-      return;
-    }
-    setNotice(true); // only reachable with ?installtest=1 (no browser prompt)
-  };
+  const closeSheet = () => setSheet(false);
 
   return (
     <React.Fragment>
-    {debugPanel}
-    <div className="pwa-pop-scrim" onClick={close}>
-      <div
-        className="pwa-pop-card"
-        role="dialog"
-        aria-modal="true"
-        aria-label={tx.title}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          className="pwa-pop-icon"
-          src="/icons/icon-192-any.png"
-          alt=""
-          width="56"
-          height="56"
-        />
+      {debugPanel}
 
-        {showSteps ? (
-          <React.Fragment>
+      {showBar && (
+        <div className="pwa-bar" role="region" aria-label={tx.install}>
+          <img
+            className="pwa-bar-icon"
+            src="/icons/icon-192-any.png"
+            alt=""
+            width="32"
+            height="32"
+          />
+          <span className="pwa-bar-text">{tx.bar}</span>
+          <button
+            type="button"
+            className="btn btn-green pwa-bar-btn"
+            onClick={runInstall}
+          >
+            {tx.install}
+          </button>
+          <button
+            type="button"
+            className="pwa-bar-x"
+            onClick={closeBar}
+            aria-label={tx.close}
+            title={tx.close}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12" />
+              <path d="M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {sheet && canInstall && (
+        <div className="pwa-pop-scrim" onClick={closeSheet}>
+          <div
+            className="pwa-pop-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={tx.stepsTitle}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              className="pwa-pop-icon"
+              src="/icons/icon-192-any.png"
+              alt=""
+              width="56"
+              height="56"
+            />
             <h3 className="pwa-pop-title">{tx.stepsTitle}</h3>
             <ol className="pwa-pop-steps">
-              <li>{tx.step1}</li>
-              <li>{tx.step2}</li>
-              <li>{tx.step3}</li>
+              {(isIos() ? tx.iosSteps : tx.androidSteps).map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
             </ol>
             <div className="pwa-pop-actions">
-              <button type="button" className="btn btn-green" onClick={close}>
+              <button
+                type="button"
+                className="btn btn-green"
+                onClick={closeSheet}
+              >
                 {tx.done}
               </button>
             </div>
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            <h3 className="pwa-pop-title">{tx.title}</h3>
-            <p className="pwa-pop-text">{notice ? tx.noPrompt : tx.body}</p>
-            <div className="pwa-pop-actions">
-              <button type="button" className="btn btn-outline" onClick={close}>
-                {tx.cancel}
-              </button>
-              <button type="button" className="btn btn-green" onClick={install}>
-                {tx.install}
-              </button>
-            </div>
-          </React.Fragment>
-        )}
-      </div>
-    </div>
+          </div>
+        </div>
+      )}
     </React.Fragment>
   );
 }
 
 /* =========================================================================
-   TOP-BAR ICON - small download icon in the nav row (same size/style as the
-   theme toggle). Shown on every page, phones only, and only while the app is
-   NOT installed. It disappears once installed.
+   TOP-BAR ICON - shows the moment the nav bar renders (phones, not installed)
    ========================================================================= */
 function InstallIcon() {
   useInstallRefresh();
 
   if (!canInstallHere()) return null;
 
-  const onClick = async () => {
-    const ev = window.__wlInstallEvent;
-    if (ev) {
-      try {
-        ev.prompt();
-        await ev.userChoice;
-      } catch (e) {}
-      window.__wlInstallEvent = null;
-      window.dispatchEvent(new Event("wl-install-change"));
-      return;
-    }
-    // iPhone: no native prompt, show the steps.
-    window.dispatchEvent(new Event("wl-install-steps"));
-  };
-
   return (
     <button
       type="button"
       className="theme-toggle pwa-install-icon"
-      onClick={onClick}
+      onClick={runInstall}
       aria-label="Install app"
       title="Install app"
     >

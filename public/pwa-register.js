@@ -9,6 +9,30 @@
 (function () {
   "use strict";
 
+  /* -----------------------------------------------------------------------
+     INSTALL PROMPT CAPTURE
+     Chrome/Edge/Android fire "beforeinstallprompt" only when the app is NOT
+     installed. We stash the event so the React "Install app" button can use
+     it later, and clear it once the app gets installed.
+     ----------------------------------------------------------------------- */
+  window.__wlInstallEvent = window.__wlInstallEvent || null;
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    window.__wlInstallEvent = e;
+    window.dispatchEvent(new Event("wl-install-change"));
+  });
+
+  window.addEventListener("appinstalled", function () {
+    window.__wlInstallEvent = null;
+    try { localStorage.setItem("wl-pwa-installed", "1"); } catch (err) {}
+    window.dispatchEvent(new Event("wl-install-change"));
+  });
+})();
+
+(function () {
+  "use strict";
+
   // Check browser support
   if (!("serviceWorker" in navigator)) {
     console.warn(

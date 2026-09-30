@@ -2033,3 +2033,20 @@ a { color: inherit; }
     font-size: 16px;
   }
 }
+
+/* =========================================================================
+   PWA INSTALL BUTTON (only rendered when the app is not installed)
+   ========================================================================= */
+.pwa-install-btn { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.pwa-install-nav { padding: 8px 14px; font-size: 14px; }
+@media (max-width: 979px) { .pwa-install-nav span { display: none; } .pwa-install-nav { padding: 8px 10px; } } /* icon-only on phones */
+.pwa-ios-scrim {
+  position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.55);
+  display: flex; align-items: flex-end; justify-content: center; padding: 16px;
+}
+.pwa-ios-card {
+  width: 100%; max-width: 380px; background: var(--surface, #fff); color: inherit;
+  border-radius: 16px; padding: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.3);
+}
+.pwa-ios-card h3 { margin: 0 0 10px; }
+.pwa-ios-card ol { margin: 0 0 16px; padding-left: 20px; line-height: 1.7; }

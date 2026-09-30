@@ -10,7 +10,7 @@ const { useState, useEffect } = React;
                      the nav bar (no waiting for the browser).
    2. InstallPopup - (name kept) a slim horizontal bar right BELOW the nav bar
                      when the HOME page opens:  [icon] text [Install app] [X]
-                     X closes it for this visit. Also hosts the small
+                     X closes it for good (remembered on this phone). Also hosts the small
                      "how to install" sheet used when the browser gives no
                      native prompt (iPhone, or Chrome that has not offered yet).
 
@@ -22,7 +22,7 @@ const { useState, useEffect } = React;
 const DISMISS_KEY = "wl-install-dismissed";
 const INSTALLED_KEY = "wl-pwa-installed-at";
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-const BUILD = "install-v5";
+const BUILD = "install-v6";
 
 function urlFlag(name) {
   try {
@@ -79,7 +79,7 @@ function isHomePage() {
 
 function wasDismissed() {
   try {
-    return sessionStorage.getItem(DISMISS_KEY) === "1";
+    return localStorage.getItem(DISMISS_KEY) === "1";
   } catch (e) {
     return false;
   }
@@ -87,7 +87,7 @@ function wasDismissed() {
 
 function rememberDismiss() {
   try {
-    sessionStorage.setItem(DISMISS_KEY, "1");
+    localStorage.setItem(DISMISS_KEY, "1");
   } catch (e) {}
 }
 

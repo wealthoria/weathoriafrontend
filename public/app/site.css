@@ -277,12 +277,6 @@ a { color: inherit; }
   opacity: .42; filter: blur(1.5px) saturate(1.06) brightness(1.06);
 }
 [data-theme="dark"] .hero-video video { opacity: .5; filter: blur(1.5px) saturate(1.12); }
-/* animated growth-chart background (src/app/heroChart.js) */
-.hero-video .hero-canvas {
-  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
-  opacity: .9;
-}
-[data-theme="dark"] .hero-video .hero-canvas { opacity: 1; }
 /* feather the video into the canvas at top + bottom, plus a warm coral glow.
    The middle band stays clear so the motion is clearly visible in both modes. */
 .hero-video::after {

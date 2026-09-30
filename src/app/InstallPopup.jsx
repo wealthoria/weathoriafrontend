@@ -19,6 +19,16 @@ const { useState, useEffect } = React;
    ========================================================================= */
 
 const DISMISS_KEY = "wl-install-dismissed";
+const BUILD = "install-v3";
+
+/* Test helpers (only when the address has ?installdebug=1 or ?installtest=1) */
+function urlFlag(name) {
+  try {
+    return new URLSearchParams(window.location.search).get(name) === "1";
+  } catch (e) {
+    return false;
+  }
+}
 
 /* Capture the browser's install event as early as possible (this runs when
    the bundle loads), so it is never missed. Chrome/Edge on Android only fire
@@ -108,7 +118,8 @@ const TEXT = {
     step1: "Tap the Share button in Safari.",
     step2: "Scroll down and tap Add to Home Screen.",
     step3: "Tap Add.",
-    done: "Got it"
+    done: "Got it",
+    noPrompt: "Your browser is not offering install right now. Use the browser menu (\u22EE) and tap Install app / Add to Home screen."
   },
   kn: {
     title: "Wealthoria ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
@@ -119,17 +130,22 @@ const TEXT = {
     step1: "Safari ನಲ್ಲಿ Share ಬಟನ್ ಒತ್ತಿ.",
     step2: "ಕೆಳಗೆ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ, Add to Home Screen ಒತ್ತಿ.",
     step3: "Add ಒತ್ತಿ.",
-    done: "ಸರಿ"
+    done: "ಸರಿ",
+    noPrompt: "ಬ್ರೌಸರ್ ಈಗ ಇನ್‌ಸ್ಟಾಲ್ ಆಯ್ಕೆ ನೀಡುತ್ತಿಲ್ಲ. ಬ್ರೌಸರ್ ಮೆನು (\u22EE) ಒತ್ತಿ, Install app / Add to Home screen ಆಯ್ಕೆಮಾಡಿ."
   }
 };
 
 function installState() {
   return {
-    phone: isPhone(),
-    installedOrStandalone: isStandalone(),
-    dismissedThisVisit: wasDismissed(),
-    hasInstallEvent: !!window.__wlInstallEvent,
-    iphone: isIos()
+    build: BUILD,
+    page: window.location.pathname + window.location.search,
+    isPhone: isPhone(),
+    isHomePage: isHomePage(),
+    runningAsInstalledApp: isStandalone(),
+    cancelledThisVisit: wasDismissed(),
+    browserOfferedInstall: !!window.__wlInstallEvent,
+    iphone: isIos(),
+    forcedByInstalltest: urlFlag("installtest")
   };
 }
 
@@ -156,10 +172,30 @@ function useInstallRefresh() {
    Android only gets the browser event when the app is NOT installed.
    iPhone has no event, so we rely on "not running as an installed app". */
 function canInstallHere() {
+  if (urlFlag("installtest")) return true; // ?installtest=1 forces the UI to show
   return (
     isPhone() &&
     !isStandalone() &&
     (!!window.__wlInstallEvent || isIos())
+  );
+}
+
+/* On-screen status panel: open  yoursite/?installdebug=1  on the phone. */
+function InstallDebug() {
+  useInstallRefresh();
+  const st = installState();
+  const rows = Object.keys(st).map((k) => k + ": " + String(st[k]));
+  return (
+    <pre
+      style={{
+        position: "fixed", left: 8, right: 8, top: 8, zIndex: 10001,
+        margin: 0, padding: "10px 12px", borderRadius: 10,
+        background: "rgba(0,0,0,.88)", color: "#7CFC9A",
+        font: "12px/1.5 monospace", whiteSpace: "pre-wrap", pointerEvents: "none"
+      }}
+    >
+      {rows.join("\n")}
+    </pre>
   );
 }
 
@@ -174,6 +210,7 @@ function InstallPopup() {
   const rerender = useInstallRefresh();
   const [open, setOpen] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  const [notice, setNotice] = useState(false);
 
   const nativeEvent = window.__wlInstallEvent || null;
   const installable = canInstallHere();
@@ -196,12 +233,15 @@ function InstallPopup() {
     return () => window.removeEventListener("wl-install-steps", showManual);
   }, []);
 
-  if (!open || !installable) return null;
+  const debugPanel = urlFlag("installdebug") ? <InstallDebug /> : null;
+
+  if (!open || !installable) return debugPanel;
 
   const close = () => {
     rememberDismiss();
     setOpen(false);
     setShowSteps(false);
+    setNotice(false);
     rerender();
   };
 
@@ -217,10 +257,16 @@ function InstallPopup() {
       window.dispatchEvent(new Event("wl-install-change"));
       return;
     }
-    if (isIos()) setShowSteps(true);
+    if (isIos()) {
+      setShowSteps(true);
+      return;
+    }
+    setNotice(true); // only reachable with ?installtest=1 (no browser prompt)
   };
 
   return (
+    <React.Fragment>
+    {debugPanel}
     <div className="pwa-pop-scrim" onClick={close}>
       <div
         className="pwa-pop-card"
@@ -254,7 +300,7 @@ function InstallPopup() {
         ) : (
           <React.Fragment>
             <h3 className="pwa-pop-title">{tx.title}</h3>
-            <p className="pwa-pop-text">{tx.body}</p>
+            <p className="pwa-pop-text">{notice ? tx.noPrompt : tx.body}</p>
             <div className="pwa-pop-actions">
               <button type="button" className="btn btn-outline" onClick={close}>
                 {tx.cancel}
@@ -267,6 +313,7 @@ function InstallPopup() {
         )}
       </div>
     </div>
+    </React.Fragment>
   );
 }
 

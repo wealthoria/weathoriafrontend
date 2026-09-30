@@ -6,21 +6,50 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#e8ebe6",
   "theme_color": "#e8473f",
   "lang": "en",
   "dir": "ltr",
   "prefer_related_applications": false,
   "related_applications": [
-    { "platform": "webapp", "url": "https://www.wealthoria.in/manifest.webmanifest" }
+    {
+      "platform": "webapp",
+      "url": "https://www.wealthoria.in/manifest.webmanifest"
+    }
   ],
-  "categories": ["education", "finance"],
+  "categories": [
+    "education",
+    "finance"
+  ],
   "icons": [
-    { "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512-any.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192-any.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-any.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
     {
@@ -28,21 +57,26 @@
       "short_name": "Learn",
       "description": "Browse Wealthoria learning programs",
       "url": "Wealthoria.html#programs",
-      "icons": [{ "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "icons/icon-192-any.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Student login",
       "short_name": "Student",
       "description": "Access your courses and progress",
       "url": "Student Portal.html",
-      "icons": [{ "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "Member workspace",
-      "short_name": "Members",
-      "description": "Content, courses and admin tools",
-      "url": "Member Portal.html",
-      "icons": [{ "src": "icons/icon-192-any.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "icons/icon-192-any.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

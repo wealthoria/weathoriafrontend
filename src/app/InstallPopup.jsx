@@ -22,7 +22,7 @@ const { useState, useEffect } = React;
 const DISMISS_KEY = "wl-install-dismissed";
 const INSTALLED_KEY = "wl-pwa-installed-at";
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-const BUILD = "install-v4";
+const BUILD = "install-v5";
 
 function urlFlag(name) {
   try {
@@ -112,55 +112,17 @@ function installedRecently() {
   }
 }
 
-/* -------------------------------------------------------------------------
-   Runs once when the bundle loads (before any React render).
-   ------------------------------------------------------------------------- */
-if (typeof window !== "undefined" && !window.__wlInstallListening) {
-  window.__wlInstallListening = true;
-
-  // Chrome/Edge fire this ONLY when the app is not installed.
-  window.addEventListener("beforeinstallprompt", function (e) {
-    e.preventDefault();
-    window.__wlInstallEvent = e;
-    clearInstalled(); // proof it is not installed (e.g. user uninstalled it)
-    window.dispatchEvent(new Event("wl-install-change"));
-  });
-
-  window.addEventListener("appinstalled", function () {
-    window.__wlInstallEvent = null;
-    markInstalled();
-    window.dispatchEvent(new Event("wl-install-change"));
-  });
-
-  // Opened from the home-screen icon: remember it (browser tabs share this).
-  if (isStandalone()) markInstalled();
-
-  // Chrome on Android can tell us if this site's app is installed.
-  try {
-    if (navigator.getInstalledRelatedApps) {
-      navigator
-        .getInstalledRelatedApps()
-        .then(function (apps) {
-          if (apps && apps.length > 0) {
-            window.__wlRelatedInstalled = true;
-            window.dispatchEvent(new Event("wl-install-change"));
-          }
-        })
-        .catch(function () {});
-    }
-  } catch (e) {}
-}
-
 function isInstalled() {
   if (isStandalone()) return true;
-  if (window.__wlInstallEvent) return false; // browser says: not installed
-  if (window.__wlRelatedInstalled) return true;
-  return installedRecently();
+  if (window.__wlJustInstalled) return true;      // installed in this visit
+  if (window.__wlInstallEvent) return false;      // browser says: not installed
+  return !!window.__wlRelatedInstalled;           // no stale localStorage guess
 }
 
-/* Phone + app not installed. No waiting for the browser event. */
 function canInstallHere() {
-  if (urlFlag("installtest")) return true; // ?installtest=1 forces it on
+  if (urlFlag("installtest")) return true;
+  // wait until the installed-app check settles (unless the browser already offered install)
+  if (!window.__wlInstallChecked && !window.__wlInstallEvent) return false;
   return isPhone() && !isInstalled();
 }
 
@@ -175,6 +137,8 @@ function installState() {
     browserOfferedInstall: !!window.__wlInstallEvent,
     cancelledThisVisit: wasDismissed(),
     iphone: isIos(),
+    installCheckDone: !!window.__wlInstallChecked,
+    relatedAppInstalled: !!window.__wlRelatedInstalled,
     forcedByInstalltest: urlFlag("installtest"),
     showInstallUi: canInstallHere()
   };
@@ -194,7 +158,7 @@ async function runInstall() {
       outcome = choice && choice.outcome;
     } catch (e) {}
     window.__wlInstallEvent = null; // the event can only be used once
-    if (outcome === "accepted") markInstalled();
+    if (outcome === "accepted") { window.__wlJustInstalled = true; markInstalled(); }
     window.dispatchEvent(new Event("wl-install-change"));
     return;
   }

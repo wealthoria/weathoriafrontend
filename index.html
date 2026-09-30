@@ -149,6 +149,40 @@
 }
 </script>
  
+<script>
+(function () {
+  window.__wlInstallEvent = null;
+  window.__wlRelatedInstalled = false;
+  window.__wlInstallChecked = false;
+
+  function ping() { window.dispatchEvent(new Event("wl-install-change")); }
+  function checked() { window.__wlInstallChecked = true; ping(); }
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    window.__wlInstallEvent = e;
+    ping();
+  });
+  window.addEventListener("appinstalled", function () {
+    window.__wlInstallEvent = null;
+    window.__wlJustInstalled = true;
+    ping();
+  });
+
+  if (navigator.getInstalledRelatedApps) {
+    navigator.getInstalledRelatedApps()
+      .then(function (apps) {
+        window.__wlRelatedInstalled = !!(apps && apps.length);
+        checked();
+      })
+      .catch(checked);
+    setTimeout(checked, 800); // failsafe
+  } else {
+    checked();
+  }
+})();
+</script>
+
 </head>
 
 <body>

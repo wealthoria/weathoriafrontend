@@ -188,7 +188,7 @@ self.addEventListener(
    ========================================================================= */
 
 const CACHE_VERSION =
-  "wealthoria-v10";
+  "wealthoria-v11";
 
 const PRECACHE =
   `${CACHE_VERSION}-precache`;

@@ -15,19 +15,19 @@ const currentPath = window.location.pathname.toLowerCase();
 const currentPage = new URLSearchParams(
   window.location.search
 ).get("page");
-
 const isLegalPage =
   [
     "/privacy-policy.html",
     "/terms.html",
+    "/refund-policy.html",
     "/contactus.html"
   ].includes(currentPath) ||
   [
     "privacy-policy",
     "terms",
-    "contactus"
+    "contactus",
+    "refund-policy"
   ].includes(currentPage);
-
   const go = (id) => {setOpen(false);onNav(id);};
 
   return (

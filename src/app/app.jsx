@@ -310,6 +310,10 @@ const isTermsPage =
   currentPath === "/terms.html" ||
   currentPage === "terms";
 
+  const isRefundPolicy =
+  currentPath === "/refund-policy.html" ||
+  currentPage === "refund-policy";
+
 const PrivacyPolicy = window.PrivacyPolicy;
   /* =======================================================
      RENDER
@@ -323,63 +327,119 @@ const PrivacyPolicy = window.PrivacyPolicy;
         onNav={onNav}
       />
 
-{isPrivacyPolicy ? (
-  typeof PrivacyPolicy === "function" ? (
-    <PrivacyPolicy />
-  ) : (
-    <main className="privacy-page">
-      <p>Privacy Policy is loading...</p>
-    </main>
-  )
-) : isTermsPage ? (
-  <main className="privacy-page">
-    <article className="privacy-card">
-      <span className="privacy-eyebrow">
-        WEALTHORIA
-      </span>
+      {isPrivacyPolicy ? (
+        typeof PrivacyPolicy === "function" ? (
+          <PrivacyPolicy />
+        ) : (
+          <main className="privacy-page">
+            <p>Privacy Policy is loading...</p>
+          </main>
+        )
+      ) : isTermsPage ? (
+        <main className="privacy-page">
+          <article className="privacy-card">
+            <span className="privacy-eyebrow">WEALTHORIA</span>
+            <h1>Terms &amp; Conditions</h1>
+            <div className="privacy-divider" />
+            <p>
+              By registering for Wealthoria webinars you agree
+              to these terms.
+            </p>
+            <ul>
+              <li>Registration is subject to payment confirmation.</li>
+              <li>Webinar timings may change with prior notice.</li>
+              <li>Content is for educational purposes only.</li>
+              <li>
+                Recording or redistribution without permission
+                is prohibited.
+              </li>
+            </ul>
+          </article>
+        </main>
+      ) : isRefundPolicy ? (
+        <main className="privacy-page">
+        
+<article className="privacy-card">
+  <span className="privacy-eyebrow">WEALTHORIA</span>
 
-      <h1>Terms &amp; Conditions</h1>
+  <h1>Cancellation &amp; Refund Policy</h1>
 
-      <div className="privacy-divider" />
+  <div className="privacy-divider" />
 
-      <p>
-        By registering for Wealthoria webinars you agree
-        to these terms.
-      </p>
+  <h2>1. Membership Subscription</h2>
+  <p>
+    Wealthoria offers a membership subscription at ₹99 per month.
+    Active subscribers receive access to a dedicated member portal
+    and dashboard, where they can watch videos, access weekly
+    round-ups, and view the latest updates and available membership
+    content.
+  </p>
 
-      <ul>
-        <li>Registration is subject to payment confirmation.</li>
-        <li>Webinar timings may change with prior notice.</li>
-        <li>Content is for educational purposes only.</li>
-        <li>
-          Recording or redistribution without permission
-          is prohibited.
-        </li>
-      </ul>
-    </article>
-  </main>
-) : (
-  <main>
-    <Hero onNav={onNav} />
-    <Ticker />
-    <IntroVideo />
-    <Metrics />
-    <Narrative />
-    <Why />
-    <Programs onNav={onNav} />
-    <Process />
-    <Founder />
-    <Testimonials />
-    <YouTube />
-    <Library />
-    <EnquiryForm />
-    <FAQ />
-  </main>
-)}
+  <h2>2. Subscription Renewal and Auto-Debit</h2>
+  <p>
+    Your subscription may renew automatically each month according
+    to your selected payment method and auto-debit authorization.
+    If you cancel your auto-debit authorization, future automatic
+    subscription payments will stop. You can continue accessing the
+    member portal until the end of the subscription period you have
+    already paid for.
+  </p>
+
+  <h2>3. Access After Subscription Expiry</h2>
+  <p>
+    Once your paid subscription period ends, access to the member
+    portal and subscription content will be suspended if your
+    subscription has not been renewed.
+  </p>
+
+  <h2>4. Reactivating Your Membership</h2>
+  <p>
+    You can subscribe again using the same email address associated
+    with your existing account. Once your new subscription is
+    successfully activated, your membership access will be restored.
+  </p>
+
+  <h2>5. Cancellation and Refunds</h2>
+  <p>
+    Subscription payments are generally non-refundable once a
+    subscription period has started, except where a refund is
+    required by applicable law or approved by Wealthoria.
+  </p>
+  <p>
+    If Wealthoria cancels a paid service and you are eligible for
+    a refund, the refund will be processed as applicable.
+  </p>
+
+  <h2>6. Contact Us</h2>
+  <p>
+    For assistance with subscriptions, auto-debit cancellation,
+    membership access, or refunds, contact{" "}
+    <a href="mailto:support@wealthoria.in">
+      support@wealthoria.in
+    </a>.
+  </p>
+</article>
+        </main>
+      ) : (
+        <main>
+          <Hero onNav={onNav} />
+          <Ticker />
+          <IntroVideo />
+          <Metrics />
+          <Narrative />
+          <Why />
+          <Programs onNav={onNav} />
+          <Process />
+          <Founder />
+          <Testimonials />
+          <YouTube />
+          <Library />
+          <EnquiryForm />
+          <FAQ />
+        </main>
+      )}
+
       <Footer />
-      
-
-
       <SiteAnimations />
 
     </AppCtx.Provider>

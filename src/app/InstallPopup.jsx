@@ -6,7 +6,9 @@ const { useState, useEffect } = React;
 /* =========================================================================
    PWA INSTALL POPUP
    - Phones only (Android + iPhone). Never on laptop/desktop/tablet.
-   - Shown when the site opens, only if the app is NOT installed.
+   - Popup opens automatically ONLY on the home page, only if the app is NOT
+     installed. A small install icon in the top bar (InstallIcon) covers every
+     other page and the case where the popup was cancelled.
    - Never shown inside the installed app.
    - Buttons: Install / Cancel.
    - After Cancel it stays hidden for that visit (comes back next time the
@@ -69,6 +71,19 @@ function isPhone() {
   return phoneUA || uaDataMobile || coarseAndSmall;
 }
 
+function isHomePage() {
+  try {
+    const path = (window.location.pathname || "/").toLowerCase();
+    const page = new URLSearchParams(window.location.search).get("page");
+    return (
+      !page &&
+      (path === "/" || path === "/index.html" || path === "/wealthoria.html")
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 function wasDismissed() {
   try {
     return sessionStorage.getItem(DISMISS_KEY) === "1";
@@ -121,55 +136,73 @@ function installState() {
 // Type  __wlInstallDebug()  in the phone's browser console to see why the popup is hidden.
 window.__wlInstallDebug = installState;
 
-function InstallPopup() {
-  const app = typeof window.useApp === "function" ? window.useApp() : null;
-  const tx = TEXT[app && app.lang === "kn" ? "kn" : "en"];
-
+/* Re-render whenever the browser's install state changes. */
+function useInstallRefresh() {
   const [, setTick] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [showSteps, setShowSteps] = useState(false);
-
-  // Re-check whenever the browser tells us the install state changed.
   useEffect(() => {
     const refresh = () => setTick((n) => n + 1);
     window.addEventListener("wl-install-change", refresh);
     window.addEventListener("appinstalled", refresh);
     refresh(); // covers an event that arrived before this listener attached
-    try {
-      console.info("[Wealthoria install popup]", installState());
-    } catch (e) {}
     return () => {
       window.removeEventListener("wl-install-change", refresh);
       window.removeEventListener("appinstalled", refresh);
     };
   }, []);
+  return () => setTick((n) => n + 1);
+}
 
-  const nativeEvent = window.__wlInstallEvent || null;
-
-  // Android only gets the event when the app is NOT installed.
-  // iPhone has no event, so we rely on "not running as installed app".
-  const eligible =
+/* Phone + not installed + can actually be installed.
+   Android only gets the browser event when the app is NOT installed.
+   iPhone has no event, so we rely on "not running as an installed app". */
+function canInstallHere() {
+  return (
     isPhone() &&
     !isStandalone() &&
-    !wasDismissed() &&
-    (!!nativeEvent || isIos());
+    (!!window.__wlInstallEvent || isIos())
+  );
+}
 
+/* =========================================================================
+   POPUP  - opens automatically ONLY on the home page (once per visit).
+   Also opens the iPhone steps when the top install icon is tapped.
+   ========================================================================= */
+function InstallPopup() {
+  const app = typeof window.useApp === "function" ? window.useApp() : null;
+  const tx = TEXT[app && app.lang === "kn" ? "kn" : "en"];
+
+  const rerender = useInstallRefresh();
+  const [open, setOpen] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
+
+  const nativeEvent = window.__wlInstallEvent || null;
+  const installable = canInstallHere();
+  const autoShow = installable && isHomePage() && !wasDismissed();
+
+  // Automatic popup: home page only, ~1 second after opening.
   useEffect(() => {
-    if (!eligible) {
-      setOpen(false);
-      return undefined;
-    }
+    if (!autoShow) return undefined;
     const timer = setTimeout(() => setOpen(true), 1200);
     return () => clearTimeout(timer);
-  }, [eligible]);
+  }, [autoShow]);
 
-  if (!open || !eligible) return null;
+  // Top-icon tap on iPhone asks us to show the "Add to Home Screen" steps.
+  useEffect(() => {
+    const showManual = () => {
+      setShowSteps(true);
+      setOpen(true);
+    };
+    window.addEventListener("wl-install-steps", showManual);
+    return () => window.removeEventListener("wl-install-steps", showManual);
+  }, []);
+
+  if (!open || !installable) return null;
 
   const close = () => {
     rememberDismiss();
     setOpen(false);
     setShowSteps(false);
-    setTick((n) => n + 1);
+    rerender();
   };
 
   const install = async () => {
@@ -181,6 +214,7 @@ function InstallPopup() {
       // The event can only be used once.
       window.__wlInstallEvent = null;
       close();
+      window.dispatchEvent(new Event("wl-install-change"));
       return;
     }
     if (isIos()) setShowSteps(true);
@@ -236,5 +270,59 @@ function InstallPopup() {
   );
 }
 
+/* =========================================================================
+   TOP-BAR ICON - small download icon in the nav row (same size/style as the
+   theme toggle). Shown on every page, phones only, and only while the app is
+   NOT installed. It disappears once installed.
+   ========================================================================= */
+function InstallIcon() {
+  useInstallRefresh();
+
+  if (!canInstallHere()) return null;
+
+  const onClick = async () => {
+    const ev = window.__wlInstallEvent;
+    if (ev) {
+      try {
+        ev.prompt();
+        await ev.userChoice;
+      } catch (e) {}
+      window.__wlInstallEvent = null;
+      window.dispatchEvent(new Event("wl-install-change"));
+      return;
+    }
+    // iPhone: no native prompt, show the steps.
+    window.dispatchEvent(new Event("wl-install-steps"));
+  };
+
+  return (
+    <button
+      type="button"
+      className="theme-toggle pwa-install-icon"
+      onClick={onClick}
+      aria-label="Install app"
+      title="Install app"
+    >
+      <svg
+        width="19"
+        height="19"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 3v12" />
+        <path d="m7 10 5 5 5-5" />
+        <path d="M5 21h14" />
+      </svg>
+    </button>
+  );
+}
+
 window.InstallPopup = InstallPopup;
+window.InstallIcon = InstallIcon;
+export { InstallIcon };
 export default InstallPopup;

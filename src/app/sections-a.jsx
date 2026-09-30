@@ -1,5 +1,6 @@
 /* global React, window */
 import React from "react";
+import { InstallIcon } from "./InstallPopup.jsx";
 
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
@@ -96,6 +97,7 @@ const isLegalPage =
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
+            <InstallIcon />
         
 
     {/*

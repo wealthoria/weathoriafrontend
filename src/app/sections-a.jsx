@@ -1,5 +1,6 @@
 /* global React, window */
 import React from "react";
+import { startHeroChart } from "./heroChart.js";
 
 const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
@@ -178,44 +179,20 @@ function Hero({ onNav }) {
   const { t } = useApp();
   const h = t.hero;
 
-  // pause the ambient video while the hero is offscreen (saves CPU/battery)
+  // Animated growth-chart background (pure canvas, no video file).
+  // It pauses itself when the hero is off screen or the tab is hidden.
+  const heroCanvasRef = React.useRef(null);
+
   React.useEffect(() => {
-    const v = document.querySelector(".hero-video video");
-    const hero = document.getElementById("top");
-    if (!v || !hero || !("IntersectionObserver" in window)) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const io = new IntersectionObserver((es) => {
-      es.forEach((e) => {if (e.isIntersecting) {v.play().catch(() => {});} else {v.pause();}});
-    }, { threshold: 0.05 });
-    io.observe(hero);
-    return () => io.disconnect();
+    if (!heroCanvasRef.current) return undefined;
+    return startHeroChart(heroCanvasRef.current);
   }, []);
+
   return (
     <section className="hero" id="top">
       <div className="hero-video" aria-hidden="true">
       
-      <video
-  autoPlay
-  loop
-  muted
-  playsInline
-  preload="metadata"
-  poster="/assets/hero-bg.png"
-  ref={(el) => {
-    if (
-      el &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      el.removeAttribute("autoplay");
-      el.pause();
-    }
-  }}
->
-  <source
-    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4"
-    type="video/mp4"
-  />
-</video>
+      <canvas ref={heroCanvasRef} className="hero-canvas" />
       </div>
       <div className="hero-blob" aria-hidden="true"></div>
       <div className="wrap hero-grid">

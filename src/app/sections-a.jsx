@@ -15,6 +15,8 @@ const currentPath = window.location.pathname.toLowerCase();
 const currentPage = new URLSearchParams(
   window.location.search
 ).get("page");
+
+
 const isLegalPage =
   [
     "/privacy-policy.html",

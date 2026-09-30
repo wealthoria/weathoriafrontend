@@ -314,6 +314,11 @@ const isTermsPage =
   currentPath === "/refund-policy.html" ||
   currentPage === "refund-policy";
 
+
+  const isContactUs =
+  currentPath === "/contactus.html" ||
+  currentPage === "contactus";
+
 const PrivacyPolicy = window.PrivacyPolicy;
   /* =======================================================
      RENDER
@@ -360,7 +365,6 @@ const PrivacyPolicy = window.PrivacyPolicy;
         <main className="privacy-page">
         
 <article className="privacy-card">
-  <span className="privacy-eyebrow">WEALTHORIA</span>
 
   <h1>Cancellation &amp; Refund Policy</h1>
 
@@ -420,7 +424,57 @@ const PrivacyPolicy = window.PrivacyPolicy;
   </p>
 </article>
         </main>
-      ) : (
+      ) 
+      : isContactUs ? (
+        <main className="privacy-page">
+          <article className="privacy-card">
+
+            <h1>Contact Us</h1>
+            <div className="privacy-divider" />
+
+            <p>
+              We're here to help you with your Wealthoria membership,
+              subscriptions, webinars, and learning experience.
+            </p>
+
+            <h2>How Can We Help You?</h2>
+            <ul>
+              <li>Membership subscriptions, renewals, and auto-debit cancellation.</li>
+              <li>Member portal login, dashboard access, and subscription activation.</li>
+              <li>Webinar registration, payments, and joining links.</li>
+              <li>Educational videos, weekly round-ups, and membership updates.</li>
+              <li>Payment confirmation and eligible refund queries.</li>
+            </ul>
+
+            <h2>Contact Information</h2>
+            <p>
+              <strong>Email:</strong>{" "}
+              <a href="mailto:support@wealthoria.in">
+                support@wealthoria.in
+              </a>
+            </p>
+
+            <p>
+              <strong>Website:</strong>{" "}
+              <a href="https://www.wealthoria.in/">
+                www.wealthoria.in
+              </a>
+            </p>
+             <p>
+              <strong>Location:</strong>{" "}
+              Wealthoria Education Private Limited No.2687/1, D-1, 2nd Floor 
+5th Cross, Kalidasa Road 
+V V Mohalla, Mysore - 570002
+            </p>
+
+            <h2>Need Assistance?</h2>
+            <p>
+              Email us with a brief description of your issue. For
+              account-related queries, include your registered email
+              address. Please do not send passwords, OTPs, or card details.
+            </p>
+          </article>
+        </main>):(
         <main>
           <Hero onNav={onNav} />
           <Ticker />

@@ -296,8 +296,19 @@ function App() {
   };
 
 
-  const isPrivacyPolicy =
-  window.location.pathname === "/privacy-policy.html";
+const currentPage = new URLSearchParams(
+  window.location.search
+).get("page");
+
+const currentPath = window.location.pathname.toLowerCase();
+
+const isPrivacyPolicy =
+  currentPath === "/privacy-policy.html" ||
+  currentPage === "privacy-policy";
+
+const isTermsPage =
+  currentPath === "/terms.html" ||
+  currentPage === "terms";
 
 const PrivacyPolicy = window.PrivacyPolicy;
   /* =======================================================
@@ -311,6 +322,7 @@ const PrivacyPolicy = window.PrivacyPolicy;
       <NavBar
         onNav={onNav}
       />
+
 {isPrivacyPolicy ? (
   typeof PrivacyPolicy === "function" ? (
     <PrivacyPolicy />
@@ -319,10 +331,36 @@ const PrivacyPolicy = window.PrivacyPolicy;
       <p>Privacy Policy is loading...</p>
     </main>
   )
+) : isTermsPage ? (
+  <main className="privacy-page">
+    <article className="privacy-card">
+      <span className="privacy-eyebrow">
+        WEALTHORIA
+      </span>
+
+      <h1>Terms &amp; Conditions</h1>
+
+      <div className="privacy-divider" />
+
+      <p>
+        By registering for Wealthoria webinars you agree
+        to these terms.
+      </p>
+
+      <ul>
+        <li>Registration is subject to payment confirmation.</li>
+        <li>Webinar timings may change with prior notice.</li>
+        <li>Content is for educational purposes only.</li>
+        <li>
+          Recording or redistribution without permission
+          is prohibited.
+        </li>
+      </ul>
+    </article>
+  </main>
 ) : (
   <main>
     <Hero onNav={onNav} />
-
     <Ticker />
     <IntroVideo />
     <Metrics />
@@ -338,7 +376,6 @@ const PrivacyPolicy = window.PrivacyPolicy;
     <FAQ />
   </main>
 )}
-
       <Footer />
       
 

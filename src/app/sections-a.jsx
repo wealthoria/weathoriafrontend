@@ -10,6 +10,24 @@ const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
 function NavBar({ onNav }) {
   const { t, lang, setLang, theme, toggleTheme } = useApp();
   const [open, setOpen] = useState(false);
+const currentPath = window.location.pathname.toLowerCase();
+
+const currentPage = new URLSearchParams(
+  window.location.search
+).get("page");
+
+const isLegalPage =
+  [
+    "/privacy-policy.html",
+    "/terms.html",
+    "/contactus.html"
+  ].includes(currentPath) ||
+  [
+    "privacy-policy",
+    "terms",
+    "contactus"
+  ].includes(currentPage);
+
   const go = (id) => {setOpen(false);onNav(id);};
 
   return (
@@ -22,6 +40,10 @@ function NavBar({ onNav }) {
     href="/Wealthoria.html"
   />
 </span>         <nav className="nav-links">
+
+ {isLegalPage && (
+  <a href="/">Home</a>
+)}
  {t.nav.links.map((l) =>
   <a
     key={l.id}
@@ -113,6 +135,7 @@ function NavBar({ onNav }) {
       </header>
 
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
+  
       <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
           <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />

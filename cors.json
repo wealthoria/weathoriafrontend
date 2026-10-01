@@ -1,11 +1,7 @@
 [
   {
     "origin": [
-      "http://localhost:5173",
-      "https://www.wealthoria.in",
-      "https://wealthoria.in",
-      "https://wealthoria-6fc11.web.app",
-      "https://wealthoria-6fc11.firebaseapp.com"
+      "http://localhost:5173"
     ],
     "method": [
       "GET",

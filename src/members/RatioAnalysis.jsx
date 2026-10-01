@@ -1,6 +1,5 @@
 ﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
 import React from "react";
-import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -145,7 +144,7 @@ const getFreshThumbnailUrl = async (contentId, token) => {
 
   useEffect(() => {
 
-    if (!fbDb) {
+    if (!window.db) {
 
       console.error(
         "Firestore is not available."
@@ -162,7 +161,7 @@ const getFreshThumbnailUrl = async (contentId, token) => {
 
 
     const unsubscribe =
-      fbDb
+      window.db
         .collection("content")
         .where(
           "category",

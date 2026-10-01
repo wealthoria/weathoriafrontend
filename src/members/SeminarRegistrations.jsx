@@ -1,5 +1,4 @@
 ﻿import React from "react";
-import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -21,7 +20,7 @@ function SeminarRegistrations() {
         setLoading(true);
         setError("");
 
-        if (!fbDb) {
+        if (!window.db) {
           throw new Error(
             "Firestore is not initialized."
           );
@@ -32,7 +31,7 @@ function SeminarRegistrations() {
          * This collection name must match
          * your Firebase collection.
          */
-        const snapshot = await fbDb
+        const snapshot = await window.db
           .collection("seminar_registrations")
           .get();
 

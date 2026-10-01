@@ -1,5 +1,4 @@
 ﻿import React from "react";
-import { auth as fbAuth, db as fbDb } from "../firebase.js";
 
 /* =========================================================================
    WEALTHORIA ADMIN — UPLOADS
@@ -273,7 +272,7 @@ function getFileUrl(fileUrl) {
 
 
 async function getAdminToken() {
-  const currentUser = fbAuth?.currentUser;
+  const currentUser = window.auth?.currentUser;
 
   if (!currentUser) {
     throw new Error(
@@ -2479,7 +2478,7 @@ function UploadsScreen() {
          * Delete Firestore record first.
          */
 
-        await fbDb
+        await window.db
           .collection(
             "content"
           )
@@ -2611,7 +2610,7 @@ function UploadsScreen() {
 
       try {
 
-        if (!fbDb) {
+        if (!window.db) {
           throw new Error(
             "Firestore is not initialized."
           );
@@ -2788,7 +2787,7 @@ function UploadsScreen() {
            FIRESTORE UPDATE
         ===================================================== */
 
-        await fbDb
+        await window.db
           .collection(
             "content"
           )
@@ -4806,7 +4805,7 @@ function UploadsScreen() {
 
                 try {
 
-                  if (!fbDb) {
+                  if (!window.db) {
                     throw new Error(
                       "Firestore is not initialized."
                     );
@@ -4919,7 +4918,7 @@ function UploadsScreen() {
 
 
                   const docRef =
-                    await fbDb
+                    await window.db
                       .collection(
                         "content"
                       )
@@ -5021,7 +5020,7 @@ function UploadsScreen() {
                   }
 
 
-                  if (!fbDb) {
+                  if (!window.db) {
 
                     throw new Error(
                       "Firestore is not initialized."
@@ -5128,7 +5127,7 @@ function UploadsScreen() {
 
 
                   const docRef =
-                    await fbDb
+                    await window.db
                       .collection(
                         "content"
                       )

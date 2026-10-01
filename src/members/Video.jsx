@@ -1,5 +1,4 @@
 import React from "react";
-import { db as fbDb } from "../firebase.js";
 
 const { useState, useEffect } = React;
 
@@ -270,7 +269,7 @@ function MemberVideo() {
   ======================================================= */
 
   useEffect(() => {
-    if (!fbDb) {
+    if (!window.db) {
       setError(
         "Unable to connect to content."
       );
@@ -281,7 +280,7 @@ function MemberVideo() {
     }
 
     const unsubscribe =
-      fbDb
+      window.db
         .collection("content")
         .where(
           "type",

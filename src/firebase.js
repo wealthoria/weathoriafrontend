@@ -38,16 +38,20 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 
 /* =========================================================
-   GLOBALS
+   EXPOSE GLOBALS
    ---------------------------------------------------------
-   Only the Firebase SDK namespace stays on window, because
-   public/firebase/notifications.js is a separately-loaded
-   classic script that needs firebase.messaging().
-   db / auth / storage are NOT exposed any more: import them
-   from "./firebase.js" instead.
+   Existing Wealthoria files use:
+     window.firebase
+     window.auth
+     window.db
+     window.storage
    ========================================================= */
 
 window.firebase = firebase;
+window.firebaseApp = app;
+window.auth = auth;
+window.db = db;
+window.storage = storage;
 
 /* =========================================================
    DEBUG

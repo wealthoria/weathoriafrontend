@@ -1,5 +1,4 @@
 ﻿import React from "react";
-import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -59,7 +58,7 @@ function useAdminData() {
 
 function getDB() {
 
-  if (!fbDb) {
+  if (!window.db) {
 
     throw new Error(
       "Firestore is not initialized."
@@ -67,7 +66,7 @@ function getDB() {
 
   }
 
-  return fbDb;
+  return window.db;
 
 }
 

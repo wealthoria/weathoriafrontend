@@ -61,6 +61,7 @@ import "./members/members-router.jsx";
 // ============================================================
 
 import "./admin/auth.jsx";
+import "./admin/data.jsx";
 import "./admin/store.jsx";
 import "./admin/analytics-data.jsx";
 

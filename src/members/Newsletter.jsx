@@ -1,6 +1,5 @@
 ﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
 import React from "react";
-import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -127,7 +126,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
   };
   useEffect(() => {
 
-    if (!fbDb) {
+    if (!window.db) {
 
       console.error(
         "Firestore is not available."
@@ -143,7 +142,7 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
     }
 
     const unsubscribe =
-      fbDb
+      window.db
         .collection("content")
         .where(
           "category",

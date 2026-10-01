@@ -1,5 +1,4 @@
 import React from "react";
-import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -130,13 +129,13 @@ const isActiveSubscription = (item) =>
 
 function getCollectionRows(name) {
   if (
-    !fbDb ||
-    typeof fbDb.collection !== "function"
+    !window.db ||
+    typeof window.db.collection !== "function"
   ) {
     return Promise.resolve([]);
   }
 
-  return fbDb
+  return window.db
     .collection(name)
     .get()
     .then((snapshot) =>
@@ -166,8 +165,8 @@ function useReportsData() {
 
   const load = useCallback(async () => {
     if (
-      !fbDb ||
-      typeof fbDb.collection !== "function"
+      !window.db ||
+      typeof window.db.collection !== "function"
     ) {
       setState({
         loading: false,

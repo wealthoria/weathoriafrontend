@@ -1,5 +1,4 @@
 ﻿import React from "react";
-import { auth as fbAuth } from "../firebase.js";
 
 /* global React, window */
 
@@ -118,7 +117,7 @@ function AdminAuthProvider({
 
   useEffect(() => {
 
-    if (!fbAuth) {
+    if (!window.auth) {
 
       console.error(
         "Firebase Auth is not initialized."
@@ -139,7 +138,7 @@ function AdminAuthProvider({
 
 
     const unsubscribe =
-      fbAuth.onAuthStateChanged(
+      window.auth.onAuthStateChanged(
         async (user) => {
 
           if (!mounted) {
@@ -183,7 +182,7 @@ function AdminAuthProvider({
                 but do not have admin: true.
               */
               try {
-                await fbAuth.signOut();
+                await window.auth.signOut();
               } catch (signOutError) {
                 console.warn(
                   "Firebase sign-out cleanup failed:",
@@ -279,7 +278,7 @@ function AdminAuthProvider({
         password
       ) => {
 
-        if (!fbAuth) {
+        if (!window.auth) {
 
           throw new Error(
             "Firebase Authentication is not initialized."
@@ -307,7 +306,7 @@ function AdminAuthProvider({
 
 
         const result =
-          await fbAuth
+          await window.auth
             .signInWithEmailAndPassword(
               email.trim(),
               password
@@ -331,7 +330,7 @@ function AdminAuthProvider({
 
         if (!admin) {
 
-          await fbAuth.signOut();
+          await window.auth.signOut();
 
           throw new Error(
             "This account does not have Admin access."
@@ -346,7 +345,7 @@ function AdminAuthProvider({
 
         if (!checkAdminAccess(admin)) {
 
-          await fbAuth.signOut();
+          await window.auth.signOut();
 
           throw new Error(
             "This account does not have Admin access."
@@ -417,9 +416,9 @@ function AdminAuthProvider({
 
         try {
 
-          if (fbAuth) {
+          if (window.auth) {
 
-            await fbAuth.signOut();
+            await window.auth.signOut();
 
           }
 
@@ -460,8 +459,8 @@ function AdminAuthProvider({
       async () => {
 
         if (
-          !fbAuth ||
-          !fbAuth.currentUser
+          !window.auth ||
+          !window.auth.currentUser
         ) {
 
           return null;
@@ -470,7 +469,7 @@ function AdminAuthProvider({
 
 
         const user =
-          fbAuth.currentUser;
+          window.auth.currentUser;
 
 
         const admin =

@@ -248,36 +248,21 @@ const BLOCKED_MEMBER_STATUSES = ["deleted", "deactivated", "disabled", "blocked"
    A subscription record keeps only its latest billing period,
    so earlier charges are placed one month apart before it.
 */
-
-function addMonths(ms, n) {
-  const d = new Date(ms);
-  const day = d.getDate();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + n);
-  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  d.setDate(Math.min(day, lastDay));
-  return d.getTime();
-}
-
 function getSubscriptionCharges(row) {
   if (!isSuccessfulSubscription(row)) return [];
 
   const amount = getSubscriptionAmount(row);
-  const paidCount = Math.max(1, Math.floor(Number(row?.paidCount) || 0));
+  const paidCount = Math.floor(Number(row?.paidCount) || 0);
   const periodEnd = safeTimestamp(row?.nextBillingDate);
 
-  // Date of the most recent payment
-  const latest =
-    safeTimestamp(row?.subscriptionStartDate) ||
-    (periodEnd ? addMonths(periodEnd, -1) : 0) ||
-    safeTimestamp(getSubscriptionRevenueDate(row));
+  if (paidCount > 0 && periodEnd) {
+    return Array.from({ length: paidCount }, (_, k) => ({
+      time: periodEnd - (k + 1) * MONTH_MS,
+      amount
+    }));
+  }
 
-  if (!latest) return [];
-
-  return Array.from({ length: paidCount }, (_, k) => ({
-    time: Math.min(addMonths(latest, -k), Date.now()), // never in the future
-    amount
-  }));
+  return [{ time: safeTimestamp(getSubscriptionRevenueDate(row)), amount }];
 }
 
 // memberId / email -> end of the latest paid period (ms)
@@ -506,27 +491,26 @@ function BackendLineChart({ data, dataKey, onPointClick, selectedIndex }) {
           const x = getX(index);
           const y = getY(item[dataKey]);
           const selected = selectedIndex === index;
-return (
-  <g
-    key={`${item.label}-${index}`}
-    onClick={() => onPointClick?.(item, index)}
-    style={{ cursor: onPointClick ? "pointer" : "default" }}
-  >
-    <circle cx={x} cy={y} r={18} fill="transparent" />
 
-    <circle
-      cx={x}
-      cy={y}
-      r={selected ? 7 : 4.5}
-      fill="#e8473f"
-      stroke="var(--canvas, #fff)"
-      strokeWidth={selected ? 3 : 2}
-    />
-    <title>
-      {`${item.label}: ${fmtINR0(item[dataKey])}`}
-    </title>
-  </g>
-);
+          return (
+            <g
+              key={`${item.label}-${index}`}
+              onClick={() => onPointClick?.(item, index)}
+              style={{ cursor: onPointClick ? "pointer" : "default" }}
+            >
+              <circle
+                cx={x}
+                cy={y}
+                r={selected ? 7 : 4.5}
+                fill="#e8473f"
+                stroke="var(--canvas, #fff)"
+                strokeWidth={selected ? 3 : 2}
+              />
+              <title>
+                {`${item.label}: ${fmtINR0(item[dataKey])}`}
+              </title>
+            </g>
+          );
         })}
 
         {labelIndexes.map((index) => {
@@ -614,7 +598,6 @@ function aggregateRevenueSeries(rows, grain) {
         revenue: 0,
         courseRevenue: 0,
         subscriptionRevenue: 0,
-        subscriptionCount: 0,
         signups: 0,
         date: date.toISOString()
       });
@@ -624,7 +607,6 @@ function aggregateRevenueSeries(rows, grain) {
     group.revenue += Number(row.revenue || 0);
     group.courseRevenue += Number(row.courseRevenue || 0);
     group.subscriptionRevenue += Number(row.subscriptionRevenue || 0);
-    group.subscriptionCount += Number(row.subscriptionCount || 0);
     group.signups += Number(row.signups || 0);
 
     if (index === source.length - 1) {
@@ -1246,14 +1228,6 @@ function ControlPanel() {
         0
       );
 
-      const subscriptionCountValue = subscriptionCharges.reduce(
-        (sum, charge) =>
-          charge.time >= start.getTime() && charge.time < end.getTime()
-            ? sum + 1
-            : sum,
-        0
-      );
-
       const signupValue = uniqueMembers.filter((member) => {
         const t = safeTimestamp(getCreatedValue(member));
         return t >= start.getTime() && t < end.getTime();
@@ -1268,7 +1242,6 @@ function ControlPanel() {
         revenue: courseRevenueValue + subscriptionRevenueValue,
         courseRevenue: courseRevenueValue,
         subscriptionRevenue: subscriptionRevenueValue,
-        subscriptionCount: subscriptionCountValue,
         signups: signupValue
       });
     }
@@ -1692,14 +1665,6 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                           Subscriptions
                         </div>
                         <b>{fmtINR0(selectedRevenuePoint.item.subscriptionRevenue)}</b>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 10, opacity: 0.58 }}>
-                          Paid subscriptions
-                        </div>
-                        <b>
-                          {Number(selectedRevenuePoint.item.subscriptionCount || 0).toLocaleString("en-IN")}
-                        </b>
                       </div>
                     </div>
                   </div>

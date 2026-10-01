@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { auth as fbAuth } from "../firebase.js";
 
 /* global React, window */
 
@@ -11,6 +12,77 @@ const {
 /* =========================================================
    MEMBER / ADMIN LOGIN
 ========================================================= */
+
+/* =========================================================
+   MODULE-SCOPED STATE (not readable/writable from the console)
+========================================================= */
+let sessionRestoreStarted = false;
+
+/* =========================================================
+   CLIENT-SIDE LOGIN THROTTLE
+   A UX deterrent only. Real brute-force protection must be
+   enforced by the backend (/api/members/login) as well.
+========================================================= */
+const LOGIN_ATTEMPTS_KEY = "wealthoria-login-attempts";
+const LOGIN_FREE_ATTEMPTS = 3;
+const LOGIN_BASE_LOCK_MS = 30 * 1000;
+const LOGIN_MAX_LOCK_MS = 5 * 60 * 1000;
+
+const readLoginAttempts = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LOGIN_ATTEMPTS_KEY) || "null");
+    if (parsed && Number.isFinite(parsed.count)) {
+      return { count: parsed.count, lockedUntil: Number(parsed.lockedUntil) || 0 };
+    }
+  } catch { /* ignore */ }
+  return { count: 0, lockedUntil: 0 };
+};
+
+const getLoginLockRemainingMs = () =>
+  Math.max(0, readLoginAttempts().lockedUntil - Date.now());
+
+const recordLoginFailure = () => {
+  try {
+    const { count } = readLoginAttempts();
+    const next = count + 1;
+    let lockedUntil = 0;
+    if (next >= LOGIN_FREE_ATTEMPTS) {
+      const lockMs = Math.min(
+        LOGIN_BASE_LOCK_MS * 2 ** (next - LOGIN_FREE_ATTEMPTS),
+        LOGIN_MAX_LOCK_MS
+      );
+      lockedUntil = Date.now() + lockMs;
+    }
+    localStorage.setItem(LOGIN_ATTEMPTS_KEY, JSON.stringify({ count: next, lockedUntil }));
+  } catch { /* ignore */ }
+};
+
+const clearLoginFailures = () => {
+  try { localStorage.removeItem(LOGIN_ATTEMPTS_KEY); } catch { /* ignore */ }
+};
+
+/* =========================================================
+   TOKEN EXPIRY
+   If the backend token is a JWT, read its `exp` claim so the
+   client can drop an expired session without a round trip.
+   Returns 0 when the token carries no readable expiry.
+========================================================= */
+const getTokenExpiry = (token) => {
+  try {
+    const part = String(token || "").split(".")[1];
+    if (!part) return 0;
+    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/"));
+    const exp = Number(JSON.parse(json).exp);
+    return Number.isFinite(exp) && exp > 0 ? exp * 1000 : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const isSessionTokenExpired = (session) => {
+  const expiry = Number(session?.tokenExpiry) || getTokenExpiry(session?.token);
+  return expiry > 0 && Date.now() >= expiry;
+};
 
 function MemberLogin() {
 
@@ -754,7 +826,13 @@ useEffect(() => {
         /*
          * Validate saved member session
          */
-       if (sessionData?.token) {
+       if (sessionData?.token && isSessionTokenExpired(sessionData)) {
+  if (savedSession.uid) {
+    removeMemberSession(savedSession.uid);
+  }
+  sessionData = null;
+}
+if (sessionData?.token) {
 
           const controller = new AbortController();
 
@@ -855,13 +933,13 @@ try {
        * SECOND:
        * Check Firebase Auth only for ADMIN.
        */
-      if (window.auth?.onAuthStateChanged) {
+      if (fbAuth?.onAuthStateChanged) {
         const currentUser =
           await new Promise((resolve) => {
             let unsubscribe;
 
             unsubscribe =
-              window.auth.onAuthStateChanged(
+              fbAuth.onAuthStateChanged(
                 (user) => {
                   if (unsubscribe) {
                     unsubscribe();
@@ -898,7 +976,7 @@ try {
              * Not an admin.
              * Firebase member state is not used.
              */
-            await window.auth.signOut();
+            await fbAuth.signOut();
           } catch (error) {
             console.warn(
               "Firebase admin session check failed:",
@@ -930,8 +1008,8 @@ try {
     }
   };
 
- if (!window.__wealthoriaSessionRestoreStarted) {
-  window.__wealthoriaSessionRestoreStarted = true;
+ if (!sessionRestoreStarted) {
+  sessionRestoreStarted = true;
   restoreExistingSession();
 }
 
@@ -951,6 +1029,11 @@ try {
       event.preventDefault();
 
       setError("");
+      const lockMs = getLoginLockRemainingMs();
+      if (lockMs > 0) {
+        setError(`Too many failed attempts. Please try again in ${Math.ceil(lockMs / 1000)} seconds.`);
+        return;
+      }
 
 
       const cleanEmail =
@@ -1022,10 +1105,10 @@ try {
    1. ADMIN LOGIN — FIREBASE AUTH ONLY
 ================================================= */
 
-if (window.auth) {
+if (fbAuth) {
   try {
     const adminResult =
-      await window.auth.signInWithEmailAndPassword(
+      await fbAuth.signInWithEmailAndPassword(
         cleanEmail,
         password
       );
@@ -1046,7 +1129,7 @@ if (adminUser) {
 
   // Not an admin — sign out and continue
   // with normal member login.
-  await window.auth.signOut();
+  await fbAuth.signOut();
 }
 
   } catch (adminError) {
@@ -1055,8 +1138,8 @@ if (adminUser) {
      * Continue with normal member login.
      */
     try {
-      if (window.auth?.currentUser) {
-        await window.auth.signOut();
+      if (fbAuth?.currentUser) {
+        await fbAuth.signOut();
       }
     } catch (signOutError) {
       console.warn(
@@ -1195,7 +1278,8 @@ const session = {
   role: data.role || "member",
   status: data.status || "active",
   subscription: data.subscription || null,
-  token: data.token
+  token: data.token,
+  tokenExpiry: getTokenExpiry(data.token)
 };
 
 
@@ -1275,6 +1359,7 @@ saveMemberSession(
   updatedSession,
   remember
 );
+clearLoginFailures();
 
 /* Check current access */
 const accessUntil =
@@ -1328,6 +1413,7 @@ window.location.replace(
           "Login error:",
           err
         );
+        recordLoginFailure();
 
 
         let message =

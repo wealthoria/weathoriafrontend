@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import * as XLSX from "xlsx";
+import { db as fbDb } from "../firebase.js";
 
 /* global window */
 
@@ -359,10 +360,10 @@ function getContentCategory(row) {
 }
 
 function getCollectionRows(name) {
-  if (!window.db || typeof window.db.collection !== "function") {
+  if (!fbDb || typeof fbDb.collection !== "function") {
     return Promise.resolve([]);
   }
-  return window.db.collection(name).get().then((snapshot) =>
+  return fbDb.collection(name).get().then((snapshot) =>
     snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
   ).catch((error) => {
     console.warn(`Dashboard could not load ${name}:`, error);
@@ -965,7 +966,7 @@ function useBackendDashboard(days) {
   });
 
   const load = useCallback(async () => {
-    if (!window.db || typeof window.db.collection !== "function") {
+    if (!fbDb || typeof fbDb.collection !== "function") {
       setState((prev) => ({ ...prev, loading: false, error: "Firestore is not available." }));
       return;
     }

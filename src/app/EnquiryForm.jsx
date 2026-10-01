@@ -2,6 +2,7 @@
 
 
 import React, { useState } from "react";
+import { firebase as fbCompat, db as fbDb } from "../firebase.js";
 
 const { AppCtx, Icon, Reveal } = window;
 
@@ -65,11 +66,11 @@ function EnquiryForm() {
   setLoading(true);
 
   try {
-    if (!window.db || typeof window.db.collection !== "function") {
+    if (!fbDb || typeof fbDb.collection !== "function") {
       throw new Error("Firestore database is not available.");
     }
 
-    await window.db.collection("enquiries").add({
+    await fbDb.collection("enquiries").add({
       name: vals.name.trim(),
       email: vals.email.trim(),
       phone: vals.phone.trim(),
@@ -78,8 +79,8 @@ function EnquiryForm() {
       message: vals.message.trim(),
       status: "new",
       createdAt:
-        window.firebase?.firestore?.FieldValue?.serverTimestamp
-          ? window.firebase.firestore.FieldValue.serverTimestamp()
+        fbCompat?.firestore?.FieldValue?.serverTimestamp
+          ? fbCompat.firestore.FieldValue.serverTimestamp()
           : new Date()
     });
 

@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { firebase as fbCompat, db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -86,10 +87,10 @@ function CoursesList() {
 
   useEffect(() => {
 
-    if (!window.db) {
+    if (!fbDb) {
 
       console.error(
-        "Firestore window.db is not available"
+        "Firestore fbDb is not available"
       );
 
       setLoading(false);
@@ -99,7 +100,7 @@ function CoursesList() {
 
 
     const unsubscribe =
-      window.db
+      fbDb
         .collection("courses")
         .onSnapshot(
 
@@ -192,7 +193,7 @@ function CoursesList() {
 
     try {
 
-      await window.db
+      await fbDb
         .collection("courses")
         .doc(course.id)
         .delete();
@@ -1002,7 +1003,7 @@ function CourseForm({
 
     try {
 
-      if (!window.db) {
+      if (!fbDb) {
 
         throw new Error(
           "Firestore is not connected."
@@ -1012,11 +1013,11 @@ function CourseForm({
 
 
       const now =
-        window.firebase
+        fbCompat
           ?.firestore
           ?.FieldValue
           ?.serverTimestamp
-          ? window.firebase
+          ? fbCompat
               .firestore
               .FieldValue
               .serverTimestamp()
@@ -1121,7 +1122,7 @@ function CourseForm({
 
       if (isEditing) {
 
-        await window.db
+        await fbDb
           .collection("courses")
           .doc(course.id)
           .update(payload);
@@ -1152,7 +1153,7 @@ function CourseForm({
 
 
         const doc =
-          await window.db
+          await fbDb
             .collection("courses")
             .add(payload);
 

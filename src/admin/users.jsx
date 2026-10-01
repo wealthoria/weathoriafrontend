@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { auth as fbAuth, db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -364,7 +365,7 @@ function UsersScreen() {
 
   useEffect(() => {
 
-    if (!window.db) {
+    if (!fbDb) {
 
       setError(
         "Firebase Firestore is not available."
@@ -381,7 +382,7 @@ function UsersScreen() {
     try {
 
       unsubscribeMembers =
-        window.db
+        fbDb
           .collection("members")
           .onSnapshot(
 
@@ -525,7 +526,7 @@ function UsersScreen() {
        * to remain visible without changing the subscription data.
        */
       unsubscribeSubscriptions =
-        window.db
+        fbDb
           .collection("subscriptions")
           .onSnapshot(
 
@@ -995,7 +996,7 @@ function UsersScreen() {
   ======================================================= */
 
   async function getAdminToken() {
-    const currentUser = window.auth?.currentUser;
+    const currentUser = fbAuth?.currentUser;
 
     if (!currentUser) {
       throw new Error(

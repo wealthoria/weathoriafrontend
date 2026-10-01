@@ -1,6 +1,7 @@
 /* global React, window */
 
 import React, { useEffect, useMemo, useState } from "react";
+import { db as fbDb } from "../firebase.js";
 const { MIcon } = window;
 
 /* =========================================================
@@ -340,7 +341,7 @@ function PrebookOrders() {
   ======================================================= */
 
   useEffect(() => {
-    if (!window.db || typeof window.db.collection !== "function") {
+    if (!fbDb || typeof fbDb.collection !== "function") {
       setError("Firestore database is not available.");
       setLoading(false);
       return;
@@ -348,7 +349,7 @@ function PrebookOrders() {
 
     setLoading(true);
 
-    const unsubscribe = window.db.collection("bookOrders").onSnapshot(
+    const unsubscribe = fbDb.collection("bookOrders").onSnapshot(
       (snapshot) => {
         const rows = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -801,7 +802,7 @@ const exportPageCourierFormat = async () => {
     if (!confirmed) return;
 
     try {
-      const ref = window.db.collection("bookOrders").doc(order.id);
+      const ref = fbDb.collection("bookOrders").doc(order.id);
       await ref.delete();
 
       setSelected((prev) => (prev?.id === order.id ? null : prev));
@@ -1084,16 +1085,16 @@ const exportPageCourierFormat = async () => {
 
       /* RECORD LABEL GENERATION */
 
-      if (window.db?.batch) {
+      if (fbDb?.batch) {
         const labelBatchId = `LBL-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const generatedAt = new Date().toISOString();
 
         for (let i = 0; i < labelOrders.length; i += 400) {
           const chunk = labelOrders.slice(i, i + 400);
-          const batch = window.db.batch();
+          const batch = fbDb.batch();
 
           chunk.forEach((order) => {
-            const ref = window.db.collection("bookOrders").doc(order.id);
+            const ref = fbDb.collection("bookOrders").doc(order.id);
             batch.update(ref, {
               labelGenerated: true,
               labelGeneratedAt: generatedAt,
@@ -1159,10 +1160,10 @@ const exportPageCourierFormat = async () => {
 
       for (let i = 0; i < resettableOrders.length; i += 400) {
         const chunk = resettableOrders.slice(i, i + 400);
-        const batch = window.db.batch();
+        const batch = fbDb.batch();
 
         chunk.forEach((order) => {
-          const ref = window.db.collection("bookOrders").doc(order.id);
+          const ref = fbDb.collection("bookOrders").doc(order.id);
           batch.update(ref, {
             labelGenerated: false,
             labelGeneratedAt: null,

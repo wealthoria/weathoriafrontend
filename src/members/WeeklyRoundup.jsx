@@ -1,5 +1,6 @@
 ﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
 import React from "react";
+import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -120,7 +121,7 @@ function WeeklyRoundup() {
 
   useEffect(() => {
 
-    if (!window.db) {
+    if (!fbDb) {
 
       console.error(
         "Firestore is not available."
@@ -137,7 +138,7 @@ function WeeklyRoundup() {
 
 
     const unsubscribe =
-      window.db
+      fbDb
         .collection("content")
         .where(
           "category",

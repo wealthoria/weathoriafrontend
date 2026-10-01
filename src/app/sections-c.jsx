@@ -1,5 +1,6 @@
 ﻿/* global React, window */
 import React from "react";
+import { db as fbDb } from "../firebase.js";
 
 const { useState, useEffect } = React;
 const {
@@ -292,7 +293,7 @@ useEffect(() => {
 
     loaded = true;
 
-    if (!window.db) {
+    if (!fbDb) {
 
       console.error(
         "Firestore is not available"
@@ -305,7 +306,7 @@ useEffect(() => {
   
 
     unsubscribe =
-     window.db
+     fbDb
   .collection("youtube_videos")
   .where("published", "==", true)
   .onSnapshot(

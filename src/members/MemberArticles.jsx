@@ -3,6 +3,7 @@
 /* global React, window */
 import React from "react";
 import { usePendingContent } from "./memberContent.js";
+import { db as fbDb } from "../firebase.js";
 
 
 const { useState, useEffect } = React;
@@ -223,7 +224,7 @@ setSelectedPdf({
   ========================================================= */
 
   useEffect(() => {
-    if (!window.db) {
+    if (!fbDb) {
       console.error(
         "Firestore is not available."
       );
@@ -238,7 +239,7 @@ setSelectedPdf({
     }
 
     const unsubscribe =
-      window.db
+      fbDb
         .collection("content")
         .where(
           "category",

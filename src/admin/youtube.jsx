@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 
@@ -98,7 +99,7 @@ function AdminYouTube() {
   ========================================================= */
 
   useEffect(() => {
-    if (!window.db) {
+    if (!fbDb) {
       console.error(
         "Firestore is not available"
       );
@@ -106,7 +107,7 @@ function AdminYouTube() {
       return;
     }
 
-    const unsubscribe = window.db
+    const unsubscribe = fbDb
       .collection("youtube_videos")
       .onSnapshot(
         (snapshot) => {
@@ -343,7 +344,7 @@ function AdminYouTube() {
       ===================================================== */
 
       if (editingVideo) {
-        await window.db
+        await fbDb
           .collection("youtube_videos")
           .doc(editingVideo.id)
           .update({
@@ -395,7 +396,7 @@ function AdminYouTube() {
             Math.max(...orders) + 1;
         }
 
-        await window.db
+        await fbDb
           .collection("youtube_videos")
           .add({
             title:
@@ -473,7 +474,7 @@ function AdminYouTube() {
     }
 
     try {
-      await window.db
+      await fbDb
         .collection("youtube_videos")
         .doc(id)
         .delete();
@@ -677,12 +678,12 @@ function AdminYouTube() {
       );
 
       const batch =
-        window.db.batch();
+        fbDb.batch();
 
       orderedVideos.forEach(
         (video, index) => {
           const reference =
-            window.db
+            fbDb
               .collection(
                 "youtube_videos"
               )

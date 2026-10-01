@@ -1,6 +1,7 @@
 /* global React, window */
 
 import React, { useEffect, useMemo, useState } from "react";
+import { db as fbDb } from "../firebase.js";
 
 const { MIcon } = window;
 
@@ -46,7 +47,7 @@ function Enquiries() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    if (!window.db || typeof window.db.collection !== "function") {
+    if (!fbDb || typeof fbDb.collection !== "function") {
       setError("Firestore database is not available.");
       setLoading(false);
       return;
@@ -54,7 +55,7 @@ function Enquiries() {
 
     setLoading(true);
 
-    const unsubscribe = window.db
+    const unsubscribe = fbDb
       .collection("enquiries")
       .onSnapshot(
         (snapshot) => {
@@ -109,7 +110,7 @@ function Enquiries() {
 
   const handleStatusChange = async (id, status) => {
     try {
-      await window.db.collection("enquiries").doc(id).update({
+      await fbDb.collection("enquiries").doc(id).update({
         status,
         updatedAt: new Date()
       });

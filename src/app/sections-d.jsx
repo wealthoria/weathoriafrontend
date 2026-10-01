@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { db as fbDb } from "../firebase.js";
 
 /* global React, window */
 const { useState } = React;
@@ -64,7 +65,7 @@ const submit = async (ev) => {
   if (!validate()) return;
 
   try {
-    await window.db.collection("enquiries").add({
+    await fbDb.collection("enquiries").add({
       name: vals.name.trim(),
       email: vals.email.trim().toLowerCase(),
       phone: vals.phone.trim(),

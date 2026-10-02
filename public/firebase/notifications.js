@@ -4,13 +4,13 @@
   // CONFIG
   // =========================================================
 
-  const FIREBASE_MESSAGING_SDK =
+  var FIREBASE_MESSAGING_SDK =
     "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging-compat.js";
 
-  const VAPID_KEY =
+  var VAPID_KEY =
     "BEoUv-g5znqXgkiql7pW95Ucw67PDIgJWNGYLkFVo4vu8ZxZEp0DSk0ggnl1piEktPvsBfJKqATvsAJO-GUFvpc";
 
-  const BACKEND_URL =
+  var BACKEND_URL =
     "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 
@@ -21,184 +21,60 @@
 
   function getLoggedInMember() {
 
-    const MEMBER_SESSIONS_KEY =
-      "wealthoria-member-sessions";
+    var MEMBER_SESSIONS_KEY = "wealthoria-member-sessions";
+    var CURRENT_MEMBER_KEY  = "wealthoria-current-member";
 
-    const CURRENT_MEMBER_KEY =
-      "wealthoria-current-member";
-
-
-    // =======================================================
-    // GET CURRENT MEMBER UID
-    // =======================================================
-
-    const readCurrentMemberUid = () => {
-
-      const raw =
+    function readCurrentMemberUid() {
+      var raw =
         sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
         localStorage.getItem(CURRENT_MEMBER_KEY);
 
-      if (!raw) {
-        return "";
-      }
+      if (!raw) return "";
 
       try {
-
-        const parsed =
-          JSON.parse(raw);
-
-        if (typeof parsed === "string") {
-          return parsed;
-        }
-
-        return parsed?.uid || "";
-
-      } catch (error) {
-
-        // UID may already be stored as plain text
+        var parsed = JSON.parse(raw);
+        if (typeof parsed === "string") return parsed;
+        return parsed && parsed.uid ? parsed.uid : "";
+      } catch (_) {
         return raw;
       }
-    };
+    }
 
-
-    // =======================================================
-    // READ MEMBER SESSIONS
-    // =======================================================
-
-    const readSessions = (storage) => {
-
+    function readSessions(storage) {
       try {
-
-        const raw =
-          storage.getItem(MEMBER_SESSIONS_KEY);
-
-        if (!raw) {
-          return {};
-        }
-
-        const parsed =
-          JSON.parse(raw);
-
-        if (
-          parsed &&
-          typeof parsed === "object"
-        ) {
-          return parsed;
-        }
-
-        return {};
-
-      } catch (error) {
-
-        console.error(
-          "❌ Member sessions parse error:",
-          error
-        );
-
+        var raw = storage.getItem(MEMBER_SESSIONS_KEY);
+        if (!raw) return {};
+        var parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === "object") ? parsed : {};
+      } catch (e) {
+        console.error("Member sessions parse error:", e);
         return {};
       }
-    };
+    }
 
-
-    // =======================================================
-    // GET CURRENT UID
-    // =======================================================
-
-    const currentUid =
-      readCurrentMemberUid();
-
-
-    // =======================================================
-    // FIND CURRENT MEMBER IN SESSION STORAGE
-    // =======================================================
+    var currentUid = readCurrentMemberUid();
 
     if (currentUid) {
+      var sessionStore = readSessions(sessionStorage);
+      if (sessionStore[currentUid]) return sessionStore[currentUid];
 
-      const sessionStore =
-        readSessions(sessionStorage);
-
-      if (
-        sessionStore[currentUid]
-      ) {
-
-   
-
-        return sessionStore[currentUid];
-      }
-
-
-      // =====================================================
-      // FIND CURRENT MEMBER IN LOCAL STORAGE
-      // =====================================================
-
-      const localStore =
-        readSessions(localStorage);
-
-      if (
-        localStore[currentUid]
-      ) {
-
-      
-
-        return localStore[currentUid];
-      }
+      var localStore = readSessions(localStorage);
+      if (localStore[currentUid]) return localStore[currentUid];
     }
 
-
-    // =======================================================
-    // LEGACY SESSION FALLBACK
-    // =======================================================
-
-    const legacyLocal =
-      localStorage.getItem(
-        "wealthoria-member"
-      );
-
-    const legacySession =
-      sessionStorage.getItem(
-        "wealthoria-member"
-      );
-
+    // Legacy single-session fallback.
+    var legacyLocal   = localStorage.getItem("wealthoria-member");
+    var legacySession = sessionStorage.getItem("wealthoria-member");
 
     try {
-
-      if (legacySession) {
-
-        const member =
-          JSON.parse(
-            legacySession
-          );
-
-      
-
-        return member;
-      }
-
-
-      if (legacyLocal) {
-
-        const member =
-          JSON.parse(
-            legacyLocal
-          );
-
-     
-
-        return member;
-      }
-
-    } catch (error) {
-
-      console.error(
-        "❌ Legacy member session parse error:",
-        error
-      );
+      if (legacySession) return JSON.parse(legacySession);
+      if (legacyLocal)   return JSON.parse(legacyLocal);
+    } catch (e) {
+      console.error("Legacy member session parse error:", e);
     }
-
 
     return null;
   }
-
 
 
   // =========================================================
@@ -206,136 +82,82 @@
   // =========================================================
 
   function loadScript(src) {
-
-    return new Promise((resolve, reject) => {
-
-      const existing =
-        document.querySelector(
-          `script[src="${src}"]`
-        );
-
-      if (existing) {
-
+    return new Promise(function (resolve, reject) {
+      if (document.querySelector('script[src="' + src + '"]')) {
         resolve();
         return;
       }
 
-
-      const script =
-        document.createElement("script");
-
+      var script = document.createElement("script");
       script.src = src;
-
-
-      script.onload = () => {
-
-      
-        resolve();
+      script.onload  = function () { resolve(); };
+      script.onerror = function (err) {
+        console.error("Script failed:", src, err);
+        reject(new Error("Failed to load: " + src));
       };
-
-
-      script.onerror = (error) => {
-
-        console.error(
-          "❌ Script failed:",
-          src,
-          error
-        );
-
-        reject(
-          new Error(
-            "Failed to load: " + src
-          )
-        );
-      };
-
-
       document.head.appendChild(script);
     });
   }
 
 
-
   // =========================================================
-  // FIREBASE MESSAGING
+  // FIREBASE MESSAGING INSTANCE
   // =========================================================
 
   async function getMessagingInstance() {
-
     if (!window.firebase) {
-
-      throw new Error(
-        "Firebase is not loaded."
-      );
+      throw new Error("Firebase is not loaded.");
     }
 
-
-    if (
-      typeof window.firebase.messaging !==
-      "function"
-    ) {
-
-    
-
-      await loadScript(
-        FIREBASE_MESSAGING_SDK
-      );
+    if (typeof window.firebase.messaging !== "function") {
+      await loadScript(FIREBASE_MESSAGING_SDK);
     }
 
-
-    if (
-      typeof window.firebase.messaging !==
-      "function"
-    ) {
-
-      throw new Error(
-        "Firebase Messaging SDK could not be loaded."
-      );
+    if (typeof window.firebase.messaging !== "function") {
+      throw new Error("Firebase Messaging SDK could not be loaded.");
     }
-
 
     return firebase.messaging();
   }
 
 
-
   // =========================================================
-  // SERVICE WORKER (needed for push)
-  // =========================================================
+  // GET / REGISTER SERVICE WORKER
   //
-  // Waiting on navigator.serviceWorker.ready hangs forever
-  // if the service worker never installed. Register it if
-  // needed and give up after 15 seconds with a clear message.
+  // We ALWAYS pass serviceWorkerRegistration to getToken() so
+  // Firebase uses /service-worker.js and never falls back to
+  // the default /firebase-messaging-sw.js scope.
   //
+  // If the SW is still installing we wait up to 15 s before
+  // giving a clear error message.
   // =========================================================
 
-  let lastPushError = "";
+  var lastPushError = "";
 
   async function getPushServiceWorker() {
-
-    let registration =
+    var registration =
       await navigator.serviceWorker.getRegistration("/");
 
     if (!registration) {
-      registration =
-        await navigator.serviceWorker.register(
-          "/service-worker.js",
-          { scope: "/" }
-        );
+      registration = await navigator.serviceWorker.register(
+        "/service-worker.js",
+        { scope: "/" }
+      );
     }
 
+    // Already active — done immediately, no delay.
     if (registration.active) {
       return registration;
     }
 
-    const worker =
-      registration.installing || registration.waiting;
+    // Waiting for the SW to activate.
+    var worker = registration.installing || registration.waiting;
 
     await new Promise(function (resolve, reject) {
-
-      const timer = setTimeout(function () {
+      var timer = setTimeout(function () {
         reject(new Error(
-          "The app's background service did not start. Close Wealthoria completely, open it again and retry."
+          "The app's background service did not start. " +
+          "Close Wealthoria completely, open it again and retry."
         ));
       }, 15000);
 
@@ -349,12 +171,11 @@
         if (worker.state === "activated") {
           clearTimeout(timer);
           resolve();
-        }
-
-        if (worker.state === "redundant") {
+        } else if (worker.state === "redundant") {
           clearTimeout(timer);
           reject(new Error(
-            "The app's background service failed to install. Close Wealthoria completely, open it again and retry."
+            "The app's background service failed to install. " +
+            "Close Wealthoria completely, open it again and retry."
           ));
         }
       });
@@ -367,268 +188,94 @@
   // =========================================================
   // GET FCM TOKEN AND SAVE TO BACKEND
   // =========================================================
-  //
-  // IMPORTANT:
-  //
-  // This function automatically registers the FCM token
-  // when:
-  //
-  // 1. Member is logged in
-  // 2. Notification permission is granted
-  //
-  // =========================================================
 
   async function registerMemberFCMToken() {
 
-  
-
     try {
 
-      // -----------------------------------------------------
-      // 1. Get logged-in member
-      // -----------------------------------------------------
-
-      const member =
-        getLoggedInMember();
-
-
-      if (
-        !member ||
-        !member.uid
-      ) {
-
-        console.warn(
-          "⚠️ No logged-in member found."
-        );
-
+      // 1. Member must be logged in.
+      var member = getLoggedInMember();
+      if (!member || !member.uid) {
+        console.warn("No logged-in member found.");
         return false;
       }
 
-
-    
-
-
-      // -----------------------------------------------------
-      // 2. Authentication token
-      // -----------------------------------------------------
-
+      // 2. Member must have a valid auth token.
       if (!member.token) {
-
-        console.warn(
-          "⚠️ Member authentication token is missing."
-        );
-
+        console.warn("Member authentication token is missing.");
         lastPushError = "Your login has expired. Please log out and log in again.";
-
         return false;
       }
 
-
-      // -----------------------------------------------------
-      // 3. Browser notification support
-      // -----------------------------------------------------
-
-      if (
-        !("Notification" in window)
-      ) {
-
-        console.warn(
-          "⚠️ Notifications are not supported."
-        );
-
+      // 3. Browser notification support.
+      if (!("Notification" in window)) {
+        console.warn("Notifications are not supported by this browser.");
         return false;
       }
 
-
-
+      // 4. Firebase must be loaded.
       if (!window.firebase) {
-
-        console.error(
-          "❌ Firebase is not loaded."
-        );
-
+        console.error("Firebase is not loaded.");
         return false;
       }
 
-
-      // -----------------------------------------------------
-      // 6. Service Worker
-      // -----------------------------------------------------
-
-      if (
-        !("serviceWorker" in navigator)
-      ) {
-
-        console.error(
-          "❌ Service Worker is not supported."
-        );
-
+      // 5. Service Worker support.
+      if (!("serviceWorker" in navigator)) {
+        console.error("Service Worker is not supported.");
         return false;
       }
 
+      var registration = await getPushServiceWorker();
+      var messaging    = await getMessagingInstance();
 
-      const registration =
-        await getPushServiceWorker();
-
-
-    
-
-
-      // -----------------------------------------------------
-      // 7. Firebase Messaging
-      // -----------------------------------------------------
-
-      const messaging =
-        await getMessagingInstance();
-
-
-    
-
-      // -----------------------------------------------------
-      // 8. Get FCM token
-      // -----------------------------------------------------
-
-    
-
-      const fcmToken =
-        await messaging.getToken({
-
-          vapidKey:
-            VAPID_KEY,
-
-          serviceWorkerRegistration:
-            registration
-
-        });
-
+      // 6. Get FCM token — explicitly pass our SW so no delay.
+      var fcmToken = await messaging.getToken({
+        vapidKey:                  VAPID_KEY,
+        serviceWorkerRegistration: registration
+      });
 
       if (!fcmToken) {
-
-        console.error(
-          "❌ Firebase did not return an FCM token."
-        );
-
+        console.error("Firebase did not return an FCM token.");
         lastPushError = "The phone did not provide a notification address. Please try again.";
-
         return false;
       }
 
+      // 7. Send token to backend.
+      var response = await fetch(
+        BACKEND_URL + "/api/members/notification-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + member.token
+          },
+          body: JSON.stringify({ token: fcmToken })
+        }
+      );
 
-
-
-
-      // -----------------------------------------------------
-      // 9. Send token to backend
-      // -----------------------------------------------------
-
-    
-
-      const response =
-        await fetch(
-          `${BACKEND_URL}/api/members/notification-token`,
-          {
-
-            method: "POST",
-
-            headers: {
-
-              "Content-Type":
-                "application/json",
-
-              "Authorization":
-                "Bearer " +
-                member.token
-
-            },
-
-            body:
-              JSON.stringify({
-
-                token:
-                  fcmToken
-
-              })
-
-          }
-        );
-
-
-      // -----------------------------------------------------
-      // 10. Read backend response
-      // -----------------------------------------------------
-
-      let data = {};
-
-
+      var data = {};
       try {
-
-        data =
-          await response.json();
-
-      } catch (jsonError) {
-
-        console.error(
-          "❌ Could not parse backend response:",
-          jsonError
-        );
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error("Could not parse backend response:", jsonErr);
       }
-
-
-
-
-      // -----------------------------------------------------
-      // 11. Backend error
-      // -----------------------------------------------------
 
       if (!response.ok) {
-
         lastPushError =
-          data?.message ||
-          `Server error (${response.status}). Please log out, log in again and retry.`;
-
-        console.error(
-          "❌ Failed to save FCM token.",
-          {
-            status:
-              response.status,
-
-            response:
-              data
-          }
-        );
-
+          data.message ||
+          ("Server error (" + response.status + "). Please log out, log in again and retry.");
+        console.error("Failed to save FCM token.", { status: response.status, response: data });
         return false;
       }
-
-
-      // -----------------------------------------------------
-      // 12. SUCCESS
-      // -----------------------------------------------------
-
-   
-
-     
-
-
-
 
       return true;
 
-
     } catch (error) {
-
-      console.error(
-        "❌ FCM token registration failed:",
-        error
-      );
-
-      lastPushError =
-        error?.message || "Unknown error.";
-
+      console.error("FCM token registration failed:", error);
+      lastPushError = error.message || "Unknown error.";
       return false;
     }
   }
-
 
 
   // =========================================================
@@ -637,415 +284,169 @@
 
   async function initializeMemberForegroundNotifications() {
 
-  
-
     try {
 
-      // -----------------------------------------------------
-      // 1. Get member
-      // -----------------------------------------------------
-
-      const member =
-        getLoggedInMember();
-
-
-      if (
-        !member ||
-        !member.uid
-      ) {
-
-        console.warn(
-          "⚠️ No logged-in member found."
-        );
-
+      // 1. Member must be logged in.
+      var member = getLoggedInMember();
+      if (!member || !member.uid) {
+        console.warn("No logged-in member found.");
         return false;
       }
 
-
-      // -----------------------------------------------------
-      // 2. Firebase
-      // -----------------------------------------------------
-
+      // 2. Firebase must be loaded.
       if (!window.firebase) {
-
-        console.error(
-          "❌ Firebase is not loaded."
-        );
-
+        console.error("Firebase is not loaded.");
         return false;
       }
 
-
-      // -----------------------------------------------------
-      // 3. Service Worker
-      // -----------------------------------------------------
-
-      if (
-        !("serviceWorker" in navigator)
-      ) {
-
-        console.error(
-          "❌ Service Worker not supported."
-        );
-
+      // 3. Service Worker support.
+      if (!("serviceWorker" in navigator)) {
+        console.error("Service Worker not supported.");
         return false;
       }
 
+      var registration = await getPushServiceWorker();
+      var messaging    = await getMessagingInstance();
 
-      const registration =
-        await getPushServiceWorker();
-
-
-
-
-      // -----------------------------------------------------
-      // 4. Messaging
-      // -----------------------------------------------------
-
-      const messaging =
-        await getMessagingInstance();
-
-
-      // =====================================================
-      // 5. REGISTER FCM TOKEN AUTOMATICALLY
-      // =====================================================
-      //
-      // This is the important new part.
-      //
-      // If permission is already granted, automatically
-      // create/get the FCM token and save it to backend.
-      //
-      // =====================================================
-
-      if (
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
-
+      // 4. If permission already granted, refresh the FCM token automatically.
+      if ("Notification" in window && Notification.permission === "granted") {
         await registerMemberFCMToken();
-
-      } else {
-
-       
       }
 
-
-      // =====================================================
-      // 6. FOREGROUND LISTENER
-      // =====================================================
-
-      if (
-        window.memberForegroundListenerReady
-      ) {
-
-     
-
+      // 5. Skip if already listening.
+      if (window.memberForegroundListenerReady) {
         return true;
       }
 
+      // 6. Foreground message listener.
+      messaging.onMessage(async function (payload) {
 
-      messaging.onMessage(
-        async function (payload) {
+        var title =
+          (payload.notification && payload.notification.title) ||
+          (payload.data && payload.data.title) ||
+          "Wealthoria";
 
-      
+        var body =
+          (payload.notification && payload.notification.body) ||
+          (payload.data && payload.data.body) ||
+          "You have a new notification.";
 
-          // -------------------------------------------------
-          // Notification title
-          // -------------------------------------------------
-
-          const title =
-            payload.notification?.title ||
-            payload.data?.title ||
-            "Wealthoria";
-
-
-          // -------------------------------------------------
-          // Notification body
-          // -------------------------------------------------
-
-          const body =
-            payload.notification?.body ||
-            payload.data?.body ||
-            "You have a new notification.";
-
-
-          // =================================================
-          // SEND EVENT TO MEMBER DASHBOARD
-          // =================================================
-
-          window.dispatchEvent(
-            new CustomEvent(
-              "wealthoria:notification",
-              {
-
-                detail: {
-
-                  title:
-                    title,
-
-                  message:
-                    body,
-
-                  url:
-                    payload?.data?.url || ""
-
-                }
-
-              }
-            )
-          );
-
-
-       
-
-
-          // =================================================
-          // SHOW BROWSER NOTIFICATION
-          // =================================================
-
-          if (
-            "Notification" in window &&
-            Notification.permission ===
-              "granted"
-          ) {
-
-            try {
-
-              // Android Chrome refuses `new Notification()` from a page;
-              // the service worker's showNotification works everywhere.
-              const data = payload?.data || {};
-
-              await registration.showNotification(
-                title,
-                {
-                  body,
-                  icon: "/icons/icon-192.png",
-                  badge: "/icons/icon-192.png",
-                  tag: data.tag || `wealthoria-${Date.now()}`,
-                  renotify: true,
-                  requireInteraction: true,
-                  silent: false,
-                  vibrate: [200, 100, 200],
-                  timestamp: Date.now(),
-                  data: {
-                    url: data.url || "/members/dashboard"
-                  }
-                }
-              );
-
-            } catch (
-              notificationError
-            ) {
-
-              console.error(
-                "❌ Could not display browser notification:",
-                notificationError
-              );
-
+        // Notify the member dashboard UI.
+        window.dispatchEvent(
+          new CustomEvent("wealthoria:notification", {
+            detail: {
+              title:   title,
+              message: body,
+              url:     (payload.data && payload.data.url) || ""
             }
+          })
+        );
 
+        // Show the browser notification popup.
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            var data = (payload.data) || {};
+
+            await registration.showNotification(title, {
+              body:               body,
+              icon:               "/icons/icon-192.png",
+              badge:              "/icons/icon-192.png",
+              tag:                data.tag || ("wealthoria-" + Date.now()),
+              renotify:           true,
+              requireInteraction: true,
+              silent:             false,
+              vibrate:            [200, 100, 200],
+              timestamp:          Date.now(),
+              data: {
+                url: data.url || "/members/dashboard"
+              }
+            });
+
+          } catch (notificationError) {
+            console.error("Could not display browser notification:", notificationError);
           }
-
         }
-      );
 
+      });
 
-      window.memberForegroundListenerReady =
-        true;
-
-
-
+      window.memberForegroundListenerReady = true;
       return true;
 
-
     } catch (error) {
-
-      console.error(
-        "❌ Foreground notification initialization error:",
-        error
-      );
-
+      console.error("Foreground notification initialization error:", error);
       return false;
     }
   }
 
 
-
   // =========================================================
-  // ENABLE MEMBER NOTIFICATIONS
+  // ENABLE MEMBER NOTIFICATIONS  (called by the Enable button)
   // =========================================================
 
-  window.enableMemberNotifications =
-    async function () {
+  window.enableMemberNotifications = async function () {
 
-   
+    try {
 
-
-      try {
-
-        // ---------------------------------------------------
-        // 1. Firebase check
-        // ---------------------------------------------------
-
-        if (!window.firebase) {
-
-          alert(
-            "Firebase is not loaded."
-          );
-
-          return;
-        }
-
-
-
-
-        // ---------------------------------------------------
-        // 2. Browser notification support
-        // ---------------------------------------------------
-
-        if (
-          !("Notification" in window)
-        ) {
-
-          alert(
-            "This browser does not support notifications."
-          );
-
-          return;
-        }
-
-
-        // ---------------------------------------------------
-        // 3. Get logged-in member
-        // ---------------------------------------------------
-
-        const member =
-          getLoggedInMember();
-
-
-
-        if (
-          !member ||
-          !member.uid
-        ) {
-
-          alert(
-            "Please login as a member first."
-          );
-
-          return;
-        }
-
-
-        // ---------------------------------------------------
-        // 4. Request permission
-        // ---------------------------------------------------
-
-        let permission =
-          Notification.permission;
-
-
-        if (
-          permission !== "granted"
-        ) {
-
-          permission =
-            await Notification.requestPermission();
-
-        }
-
-
-
-
-        if (
-          permission !== "granted"
-        ) {
-
-          alert(
-            "Notification permission was not granted."
-          );
-
-          return;
-        }
-
-
-        // ---------------------------------------------------
-        // 5. Initialize notification system
-        // ---------------------------------------------------
-
-        await initializeMemberForegroundNotifications();
-
-
-        // ---------------------------------------------------
-        // 6. Explicitly register token
-        // ---------------------------------------------------
-        //
-        // This ensures that pressing the Enable button
-        // always registers/saves the current FCM token.
-        //
-        // ---------------------------------------------------
-
-        const saved =
-          await registerMemberFCMToken();
-
-
-        if (!saved) {
-
-          alert(
-            "Unable to enable notifications on this device:\n" +
-            (lastPushError || "Please check the notification permission and try again.")
-          );
-
-          return;
-        }
-
-
-        // ---------------------------------------------------
-        // 7. Success
-        // ---------------------------------------------------
-
-
-        alert(
-          "Notifications enabled successfully! 🔔"
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "❌ Notification setup error:",
-          error
-        );
-
-
-        alert(
-          "Unable to enable notifications:\n" +
-          error.message
-        );
-
+      // 1. Firebase check.
+      if (!window.firebase) {
+        alert("Firebase is not loaded.");
+        return;
       }
 
-    };
+      // 2. Browser support.
+      if (!("Notification" in window)) {
+        alert("This browser does not support notifications.");
+        return;
+      }
 
+      // 3. Member must be logged in.
+      var member = getLoggedInMember();
+      if (!member || !member.uid) {
+        alert("Please login as a member first.");
+        return;
+      }
+
+      // 4. Request permission.
+      var permission = Notification.permission;
+      if (permission !== "granted") {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission !== "granted") {
+        alert("Notification permission was not granted.");
+        return;
+      }
+
+      // 5. Initialise the foreground listener.
+      await initializeMemberForegroundNotifications();
+
+      // 6. Register / refresh the FCM token.
+      var saved = await registerMemberFCMToken();
+
+      if (!saved) {
+        alert(
+          "Unable to enable notifications on this device:\n" +
+          (lastPushError || "Please check the notification permission and try again.")
+        );
+        return;
+      }
+
+      // 7. Done.
+      alert("Notifications enabled successfully! \uD83D\uDD14");
+
+    } catch (error) {
+      console.error("Notification setup error:", error);
+      alert("Unable to enable notifications:\n" + error.message);
+    }
+
+  };
 
 
   // =========================================================
-  // EXPOSE FUNCTIONS
+  // EXPOSE
   // =========================================================
 
-  window.initializeMemberForegroundNotifications =
-    initializeMemberForegroundNotifications;
-
-
-  window.registerMemberFCMToken =
-    registerMemberFCMToken;
-
-
-
-  // =========================================================
-  // SCRIPT LOADED
-  // =========================================================
-
- 
+  window.initializeMemberForegroundNotifications = initializeMemberForegroundNotifications;
+  window.registerMemberFCMToken                  = registerMemberFCMToken;
 
 })();

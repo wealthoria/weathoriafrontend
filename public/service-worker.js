@@ -78,14 +78,9 @@ function buildWealthoriaNotification(payload) {
 /* =========================================================================
    BACKGROUND PUSH NOTIFICATION
    ========================================================================= */
-
 messaging.onBackgroundMessage(function (payload) {
 
-  // Older messages that carry a `notification` block are already shown
-  // by Firebase itself; showing them again would create a duplicate.
-  if (payload?.notification) {
-    return;
-  }
+  console.log("[Wealthoria SW] Background message received:", payload);
 
   const notification =
     buildWealthoriaNotification(payload);
@@ -188,7 +183,7 @@ self.addEventListener(
    ========================================================================= */
 
 const CACHE_VERSION =
-  "wealthoria-v12";
+  "wealthoria-v13";
 
 const PRECACHE =
   `${CACHE_VERSION}-precache`;
@@ -441,7 +436,7 @@ self.addEventListener(
                 );
 
               })
-              .catch(function () {});
+              .catch(function () { });
 
 
             return response;
@@ -582,7 +577,7 @@ self.addEventListener(
 
                     })
 
-                    .catch(function () {});
+                    .catch(function () { });
 
 
                   return response;
@@ -643,7 +638,7 @@ self.addEventListener(
 
                     })
 
-                    .catch(function () {});
+                    .catch(function () { });
 
                 }
 

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -1052,11 +1052,19 @@ function CourseForm({
           title.trim()
         );
 
+        const currentUser = window.auth?.currentUser;
+        const token = currentUser ? await currentUser.getIdToken(true) : "";
+
         const response =
           await fetch(
             "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/upload-course-thumbnail",
             {
               method: "POST",
+              headers: token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                  }
+                : {},
               body: formData
             }
           );

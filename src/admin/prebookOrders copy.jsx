@@ -1,7 +1,16 @@
 /* global React, window */
 
 import React, { useEffect, useMemo, useState } from "react";
+import { auth } from "../firebase";
 const { MIcon } = window;
+
+async function getAdminToken() {
+  const currentUser = auth?.currentUser || window.auth?.currentUser;
+  if (!currentUser) {
+    throw new Error("Admin authentication required. Please login again.");
+  }
+  return currentUser.getIdToken(true);
+}
 
 /* =========================================================
    HELPERS
@@ -855,14 +864,15 @@ const exportOrdersToExcel = async () => {
       setStatusError("");
       setStatusSuccess("");
 
+      const token = await getAdminToken();
+
       const response = await fetch(
         `https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/admin/notifications/prebook-orders/${encodeURIComponent(order.id)}/status`,
-       
-       
         {
           method: "PATCH",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
             shippingStatus: newStatus
@@ -983,12 +993,15 @@ const exportOrdersToExcel = async () => {
       setEmailError("");
       setEmailSuccess("");
 
+      const token = await getAdminToken();
+
       const response = await fetch(
         "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/admin/notifications/prebook-email",
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
             email,

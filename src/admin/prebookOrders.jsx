@@ -1,7 +1,26 @@
 /* global React, window */
 
 import React, { useEffect, useMemo, useState } from "react";
+import { auth } from "../firebase";
 const { MIcon } = window;
+
+const API_BASE_URL =
+  typeof window !== "undefined" && window.WEALTHORIA_API_BASE !== undefined
+    ? window.WEALTHORIA_API_BASE
+    : typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        !window.location.hostname.endsWith("wealthoria.in"))
+    ? ""
+    : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+
+async function getAdminToken() {
+  const currentUser = auth?.currentUser || window.auth?.currentUser;
+  if (!currentUser) {
+    throw new Error("Admin authentication required. Please login again.");
+  }
+  return currentUser.getIdToken(true);
+}
 
 /* =========================================================
    HELPERS
@@ -16,6 +35,16 @@ function safeTimestamp(value) {
   if (value?.seconds) return Number(value.seconds) * 1000;
   const parsed = new Date(value).getTime();
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function toDateInputValue(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function formatDate(value) {
@@ -317,6 +346,10 @@ function PrebookOrders() {
   const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [shippingFilter, setShippingFilter] = useState("all");
+  const [couponFilter, setCouponFilter] = useState("all");
+  const [datePreset, setDatePreset] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [selected, setSelected] = useState(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -425,6 +458,44 @@ function PrebookOrders() {
   }, [orders]);
 
   /* =======================================================
+     COUPON STATS
+  ======================================================= */
+
+  const couponStats = useMemo(() => {
+    let withCoupon = 0;
+    let withoutCoupon = 0;
+    let withCouponAmount = 0;
+    let withoutCouponAmount = 0;
+    const codeData = {};
+
+    orders.forEach((order) => {
+      const code = String(order.couponCode || "").trim().toUpperCase();
+      const amt = Number(order.amount) || 0;
+      const disc = Number(order.discountAmount) || 0;
+
+      if (code) {
+        withCoupon += 1;
+        withCouponAmount += amt;
+        if (!codeData[code]) {
+          codeData[code] = { count: 0, totalAmount: 0, totalDiscount: 0 };
+        }
+        codeData[code].count += 1;
+        codeData[code].totalAmount += amt;
+        codeData[code].totalDiscount += disc;
+      } else {
+        withoutCoupon += 1;
+        withoutCouponAmount += amt;
+      }
+    });
+
+    const uniqueCoupons = Object.entries(codeData)
+      .map(([code, data]) => ({ code, ...data }))
+      .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
+
+    return { withCoupon, withoutCoupon, withCouponAmount, withoutCouponAmount, uniqueCoupons };
+  }, [orders]);
+
+  /* =======================================================
      FILTER
   ======================================================= */
 
@@ -438,9 +509,30 @@ function PrebookOrders() {
 
       const paymentStatus = String(order.paymentStatus || "").toLowerCase();
       const shippingStatus = String(order.shippingStatus || "").toLowerCase();
+      const orderCouponCode = String(order.couponCode || "").trim().toUpperCase();
 
       if (paymentFilter !== "all" && paymentStatus !== paymentFilter) return false;
       if (shippingFilter !== "all" && shippingStatus !== shippingFilter) return false;
+
+      if (couponFilter === "with_coupon" && !orderCouponCode) return false;
+      if (couponFilter === "without_coupon" && orderCouponCode) return false;
+      if (couponFilter.startsWith("code:")) {
+        const targetCode = couponFilter.slice(5).toUpperCase();
+        if (orderCouponCode !== targetCode) return false;
+      }
+
+      // Date filtering
+      if (startDate) {
+        const startMs = new Date(`${startDate}T00:00:00`).getTime();
+        const orderMs = safeTimestamp(order.createdAt);
+        if (!orderMs || orderMs < startMs) return false;
+      }
+
+      if (endDate) {
+        const endMs = new Date(`${endDate}T23:59:59.999`).getTime();
+        const orderMs = safeTimestamp(order.createdAt);
+        if (!orderMs || orderMs > endMs) return false;
+      }
 
       if (!query) return true;
 
@@ -454,6 +546,9 @@ function PrebookOrders() {
         customer.email,
         customer.phone,
         product.name,
+        order.couponCode,
+        order.couponId,
+        order.couponCodeId,
         order.razorpayOrderId,
         order.razorpayPaymentId,
         order.shiprocketOrderId,
@@ -471,7 +566,71 @@ function PrebookOrders() {
 
       return searchable.includes(query);
     });
-  }, [orders, search, paymentFilter, shippingFilter, showDuplicates, duplicateInfo]);
+  }, [orders, search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates, duplicateInfo]);
+
+  /* =======================================================
+     FILTERED METRICS (Total amount & discount for filtered orders / coupon)
+  ======================================================= */
+
+  const filteredMetrics = useMemo(() => {
+    let totalAmount = 0;
+    let totalDiscount = 0;
+
+    filteredOrders.forEach((o) => {
+      totalAmount += Number(o.amount) || 0;
+      totalDiscount += Number(o.discountAmount) || 0;
+    });
+
+    const avgAmount = filteredOrders.length ? Math.round(totalAmount / filteredOrders.length) : 0;
+
+    return {
+      totalAmount,
+      totalDiscount,
+      avgAmount,
+      orderCount: filteredOrders.length
+    };
+  }, [filteredOrders]);
+
+  /* =======================================================
+     DATE PRESET HANDLER
+  ======================================================= */
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+
+    if (preset === "all") {
+      setStartDate("");
+      setEndDate("");
+    } else if (preset === "today") {
+      const todayStr = toDateInputValue(now);
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === "yesterday") {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      const yStr = toDateInputValue(y);
+      setStartDate(yStr);
+      setEndDate(yStr);
+    } else if (preset === "7days") {
+      const endStr = toDateInputValue(now);
+      const start = new Date();
+      start.setDate(start.getDate() - 6);
+      setStartDate(toDateInputValue(start));
+      setEndDate(endStr);
+    } else if (preset === "30days") {
+      const endStr = toDateInputValue(now);
+      const start = new Date();
+      start.setDate(start.getDate() - 29);
+      setStartDate(toDateInputValue(start));
+      setEndDate(endStr);
+    } else if (preset === "this_month") {
+      const startStr = toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
+      const endStr = toDateInputValue(now);
+      setStartDate(startStr);
+      setEndDate(endStr);
+    }
+  };
 
   /* =======================================================
      PAGINATION — 50 RECORDS PER PAGE
@@ -481,7 +640,7 @@ function PrebookOrders() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, paymentFilter, shippingFilter, showDuplicates]);
+  }, [search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates]);
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -509,6 +668,7 @@ function PrebookOrders() {
 
   const counts = useMemo(() => {
     let paid = 0;
+    let paidRevenue = 0;
     let pendingShipping = 0;
     let shipped = 0;
     let delivered = 0;
@@ -516,14 +676,18 @@ function PrebookOrders() {
     orders.forEach((order) => {
       const paymentStatus = String(order.paymentStatus || "").toLowerCase();
       const shippingStatus = String(order.shippingStatus || "").toLowerCase();
+      const amount = Number(order.amount) || 0;
 
-      if (paymentStatus === "paid") paid += 1;
+      if (paymentStatus === "paid") {
+        paid += 1;
+        paidRevenue += amount;
+      }
       if (shippingStatus === "pending" || !shippingStatus) pendingShipping += 1;
       if (shippingStatus === "shipped" || shippingStatus === "in_transit") shipped += 1;
       if (shippingStatus === "delivered") delivered += 1;
     });
 
-    return { total: orders.length, paid, pendingShipping, shipped, delivered };
+    return { total: orders.length, paid, paidRevenue, pendingShipping, shipped, delivered };
   }, [orders]);
 
   /* =======================================================
@@ -591,7 +755,10 @@ function PrebookOrders() {
            "SENDER MOBILE NO":9019759001,
            "RECEIVER MOBILE NO":customer.phone,
           "Phone Number": customer.phone || "",
-          "Book ID": order.bookingId || ""
+          "Book ID": order.bookingId || "",
+          "Amount": order.amount ? `₹${order.amount}` : "",
+          "Coupon Code": order.couponCode || "",
+          "Discount Amount": order.discountAmount ? `₹${order.discountAmount}` : ""
         };
       });
 
@@ -751,11 +918,16 @@ const exportPageCourierFormat = async () => {
       setStatusError("");
       setStatusSuccess("");
 
+      const token = await getAdminToken();
+
       const response = await fetch(
-        `https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/admin/notifications/prebook-orders/${encodeURIComponent(order.id)}/status`,
+        `${API_BASE_URL}/api/admin/notifications/prebook-orders/${encodeURIComponent(order.id)}/status`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
           body: JSON.stringify({ shippingStatus: newStatus })
         }
       );
@@ -842,11 +1014,16 @@ const exportPageCourierFormat = async () => {
       setEmailError("");
       setEmailSuccess("");
 
+      const token = await getAdminToken();
+
       const response = await fetch(
-        "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/admin/notifications/prebook-email",
+        `${API_BASE_URL}/api/admin/notifications/prebook-email`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
           body: JSON.stringify({
             email,
             subject: emailSubject.trim(),
@@ -1272,8 +1449,38 @@ const exportPageCourierFormat = async () => {
           >
             Pre-book Orders
           </h2>
-          <div style={{ marginTop: 6, fontSize: 13, color: "#667085" }}>
-            Showing {pageStart}-{pageEnd} of {filteredOrders.length} records · Page {currentPage} of {totalPages}
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              color: "#667085",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap"
+            }}
+          >
+            <span>
+              Showing {pageStart}-{pageEnd} of {filteredOrders.length} records · Page {currentPage} of {totalPages}
+            </span>
+            {couponFilter !== "all" && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "2px 9px",
+                  borderRadius: 6,
+                  background: "#ecfdf3",
+                  border: "1px solid #a6f4c5",
+                  color: "#027a48",
+                  fontWeight: 750,
+                  fontSize: 12
+                }}
+              >
+                🏷️ {couponFilter.startsWith("code:") ? couponFilter.slice(5) : "Coupon Filtered"} Total: ₹{filteredMetrics.totalAmount.toLocaleString("en-IN")}
+              </span>
+            )}
           </div>
         </div>
 
@@ -1399,7 +1606,7 @@ const exportPageCourierFormat = async () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
           gap: 14,
           marginBottom: 20
         }}
@@ -1407,6 +1614,7 @@ const exportPageCourierFormat = async () => {
         {[
           ["Total orders", counts.total, "inbox", "#f5f7fa"],
           ["Paid", counts.paid, "check", "#f0fbf3"],
+          ["Paid Revenue", `₹${counts.paidRevenue.toLocaleString("en-IN")}`, "credit-card", "#ecfdf3"],
           ["Pending shipping", counts.pendingShipping, "package", "#fff8e8"],
           ["Shipped", counts.shipped, "truck", "#f2f7ff"],
           ["Delivered", counts.delivered, "check", "#f0fbf3"]
@@ -1489,6 +1697,160 @@ const exportPageCourierFormat = async () => {
       )}
 
       {/* ===================================================
+          COUPON / FILTER STATS HIGHLIGHT BANNER
+      =================================================== */}
+
+      {couponFilter !== "all" && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf3 100%)",
+            border: "1px solid #a6f4c5",
+            borderRadius: 14,
+            padding: "16px 20px",
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+            boxShadow: "0 2px 8px rgba(16, 185, 129, 0.08)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "#d1fae5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 22
+              }}
+            >
+              🏷️
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: "#027a48",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em"
+                }}
+              >
+                {couponFilter.startsWith("code:")
+                  ? `Coupon Selected: ${couponFilter.slice(5)}`
+                  : couponFilter === "with_coupon"
+                  ? "Orders With Coupon"
+                  : "Orders Without Coupon"}
+              </div>
+              <div style={{ fontSize: 13, color: "#344054", marginTop: 2 }}>
+                {filteredMetrics.orderCount} order{filteredMetrics.orderCount === 1 ? "" : "s"} found
+                {startDate || endDate ? ` (${startDate || "start"} to ${endDate || "today"})` : ""}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#667085",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em"
+                }}
+              >
+                Total Amount
+              </div>
+              <div
+                style={{
+                  fontSize: 22,
+                  fontWeight: 850,
+                  color: "#027a48",
+                  marginTop: 2
+                }}
+              >
+                ₹{filteredMetrics.totalAmount.toLocaleString("en-IN")}
+              </div>
+            </div>
+
+            {filteredMetrics.totalDiscount > 0 && (
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#667085",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.03em"
+                  }}
+                >
+                  Total Discounts
+                </div>
+                <div
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 800,
+                    color: "#b42318",
+                    marginTop: 2
+                  }}
+                >
+                  -₹{filteredMetrics.totalDiscount.toLocaleString("en-IN")}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#667085",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em"
+                }}
+              >
+                Avg Order Value
+              </div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: "#344054",
+                  marginTop: 2
+                }}
+              >
+                ₹{filteredMetrics.avgAmount.toLocaleString("en-IN")}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCouponFilter("all")}
+              style={{
+                height: 36,
+                padding: "0 13px",
+                border: "1px solid #a6f4c5",
+                borderRadius: 8,
+                background: "#fff",
+                color: "#027a48",
+                fontSize: 12,
+                fontWeight: 750,
+                cursor: "pointer"
+              }}
+            >
+              Clear Coupon Filter
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================
           FILTER BAR
       =================================================== */}
 
@@ -1565,12 +1927,122 @@ const exportPageCourierFormat = async () => {
           <option value="delivered">Delivered</option>
         </select>
 
+        <select
+          value={couponFilter}
+          onChange={(e) => setCouponFilter(e.target.value)}
+          style={{
+            height: 42,
+            border: "1px solid #dfe3e8",
+            borderRadius: 10,
+            padding: "0 12px",
+            fontSize: 13,
+            background: "var(--card, #fff)",
+            color: "var(--ink, #17191c)"
+          }}
+        >
+          <option value="all">All coupons ({orders.length})</option>
+          <option value="with_coupon">
+            With coupon ({couponStats.withCoupon} · ₹{couponStats.withCouponAmount.toLocaleString("en-IN")})
+          </option>
+          <option value="without_coupon">
+            Without coupon ({couponStats.withoutCoupon} · ₹{couponStats.withoutCouponAmount.toLocaleString("en-IN")})
+          </option>
+          {couponStats.uniqueCoupons.length > 0 && (
+            <optgroup label="Coupons Used">
+              {couponStats.uniqueCoupons.map(({ code, count, totalAmount }) => (
+                <option key={code} value={`code:${code}`}>
+                  {code} ({count} orders · ₹{totalAmount.toLocaleString("en-IN")})
+                </option>
+              ))}
+            </optgroup>
+          )}
+        </select>
+
+        {/* DATE PRESET FILTER */}
+        <select
+          value={datePreset}
+          onChange={(e) => handleDatePresetChange(e.target.value)}
+          style={{
+            height: 42,
+            border: "1px solid #dfe3e8",
+            borderRadius: 10,
+            padding: "0 12px",
+            fontSize: 13,
+            background: "var(--card, #fff)",
+            color: "var(--ink, #17191c)"
+          }}
+        >
+          <option value="all">All dates</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="7days">Last 7 days</option>
+          <option value="30days">Last 30 days</option>
+          <option value="this_month">This month</option>
+          <option value="custom">Custom date range...</option>
+        </select>
+
+        {/* CUSTOM DATE PICKERS */}
+        {(datePreset === "custom" || startDate || endDate) && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "#f8fafc",
+              padding: "2px 8px",
+              borderRadius: 10,
+              border: "1px solid #dfe3e8"
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#667085" }}>From</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setDatePreset("custom");
+              }}
+              style={{
+                height: 36,
+                border: "1px solid #dfe3e8",
+                borderRadius: 7,
+                padding: "0 8px",
+                fontSize: 12,
+                background: "#fff",
+                color: "var(--ink, #17191c)"
+              }}
+            />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#667085" }}>To</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setDatePreset("custom");
+              }}
+              style={{
+                height: 36,
+                border: "1px solid #dfe3e8",
+                borderRadius: 7,
+                padding: "0 8px",
+                fontSize: 12,
+                background: "#fff",
+                color: "var(--ink, #17191c)"
+              }}
+            />
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => {
             setSearch("");
             setPaymentFilter("all");
             setShippingFilter("all");
+            setCouponFilter("all");
+            setDatePreset("all");
+            setStartDate("");
+            setEndDate("");
           }}
           style={{
             height: 42,
@@ -1617,7 +2089,7 @@ const exportPageCourierFormat = async () => {
         </div>
 
         <div style={{ overflowX: "auto", width: "100%" }}>
-          <table style={{ width: "100%", minWidth: 1250, borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", minWidth: 1380, borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e8ebef" }}>
                 {[
@@ -1629,6 +2101,7 @@ const exportPageCourierFormat = async () => {
                   "Phone",
                   "Qty",
                   "Amount",
+                  "Coupon",
                   "Delivery Status",
                   "Label",
                   "View",
@@ -1656,7 +2129,7 @@ const exportPageCourierFormat = async () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
                   >
                     Loading pre-book orders...
@@ -1665,7 +2138,7 @@ const exportPageCourierFormat = async () => {
               ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={13}
+                    colSpan={14}
                     style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
                   >
                     {orders.length === 0
@@ -1773,6 +2246,38 @@ const exportPageCourierFormat = async () => {
                         }}
                       >
                         ₹{valueOrDash(order.amount)}
+                      </td>
+
+                      {/* COUPON */}
+                      <td style={{ padding: "14px", whiteSpace: "nowrap" }}>
+                        {order.couponCode ? (
+                          <div style={{ display: "inline-flex", flexDirection: "column", gap: 3 }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                padding: "4px 8px",
+                                borderRadius: 6,
+                                background: "#ecfdf3",
+                                border: "1px solid #a6f4c5",
+                                color: "#027a48",
+                                fontSize: 11,
+                                fontWeight: 750,
+                                letterSpacing: "0.02em"
+                              }}
+                            >
+                              🏷️ {order.couponCode}
+                            </span>
+                            {Number(order.discountAmount) > 0 && (
+                              <span style={{ fontSize: 11, color: "#475467", fontWeight: 650 }}>
+                                -₹{order.discountAmount} {order.discountPercentage ? `(${order.discountPercentage}%)` : ""}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#98a2b3", fontSize: 13 }}>—</span>
+                        )}
                       </td>
 
                       {/* DELIVERY STATUS */}
@@ -2461,13 +2966,45 @@ const exportPageCourierFormat = async () => {
                   marginBottom: 20
                 }}
               >
-                <h3 style={{ margin: "12px 0 4px", fontSize: 15 }}>Payment Details</h3>
+                <h3 style={{ margin: "12px 0 4px", fontSize: 15 }}>Payment & Coupon Details</h3>
                 <DetailField label="Razorpay Order ID">{selected.razorpayOrderId}</DetailField>
                 <DetailField label="Razorpay Payment ID">{selected.razorpayPaymentId}</DetailField>
                 <DetailField label="Payment Status">
                   <StatusBadge type="payment" value={selected.paymentStatus} />
                 </DetailField>
                 <DetailField label="Currency">{selected.currency || "INR"}</DetailField>
+                <DetailField label="Coupon Applied">
+                  {selected.couponCode ? (
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        background: "#ecfdf3",
+                        border: "1px solid #a6f4c5",
+                        color: "#027a48",
+                        fontWeight: 750,
+                        fontSize: 12
+                      }}
+                    >
+                      🏷️ {selected.couponCode}
+                    </span>
+                  ) : (
+                    "None"
+                  )}
+                </DetailField>
+                {selected.couponCode && (
+                  <>
+                    <DetailField label="Discount Amount">
+                      {selected.discountAmount ? `₹${selected.discountAmount}` : "—"}
+                    </DetailField>
+                    <DetailField label="Discount Percentage">
+                      {selected.discountPercentage ? `${selected.discountPercentage}%` : "—"}
+                    </DetailField>
+                    <DetailField label="Coupon ID">
+                      {selected.couponId || selected.couponCodeId || "—"}
+                    </DetailField>
+                  </>
+                )}
               </div>
 
               {/* SYSTEM DETAILS */}

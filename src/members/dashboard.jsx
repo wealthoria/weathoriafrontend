@@ -17,6 +17,44 @@ const DASHBOARD_API =
 
 
 /* =========================================================
+   PUSH NOTIFICATIONS SCRIPT
+   Bump ?v= whenever public/firebase/notifications.js changes,
+   otherwise the service worker keeps serving the cached copy.
+========================================================= */
+
+const NOTIFICATIONS_SCRIPT_URL =
+  "/firebase/notifications.js?v=29";
+
+let notificationsScriptPromise = null;
+
+function ensureMemberNotificationsScript() {
+
+  if (typeof window.enableMemberNotifications === "function") {
+    return Promise.resolve();
+  }
+
+  if (notificationsScriptPromise) {
+    return notificationsScriptPromise;
+  }
+
+  notificationsScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = NOTIFICATIONS_SCRIPT_URL;
+    script.async = true;
+    script.setAttribute("data-wealthoria-notifications", "true");
+    script.onload = () => resolve();
+    script.onerror = () => {
+      notificationsScriptPromise = null;
+      reject(new Error("Could not load the notification service. Please check your internet and try again."));
+    };
+    document.head.appendChild(script);
+  });
+
+  return notificationsScriptPromise;
+}
+
+
+/* =========================================================
    HELPERS
 ========================================================= */
 
@@ -1993,6 +2031,77 @@ const [authChecking, setAuthChecking] =
 const [notificationStatus, setNotificationStatus] =
   useState("checking");
 
+const [notificationError, setNotificationError] =
+  useState("");
+
+const [enablingNotifications, setEnablingNotifications] =
+  useState(false);
+
+const isIosDevice =
+  typeof navigator !== "undefined" &&
+  /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
+/* Enable push on THIS device. Each phone / computer must do this once. */
+const handleEnableNotifications = async () => {
+
+  setNotificationError("");
+  setEnablingNotifications(true);
+
+  try {
+
+    if (!("Notification" in window)) {
+      setNotificationStatus("unsupported");
+      return;
+    }
+
+    // Ask permission FIRST, straight from the tap. Safari and some
+    // Android browsers ignore the request if we await anything before it.
+    let permission = Notification.permission;
+    if (permission !== "granted") {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission === "denied") {
+      setNotificationStatus("blocked");
+      return;
+    }
+
+    if (permission !== "granted") {
+      setNotificationStatus("not-enabled");
+      return;
+    }
+
+    await ensureMemberNotificationsScript();
+
+    const result =
+      await window.enableMemberNotifications(member);
+
+    if (result && result.ok) {
+      setNotificationStatus("enabled");
+    } else {
+      setNotificationStatus("error");
+      setNotificationError(
+        (result && result.error) ||
+        window.wealthoriaLastPushError ||
+        "Could not finish enabling notifications on this device."
+      );
+    }
+
+  } catch (error) {
+
+    setNotificationStatus("error");
+    setNotificationError(
+      error?.message ||
+      "Could not finish enabling notifications on this device."
+    );
+
+  } finally {
+
+    setEnablingNotifications(false);
+
+  }
+};
+
 useEffect(() => {
   if (!("Notification" in window)) {
     setNotificationStatus("unsupported");
@@ -2302,88 +2411,32 @@ useEffect(() => {
 
         try {
 
-          // notifications.js may already
-          // be loaded by another part
-          // of the application.
+          // Loads /firebase/notifications.js once (shared with the
+          // Enable button), then refreshes this device's token.
+          await ensureMemberNotificationsScript();
+
+          if (cancelled) {
+            return;
+          }
 
           if (
             typeof window.initializeMemberForegroundNotifications ===
             "function"
           ) {
 
-            await window.initializeMemberForegroundNotifications();
+            await window.initializeMemberForegroundNotifications(member);
 
-            return;
+            // Permission was already granted on this device: confirm the
+            // server really has the token, and show why if it does not.
+            const saved = await window.wealthoriaPushRefresh;
 
-          }
-
-
-          const existingScript =
-            document.querySelector(
-              'script[data-wealthoria-notifications="true"]'
-            );
-
-
-          if (
-            !existingScript
-          ) {
-
-            const script =
-              document.createElement(
-                "script"
+            if (!cancelled && saved === false) {
+              setNotificationStatus("error");
+              setNotificationError(
+                window.wealthoriaLastPushError ||
+                "Notifications are allowed but this device is not registered yet."
               );
-
-
-            script.src =
-              "/firebase/notifications.js?v=28";
-
-
-            script.async = true;
-
-
-            script.setAttribute(
-              "data-wealthoria-notifications",
-              "true"
-            );
-
-
-            await new Promise(
-              (
-                resolve,
-                reject
-              ) => {
-
-                script.onload =
-                  resolve;
-
-                script.onerror =
-                  reject;
-
-                document.head.appendChild(
-                  script
-                );
-
-              }
-            );
-
-          }
-
-
-          if (
-            cancelled
-          ) {
-
-            return;
-
-          }
-
-
-          if (
-            typeof window.initializeMemberForegroundNotifications ===
-            "function"
-          ) {
-
-            await window.initializeMemberForegroundNotifications();
+            }
 
           }
 
@@ -3390,17 +3443,9 @@ if (!membershipLoaded) {
             <button
               type="button"
               className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
-          onClick={async () => {
-  if (
-    "Notification" in window &&
-    Notification.permission !== "granted" &&
-    typeof window.enableMemberNotifications === "function"
-  ) {
-    await window.enableMemberNotifications();
-  }
-
-  openPage("notifications");
-}}
+          onClick={() => {
+            openPage("notifications");
+          }}
             >
 
               🔔 Notifications
@@ -3475,41 +3520,45 @@ if (!membershipLoaded) {
         <div className="wd-content">
  {/* NOTIFICATION PERMISSION */}
 
-  {notificationStatus === "not-enabled" && (
+  {(notificationStatus === "not-enabled" || notificationStatus === "error") && (
     <div className="notification-banner">
       <div className="notification-banner-content">
         <div>
-          <strong>🔔 Stay updated with Wealthoria</strong>
+          <strong>
+            {notificationStatus === "error"
+              ? "🔔 Notifications are not working on this device yet"
+              : "🔔 Stay updated with Wealthoria"}
+          </strong>
           <p>
-            Enable notifications to receive important updates,
-            webinar reminders and new content.
+            {notificationStatus === "error"
+              ? notificationError
+              : "Enable notifications to receive important updates, webinar reminders and new content. Do this once on each phone and computer you use."}
           </p>
         </div>
 
         <button
           type="button"
-          onClick={async () => {
-            if (
-              typeof window.enableMemberNotifications === "function"
-            ) {
-              await window.enableMemberNotifications();
-
-              if (
-                "Notification" in window &&
-                Notification.permission === "granted"
-              ) {
-                setNotificationStatus("enabled");
-              }
-            }
-          }}
+          disabled={enablingNotifications}
+          onClick={handleEnableNotifications}
         >
-          Enable Notifications
+          {enablingNotifications
+            ? "Enabling..."
+            : notificationStatus === "error"
+              ? "Try Again"
+              : "Enable Notifications"}
         </button>
       </div>
     </div>
   )}
 
- 
+  {notificationStatus === "unsupported" && isIosDevice && (
+    <div className="notification-blocked">
+      📱 To get Wealthoria notifications on iPhone: tap Share, then
+      "Add to Home Screen", open Wealthoria from that icon, log in and
+      tap Enable Notifications.
+    </div>
+  )}
+
   {notificationStatus === "blocked" && (
     <div className="notification-blocked">
       🔕 Notifications are blocked. Please enable them in your browser/device settings.

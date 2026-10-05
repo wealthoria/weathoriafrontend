@@ -1,3 +1,19 @@
+/* =========================================================================
+   Wealthoria: member push notifications (browser side)
+
+   What this file does:
+     1. Asks permission (only from the "Enable" button, a user tap).
+     2. Waits until /service-worker.js is really ACTIVE, then gets the
+        device's FCM token.
+     3. Saves the token on the server with a stable per-device id, so a
+        member can have desktop + phone + tablet at the same time.
+     4. Re-checks the token every time the member opens the app (tokens
+        rotate), and keeps it after logout so the device keeps receiving.
+     5. Shows foreground notifications (when the app is open on screen).
+
+   Version 29. Bump the ?v= in members/dashboard.jsx when this file changes.
+   ========================================================================= */
+
 (function () {
 
   // =========================================================
@@ -13,10 +29,86 @@
   var BACKEND_URL =
     "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
+  var SW_URL = "/service-worker.js";
+
+  // Local keys (this device only)
+  var DEVICE_ID_KEY      = "wealthoria-push-device-id";
+  var SAVED_TOKEN_KEY    = "wealthoria-push-token";
+  var SAVED_UID_KEY      = "wealthoria-push-uid";
+  var SAVED_AT_KEY       = "wealthoria-push-saved-at";
+
+  // Re-send an unchanged token to the server at most every 6 hours.
+  var RESYNC_MS = 6 * 60 * 60 * 1000;
+
+  var lastPushError = "";
+
+  function setError(message) {
+    lastPushError = message || "";
+    window.wealthoriaLastPushError = lastPushError;
+  }
+
 
   // =========================================================
-  // GET CURRENT LOGGED-IN MEMBER
-  // MULTI-ACCOUNT SAFE
+  // SAFE STORAGE
+  // =========================================================
+
+  function lsGet(key) {
+    try { return localStorage.getItem(key); } catch (_) { return null; }
+  }
+
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (_) {}
+  }
+
+
+  // =========================================================
+  // DEVICE INFO
+  // =========================================================
+
+  function getDeviceId() {
+    var id = lsGet(DEVICE_ID_KEY);
+    if (id) return id;
+
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      id = window.crypto.randomUUID();
+    } else {
+      id = "dev-" + Date.now().toString(36) + "-" +
+        Math.random().toString(36).slice(2, 10);
+    }
+
+    lsSet(DEVICE_ID_KEY, id);
+    return id;
+  }
+
+  function isStandalone() {
+    try {
+      return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function getDeviceInfo() {
+    var ua = navigator.userAgent || "";
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+    return {
+      deviceId:   getDeviceId(),
+      platform:   isMobile ? "mobile" : "desktop",
+      standalone: isStandalone(),
+      userAgent:  ua.slice(0, 300)
+    };
+  }
+
+  function isIos() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+  }
+
+
+  // =========================================================
+  // GET CURRENT LOGGED-IN MEMBER (multi-account safe)
   // =========================================================
 
   function getLoggedInMember() {
@@ -25,9 +117,12 @@
     var CURRENT_MEMBER_KEY  = "wealthoria-current-member";
 
     function readCurrentMemberUid() {
-      var raw =
-        sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
-        localStorage.getItem(CURRENT_MEMBER_KEY);
+      var raw = null;
+      try {
+        raw =
+          sessionStorage.getItem(CURRENT_MEMBER_KEY) ||
+          localStorage.getItem(CURRENT_MEMBER_KEY);
+      } catch (_) {}
 
       if (!raw) return "";
 
@@ -47,7 +142,6 @@
         var parsed = JSON.parse(raw);
         return (parsed && typeof parsed === "object") ? parsed : {};
       } catch (e) {
-        console.error("Member sessions parse error:", e);
         return {};
       }
     }
@@ -63,15 +157,12 @@
     }
 
     // Legacy single-session fallback.
-    var legacyLocal   = localStorage.getItem("wealthoria-member");
-    var legacySession = sessionStorage.getItem("wealthoria-member");
-
     try {
+      var legacySession = sessionStorage.getItem("wealthoria-member");
+      var legacyLocal   = localStorage.getItem("wealthoria-member");
       if (legacySession) return JSON.parse(legacySession);
       if (legacyLocal)   return JSON.parse(legacyLocal);
-    } catch (e) {
-      console.error("Legacy member session parse error:", e);
-    }
+    } catch (e) {}
 
     return null;
   }
@@ -87,14 +178,10 @@
         resolve();
         return;
       }
-
       var script = document.createElement("script");
       script.src = src;
       script.onload  = function () { resolve(); };
-      script.onerror = function (err) {
-        console.error("Script failed:", src, err);
-        reject(new Error("Failed to load: " + src));
-      };
+      script.onerror = function () { reject(new Error("Failed to load: " + src)); };
       document.head.appendChild(script);
     });
   }
@@ -117,69 +204,94 @@
       throw new Error("Firebase Messaging SDK could not be loaded.");
     }
 
-    return firebase.messaging();
+    if (window.firebase.messaging.isSupported &&
+        !window.firebase.messaging.isSupported()) {
+      throw new Error(
+        isIos()
+          ? "On iPhone, open Wealthoria from the Home Screen icon (Share > Add to Home Screen), then enable notifications."
+          : "This browser does not support push notifications."
+      );
+    }
+
+    return window.firebase.messaging();
   }
 
 
   // =========================================================
-  // GET / REGISTER SERVICE WORKER
-  //
-  // We ALWAYS pass serviceWorkerRegistration to getToken() so
-  // Firebase uses /service-worker.js and never falls back to
-  // the default /firebase-messaging-sw.js scope.
-  //
-  // If the SW is still installing we wait up to 15 s before
-  // giving a clear error message.
+  // REMOVE THE OLD /firebase-messaging-sw.js REGISTRATION
+  // Older app versions created a second push subscription there,
+  // which causes duplicate notifications. Its token dies after this
+  // and the server removes it on the next send.
   // =========================================================
 
-  var lastPushError = "";
+  async function removeLegacyMessagingWorker() {
+    try {
+      if (!navigator.serviceWorker.getRegistrations) return;
+      var regs = await navigator.serviceWorker.getRegistrations();
+      for (var i = 0; i < regs.length; i++) {
+        var reg = regs[i];
+        if (reg.scope && reg.scope.indexOf("firebase-cloud-messaging-push-scope") !== -1) {
+          await reg.unregister();
+        }
+      }
+    } catch (_) {}
+  }
+
+
+  // =========================================================
+  // GET AN *ACTIVE* SERVICE WORKER
+  // getToken() fails with "no active Service Worker" if the worker is
+  // still installing, which is common on a phone's first visit.
+  // =========================================================
+
+  function waitForActivation(worker, timeoutMs) {
+    return new Promise(function (resolve) {
+      if (!worker) { resolve(false); return; }
+      if (worker.state === "activated") { resolve(true); return; }
+
+      var done = false;
+      var timer = setTimeout(function () {
+        if (!done) { done = true; resolve(false); }
+      }, timeoutMs);
+
+      worker.addEventListener("statechange", function () {
+        if (done) return;
+        if (worker.state === "activated") {
+          done = true; clearTimeout(timer); resolve(true);
+        } else if (worker.state === "redundant") {
+          done = true; clearTimeout(timer); resolve(false);
+        }
+      });
+    });
+  }
 
   async function getPushServiceWorker() {
-    var registration =
-      await navigator.serviceWorker.getRegistration("/");
-
-    if (!registration) {
-      registration = await navigator.serviceWorker.register(
-        "/service-worker.js",
-        { scope: "/" }
-      );
+    if (!("serviceWorker" in navigator)) {
+      throw new Error("Service Worker is not supported on this browser.");
     }
 
-    // Already active — done immediately, no delay.
+    var registration = await navigator.serviceWorker.getRegistration("/");
+
+    if (!registration) {
+      registration = await navigator.serviceWorker.register(SW_URL, { scope: "/" });
+    }
+
     if (registration.active) {
       return registration;
     }
 
-    // Waiting for the SW to activate.
-    var worker = registration.installing || registration.waiting;
+    var pending = registration.installing || registration.waiting;
+    var ok = await waitForActivation(pending, 15000);
 
-    await new Promise(function (resolve, reject) {
-      var timer = setTimeout(function () {
-        reject(new Error(
-          "The app's background service did not start. " +
-          "Close Wealthoria completely, open it again and retry."
-        ));
-      }, 15000);
-
-      if (!worker) {
-        clearTimeout(timer);
-        resolve();
-        return;
-      }
-
-      worker.addEventListener("statechange", function () {
-        if (worker.state === "activated") {
-          clearTimeout(timer);
-          resolve();
-        } else if (worker.state === "redundant") {
-          clearTimeout(timer);
-          reject(new Error(
-            "The app's background service failed to install. " +
-            "Close Wealthoria completely, open it again and retry."
-          ));
-        }
-      });
-    });
+    if (!ok && !registration.active) {
+      // Last attempt: the browser's own "ready" promise.
+      var ready = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(function (r) { setTimeout(r, 5000); })
+      ]);
+      if (ready && ready.active) return ready;
+      throw new Error("The notification service is still starting. Please wait a few seconds and tap Enable again.");
+    }
 
     return registration;
   }
@@ -187,60 +299,73 @@
 
   // =========================================================
   // GET FCM TOKEN AND SAVE TO BACKEND
+  // Returns true / false. Reason for failure: window.wealthoriaLastPushError
   // =========================================================
 
-  async function registerMemberFCMToken() {
+  async function registerMemberFCMToken(explicitMember, options) {
+
+    var force = !!(options && options.force);
 
     try {
+      setError("");
 
-      // 1. Member must be logged in.
-      var member = getLoggedInMember();
+      var member = explicitMember || getLoggedInMember();
       if (!member || !member.uid) {
-        console.warn("No logged-in member found.");
+        setError("Please log in as a member first.");
         return false;
       }
 
-      // 2. Member must have a valid auth token.
       if (!member.token) {
-        console.warn("Member authentication token is missing.");
-        lastPushError = "Your login has expired. Please log out and log in again.";
+        setError("Your login has expired. Please log out and log in again.");
         return false;
       }
 
-      // 3. Browser notification support.
       if (!("Notification" in window)) {
-        console.warn("Notifications are not supported by this browser.");
+        setError(isIos()
+          ? "On iPhone, open Wealthoria from the Home Screen icon (Share > Add to Home Screen), then enable notifications."
+          : "This browser does not support notifications.");
         return false;
       }
 
-      // 4. Firebase must be loaded.
+      if (Notification.permission !== "granted") {
+        setError("Notification permission has not been granted on this device.");
+        return false;
+      }
+
       if (!window.firebase) {
-        console.error("Firebase is not loaded.");
-        return false;
-      }
-
-      // 5. Service Worker support.
-      if (!("serviceWorker" in navigator)) {
-        console.error("Service Worker is not supported.");
+        setError("Firebase is not loaded. Please refresh the page.");
         return false;
       }
 
       var registration = await getPushServiceWorker();
       var messaging    = await getMessagingInstance();
 
-      // 6. Get FCM token — explicitly pass our SW so no delay.
       var fcmToken = await messaging.getToken({
         vapidKey:                  VAPID_KEY,
         serviceWorkerRegistration: registration
       });
 
       if (!fcmToken) {
-        console.error("Firebase did not return an FCM token.");
-        lastPushError = "The phone did not provide a notification address. Please try again.";
+        setError("This device did not return a notification address. Please try again.");
         return false;
       }
 
-      // 7. Send token to backend.
+      // Skip the network call if nothing changed recently.
+      var savedToken = lsGet(SAVED_TOKEN_KEY);
+      var savedUid   = lsGet(SAVED_UID_KEY);
+      var savedAt    = Number(lsGet(SAVED_AT_KEY) || 0);
+
+      if (
+        !force &&
+        savedToken === fcmToken &&
+        savedUid === member.uid &&
+        Date.now() - savedAt < RESYNC_MS
+      ) {
+        return true;
+      }
+
+      var info = getDeviceInfo();
+
       var response = await fetch(
         BACKEND_URL + "/api/members/notification-token",
         {
@@ -249,196 +374,187 @@
             "Content-Type": "application/json",
             "Authorization": "Bearer " + member.token
           },
-          body: JSON.stringify({ token: fcmToken })
+          body: JSON.stringify({
+            token:         fcmToken,
+            previousToken: (savedToken && savedToken !== fcmToken) ? savedToken : null,
+            deviceId:      info.deviceId,
+            platform:      info.platform,
+            standalone:    info.standalone,
+            userAgent:     info.userAgent
+          })
         }
       );
 
       var data = {};
-      try {
-        data = await response.json();
-      } catch (jsonErr) {
-        console.error("Could not parse backend response:", jsonErr);
-      }
+      try { data = await response.json(); } catch (_) {}
 
-      if (!response.ok) {
-        lastPushError =
-          data.message ||
-          ("Server error (" + response.status + "). Please log out, log in again and retry.");
-        console.error("Failed to save FCM token.", { status: response.status, response: data });
+      if (!response.ok || data.success === false) {
+        if (response.status === 401 || response.status === 403) {
+          setError("Your login has expired. Please log out, log in again and tap Enable.");
+        } else {
+          setError(data.message || ("Server error (" + response.status + "). Please try again."));
+        }
+        console.error("[Wealthoria push] Failed to save token.", response.status, data);
         return false;
       }
 
+      lsSet(SAVED_TOKEN_KEY, fcmToken);
+      lsSet(SAVED_UID_KEY, member.uid);
+      lsSet(SAVED_AT_KEY, String(Date.now()));
+
+      console.log("[Wealthoria push] Device registered for notifications.");
       return true;
 
     } catch (error) {
-      console.error("FCM token registration failed:", error);
-      lastPushError = error.message || "Unknown error.";
+      console.error("[Wealthoria push] Token registration failed:", error);
+      setError((error && error.message) || "Could not enable notifications on this device.");
       return false;
     }
   }
 
 
   // =========================================================
-  // FOREGROUND NOTIFICATION LISTENER
+  // FOREGROUND LISTENER + AUTOMATIC TOKEN REFRESH
+  // Called every time the member dashboard opens.
   // =========================================================
 
-  async function initializeMemberForegroundNotifications() {
+  async function initializeMemberForegroundNotifications(explicitMember) {
 
     try {
+      var member = explicitMember || getLoggedInMember();
+      if (!member || !member.uid) return false;
+      if (!window.firebase) return false;
+      if (!("serviceWorker" in navigator)) return false;
 
-      // 1. Member must be logged in.
-      var member = getLoggedInMember();
-      if (!member || !member.uid) {
-        console.warn("No logged-in member found.");
-        return false;
-      }
+      await removeLegacyMessagingWorker();
 
-      // 2. Firebase must be loaded.
-      if (!window.firebase) {
-        console.error("Firebase is not loaded.");
-        return false;
-      }
-
-      // 3. Service Worker support.
-      if (!("serviceWorker" in navigator)) {
-        console.error("Service Worker not supported.");
-        return false;
-      }
-
-      var registration = await getPushServiceWorker();
-      var messaging    = await getMessagingInstance();
-
-      // 4. If permission already granted, refresh the FCM token automatically.
+      // Keep the server's copy of this device's token fresh.
+      // The dashboard awaits window.wealthoriaPushRefresh to show errors.
       if ("Notification" in window && Notification.permission === "granted") {
-        await registerMemberFCMToken();
+        window.wealthoriaPushRefresh =
+          registerMemberFCMToken(member).catch(function () { return false; });
+      } else {
+        window.wealthoriaPushRefresh = Promise.resolve(null);
       }
 
-      // 5. Skip if already listening.
       if (window.memberForegroundListenerReady) {
         return true;
       }
 
-      // 6. Foreground message listener.
-      messaging.onMessage(async function (payload) {
+      var messaging = await getMessagingInstance();
 
-        var title =
-          (payload.notification && payload.notification.title) ||
-          (payload.data && payload.data.title) ||
-          "Wealthoria";
+      // Fires only while a Wealthoria page is visible on screen.
+      // (When the app is closed or hidden, the service worker shows it.)
+      messaging.onMessage(function (payload) {
 
-        var body =
-          (payload.notification && payload.notification.body) ||
-          (payload.data && payload.data.body) ||
-          "You have a new notification.";
+        var data = payload.data || {};
+        var notification = payload.notification || {};
 
-        // Notify the member dashboard UI.
+        var title = data.title || notification.title || "Wealthoria";
+        var body  = data.body  || notification.body  || "You have a new notification.";
+        var url   = data.url   || (payload.fcmOptions && payload.fcmOptions.link) || "/members/dashboard";
+
+        // In-app banner on the member dashboard
         window.dispatchEvent(
           new CustomEvent("wealthoria:notification", {
-            detail: {
-              title:   title,
-              message: body,
-              url:     (payload.data && payload.data.url) || ""
-            }
+            detail: { title: title, message: body, url: url }
           })
         );
 
-        // Show the browser notification popup.
+        // System popup as well (the service worker draws it, which
+        // also works on Android where new Notification() is not allowed).
         if ("Notification" in window && Notification.permission === "granted") {
-          try {
-            var data = (payload.data) || {};
-
-            await registration.showNotification(title, {
-              body:               body,
-              icon:               "/icons/icon-192.png",
-              badge:              "/icons/icon-192.png",
-              tag:                data.tag || ("wealthoria-" + Date.now()),
-              renotify:           true,
-              requireInteraction: true,
-              silent:             false,
-              vibrate:            [200, 100, 200],
-              timestamp:          Date.now(),
-              data: {
-                url: data.url || "/members/dashboard"
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: "WEALTHORIA_SHOW_NOTIFICATION",
+              payload: {
+                data: {
+                  title: title,
+                  body:  body,
+                  url:   url,
+                  tag:   data.tag || ""
+                }
               }
             });
-
-          } catch (notificationError) {
-            console.error("Could not display browser notification:", notificationError);
           }
         }
-
       });
 
       window.memberForegroundListenerReady = true;
       return true;
 
     } catch (error) {
-      console.error("Foreground notification initialization error:", error);
+      console.warn("[Wealthoria push] Foreground init:", error);
       return false;
     }
   }
 
 
   // =========================================================
-  // ENABLE MEMBER NOTIFICATIONS  (called by the Enable button)
+  // ENABLE (called by the "Enable Notifications" button)
+  // Returns { ok, permission, error }
   // =========================================================
 
-  window.enableMemberNotifications = async function () {
+  window.enableMemberNotifications = async function (explicitMember) {
 
     try {
-
-      // 1. Firebase check.
-      if (!window.firebase) {
-        alert("Firebase is not loaded.");
-        return;
-      }
-
-      // 2. Browser support.
       if (!("Notification" in window)) {
-        alert("This browser does not support notifications.");
-        return;
+        var msg = isIos()
+          ? "On iPhone, open Wealthoria from the Home Screen icon (Share > Add to Home Screen), then enable notifications."
+          : "This browser does not support notifications.";
+        setError(msg);
+        return { ok: false, permission: "unsupported", error: msg };
       }
 
-      // 3. Member must be logged in.
-      var member = getLoggedInMember();
+      var member = explicitMember || getLoggedInMember();
       if (!member || !member.uid) {
-        alert("Please login as a member first.");
-        return;
+        setError("Please log in as a member first.");
+        return { ok: false, permission: Notification.permission, error: lastPushError };
       }
 
-      // 4. Request permission.
+      // Must run directly inside the tap, before any other await.
       var permission = Notification.permission;
       if (permission !== "granted") {
         permission = await Notification.requestPermission();
       }
 
       if (permission !== "granted") {
-        alert("Notification permission was not granted.");
-        return;
+        setError(permission === "denied"
+          ? "Notifications are blocked. Allow them in your browser or phone settings for wealthoria.in."
+          : "Permission was not given.");
+        return { ok: false, permission: permission, error: lastPushError };
       }
 
-      // 5. Initialise the foreground listener.
-      await initializeMemberForegroundNotifications();
+      var saved = await registerMemberFCMToken(member, { force: true });
+      await initializeMemberForegroundNotifications(member);
 
-      // 6. Register / refresh the FCM token.
-      var saved = await registerMemberFCMToken();
-
-      if (!saved) {
-        alert(
-          "Unable to enable notifications on this device:\n" +
-          (lastPushError || "Please check the notification permission and try again.")
-        );
-        return;
-      }
-
-      // 7. Done.
-      alert("Notifications enabled successfully! \uD83D\uDD14");
+      return { ok: saved, permission: permission, error: saved ? "" : lastPushError };
 
     } catch (error) {
-      console.error("Notification setup error:", error);
-      alert("Unable to enable notifications:\n" + error.message);
+      setError((error && error.message) || "Notification setup error.");
+      return { ok: false, permission: ("Notification" in window) ? Notification.permission : "unsupported", error: lastPushError };
     }
+  };
 
+
+  // =========================================================
+  // DEBUG HELPER: run wealthoriaPushStatus() in the browser console
+  // =========================================================
+
+  window.wealthoriaPushStatus = async function () {
+    var reg = null;
+    try { reg = await navigator.serviceWorker.getRegistration("/"); } catch (_) {}
+    var status = {
+      permission:      ("Notification" in window) ? Notification.permission : "unsupported",
+      serviceWorker:   reg ? (reg.active ? "active" : "not active yet") : "not registered",
+      deviceId:        lsGet(DEVICE_ID_KEY),
+      tokenSavedFor:   lsGet(SAVED_UID_KEY),
+      tokenSavedAt:    lsGet(SAVED_AT_KEY) ? new Date(Number(lsGet(SAVED_AT_KEY))).toLocaleString() : null,
+      tokenPreview:    (lsGet(SAVED_TOKEN_KEY) || "").slice(0, 24),
+      lastError:       lastPushError || null
+    };
+    console.table(status);
+    return status;
   };
 
 

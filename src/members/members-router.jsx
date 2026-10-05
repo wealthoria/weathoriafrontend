@@ -4,20 +4,13 @@ import React from "react";
 
 const { useState, useEffect } = React;
 
-
-/* =========================================================
-   MEMBERS ROUTER
-   ========================================================= */
-
-function MembersRouter() {
-
-  const [path, setPath] = useState(
-    window.location.pathname
-  );
-
-  const [memberSession, setMemberSession] = useState(null);
-  const [checkingAccess, setCheckingAccess] = useState(true);
-  const [accessDenied, setAccessDenied] = useState(false);
+const API_BASE_URL =
+  typeof window !== "undefined" && window.WEALTHORIA_API_BASE !== undefined
+    ? window.WEALTHORIA_API_BASE
+    : (typeof window !== "undefined" &&
+       (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? ""
+        : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net");
 
 /* =========================================================
    MULTI-MEMBER SESSION STORAGE
@@ -31,392 +24,189 @@ const CURRENT_MEMBER_KEY =
 
 
 const readStorageObject = (storage) => {
-
   try {
-
-    const raw =
-      storage.getItem(MEMBER_SESSIONS_KEY);
-
-    if (!raw) {
-      return {};
-    }
-
-    const parsed =
-      JSON.parse(raw);
-
-    return parsed &&
-      typeof parsed === "object"
-      ? parsed
-      : {};
-
+    const raw = storage.getItem(MEMBER_SESSIONS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
   } catch (error) {
-
-    console.warn(
-      "Could not read member sessions:",
-      error
-    );
-
+    console.warn("Could not read member sessions:", error);
     return {};
   }
-
 };
 
-
-const writeStorageObject = (
-  storage,
-  sessions
-) => {
-
-  storage.setItem(
-    MEMBER_SESSIONS_KEY,
-    JSON.stringify(sessions)
-  );
-
+const writeStorageObject = (storage, sessions) => {
+  storage.setItem(MEMBER_SESSIONS_KEY, JSON.stringify(sessions));
 };
-
 
 const getSavedMemberSession = () => {
-
   try {
-
-    /* =====================================================
-       1. NEW MULTI-ACCOUNT STORAGE
-    ===================================================== */
-
-    const sessionCurrentUid =
-      sessionStorage.getItem(
-        CURRENT_MEMBER_KEY
-      );
-
+    const sessionCurrentUid = sessionStorage.getItem(CURRENT_MEMBER_KEY);
     if (sessionCurrentUid) {
-
-      const sessionSessions =
-        readStorageObject(
-          sessionStorage
-        );
-
-      const session =
-        sessionSessions[
-          sessionCurrentUid
-        ];
-
-      if (
-        session?.uid &&
-        session?.token
-      ) {
-
+      const sessionSessions = readStorageObject(sessionStorage);
+      const session = sessionSessions[sessionCurrentUid];
+      if (session?.uid && session?.token) {
         return {
-          value:
-            JSON.stringify(session),
-          type:
-            "session",
-          uid:
-            session.uid
+          value: JSON.stringify(session),
+          type: "session",
+          uid: session.uid
         };
-
       }
-
     }
 
-
-    const localCurrentUid =
-      localStorage.getItem(
-        CURRENT_MEMBER_KEY
-      );
-
+    const localCurrentUid = localStorage.getItem(CURRENT_MEMBER_KEY);
     if (localCurrentUid) {
-
-      const localSessions =
-        readStorageObject(
-          localStorage
-        );
-
-      const session =
-        localSessions[
-          localCurrentUid
-        ];
-
-      if (
-        session?.uid &&
-        session?.token
-      ) {
-
+      const localSessions = readStorageObject(localStorage);
+      const session = localSessions[localCurrentUid];
+      if (session?.uid && session?.token) {
         return {
-          value:
-            JSON.stringify(session),
-          type:
-            "local",
-          uid:
-            session.uid
+          value: JSON.stringify(session),
+          type: "local",
+          uid: session.uid
         };
-
       }
-
     }
 
-
-    /* =====================================================
-       2. BACKWARD COMPATIBILITY
-       Read old single-session storage once
-       ===================================================== */
-
-    const oldLocal =
-      localStorage.getItem(
-        "wealthoria-member"
-      );
-
+    const oldLocal = localStorage.getItem("wealthoria-member");
     if (oldLocal) {
-
       try {
-
-        const oldSession =
-          JSON.parse(oldLocal);
-
-        if (
-          oldSession?.uid &&
-          oldSession?.token
-        ) {
-
-          const localSessions =
-            readStorageObject(
-              localStorage
-            );
-
-          localSessions[
-            oldSession.uid
-          ] = oldSession;
-
-          writeStorageObject(
-            localStorage,
-            localSessions
-          );
-
-          localStorage.setItem(
-            CURRENT_MEMBER_KEY,
-            oldSession.uid
-          );
-
-          localStorage.removeItem(
-            "wealthoria-member"
-          );
-
-       
+        const oldSession = JSON.parse(oldLocal);
+        if (oldSession?.uid && oldSession?.token) {
+          const localSessions = readStorageObject(localStorage);
+          localSessions[oldSession.uid] = oldSession;
+          writeStorageObject(localStorage, localSessions);
+          localStorage.setItem(CURRENT_MEMBER_KEY, oldSession.uid);
+          localStorage.removeItem("wealthoria-member");
 
           return {
-            value:
-              JSON.stringify(oldSession),
-            type:
-              "local",
-            uid:
-              oldSession.uid
+            value: JSON.stringify(oldSession),
+            type: "local",
+            uid: oldSession.uid
           };
-
         }
-
       } catch (error) {
-
-        console.warn(
-          "Old local member session is invalid:",
-          error
-        );
-
+        console.warn("Old local member session is invalid:", error);
       }
-
     }
 
-
-    const oldSessionStorage =
-      sessionStorage.getItem(
-        "wealthoria-member"
-      );
-
+    const oldSessionStorage = sessionStorage.getItem("wealthoria-member");
     if (oldSessionStorage) {
-
       try {
-
-        const oldSession =
-          JSON.parse(
-            oldSessionStorage
-          );
-
-        if (
-          oldSession?.uid &&
-          oldSession?.token
-        ) {
-
-          const sessions =
-            readStorageObject(
-              sessionStorage
-            );
-
-          sessions[
-            oldSession.uid
-          ] = oldSession;
-
-          writeStorageObject(
-            sessionStorage,
-            sessions
-          );
-
-          sessionStorage.setItem(
-            CURRENT_MEMBER_KEY,
-            oldSession.uid
-          );
-
-          sessionStorage.removeItem(
-            "wealthoria-member"
-          );
-
-        
+        const oldSession = JSON.parse(oldSessionStorage);
+        if (oldSession?.uid && oldSession?.token) {
+          const sessions = readStorageObject(sessionStorage);
+          sessions[oldSession.uid] = oldSession;
+          writeStorageObject(sessionStorage, sessions);
+          sessionStorage.setItem(CURRENT_MEMBER_KEY, oldSession.uid);
+          sessionStorage.removeItem("wealthoria-member");
 
           return {
-            value:
-              JSON.stringify(oldSession),
-            type:
-              "session",
-            uid:
-              oldSession.uid
+            value: JSON.stringify(oldSession),
+            type: "session",
+            uid: oldSession.uid
           };
-
         }
-
       } catch (error) {
-
-        console.warn(
-          "Old sessionStorage member session is invalid:",
-          error
-        );
-
+        console.warn("Old sessionStorage member session is invalid:", error);
       }
-
     }
-
 
     return null;
-
   } catch (error) {
-
-    console.error(
-      "Could not read current member session:",
-      error
-    );
-
+    console.error("Could not read current member session:", error);
     return null;
-
   }
-
 };
 
-const saveMemberSession = (
-  session,
-  storageType
-) => {
-
+const saveMemberSession = (session, storageType) => {
   try {
-
-    if (!session?.uid) {
-      return;
-    }
-
-    const storage =
-      storageType === "local"
-        ? localStorage
-        : sessionStorage;
-
-    const sessions =
-      readStorageObject(storage);
-
-    sessions[session.uid] =
-      session;
-
-    writeStorageObject(
-      storage,
-      sessions
-    );
-
+    if (!session?.uid) return;
+    const storage = storageType === "local" ? localStorage : sessionStorage;
+    const sessions = readStorageObject(storage);
+    sessions[session.uid] = session;
+    writeStorageObject(storage, sessions);
   } catch (error) {
-
-    console.error(
-      "Could not save member session:",
-      error
-    );
-
+    console.error("Could not save member session:", error);
   }
-
 };
 
-
-const removeMemberSession = (
-  uid
-) => {
-
+const removeMemberSession = (uid) => {
   try {
-
-    if (!uid) {
-      return;
-    }
-
-    const localSessions =
-      readStorageObject(
-        localStorage
-      );
-
-    const sessionSessions =
-      readStorageObject(
-        sessionStorage
-      );
-
+    if (!uid) return;
+    const localSessions = readStorageObject(localStorage);
+    const sessionSessions = readStorageObject(sessionStorage);
 
     delete localSessions[uid];
     delete sessionSessions[uid];
 
+    writeStorageObject(localStorage, localSessions);
+    writeStorageObject(sessionStorage, sessionSessions);
 
-    writeStorageObject(
-      localStorage,
-      localSessions
-    );
-
-    writeStorageObject(
-      sessionStorage,
-      sessionSessions
-    );
-
-
-    if (
-      localStorage.getItem(
-        CURRENT_MEMBER_KEY
-      ) === uid
-    ) {
-
-      localStorage.removeItem(
-        CURRENT_MEMBER_KEY
-      );
-
+    if (localStorage.getItem(CURRENT_MEMBER_KEY) === uid) {
+      localStorage.removeItem(CURRENT_MEMBER_KEY);
     }
-
-
-    if (
-      sessionStorage.getItem(
-        CURRENT_MEMBER_KEY
-      ) === uid
-    ) {
-
-      sessionStorage.removeItem(
-        CURRENT_MEMBER_KEY
-      );
-
+    if (sessionStorage.getItem(CURRENT_MEMBER_KEY) === uid) {
+      sessionStorage.removeItem(CURRENT_MEMBER_KEY);
     }
-
   } catch (error) {
-
-    console.error(
-      "Could not remove member session:",
-      error
-    );
-
+    console.error("Could not remove member session:", error);
   }
-
 };
+
+function getInitialMemberSession() {
+  try {
+    const saved = getSavedMemberSession();
+    if (!saved?.value) return null;
+    const parsed = typeof saved.value === "string" ? JSON.parse(saved.value) : saved.value;
+    if (parsed?.uid && parsed?.token) {
+      const status = String(parsed.status || "").toLowerCase();
+      const inactiveStatuses = [
+        "inactive",
+        "cancelled",
+        "canceled",
+        "deactivated",
+        "disabled",
+        "blocked",
+        "suspended"
+      ];
+      if (!inactiveStatuses.includes(status)) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+/* =========================================================
+   MEMBERS ROUTER
+========================================================= */
+
+function MembersRouter() {
+  const [path, setPath] = useState(window.location.pathname);
+  const initialSession = getInitialMemberSession();
+  const [memberSession, setMemberSession] = useState(initialSession);
+
+  const isLoginRoute = path === "/members/login" || path === "/members/";
+  const isForgotPasswordRoute = path === "/members/forgot-password";
+  const isSubscriptionRoute = path === "/members/subscription";
+  const isProtectedRoute = !isLoginRoute && !isForgotPasswordRoute && !isSubscriptionRoute;
+
+  const [checkingAccess, setCheckingAccess] = useState(
+    !initialSession && isProtectedRoute
+  );
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  /* Remember route for PWA restore */
+  useEffect(() => {
+    if (path && path.startsWith("/members")) {
+      try {
+        localStorage.setItem("wealthoria_pwa_default_portal", "members");
+        if (path !== "/members/login" && path !== "/members/") {
+          localStorage.setItem("wealthoria_last_member_route", path);
+        }
+      } catch (e) {}
+    }
+  }, [path]);
 
   /* =========================================================
      LISTEN FOR BACK / FORWARD
@@ -491,36 +281,6 @@ const removeMemberSession = (
 
   window.membersNavigate =
     navigate;
-
-
-  /* =========================================================
-     PUBLIC MEMBER ROUTES
-     ========================================================= */
-
-  const isLoginRoute =
-    path === "/members/login" ||
-    path === "/members/";
-
-  const isForgotPasswordRoute =
-    path === "/members/forgot-password";
-
-  /*
-   * Subscription registration stays available for
-   * users who are NOT already logged in.
-   *
-   * An inactive logged-in member must use the
-   * dedicated Activate Subscription button on login.
-   */
-  const isSubscriptionRoute =
-    path === "/members/subscription";
-
-
-  const isProtectedRoute =
-    !isLoginRoute &&
-    !isForgotPasswordRoute &&
-    !(
-      isSubscriptionRoute
-    );
 
 
   /* =========================================================
@@ -655,7 +415,7 @@ const removeMemberSession = (
           try {
             response =
               await fetch(
-                "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/members/me",
+                `${API_BASE_URL}/api/members/me`,
                 {
                   method: "GET",
                   headers: {
@@ -684,32 +444,53 @@ const removeMemberSession = (
               jsonError
             );
           }
-if (
-  !response.ok ||
-  !data?.success ||
-  !data?.member
-) {
+          if (!response.ok) {
+            // Only revoke session on explicit 401 Unauthorized or 403 Forbidden.
+            // Temporary 5xx server issues, cold starts, or network timeouts must NOT kick the member out while watching a video!
+            if (response.status === 401 || response.status === 403) {
+              console.warn("Member session expired or unauthorized (401/403):", {
+                httpStatus: response.status,
+                responseData: data
+              });
 
-  console.error(
-    "Member /api/members/me failed:",
-    {
-      httpStatus: response.status,
-      responseData: data
-    }
-  );
+              removeMemberSession(
+                session?.uid || saved?.uid
+              );
 
-  removeMemberSession(
-    session?.uid || saved?.uid
-  );
+              if (!cancelled) {
+                setMemberSession(null);
+                setAccessDenied(true);
+                setCheckingAccess(false);
+              }
 
-  if (!cancelled) {
-    setMemberSession(null);
-    setAccessDenied(true);
-    setCheckingAccess(false);
-  }
+              return;
+            }
 
-  return;
-}
+            console.warn(
+              `Member /api/members/me returned HTTP ${response.status}. Preserving active session.`
+            );
+
+            if (!cancelled) {
+              setCheckingAccess(false);
+            }
+
+            return;
+          }
+
+          if (
+            !data?.success ||
+            !data?.member
+          ) {
+            console.warn(
+              "Member /api/members/me response incomplete. Preserving active session."
+            );
+
+            if (!cancelled) {
+              setCheckingAccess(false);
+            }
+
+            return;
+          }
 
 
           const member =
@@ -825,21 +606,16 @@ if (
 
         } catch (error) {
 
-          console.error(
-            "Member access check failed:",
+          console.warn(
+            "Member access check failed (network/offline):",
             error
           );
 
-          /*
-           * Network failure should NOT automatically
-           * delete the member's session.
-           *
-           * For a protected page, fail closed until
-           * access can be verified.
-           */
-
           if (!cancelled) {
-            setAccessDenied(true);
+            // Keep user on the page if they had a valid saved session!
+            if (!initialSession) {
+              setAccessDenied(true);
+            }
             setCheckingAccess(false);
           }
 
@@ -864,7 +640,7 @@ if (
       intervalId =
         window.setInterval(
           checkMemberAccess,
-          30000
+          300000 // Check every 5 minutes instead of every 30 seconds to prevent video interruptions
         );
 
     }

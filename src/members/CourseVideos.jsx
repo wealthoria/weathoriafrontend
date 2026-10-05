@@ -1,9 +1,16 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
 const { useState, useEffect } = React;
 
+const API_BASE_URL =
+  typeof window !== "undefined" && window.WEALTHORIA_API_BASE !== undefined
+    ? window.WEALTHORIA_API_BASE
+    : (typeof window !== "undefined" &&
+       (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? ""
+        : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net");
 
 /* =========================================================
    COURSE DATA
@@ -490,7 +497,7 @@ useEffect(() => {
 
     try {
       const response = await fetch(
-        "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/payment/purchase-history",
+        `${API_BASE_URL}/api/payment/purchase-history`,
         {
           method: "GET",
           headers: {
@@ -542,7 +549,7 @@ useEffect(() => {
 
     try {
       const response = await fetch(
-        "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/members/dashboard-content",
+        `${API_BASE_URL}/api/members/dashboard-content`,
         {
           method: "GET",
           headers: {
@@ -626,10 +633,38 @@ useEffect(() => {
 };
 
   /* =======================================================
+     HANDLE BACK BUTTON / MODAL HISTORY
+  ======================================================= */
+
+  useEffect(() => {
+    if (!selectedCourse) return;
+
+    // Push history entry for course modal so mobile Back button closes modal instead of navigating away to home page
+    window.history.pushState({ courseModal: true }, "");
+
+    const handlePopState = () => {
+      setShowPreview(false);
+      setSelectedCourse(null);
+      setPreviewEnded(false);
+      setTimeLeft(30);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [selectedCourse ? selectedCourse.id : null]);
+
+  /* =======================================================
      CLOSE COURSE
   ======================================================= */
 
   const closeCourse = () => {
+    if (window.history.state?.courseModal) {
+      window.history.back();
+      return;
+    }
 
     setShowPreview(false);
 
@@ -736,7 +771,7 @@ if (!memberSession?.token) {
     ===================================================== */
 
     const response = await fetch(
-   "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/payment/create-course-order",
+   `${API_BASE_URL}/api/payment/create-course-order`,
       {
         method: "POST",
 
@@ -810,7 +845,7 @@ if (!memberSession?.token) {
 
 const verifyResponse =
   await fetch(
-    "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api/payment/verify-course-payment",
+    `${API_BASE_URL}/api/payment/verify-course-payment`,
     {
       method: "POST",
 
@@ -1535,6 +1570,7 @@ alert(
         title={selectedCourse.title}
         allow="autoplay; encrypted-media; fullscreen"
         allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups"
         onContextMenu={(event) =>
           event.preventDefault()
         }

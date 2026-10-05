@@ -22,14 +22,16 @@ importScripts(
    FIREBASE CONFIG  (must match src/firebase.js)
    ========================================================================= */
 
-firebase.initializeApp({
-  apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
-  authDomain: "wealthoria-6fc11.firebaseapp.com",
-  projectId: "wealthoria-6fc11",
-  storageBucket: "wealthoria-6fc11.firebasestorage.app",
-  messagingSenderId: "141910518023",
-  appId: "1:141910518023:web:7198ed847f459cb71ebda2"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyDYeZggBRJ1oP8r8yjuNMYYs5VSOX3yfnE",
+    authDomain: "wealthoria-6fc11.firebaseapp.com",
+    projectId: "wealthoria-6fc11",
+    storageBucket: "wealthoria-6fc11.firebasestorage.app",
+    messagingSenderId: "141910518023",
+    appId: "1:141910518023:web:7198ed847f459cb71ebda2"
+  });
+}
 
 const messaging = firebase.messaging();
 
@@ -41,16 +43,31 @@ const messaging = firebase.messaging();
 
 function buildWealthoriaNotification(payload) {
   const data = (payload && payload.data) ? payload.data : {};
+  const notification = (payload && payload.notification) ? payload.notification : {};
 
   const title =
     data.title ||
-    (payload && payload.notification && payload.notification.title) ||
+    notification.title ||
+    (payload && payload.title) ||
     "Wealthoria";
 
   const body =
     data.body ||
-    (payload && payload.notification && payload.notification.body) ||
+    notification.body ||
+    (payload && payload.body) ||
     "You have a new notification.";
+
+  const rawUrl =
+    data.url ||
+    (notification.data && notification.data.url) ||
+    (payload && payload.url) ||
+    "/members/dashboard";
+
+  const tag =
+    data.tag ||
+    notification.tag ||
+    (payload && payload.tag) ||
+    ("wealthoria-" + Date.now());
 
   return {
     title: title,
@@ -59,18 +76,18 @@ function buildWealthoriaNotification(payload) {
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
 
-      // Each notification gets its own tag so they stack (no silent replace).
-      tag: data.tag || ("wealthoria-" + Date.now()),
+      // Each notification gets its tag for stacking / deduplication
+      tag: tag,
       renotify: true,
 
-      // Keeps the heads-up banner on screen until the user taps it.
+      // Keeps the heads-up banner on screen until tapped
       requireInteraction: true,
       silent: false,
       vibrate: [200, 100, 200],
       timestamp: Date.now(),
 
       data: {
-        url: data.url || "/members/dashboard"
+        url: rawUrl
       }
     }
   };
@@ -78,11 +95,23 @@ function buildWealthoriaNotification(payload) {
 
 
 /* =========================================================================
-   BACKGROUND PUSH NOTIFICATION
-   Fires when the app is closed or the tab is in the background.
+   BACKGROUND PUSH (FCM)
+   ONE handler only. The previous version also had a raw "push" listener,
+   so every message was shown two or three times, and iOS can cancel the
+   subscription of a site that behaves like that.
+
+   How the Firebase SDK behaves here:
+     - Message WITH a "notification" block: the SDK shows it by itself.
+       We must not show it again.
+     - Data-only message (what the backend now sends): we show it here.
+     - If a Wealthoria page is visible on screen, the SDK hands the
+       message to the page instead (notifications.js -> onMessage).
    ========================================================================= */
 
 messaging.onBackgroundMessage(function (payload) {
+  if (payload && payload.notification) {
+    return; // already displayed by the Firebase SDK
+  }
   const n = buildWealthoriaNotification(payload);
   return self.registration.showNotification(n.title, n.options);
 });
@@ -183,7 +212,7 @@ self.addEventListener("notificationclick", function (event) {
    CACHE CONFIGURATION
    ========================================================================= */
 
-const CACHE_VERSION = "wealthoria-v13";
+const CACHE_VERSION = "wealthoria-v14";
 const PRECACHE      = CACHE_VERSION + "-precache";
 const RUNTIME       = CACHE_VERSION + "-runtime";
 

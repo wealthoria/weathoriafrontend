@@ -730,9 +730,16 @@ function UsersScreen() {
       const hasPaid =
         memberSubscriptions.some(subscriptionIsPaid);
 
+      // For a paying member, ignore abandoned checkout attempts so the
+      // status filter does not list them as "Pending" / "Created".
+      const statusSource =
+        hasPaid
+          ? memberSubscriptions.filter(subscriptionIsPaid)
+          : memberSubscriptions;
+
       const statuses = [
         ...new Set(
-          memberSubscriptions
+          statusSource
             .flatMap((subscription) => [
               subscription.status,
               subscription.razorpayStatus

@@ -348,6 +348,10 @@ function UsersScreen() {
   const [subscriptionPlanFilter, setSubscriptionPlanFilter] =
     useState("all");
 
+  // Sign-ups who opened checkout but never paid are hidden by default.
+  const [showUnpaid, setShowUnpaid] =
+    useState(false);
+
   const [subscriptions, setSubscriptions] =
     useState([]);
 
@@ -471,6 +475,12 @@ function UsersScreen() {
                         data.dateOfBirth ||
                         data.dob ||
                         "",
+
+                      complimentary:
+                        Boolean(
+                          data.complimentary ||
+                          data.isLifetime
+                        ),
 
                       notificationEnabled:
                         Boolean(
@@ -652,6 +662,44 @@ function UsersScreen() {
       );
     }
 
+    // True when Razorpay took at least one payment for this record.
+    function subscriptionIsPaid(subscription) {
+      const status = normalizeValue(subscription.status);
+      const paidCount = Number(subscription.paidCount);
+
+      if (subscription.razorpayPaymentId) return true;
+
+      // Records synced from Razorpay carry paidCount.
+      if (
+        subscription.paidCount !== undefined &&
+        subscription.paidCount !== null &&
+        Number.isFinite(paidCount)
+      ) {
+        return paidCount > 0;
+      }
+
+      // Older records: these statuses were only set after payment.
+      return [
+        "active",
+        "cancelled",
+        "halted",
+        "paused",
+        "inactive"
+      ].includes(status);
+    }
+
+    // Same order the member API uses (memberRoutes subscriptionRank).
+    function subscriptionRank(subscription) {
+      const status = normalizeValue(subscription.status);
+
+      if (!subscriptionIsPaid(subscription)) return 0;
+      if (status === "active") return 5;
+      if (status === "cancelled" || status === "halted") return 4;
+      if (status === "paused") return 3;
+      if (status === "expired") return 2;
+      return 1;
+    }
+
     return members.map((member) => {
 
       const memberSubscriptions =
@@ -664,6 +712,9 @@ function UsersScreen() {
           )
           .sort(
             (a, b) =>
+              // Paid records first, so an abandoned checkout can never
+              // hide the member's real subscription.
+              subscriptionRank(b) - subscriptionRank(a) ||
               toMillis(
                 b.updatedAt ||
                 b.createdAt ||
@@ -675,6 +726,9 @@ function UsersScreen() {
                 a.subscriptionStartDate
               )
           );
+
+      const hasPaid =
+        memberSubscriptions.some(subscriptionIsPaid);
 
       const statuses = [
         ...new Set(
@@ -798,6 +852,23 @@ function UsersScreen() {
         subscriptionCount:
           memberSubscriptions.length,
 
+        hasPaid,
+
+        // Never paid and not a manual / free / admin-managed account.
+        isUnpaidSignup:
+          !hasPaid &&
+          !member.complimentary &&
+          ![
+            "active",
+            "deactivated",
+            "disabled",
+            "blocked",
+            "suspended",
+            "deleted"
+          ].includes(
+            normalizeValue(member.status || "active")
+          ),
+
       };
 
     });
@@ -897,7 +968,12 @@ function UsersScreen() {
                 subscriptionPlanFilter
             );
 
+          const matchesPaid =
+            showUnpaid ||
+            !member.isUnpaidSignup;
+
           return (
+            matchesPaid &&
             matchesSearch &&
             matchesMemberStatus &&
             matchesSubscriptionStatus &&
@@ -912,8 +988,25 @@ function UsersScreen() {
       search,
       memberStatusFilter,
       subscriptionStatusFilter,
-      subscriptionPlanFilter
+      subscriptionPlanFilter,
+      showUnpaid
     ]);
+
+
+  // Members who never paid (hidden unless "Show unpaid sign-ups" is on).
+  const unpaidSignupCount =
+    useMemo(
+      () =>
+        joinedMembers.filter(
+          (member) => member.isUnpaidSignup
+        ).length,
+      [joinedMembers]
+    );
+
+  const listedMemberCount =
+    showUnpaid
+      ? joinedMembers.length
+      : joinedMembers.length - unpaidSignupCount;
 
 
   const subscriptionStatusOptions =
@@ -1265,7 +1358,7 @@ function UsersScreen() {
     <Shell
       title="Members"
       subtitle={
-        `${members.length} registered members`
+        `${listedMemberCount} registered members`
       }
     >
 
@@ -1379,7 +1472,7 @@ function UsersScreen() {
                     800
                 }}
               >
-                {members.length}
+                {listedMemberCount}
               </span>
 
             </div>
@@ -1782,8 +1875,32 @@ function UsersScreen() {
               subscriptionStatusFilter !== "all" ||
               subscriptionPlanFilter !== "all"
                 ? `${filteredMembers.length} result${filteredMembers.length === 1 ? "" : "s"}`
-                : `${members.length} members`}
+                : `${listedMemberCount} members`}
             </div>
+
+            {unpaidSignupCount > 0 && (
+              <label
+                title="People who opened the payment page but never paid"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  color: "var(--muted, #6b7280)",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer"
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={showUnpaid}
+                  onChange={(event) =>
+                    setShowUnpaid(event.target.checked)
+                  }
+                />
+                Show unpaid sign-ups ({unpaidSignupCount})
+              </label>
+            )}
 
             <button
               type="button"
@@ -2857,7 +2974,7 @@ function UsersScreen() {
                     "#374151"
                 }}
               >
-                {members.length}
+                {listedMemberCount}
               </strong>{" "}
               members
             </span>

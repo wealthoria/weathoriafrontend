@@ -11,8 +11,8 @@ const API_BASE_URL =
       (window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1" ||
         !window.location.hostname.endsWith("wealthoria.in"))
-    ? ""
-    : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+      ? ""
+      : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 async function getAdminToken() {
   const currentUser = auth?.currentUser || window.auth?.currentUser;
@@ -29,12 +29,30 @@ async function getAdminToken() {
 function safeTimestamp(value) {
   if (!value) return 0;
   if (typeof value === "number") return value;
+  if (value instanceof Date) return value.getTime();
   if (value?.toDate && typeof value.toDate === "function") {
-    return value.toDate().getTime();
+    try {
+      return value.toDate().getTime();
+    } catch {
+      // fallback
+    }
   }
-  if (value?.seconds) return Number(value.seconds) * 1000;
+  if (value?.seconds !== undefined) return Number(value.seconds) * 1000;
+  if (value?._seconds !== undefined) return Number(value._seconds) * 1000;
   const parsed = new Date(value).getTime();
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getOrderTime(order) {
+  if (!order) return 0;
+  return (
+    safeTimestamp(order.createdAt) ||
+    safeTimestamp(order.updatedAt) ||
+    safeTimestamp(order.orderDate) ||
+    safeTimestamp(order.date) ||
+    safeTimestamp(order.timestamp) ||
+    0
+  );
 }
 
 function toDateInputValue(date) {
@@ -49,6 +67,18 @@ function toDateInputValue(date) {
 
 function formatDate(value) {
   const time = safeTimestamp(value);
+  if (!time) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(time));
+}
+
+function getOrderFormattedDate(order) {
+  const time = getOrderTime(order);
   if (!time) return "—";
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
@@ -347,6 +377,7 @@ function PrebookOrders() {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [shippingFilter, setShippingFilter] = useState("all");
   const [couponFilter, setCouponFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [datePreset, setDatePreset] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -388,7 +419,15 @@ function PrebookOrders() {
           ...doc.data()
         }));
 
-        rows.sort((a, b) => safeTimestamp(b.createdAt) - safeTimestamp(a.createdAt));
+        // Strict descending order: newest orders first
+        rows.sort((a, b) => {
+          const timeDiff = getOrderTime(b) - getOrderTime(a);
+          if (timeDiff !== 0) return timeDiff;
+          const numA = parseInt(String(a.bookingId || "").replace(/\D/g, ""), 10) || 0;
+          const numB = parseInt(String(b.bookingId || "").replace(/\D/g, ""), 10) || 0;
+          if (numA !== numB) return numB - numA;
+          return String(b.id || "").localeCompare(String(a.id || ""));
+        });
 
         setOrders(rows);
         setError("");
@@ -502,7 +541,7 @@ function PrebookOrders() {
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return orders.filter((order) => {
+    const result = orders.filter((order) => {
       if (showDuplicates && !duplicateInfo.duplicateOrderIds.has(order.id)) {
         return false;
       }
@@ -521,16 +560,15 @@ function PrebookOrders() {
         if (orderCouponCode !== targetCode) return false;
       }
 
-      // Date filtering
+      // Date filtering using robust getOrderTime
+      const orderMs = getOrderTime(order);
       if (startDate) {
         const startMs = new Date(`${startDate}T00:00:00`).getTime();
-        const orderMs = safeTimestamp(order.createdAt);
         if (!orderMs || orderMs < startMs) return false;
       }
 
       if (endDate) {
         const endMs = new Date(`${endDate}T23:59:59.999`).getTime();
-        const orderMs = safeTimestamp(order.createdAt);
         if (!orderMs || orderMs > endMs) return false;
       }
 
@@ -566,7 +604,27 @@ function PrebookOrders() {
 
       return searchable.includes(query);
     });
-  }, [orders, search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates, duplicateInfo]);
+
+    // Sort strictly by descending order (newest first) or ascending if selected
+    result.sort((a, b) => {
+      const timeDiff = getOrderTime(b) - getOrderTime(a);
+      const numA = parseInt(String(a.bookingId || "").replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(String(b.bookingId || "").replace(/\D/g, ""), 10) || 0;
+
+      if (sortOrder === "asc") {
+        if (timeDiff !== 0) return -timeDiff;
+        if (numA !== numB) return numA - numB;
+        return String(a.id || "").localeCompare(String(b.id || ""));
+      } else {
+        // Default descending: newest first
+        if (timeDiff !== 0) return timeDiff;
+        if (numA !== numB) return numB - numA;
+        return String(b.id || "").localeCompare(String(a.id || ""));
+      }
+    });
+
+    return result;
+  }, [orders, search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates, duplicateInfo, sortOrder]);
 
   /* =======================================================
      FILTERED METRICS (Total amount & discount for filtered orders / coupon)
@@ -640,7 +698,7 @@ function PrebookOrders() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates]);
+  }, [search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates, sortOrder]);
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -741,21 +799,22 @@ function PrebookOrders() {
 
       const excelRows = filteredOrders.map((order) => {
         const customer = order.customer || {};
-                const address = (customer.address || "").slice(0, 60);
+        const address = (customer.address || "").slice(0, 60);
 
         return {
           "RECEIVER NAME": customer.name || "",
 
-            "RECEIVER ADD LINE 1": address.slice(0, 30),
-            "RECEIVER ADD LINE 2": address.slice(30, 60),
-           "RECEIVER CITY":customer.city||"",
-           "RECEIVER STATE":customer.state||"",
-           "RECEIVER PINCODE":customer.pincode||"",
-           "DROP OFF PINCODE":"5700002",
-           "SENDER MOBILE NO":9019759001,
-           "RECEIVER MOBILE NO":customer.phone,
+          "RECEIVER ADD LINE 1": address.slice(0, 30),
+          "RECEIVER ADD LINE 2": address.slice(30, 60),
+          "RECEIVER CITY": customer.city || "",
+          "RECEIVER STATE": customer.state || "",
+          "RECEIVER PINCODE": customer.pincode || "",
+          "DROP OFF PINCODE": "5700002",
+          "SENDER MOBILE NO": 9019759001,
+          "RECEIVER MOBILE NO": customer.phone,
           "Phone Number": customer.phone || "",
           "Book ID": order.bookingId || "",
+          "Order Date": getOrderFormattedDate(order),
           "Amount": order.amount ? `₹${order.amount}` : "",
           "Coupon Code": order.couponCode || "",
           "Discount Amount": order.discountAmount ? `₹${order.discountAmount}` : ""
@@ -787,112 +846,112 @@ function PrebookOrders() {
      DROP OFF PINCODE | SENDER MOBILE NO | RECEIVER MOBILE NO
   ======================================================= */
 
-const exportPageCourierFormat = async () => {
-  try {
-    if (!orders.length) {
-      alert("No orders to export.");
-      return;
-    }
-
-    await loadXLSX();
-
-    // Sort by Book ID in ascending order
-    const sortedOrders = [...orders].sort((a, b) => {
-      const idA = String(a.bookingId || "");
-      const idB = String(b.bookingId || "");
-
-      return idA.localeCompare(idB, undefined, {
-        numeric: true,
-        sensitivity: "base"
-      });
-    });
-
-    const rows = sortedOrders.map((order) => {
-      const customer = order.customer || {};
-      const addr = order.shippingAddress || {};
-
-      // New orders: the customer typed Address Line 1 and
-      // Line 2 (max 30 characters each), so use them as typed.
-      const typedLine1 = String(addr.address || "").trim();
-      const typedLine2 = String(addr.landmark || "").trim();
-
-      let addressLine1 = typedLine1;
-      let addressLine2 = typedLine2;
-
-      // Older orders: one long address -> join and split 30 + 30.
-      if (typedLine1.length > 30 || typedLine2.length > 30) {
-        const fullAddress = [typedLine1, typedLine2]
-          .filter(Boolean)
-          .join(", ");
-
-        addressLine1 = fullAddress.slice(0, 30);
-        addressLine2 = fullAddress.slice(30, 60);
+  const exportPageCourierFormat = async () => {
+    try {
+      if (!orders.length) {
+        alert("No orders to export.");
+        return;
       }
 
-      return {
-        "RECEIVER NAME": customer.name || addr.name || "",
+      await loadXLSX();
 
-        "RECEIVER ADD LINE 1": addressLine1,
+      // Sort by Book ID in ascending order
+      const sortedOrders = [...orders].sort((a, b) => {
+        const idA = String(a.bookingId || "");
+        const idB = String(b.bookingId || "");
 
-        "RECEIVER ADD LINE 2": addressLine2,
+        return idA.localeCompare(idB, undefined, {
+          numeric: true,
+          sensitivity: "base"
+        });
+      });
 
-        "RECEIVER CITY": addr.city || "",
+      const rows = sortedOrders.map((order) => {
+        const customer = order.customer || {};
+        const addr = order.shippingAddress || {};
 
-        "RECEIVER STATE": addr.state || "",
+        // New orders: the customer typed Address Line 1 and
+        // Line 2 (max 30 characters each), so use them as typed.
+        const typedLine1 = String(addr.address || "").trim();
+        const typedLine2 = String(addr.landmark || "").trim();
 
-        "RECEIVER PINCODE": addr.pincode || "",
+        let addressLine1 = typedLine1;
+        let addressLine2 = typedLine2;
 
-        "DROP OFF PINCODE": "570002",
+        // Older orders: one long address -> join and split 30 + 30.
+        if (typedLine1.length > 30 || typedLine2.length > 30) {
+          const fullAddress = [typedLine1, typedLine2]
+            .filter(Boolean)
+            .join(", ");
 
-        "SENDER MOBILE NO": "",
+          addressLine1 = fullAddress.slice(0, 30);
+          addressLine2 = fullAddress.slice(30, 60);
+        }
 
-        "RECEIVER MOBILE NO": cleanPhone10(
-          customer.phone || addr.phone || ""
-        ),
+        return {
+          "RECEIVER NAME": customer.name || addr.name || "",
 
-        "Book ID": order.bookingId || ""
-      };
-    });
+          "RECEIVER ADD LINE 1": addressLine1,
 
-    const ws = window.XLSX.utils.json_to_sheet(rows);
+          "RECEIVER ADD LINE 2": addressLine2,
 
-    ws["!cols"] = [
-      { wch: 28 }, // RECEIVER NAME
-      { wch: 32 }, // RECEIVER ADD LINE 1
-      { wch: 32 }, // RECEIVER ADD LINE 2
-      { wch: 18 }, // RECEIVER CITY
-      { wch: 18 }, // RECEIVER STATE
-      { wch: 18 }, // RECEIVER PINCODE
-      { wch: 18 }, // DROP OFF PINCODE
-      { wch: 20 }, // SENDER MOBILE NO
-      { wch: 20 }, // RECEIVER MOBILE NO
-      { wch: 18 }  // Book ID
-    ];
+          "RECEIVER CITY": addr.city || "",
 
-    const wb = window.XLSX.utils.book_new();
+          "RECEIVER STATE": addr.state || "",
 
-    window.XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      "ArticleDetails"
-    );
+          "RECEIVER PINCODE": addr.pincode || "",
 
-    const today = new Date().toISOString().slice(0, 10);
+          "DROP OFF PINCODE": "570002",
 
-    window.XLSX.writeFile(
-      wb,
-      `wealthoria-courier-${today}.xlsx`
-    );
+          "SENDER MOBILE NO": "",
 
-  } catch (err) {
-    console.error("Courier export error:", err);
+          "RECEIVER MOBILE NO": cleanPhone10(
+            customer.phone || addr.phone || ""
+          ),
 
-    alert(
-      err?.message ||
-      "Unable to export Excel file."
-    );
-  }
-};
+          "Book ID": order.bookingId || ""
+        };
+      });
+
+      const ws = window.XLSX.utils.json_to_sheet(rows);
+
+      ws["!cols"] = [
+        { wch: 28 }, // RECEIVER NAME
+        { wch: 32 }, // RECEIVER ADD LINE 1
+        { wch: 32 }, // RECEIVER ADD LINE 2
+        { wch: 18 }, // RECEIVER CITY
+        { wch: 18 }, // RECEIVER STATE
+        { wch: 18 }, // RECEIVER PINCODE
+        { wch: 18 }, // DROP OFF PINCODE
+        { wch: 20 }, // SENDER MOBILE NO
+        { wch: 20 }, // RECEIVER MOBILE NO
+        { wch: 18 }  // Book ID
+      ];
+
+      const wb = window.XLSX.utils.book_new();
+
+      window.XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        "ArticleDetails"
+      );
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      window.XLSX.writeFile(
+        wb,
+        `wealthoria-courier-${today}.xlsx`
+      );
+
+    } catch (err) {
+      console.error("Courier export error:", err);
+
+      alert(
+        err?.message ||
+        "Unable to export Excel file."
+      );
+    }
+  };
 
 
   const icon = (name, size = 17) => (MIcon ? <MIcon name={name} size={size} /> : null);
@@ -908,8 +967,8 @@ const exportPageCourierFormat = async () => {
       newStatus === "shipped"
         ? "mark this order as Shipped"
         : newStatus === "delivered"
-        ? "mark this order as Delivered"
-        : `set the status to ${newStatus}`;
+          ? "mark this order as Delivered"
+          : `set the status to ${newStatus}`;
 
     if (!window.confirm(`Are you sure you want to ${actionText}?`)) return;
 
@@ -965,8 +1024,7 @@ const exportPageCourierFormat = async () => {
     if (!order?.id) return;
 
     const confirmed = window.confirm(
-      `Are you sure you want to permanently delete order ${
-        order.bookingId || order.id
+      `Are you sure you want to permanently delete order ${order.bookingId || order.id
       }?\n\nThis cannot be undone.`
     );
 
@@ -1136,9 +1194,9 @@ const exportPageCourierFormat = async () => {
       if (!reprint) {
         const confirmed = window.confirm(
           `Generate ${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"} for the current page?\n\n` +
-            `Page rows: ${rowRangeText}\n` +
-            `${totalLabelPages} A4 page${totalLabelPages === 1 ? "" : "s"} will be created (18 labels per A4 page).\n\n` +
-            `You can generate this page again later.`
+          `Page rows: ${rowRangeText}\n` +
+          `${totalLabelPages} A4 page${totalLabelPages === 1 ? "" : "s"} will be created (18 labels per A4 page).\n\n` +
+          `You can generate this page again later.`
         );
         if (!confirmed) return;
       }
@@ -1290,8 +1348,8 @@ const exportPageCourierFormat = async () => {
 
         alert(
           `${labelOrders.length} shipping label${labelOrders.length === 1 ? "" : "s"} generated successfully.\n\n` +
-            `${reprint ? "Row" : "Page rows"}: ${rowRangeText}\n` +
-            `Batch: ${labelBatchId}`
+          `${reprint ? "Row" : "Page rows"}: ${rowRangeText}\n` +
+          `Batch: ${labelBatchId}`
         );
       } else {
         alert("PDF generated, but Firestore is not available to record the label status.");
@@ -1325,8 +1383,8 @@ const exportPageCourierFormat = async () => {
 
     const confirmed = window.confirm(
       `Reset label count for ${resettableOrders.length} order${resettableOrders.length === 1 ? "" : "s"} on Page ${currentPage}?\n\n` +
-        `Their label count will become 0.\n` +
-        `The next time you generate them, the count will start from 1.`
+      `Their label count will become 0.\n` +
+      `The next time you generate them, the count will start from 1.`
     );
 
     if (!confirmed) return;
@@ -1381,7 +1439,7 @@ const exportPageCourierFormat = async () => {
 
       alert(
         `Label counts reset successfully for ${resettableOrders.length} order${resettableOrders.length === 1 ? "" : "s"}.\n\n` +
-          `Next generation will start from count 1.`
+        `Next generation will start from count 1.`
       );
     } catch (err) {
       console.error("Reset label count error:", err);
@@ -1399,8 +1457,7 @@ const exportPageCourierFormat = async () => {
     if (!order?.id) return;
 
     const confirmed = window.confirm(
-      `Reprint the shipping label for ${
-        order.bookingId || order.id
+      `Reprint the shipping label for ${order.bookingId || order.id
       }?\n\nThis will intentionally create a duplicate label.`
     );
 
@@ -1744,8 +1801,8 @@ const exportPageCourierFormat = async () => {
                 {couponFilter.startsWith("code:")
                   ? `Coupon Selected: ${couponFilter.slice(5)}`
                   : couponFilter === "with_coupon"
-                  ? "Orders With Coupon"
-                  : "Orders Without Coupon"}
+                    ? "Orders With Coupon"
+                    : "Orders Without Coupon"}
               </div>
               <div style={{ fontSize: 13, color: "#344054", marginTop: 2 }}>
                 {filteredMetrics.orderCount} order{filteredMetrics.orderCount === 1 ? "" : "s"} found
@@ -2033,6 +2090,26 @@ const exportPageCourierFormat = async () => {
           </div>
         )}
 
+        {/* SORT ORDER */}
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          style={{
+            height: 42,
+            border: "1px solid #dfe3e8",
+            borderRadius: 10,
+            padding: "0 12px",
+            fontSize: 13,
+            background: "var(--card, #fff)",
+            color: "var(--ink, #17191c)",
+            fontWeight: 700
+          }}
+          title="Sort order"
+        >
+          <option value="desc">⬇️ Newest First (Desc)</option>
+          <option value="asc">⬆️ Oldest First (Asc)</option>
+        </select>
+
         <button
           type="button"
           onClick={() => {
@@ -2040,6 +2117,7 @@ const exportPageCourierFormat = async () => {
             setPaymentFilter("all");
             setShippingFilter("all");
             setCouponFilter("all");
+            setSortOrder("desc");
             setDatePreset("all");
             setStartDate("");
             setEndDate("");
@@ -2096,6 +2174,7 @@ const exportPageCourierFormat = async () => {
                   "Select",
                   "Row",
                   "Booking ID",
+                  "Date",
                   "Name",
                   "Email",
                   "Phone",
@@ -2129,7 +2208,7 @@ const exportPageCourierFormat = async () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={15}
                     style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
                   >
                     Loading pre-book orders...
@@ -2138,7 +2217,7 @@ const exportPageCourierFormat = async () => {
               ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={15}
                     style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
                   >
                     {orders.length === 0
@@ -2207,6 +2286,20 @@ const exportPageCourierFormat = async () => {
                         }}
                       >
                         {valueOrDash(order.bookingId)}
+                      </td>
+
+                      {/* DATE */}
+                      <td
+                        style={{
+                          padding: "14px",
+                          fontSize: 12,
+                          color: "#475467",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        <div style={{ fontWeight: 650, color: "var(--ink, #17191c)" }}>
+                          {getOrderFormattedDate(order)}
+                        </div>
                       </td>
 
                       {/* NAME */}
@@ -2300,14 +2393,14 @@ const exportPageCourierFormat = async () => {
                                 order.shippingStatus === "delivered"
                                   ? "#ecfdf3"
                                   : order.shippingStatus === "shipped"
-                                  ? "#eff8ff"
-                                  : "#f2f4f7",
+                                    ? "#eff8ff"
+                                    : "#f2f4f7",
                               color:
                                 order.shippingStatus === "delivered"
                                   ? "#067647"
                                   : order.shippingStatus === "shipped"
-                                  ? "#175cd3"
-                                  : "#475467",
+                                    ? "#175cd3"
+                                    : "#475467",
                               fontSize: 11,
                               fontWeight: 750,
                               whiteSpace: "nowrap"
@@ -2316,8 +2409,8 @@ const exportPageCourierFormat = async () => {
                             {order.shippingStatus === "delivered"
                               ? "✓ Delivered"
                               : order.shippingStatus === "shipped"
-                              ? "Shipped"
-                              : "Pending"}
+                                ? "Shipped"
+                                : "Pending"}
                           </span>
 
                           {order.shippingStatus !== "delivered" && (
@@ -2348,8 +2441,8 @@ const exportPageCourierFormat = async () => {
                               {updatingStatus
                                 ? "Updating..."
                                 : order.shippingStatus === "shipped"
-                                ? "Mark as Delivered"
-                                : "Mark as Shipped"}
+                                  ? "Mark as Delivered"
+                                  : "Mark as Shipped"}
                             </button>
                           )}
                         </div>
@@ -2450,11 +2543,11 @@ const exportPageCourierFormat = async () => {
                             setEmailSubject(`Wealthoria – Pre-booking Confirmation ${bookingId}`);
                             setEmailMessage(
                               `Dear ${name},\n\n` +
-                                `Thank you for pre-booking the book "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" with Wealthoria.\n\n` +
-                                `Booking ID: ${bookingId}\n` +
-                                `Amount Paid: ₹${amount}\n\n` +
-                                `We will share shipping updates once your book is dispatched.\n\n` +
-                                `Regards,\nWealthoria`
+                              `Thank you for pre-booking the book "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" with Wealthoria.\n\n` +
+                              `Booking ID: ${bookingId}\n` +
+                              `Amount Paid: ₹${amount}\n\n` +
+                              `We will share shipping updates once your book is dispatched.\n\n` +
+                              `Regards,\nWealthoria`
                             );
                           }}
                           style={{
@@ -2850,8 +2943,11 @@ const exportPageCourierFormat = async () => {
                 >
                   Booking
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 800 }}>
-                  {valueOrDash(selected.bookingId)}
+                <div style={{ fontSize: 20, fontWeight: 800, display: "flex", alignItems: "center", gap: 12 }}>
+                  <span>{valueOrDash(selected.bookingId)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#667085" }}>
+                    📅 {getOrderFormattedDate(selected)}
+                  </span>
                 </div>
               </div>
 
@@ -2924,6 +3020,7 @@ const exportPageCourierFormat = async () => {
                   }}
                 >
                   <h3 style={{ margin: "12px 0 4px", fontSize: 15 }}>Customer</h3>
+                  <DetailField label="Order Date">{getOrderFormattedDate(selected)}</DetailField>
                   <DetailField label="Name">{selected.customer?.name}</DetailField>
                   <DetailField label="Email">{selected.customer?.email}</DetailField>
                   <DetailField label="Phone">{selected.customer?.phone}</DetailField>

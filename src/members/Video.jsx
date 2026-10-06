@@ -1,6 +1,35 @@
 import React from "react";
 
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
+
+// Remembers the video a member is watching so that, if the phone
+// reloads or relaunches the app (screen lock, app switch, low
+// memory), the same video opens again instead of the Home screen.
+const OPEN_VIDEO_KEY = "wealthoria-open-video";
+const OPEN_VIDEO_MAX_AGE = 3 * 60 * 60 * 1000;
+
+function rememberOpenVideo(videoId) {
+  try {
+    if (videoId) {
+      localStorage.setItem(
+        OPEN_VIDEO_KEY,
+        JSON.stringify({ id: String(videoId), at: Date.now() })
+      );
+    } else {
+      localStorage.removeItem(OPEN_VIDEO_KEY);
+    }
+  } catch (e) {}
+}
+
+function getRememberedVideoId() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPEN_VIDEO_KEY) || "null");
+    if (saved?.id && Date.now() - Number(saved.at || 0) < OPEN_VIDEO_MAX_AGE) {
+      return saved.id;
+    }
+  } catch (e) {}
+  return "";
+}
 
 const MEMBER_API ="https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
@@ -127,17 +156,7 @@ function MemberVideoPlayer({
     video.videoUrl || "";
 
   return (
-    <div
-      className="member-video-modal-overlay"
-      onMouseDown={(event) => {
-        if (
-          event.target ===
-          event.currentTarget
-        ) {
-          onClose();
-        }
-      }}
-    >
+    <div className="member-video-modal-overlay">
       <div
         className="member-video-modal"
         onMouseDown={(event) =>
@@ -255,6 +274,8 @@ function MemberVideo() {
   const [selectedVideo, setSelectedVideo] =
     useState(null);
 
+  const restoredVideoRef = useRef(false);
+
   const [searchQuery, setSearchQuery] =
     useState("");
 
@@ -315,6 +336,21 @@ function MemberVideo() {
             );
 
             setVideos(rows);
+
+            if (!restoredVideoRef.current) {
+              restoredVideoRef.current = true;
+
+              const rememberedId = getRememberedVideoId();
+              const remembered = rememberedId
+                ? rows.find((row) => String(row.id) === rememberedId)
+                : null;
+
+              if (remembered) {
+                setSelectedVideo(remembered);
+              } else {
+                rememberOpenVideo("");
+              }
+            }
 
             setLoading(false);
 
@@ -469,6 +505,8 @@ function openVideo(video) {
     });
   }
 
+  rememberOpenVideo(video.id);
+
   setSelectedVideo(video);
 }
   /* =======================================================
@@ -486,6 +524,8 @@ function openVideo(video) {
       content_title: selectedVideo.title || ""
     });
   }
+
+  rememberOpenVideo("");
 
   setSelectedVideo(null);
 }

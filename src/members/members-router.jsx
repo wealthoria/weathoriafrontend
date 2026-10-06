@@ -153,6 +153,37 @@ const removeMemberSession = (uid) => {
   }
 };
 
+// Cancelling only stops renewal: a cancelled member keeps access
+// until the end of the period they already paid for.
+const CANCELLED_STATUSES = ["cancelled", "canceled"];
+
+function hasPaidAccessLeft(session) {
+  const subscription = session?.subscription || {};
+
+  if (subscription.accessActive === false) return false;
+
+  const value = subscription.accessUntil || subscription.nextBillingDate;
+  let millis = 0;
+
+  if (value && typeof value === "object") {
+    const seconds = value.seconds ?? value._seconds;
+    if (typeof seconds === "number") millis = seconds * 1000;
+  } else if (value) {
+    millis = new Date(value).getTime();
+  }
+
+  return Number.isFinite(millis) && millis > Date.now();
+}
+
+function isAccessBlocked(status, session, inactiveStatuses) {
+  if (!inactiveStatuses.includes(status)) return false;
+
+  return !(
+    CANCELLED_STATUSES.includes(status) &&
+    hasPaidAccessLeft(session)
+  );
+}
+
 function getInitialMemberSession() {
   try {
     const saved = getSavedMemberSession();
@@ -169,7 +200,7 @@ function getInitialMemberSession() {
         "blocked",
         "suspended"
       ];
-      if (!inactiveStatuses.includes(status)) {
+      if (!isAccessBlocked(status, parsed, inactiveStatuses)) {
         return parsed;
       }
     }
@@ -559,8 +590,10 @@ function MembersRouter() {
 
 
           if (
-            inactiveStatuses.includes(
-              currentStatus
+            isAccessBlocked(
+              currentStatus,
+              updatedSession,
+              inactiveStatuses
             )
           ) {
 

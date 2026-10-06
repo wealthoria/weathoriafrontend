@@ -2140,10 +2140,30 @@ useEffect(() => {
 
   const [activePage, setActivePage] =
     useState(
-      () =>
-        sessionStorage.getItem(
-          "wealthoria-active-page"
-        ) || "dashboard"
+      () => {
+        const current =
+          sessionStorage.getItem(
+            "wealthoria-active-page"
+          );
+
+        if (current) return current;
+
+        // App relaunched while a video was open: go back to Videos.
+        try {
+          const openVideo = JSON.parse(
+            localStorage.getItem("wealthoria-open-video") || "null"
+          );
+
+          if (
+            openVideo?.id &&
+            Date.now() - Number(openVideo.at || 0) < 3 * 60 * 60 * 1000
+          ) {
+            return "videos";
+          }
+        } catch (e) {}
+
+        return "dashboard";
+      }
     );
 
 
@@ -2757,6 +2777,13 @@ const dashboardStats = data.stats || {};
       page
     );
 
+    // Leaving Videos: don't reopen the last video next time.
+    if (page !== "videos") {
+      try {
+        localStorage.removeItem("wealthoria-open-video");
+      } catch (e) {}
+    }
+
     // Google Analytics - track member page navigation
     if (
       typeof window.gtag === "function" &&
@@ -2850,6 +2877,10 @@ const logout =
   sessionStorage.removeItem(
     "wealthoria-active-page"
   );
+
+  try {
+    localStorage.removeItem("wealthoria-open-video");
+  } catch (e) {}
 
   setMember(null);
 

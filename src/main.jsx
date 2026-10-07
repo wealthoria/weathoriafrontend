@@ -110,6 +110,7 @@ import "./admin/users.jsx";
 import "./admin/AdminNotifications.jsx";
 import "./admin/youtube.jsx";
 import "./admin/instagram.jsx";
+import "./admin/metaAds.jsx";
 import "./admin/dashboard.jsx";
 import "./admin/reports.jsx";
 import "./admin/enquiries.jsx";

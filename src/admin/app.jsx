@@ -725,20 +725,22 @@ function ProtectedRoute({
     }
 
     /* ---------------------------------------------------------------------
-       INSTAGRAM
+       META ADS & LEADS
        --------------------------------------------------------------------- */
 
+    case "meta-ads":
+    case "ads":
     case "instagram": {
-      const AdminInstagram = getAdmin("AdminInstagram");
+      const AdminMetaAds = getAdmin("AdminMetaAds") || getAdmin("AdminInstagram");
 
       return (
-        <AdminShell title="Instagram">
-          {AdminInstagram ? (
-            <AdminInstagram />
+        <AdminShell title="Meta Ads & Leads">
+          {AdminMetaAds ? (
+            <AdminMetaAds />
           ) : (
             <div className="page">
-              <h1>Instagram</h1>
-              <p>Instagram management component is not loaded.</p>
+              <h1>Meta Ads & Leads</h1>
+              <p>Meta Ads management component is not loaded.</p>
             </div>
           )}
         </AdminShell>

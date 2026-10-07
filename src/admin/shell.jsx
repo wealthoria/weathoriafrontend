@@ -174,9 +174,9 @@ const NAV = [
   },
 
   {
-    to: "/admin/instagram",
-    label: "Instagram",
-    icon: "instagram"
+    to: "/admin/meta-ads",
+    label: "Meta Ads",
+    icon: "ads"
   },
 
   {

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import * as XLSX from "xlsx";
 
 /* global window */
@@ -213,20 +213,40 @@ function getSubscriptionRevenueDate(row) {
 }
 
 function isSuccessfulSubscription(row) {
-  // The paid count from Razorpay is the most reliable signal.
-  if (Number(row?.paidCount) > 0) return true;
+  if (!row) return false;
 
   const status = getSubscriptionStatus(row);
-  return [
+
+  // Exclude uncaptured / pending / failed attempts
+  if (["pending", "created", "failed", "attempted", "initiated", ""].includes(status)) {
+    return false;
+  }
+
+  const paidCount = Number(row?.paidCount);
+  if (
+    row?.paidCount !== undefined &&
+    row?.paidCount !== null &&
+    Number.isFinite(paidCount)
+  ) {
+    return paidCount > 0;
+  }
+
+  // If paidCount is not explicitly present, verify a captured payment ID or verified payment indicator exists
+  if (row?.razorpayPaymentId || row?.paymentId) {
+    return true;
+  }
+
+  const isPaidStatus = [
     "active",
     "paid",
     "completed",
     "cancelled",
     "halted",
     "paused",
-    // Expired subscriptions were paid before they ended.
     "expired"
   ].includes(status);
+
+  return isPaidStatus && Boolean(row?.paidAt || row?.subscriptionStartDate);
 }
 
 function getSubscriptionAmount(row) {
@@ -252,17 +272,25 @@ function getSubscriptionCharges(row) {
   if (!isSuccessfulSubscription(row)) return [];
 
   const amount = getSubscriptionAmount(row);
+  if (amount <= 0) return [];
+
   const paidCount = Math.floor(Number(row?.paidCount) || 0);
+  const effectiveCount = paidCount > 0 ? paidCount : 1;
   const periodEnd = safeTimestamp(row?.nextBillingDate);
 
-  if (paidCount > 0 && periodEnd) {
-    return Array.from({ length: paidCount }, (_, k) => ({
-      time: periodEnd - (k + 1) * MONTH_MS,
-      amount
-    }));
-  }
+  // Date of the most recent payment
+  const latest =
+    safeTimestamp(row?.paidAt) ||
+    safeTimestamp(row?.subscriptionStartDate) ||
+    (periodEnd ? addMonths(periodEnd, -1) : 0) ||
+    safeTimestamp(getSubscriptionRevenueDate(row));
 
-  return [{ time: safeTimestamp(getSubscriptionRevenueDate(row)), amount }];
+  if (!latest) return [];
+
+  return Array.from({ length: effectiveCount }, (_, k) => ({
+    time: Math.min(addMonths(latest, -k), Date.now()), // never in the future
+    amount
+  }));
 }
 
 // memberId / email -> end of the latest paid period (ms)
@@ -271,6 +299,7 @@ function buildPaidUntil(subscriptions) {
   const byEmail = new Map();
 
   (subscriptions || []).forEach((row) => {
+    if (!isSuccessfulSubscription(row)) return;
     if (!ACCESS_SUBSCRIPTION_STATUSES.includes(getSubscriptionStatus(row))) return;
 
     const until = safeTimestamp(row?.nextBillingDate);
@@ -1162,17 +1191,22 @@ function ControlPanel() {
 
   // Auto-renewing subscriptions whose paid period is still running.
   const activeSubscriptionCount = subscriptions.filter((subscription) => {
+    if (!isSuccessfulSubscription(subscription)) return false;
     if (getSubscriptionStatus(subscription) !== "active") return false;
     const until = safeTimestamp(subscription.nextBillingDate);
     return !until || until > nowMs;
   }).length;
 
   const cancelledSubscriptionCount = subscriptions.filter(
-    (subscription) => getSubscriptionStatus(subscription) === "cancelled"
+    (subscription) =>
+      isSuccessfulSubscription(subscription) &&
+      getSubscriptionStatus(subscription) === "cancelled"
   ).length;
 
   const haltedSubscriptionCount = subscriptions.filter(
-    (subscription) => getSubscriptionStatus(subscription) === "halted"
+    (subscription) =>
+      isSuccessfulSubscription(subscription) &&
+      getSubscriptionStatus(subscription) === "halted"
   ).length;
 
   // Members whose paid period is running (not just status "active").

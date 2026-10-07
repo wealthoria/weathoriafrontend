@@ -117,10 +117,28 @@ const getSubscriptionDate = (item) =>
   item?.updatedAt ||
   null;
 
+const isSuccessfulSubscriptionReport = (item) => {
+  if (!item) return false;
+  const status = String(item?.status || item?.razorpayStatus || "").trim().toLowerCase();
+  if (["pending", "created", "failed", "attempted", "initiated", ""].includes(status)) {
+    return false;
+  }
+  const paidCount = Number(item?.paidCount);
+  if (item?.paidCount !== undefined && item?.paidCount !== null && Number.isFinite(paidCount)) {
+    return paidCount > 0;
+  }
+  if (item?.razorpayPaymentId || item?.paymentId) return true;
+  return (
+    ["active", "paid", "completed", "cancelled", "halted", "paused", "expired"].includes(status) &&
+    Boolean(item?.paidAt || item?.subscriptionStartDate)
+  );
+};
+
 const isPaidPurchase = (item) =>
   String(item?.status || "paid").toLowerCase() === "paid";
 
 const isActiveSubscription = (item) =>
+  isSuccessfulSubscriptionReport(item) &&
   String(item?.status || "").toLowerCase() === "active";
 
 /* =========================================================
@@ -627,13 +645,22 @@ function ReportsPage() {
     [purchases]
   );
 
-  const activeSubscriptions =
+  const paidSubscriptions =
     useMemo(
       () =>
         subscriptions.filter(
-          isActiveSubscription
+          isSuccessfulSubscriptionReport
         ),
       [subscriptions]
+    );
+
+  const activeSubscriptions =
+    useMemo(
+      () =>
+        paidSubscriptions.filter(
+          isActiveSubscription
+        ),
+      [paidSubscriptions]
     );
 
   const purchaseRevenue =
@@ -651,7 +678,7 @@ function ReportsPage() {
   const subscriptionRevenue =
     useMemo(
       () =>
-        subscriptions.reduce(
+        paidSubscriptions.reduce(
           (sum, item) =>
             sum +
             (Number(
@@ -659,7 +686,7 @@ function ReportsPage() {
             ) || 0),
           0
         ),
-      [subscriptions]
+      [paidSubscriptions]
     );
 
   const totalRevenue =
@@ -724,7 +751,7 @@ function ReportsPage() {
   const weeklySubscriptions =
     useMemo(
       () =>
-        subscriptions.filter(
+        paidSubscriptions.filter(
           (item) =>
             toMillis(
               getSubscriptionDate(item)
@@ -732,7 +759,7 @@ function ReportsPage() {
             currentWeekStart.getTime()
         ),
       [
-        subscriptions,
+        paidSubscriptions,
         currentWeekStart
       ]
     );
@@ -756,7 +783,7 @@ function ReportsPage() {
   const monthlySubscriptions =
     useMemo(
       () =>
-        subscriptions.filter(
+        paidSubscriptions.filter(
           (item) =>
             toMillis(
               getSubscriptionDate(item)
@@ -764,7 +791,7 @@ function ReportsPage() {
             currentMonthStart.getTime()
         ),
       [
-        subscriptions,
+        paidSubscriptions,
         currentMonthStart
       ]
     );
@@ -846,7 +873,7 @@ function ReportsPage() {
           );
 
         const subscriptionsInPeriod =
-          subscriptions.filter(
+          paidSubscriptions.filter(
             (item) => {
               const time =
                 toMillis(
@@ -933,7 +960,7 @@ function ReportsPage() {
     }, [
       currentWeekStart,
       paidPurchases,
-      subscriptions,
+      paidSubscriptions,
       members
     ]);
 
@@ -980,7 +1007,7 @@ function ReportsPage() {
           );
 
         const subscriptionsInPeriod =
-          subscriptions.filter(
+          paidSubscriptions.filter(
             (item) => {
               const time =
                 toMillis(
@@ -1058,7 +1085,7 @@ function ReportsPage() {
     }, [
       currentMonthStart,
       paidPurchases,
-      subscriptions,
+      paidSubscriptions,
       members
     ]);
 
@@ -1084,7 +1111,7 @@ function ReportsPage() {
   const latestSubscriptions =
     useMemo(
       () =>
-        [...subscriptions].sort(
+        [...paidSubscriptions].sort(
           (a, b) =>
             toMillis(
               getSubscriptionDate(b)
@@ -1093,7 +1120,7 @@ function ReportsPage() {
               getSubscriptionDate(a)
             )
         ),
-      [subscriptions]
+      [paidSubscriptions]
     );
 
   return (

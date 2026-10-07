@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -174,26 +174,38 @@ const NAV = [
   },
 
   {
-  to: "/admin/reports",
-  label: "Reports",
-  icon: "reports"
-},
-
-{ to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
+    to: "/admin/instagram",
+    label: "Instagram",
+    icon: "instagram"
+  },
 
   {
-  to: "/admin/prebook-orders",
-  label: "Pre-book Orders",
-  icon: "courses"
-},
+    to: "/admin/reports",
+    label: "Reports",
+    icon: "reports"
+  },
+
+  { to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
+
+  {
+    to: "/admin/prebook-orders",
+    label: "Pre-book Orders",
+    icon: "courses"
+  },
 
 
-{
-  to: "/admin/generate-label",
-  label: "Generate Labels",
-  icon: "print"
-},
+  {
+    to: "/admin/generate-label",
+    label: "Generate Labels",
+    icon: "print"
+  },
 
+
+  {
+    to: "/admin/generate-coupon",
+    label: "Generate Coupon Code",
+    icon: "print"   // reuse any existing icon name
+  },
   {
     to: "/admin/notifications",
     label: "Send Push Notification",
@@ -305,10 +317,9 @@ function Shell({
 
       <div
         className={
-          `sb-scrim ${
-            open
-              ? "open"
-              : ""
+          `sb-scrim ${open
+            ? "open"
+            : ""
           }`
         }
         onClick={() =>
@@ -323,10 +334,9 @@ function Shell({
 
       <aside
         className={
-          `sidebar ${
-            open
-              ? "open"
-              : ""
+          `sidebar ${open
+            ? "open"
+            : ""
           }`
         }
       >
@@ -335,11 +345,11 @@ function Shell({
 
         <div className="sb-brand">
 
-        <img
-  src="/assets/logo-mark.png"
-  alt="Wealthoria"
-  className="sb-logo"
-/>
+          <img
+            src="/assets/logo-mark.png"
+            alt="Wealthoria"
+            className="sb-logo"
+          />
 
           <span className="w">
             Wealthoria
@@ -370,10 +380,9 @@ function Shell({
                 key={item.to}
                 type="button"
                 className={
-                  `sb-link ${
-                    isActive(item.to)
-                      ? "on"
-                      : ""
+                  `sb-link ${isActive(item.to)
+                    ? "on"
+                    : ""
                   }`
                 }
                 onClick={() =>
@@ -399,29 +408,29 @@ function Shell({
 
 
         {/* USER FOOTER */}
-{/* USER FOOTER */}
-<div className="sb-foot">
-  <div className="sb-user">
-    <div className="meta">
-      <div className="n">Admin</div>
+        {/* USER FOOTER */}
+        <div className="sb-foot">
+          <div className="sb-user">
+            <div className="meta">
+              <div className="n">Admin</div>
 
-      <div className="r">
-        {user?.email || ""}
-      </div>
-    </div>
+              <div className="r">
+                {user?.email || ""}
+              </div>
+            </div>
 
-    <button
-      className="row-act"
-      title="Log out"
-      onClick={() => {
-        logout();
-        navigate("/members/login");
-      }}
-    >
-      <MIcon name="logout" size={18} />
-    </button>
-  </div>
-</div>
+            <button
+              className="row-act"
+              title="Log out"
+              onClick={() => {
+                logout();
+                navigate("/members/login");
+              }}
+            >
+              <MIcon name="logout" size={18} />
+            </button>
+          </div>
+        </div>
 
       </aside>
 
@@ -501,10 +510,9 @@ function Shell({
 
         <div
           className={
-            `mcontent ${
-              wide
-                ? ""
-                : ""
+            `mcontent ${wide
+              ? ""
+              : ""
             }`
           }
         >

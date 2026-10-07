@@ -8,6 +8,15 @@ window.ReactDOM = {
   createRoot,
 };
 
+const isLocalDevHost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    !window.location.hostname.endsWith("wealthoria.in"));
+
+window.WEALTHORIA_API_BASE = isLocalDevHost
+  ? ""
+  : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 inject();
 // ============================================================
@@ -32,6 +41,7 @@ import "./app/intro-video.jsx";
 import "./app/privacy-policy.jsx";
 import "./app/anim.jsx";
 import "./app/EnquiryForm.jsx";
+import "./app/WealthoriaAI.jsx";
 import "./app/app.jsx";
 
 // ============================================================
@@ -99,11 +109,13 @@ import "./admin/courses.jsx";
 import "./admin/users.jsx";
 import "./admin/AdminNotifications.jsx";
 import "./admin/youtube.jsx";
+import "./admin/instagram.jsx";
 import "./admin/dashboard.jsx";
 import "./admin/reports.jsx";
 import "./admin/enquiries.jsx";
 import "./admin/prebookOrders.jsx";
 import "./admin/Generatelable.jsx";
+import "./admin/GenerateCoupon.jsx";
 
 
 
@@ -113,13 +125,113 @@ import PrebookForm from "./components/PrebookForm";
 
 
 // ============================================================
-// ROUTE DETECTION
+// ROUTE DETECTION & PWA MEMBER RESTORATION
 // ============================================================
 
+const isPwaStandalone = () => {
+  try {
+    const isStandaloneDisplay =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.matchMedia("(display-mode: minimal-ui)").matches;
 
+    const isIosStandalone = window.navigator.standalone === true;
+    const isAndroidApp =
+      typeof document !== "undefined" &&
+      document.referrer &&
+      document.referrer.startsWith("android-app://");
+    const isPwaParam =
+      new URLSearchParams(window.location.search).get("source") === "pwa" ||
+      new URLSearchParams(window.location.search).get("pwa") === "1";
 
-const pathname = window.location.pathname || "/";
+    return isStandaloneDisplay || isIosStandalone || isAndroidApp || isPwaParam;
+  } catch (e) {
+    return false;
+  }
+};
 
+const hasActiveMemberSession = () => {
+  try {
+    const currentUid =
+      sessionStorage.getItem("wealthoria-current-member") ||
+      localStorage.getItem("wealthoria-current-member");
+
+    if (currentUid) {
+      const raw =
+        sessionStorage.getItem("wealthoria-member-sessions") ||
+        localStorage.getItem("wealthoria-member-sessions");
+      if (raw) {
+        const sessions = JSON.parse(raw);
+        const session = sessions && sessions[currentUid];
+        if (session?.uid && session?.token) {
+          const status = String(session.status || "").toLowerCase();
+          const inactive = [
+            "inactive",
+            "cancelled",
+            "canceled",
+            "deactivated",
+            "disabled",
+            "blocked",
+            "suspended"
+          ];
+          return !inactive.includes(status);
+        }
+      }
+    }
+
+    const legacy =
+      sessionStorage.getItem("wealthoria-member") ||
+      localStorage.getItem("wealthoria-member");
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      return !!(parsed?.uid && parsed?.token);
+    }
+  } catch (e) {
+    return false;
+  }
+  return false;
+};
+
+let pathname = window.location.pathname || "/";
+
+// If opened at the root ("/" or "/index.html") in PWA or as returning member:
+if (
+  pathname === "/" ||
+  pathname === "/index.html" ||
+  pathname === "/wealthoria.html"
+) {
+  const isPwa = isPwaStandalone();
+  const defaultPortal = localStorage.getItem("wealthoria_pwa_default_portal");
+  const lastMemberRoute = localStorage.getItem("wealthoria_last_member_route");
+  const hasSession = hasActiveMemberSession();
+
+  // If in PWA standalone mode OR if the user installed/set PWA default to members:
+  if (isPwa || defaultPortal === "members") {
+    let targetRoute = "/members/login";
+
+    if (hasSession) {
+      if (
+        lastMemberRoute &&
+        lastMemberRoute.startsWith("/members/") &&
+        lastMemberRoute !== "/members/login" &&
+        lastMemberRoute !== "/members/"
+      ) {
+        targetRoute = lastMemberRoute;
+      } else {
+        targetRoute = "/members/dashboard";
+      }
+    } else if (
+      lastMemberRoute &&
+      lastMemberRoute.startsWith("/members/")
+    ) {
+      targetRoute = lastMemberRoute;
+    }
+
+    // Instantly rewrite URL in browser history without page reload
+    window.history.replaceState({}, "", targetRoute);
+    pathname = targetRoute;
+  }
+}
 
 const isAdminRoute = pathname.startsWith("/admin");
 const isMemberRoute = pathname.startsWith("/members");
@@ -221,7 +333,7 @@ else if (isMemberRoute) {
 
   root.render(<window.MembersRouter />);
 
- 
+
 }
 
 // ============================================================
@@ -263,5 +375,5 @@ else {
     );
   }
 
-root.render(<RootApp />);
+  root.render(<RootApp />);
 }

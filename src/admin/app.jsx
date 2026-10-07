@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global window */
 
@@ -34,9 +34,9 @@ const AdminThemeContext =
   window.AdminThemeContext ||
   React.createContext({
     theme: "light",
-    toggleTheme: () => {},
+    toggleTheme: () => { },
     lang: "en",
-    setLang: () => {},
+    setLang: () => { },
     t: (key) => key
   });
 
@@ -45,7 +45,7 @@ const MRouterContext =
   window.MRouterContext ||
   React.createContext({
     path: "/members/login",
-    navigate: () => {}
+    navigate: () => { }
   });
 
 
@@ -138,7 +138,7 @@ function ThemeProvider({ children }) {
         "wl-theme",
         theme
       );
-    } catch (error) {}
+    } catch (error) { }
 
   }, [theme]);
 
@@ -159,7 +159,7 @@ function ThemeProvider({ children }) {
       theme,
       toggleTheme,
       lang: "en",
-      setLang: () => {},
+      setLang: () => { },
       t: (key) => key
     }),
     [theme, toggleTheme]
@@ -189,18 +189,18 @@ function ThemeProvider({ children }) {
    ROUTER
    ========================================================================= */
 function RouterProvider({ children }) {
-const getPath = () => {
-  const pathname = window.location.pathname || "/";
+  const getPath = () => {
+    const pathname = window.location.pathname || "/";
 
-  if (
-    pathname.startsWith("/admin") ||
-    pathname === "/members/login"
-  ) {
-    return pathname;
-  }
+    if (
+      pathname.startsWith("/admin") ||
+      pathname === "/members/login"
+    ) {
+      return pathname;
+    }
 
-  return "/admin/dashboard";
-};
+    return "/admin/dashboard";
+  };
   const [path, setPath] = useState(getPath);
 
   useEffect(() => {
@@ -215,21 +215,21 @@ const getPath = () => {
     };
   }, []);
 
- const navigate = useCallback((to) => {
-  const target = to.startsWith("/") ? to : `/${to}`;
+  const navigate = useCallback((to) => {
+    const target = to.startsWith("/") ? to : `/${to}`;
 
-  const currentIsAdmin = window.location.pathname.startsWith("/admin");
-  const targetIsAdmin = target.startsWith("/admin");
+    const currentIsAdmin = window.location.pathname.startsWith("/admin");
+    const targetIsAdmin = target.startsWith("/admin");
 
-  if (currentIsAdmin && targetIsAdmin) {
-    window.history.pushState({}, "", target);
-    setPath(target);
-    window.scrollTo(0, 0);
-    return;
-  }
+    if (currentIsAdmin && targetIsAdmin) {
+      window.history.pushState({}, "", target);
+      setPath(target);
+      window.scrollTo(0, 0);
+      return;
+    }
 
-  window.location.assign(target);
-}, []);
+    window.location.assign(target);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -343,22 +343,37 @@ function resolve(path) {
   }
 
   if (
-  path === "/admin/reports"
-) {
-  return {
-    name: "reports"
-  };
-}
-if (path === "/admin/enquiries") {
-  return { name: "enquiries" };
-}
-if (path === "/admin/prebook-orders") {
-  return { name: "prebook-orders" };
-}
+    path === "/admin/instagram"
+  ) {
+    return {
+      name: "instagram"
+    };
+  }
 
-if (path === "/admin/generate-label") {
-  return { name: "generate-label" };
-}
+  if (
+    path === "/admin/reports"
+  ) {
+    return {
+      name: "reports"
+    };
+  }
+  if (path === "/admin/enquiries") {
+    return { name: "enquiries" };
+  }
+  if (path === "/admin/prebook-orders") {
+    return { name: "prebook-orders" };
+  }
+
+  if (path === "/admin/generate-label") {
+    return { name: "generate-label" };
+  }
+
+
+  if (path === "/admin/generate-coupon") {
+    return { name: "generate-coupon" };
+  }
+
+
 
   if (
     path === "/admin/notifications"
@@ -709,104 +724,146 @@ function ProtectedRoute({
       );
     }
 
+    /* ---------------------------------------------------------------------
+       INSTAGRAM
+       --------------------------------------------------------------------- */
 
+    case "instagram": {
+      const AdminInstagram = getAdmin("AdminInstagram");
+
+      return (
+        <AdminShell title="Instagram">
+          {AdminInstagram ? (
+            <AdminInstagram />
+          ) : (
+            <div className="page">
+              <h1>Instagram</h1>
+              <p>Instagram management component is not loaded.</p>
+            </div>
+          )}
+        </AdminShell>
+      );
+    }
 
     /* ---------------------------------------------------------------------
    REPORTS
    --------------------------------------------------------------------- */
 
-case "reports": {
+    case "reports": {
 
-  const AdminReports =
-    getAdmin("AdminReports");
+      const AdminReports =
+        getAdmin("AdminReports");
 
-  return (
-    <AdminShell title="Reports">
+      return (
+        <AdminShell title="Reports">
 
-      {AdminReports ? (
+          {AdminReports ? (
 
-        <AdminReports />
+            <AdminReports />
 
-      ) : (
+          ) : (
 
-        <div className="page">
+            <div className="page">
 
-          <h1>
-            Reports
-          </h1>
+              <h1>
+                Reports
+              </h1>
 
-          <p>
-            Admin reports component is not loaded.
-          </p>
+              <p>
+                Admin reports component is not loaded.
+              </p>
 
-        </div>
+            </div>
 
-      )}
+          )}
 
-    </AdminShell>
-  );
-}
-
-
-case "enquiries": {
-  const AdminEnquiries = getAdmin("AdminEnquiries");
-
-  return (
-    <AdminShell title="Enquiries">
-      {AdminEnquiries ? (
-        <AdminEnquiries />
-      ) : (
-        <div style={{ padding: 24 }}>
-          Enquiries page is not loaded.
-        </div>
-      )}
-    </AdminShell>
-  );
-}
+        </AdminShell>
+      );
+    }
 
 
-case "prebook-orders": {
-  const AdminPrebookOrders =
-    getAdmin("AdminPrebookOrders");
+    case "enquiries": {
+      const AdminEnquiries = getAdmin("AdminEnquiries");
 
-  return (
-    <AdminShell title="Pre-book Orders">
-
-      {AdminPrebookOrders ? (
-        <AdminPrebookOrders />
-      ) : (
-        <div className="page">
-          <h1>Pre-book Orders</h1>
-          <p>
-            Pre-book Orders page is not loaded.
-          </p>
-        </div>
-      )}
-
-    </AdminShell>
-  );
-}
+      return (
+        <AdminShell title="Enquiries">
+          {AdminEnquiries ? (
+            <AdminEnquiries />
+          ) : (
+            <div style={{ padding: 24 }}>
+              Enquiries page is not loaded.
+            </div>
+          )}
+        </AdminShell>
+      );
+    }
 
 
+    case "prebook-orders": {
+      const AdminPrebookOrders =
+        getAdmin("AdminPrebookOrders");
+
+      return (
+        <AdminShell title="Pre-book Orders">
+
+          {AdminPrebookOrders ? (
+            <AdminPrebookOrders />
+          ) : (
+            <div className="page">
+              <h1>Pre-book Orders</h1>
+              <p>
+                Pre-book Orders page is not loaded.
+              </p>
+            </div>
+          )}
+
+        </AdminShell>
+      );
+    }
 
 
-case "generate-label": {
-  const AdminGeneratelables =
-    getAdmin("AdminGeneratelables");
 
-  return (
-    <AdminShell title="Generate Labels">
-      {AdminGeneratelables ? (
-        <AdminGeneratelables />
-      ) : (
-        <div className="page">
-          <h1>Generate Labels</h1>
-          <p>Generate Labels page is not loaded.</p>
-        </div>
-      )}
-    </AdminShell>
-  );
-}
+
+    case "generate-label": {
+      const AdminGeneratelables =
+        getAdmin("AdminGeneratelables");
+
+      return (
+        <AdminShell title="Generate Labels">
+          {AdminGeneratelables ? (
+            <AdminGeneratelables />
+          ) : (
+            <div className="page">
+              <h1>Generate Labels</h1>
+              <p>Generate Labels page is not loaded.</p>
+            </div>
+          )}
+        </AdminShell>
+      );
+    }
+
+    case "generate-coupon": {
+      const AdminGenerateCoupon =
+        getAdmin("GenerateCoupon");
+
+      return (
+        <AdminShell title="Generate Coupon">
+          {AdminGenerateCoupon ? (
+            <AdminGenerateCoupon />
+          ) : (
+            <div className="page">
+              <h1>Generate Coupon</h1>
+              <p>Generate Coupon page is not loaded.</p>
+            </div>
+          )}
+        </AdminShell>
+      );
+    }
+
+
+
+
+
 
     /* ---------------------------------------------------------------------
        NOTIFICATIONS
@@ -1066,9 +1123,9 @@ function LoginRedirect({
   useEffect(() => {
 
     if (
-     auth.isAuthenticated &&
-auth.isAdmin &&
-path === "/members/login"
+      auth.isAuthenticated &&
+      auth.isAdmin &&
+      path === "/members/login"
     ) {
 
       navigate(

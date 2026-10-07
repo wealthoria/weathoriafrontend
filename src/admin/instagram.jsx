@@ -681,11 +681,15 @@ function MediaModal({ item, onClose, onPrev, onNext, hasPrev, hasNext, pushToast
                     Loading comments from Instagram...
                   </div>
                 ) : comments.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "40px 0", color: "#71717a", fontSize: 13 }}>
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>💬</div>
-                    No comments yet on this post.
-                    <p style={{ fontSize: 11.5, color: "#a1a1aa", margin: "4px 0 0" }}>
-                      Be the first to post a comment as <b>@wealthoria_edu</b> below!
+                  <div style={{ textAlign: "center", padding: "36px 14px", color: "#71717a", fontSize: 13 }}>
+                    <div style={{ fontSize: 26, marginBottom: 8 }}>💬</div>
+                    <b style={{ color: "#f3f4f6", fontSize: 13.5 }}>
+                      {item.comments_count > 0 ? `${item.comments_count} Comments on Instagram` : "No comments yet"}
+                    </b>
+                    <p style={{ fontSize: 11.5, color: "#a1a1aa", margin: "6px auto 0", maxWidth: "290px", lineHeight: 1.55 }}>
+                      {item.comments_count > 0
+                        ? "Public visitor comments sync in Live Mode. You can post and reply directly as @wealthoria_edu below!"
+                        : "Be the first to post a comment as @wealthoria_edu below!"}
                     </p>
                   </div>
                 ) : (

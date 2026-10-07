@@ -579,9 +579,16 @@ function AdminMetaAds() {
                         <b style={{ color: "var(--fg, #111827)" }}>{l.name}</b>
                       </td>
                       <td>
-                        <a href={`tel:${l.phone}`} style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>
-                          {l.phone}
-                        </a>
+                        {l.phone && l.phone !== "—" ? (
+                          <a
+                            href={`tel:${String(l.phone).replace(/[^\d+]/g, "")}`}
+                            style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}
+                          >
+                            {l.phone}
+                          </a>
+                        ) : (
+                          <span style={{ color: "var(--mute, #6b7280)" }}>—</span>
+                        )}
                       </td>
                       <td>
                         <span style={{ color: "var(--mute, #6b7280)" }}>{l.email}</span>

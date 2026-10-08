@@ -1583,12 +1583,17 @@ if (checkingSession) {
       aria-label="Go to Wealthoria website"
       onClick={(e) => {
         const isPwa =
-          (typeof window.isPwaStandalone === "function" && window.isPwaStandalone()) ||
-          sessionStorage.getItem("wealthoria_is_pwa") === "true";
+          typeof window.isPwaStandalone === "function"
+            ? window.isPwaStandalone()
+            : false;
         if (isPwa) {
           e.preventDefault();
-          // In PWA, stay on login page
+          return;
         }
+        try {
+          localStorage.removeItem("wealthoria_pwa_default_portal");
+          sessionStorage.removeItem("wealthoria_is_pwa");
+        } catch (err) {}
       }}
       style={{
         display: "flex",

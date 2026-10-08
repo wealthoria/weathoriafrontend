@@ -129,22 +129,22 @@ import PrebookForm from "./components/PrebookForm.jsx";
 const isPwaStandalone = () => {
   try {
     const isStandaloneDisplay =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.matchMedia("(display-mode: fullscreen)").matches ||
-      window.matchMedia("(display-mode: minimal-ui)").matches;
+      (window.matchMedia &&
+        (window.matchMedia("(display-mode: standalone)").matches ||
+          window.matchMedia("(display-mode: fullscreen)").matches ||
+          window.matchMedia("(display-mode: minimal-ui)").matches)) ||
+      window.navigator.standalone === true;
 
-    const isIosStandalone = window.navigator.standalone === true;
     const isAndroidApp =
       typeof document !== "undefined" &&
       document.referrer &&
       document.referrer.startsWith("android-app://");
+
     const isPwaParam =
       new URLSearchParams(window.location.search).get("source") === "pwa" ||
       new URLSearchParams(window.location.search).get("pwa") === "1";
-    const isPwaStored =
-      sessionStorage.getItem("wealthoria_is_pwa") === "true";
 
-    return isStandaloneDisplay || isIosStandalone || isAndroidApp || isPwaParam || isPwaStored;
+    return isStandaloneDisplay || isAndroidApp || isPwaParam;
   } catch (e) {
     return false;
   }
@@ -195,24 +195,18 @@ const hasActiveMemberSession = () => {
 
 let pathname = window.location.pathname || "/";
 
-// If opened at the root ("/" or "/index.html") in PWA or as returning member:
+// ONLY redirect to member portal on root ("/") if STRICTLY running inside the installed PWA standalone app:
 if (
   pathname === "/" ||
   pathname === "/index.html" ||
   pathname === "/wealthoria.html"
 ) {
   const isPwa = isPwaStandalone();
-  const defaultPortal = localStorage.getItem("wealthoria_pwa_default_portal");
   const lastMemberRoute = localStorage.getItem("wealthoria_last_member_route");
   const hasSession = hasActiveMemberSession();
 
-  // If in PWA standalone mode OR if the user installed/set PWA default to members:
-  if (isPwa || defaultPortal === "members") {
-    if (isPwa) {
-      try {
-        sessionStorage.setItem("wealthoria_is_pwa", "true");
-      } catch (e) {}
-    }
+  // If STRICTLY running as standalone installed PWA:
+  if (isPwa) {
     let targetRoute = "/members/login";
 
     if (hasSession) {

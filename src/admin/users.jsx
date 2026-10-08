@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -91,12 +91,49 @@ function formatMemberDate(value) {
     );
 
   } catch (error) {
-
     return "—";
-
   }
 }
 
+function safeTimestamp(value) {
+  if (!value) return 0;
+  if (typeof value === "number") return value;
+  if (value instanceof Date) return value.getTime();
+  if (value?.toDate && typeof value.toDate === "function") {
+    try {
+      return value.toDate().getTime();
+    } catch {
+      return 0;
+    }
+  }
+  if (value?.seconds !== undefined) return Number(value.seconds) * 1000;
+  if (value?._seconds !== undefined) return Number(value._seconds) * 1000;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getMemberTime(member) {
+  if (!member) return 0;
+  return (
+    safeTimestamp(member.joinedAt) ||
+    safeTimestamp(member.createdAt) ||
+    safeTimestamp(member.subscriptionStartDate) ||
+    safeTimestamp(member.registeredAt) ||
+    safeTimestamp(member.createdOn) ||
+    safeTimestamp(member.updatedAt) ||
+    0
+  );
+}
+
+function toDateInputValue(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 /* =========================================================================
    CSV HELPER
@@ -348,6 +385,15 @@ function UsersScreen() {
   const [subscriptionPlanFilter, setSubscriptionPlanFilter] =
     useState("all");
 
+  const [datePreset, setDatePreset] =
+    useState("all");
+
+  const [startDate, setStartDate] =
+    useState("");
+
+  const [endDate, setEndDate] =
+    useState("");
+
   // Sign-ups who opened checkout but never paid are hidden by default.
   const [showUnpaid, setShowUnpaid] =
     useState(false);
@@ -360,6 +406,41 @@ function UsersScreen() {
 
   const API_BASE_URL =
     "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    const todayStr = toDateInputValue(now);
+
+    if (preset === "all") {
+      setStartDate("");
+      setEndDate("");
+    } else if (preset === "today") {
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === "yesterday") {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      const yStr = toDateInputValue(y);
+      setStartDate(yStr);
+      setEndDate(yStr);
+    } else if (preset === "7days") {
+      const past = new Date();
+      past.setDate(past.getDate() - 6);
+      setStartDate(toDateInputValue(past));
+      setEndDate(todayStr);
+    } else if (preset === "30days") {
+      const past = new Date();
+      past.setDate(past.getDate() - 29);
+      setStartDate(toDateInputValue(past));
+      setEndDate(todayStr);
+    } else if (preset === "this_month") {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      setStartDate(toDateInputValue(firstDay));
+      setEndDate(todayStr);
+    }
+  };
+
 
 
   /* =======================================================
@@ -894,8 +975,18 @@ function UsersScreen() {
           .trim()
           .toLowerCase();
 
-      return joinedMembers.filter(
-        (member) => {
+      return joinedMembers
+        .filter((member) => {
+          // Date filtering
+          const memberMs = getMemberTime(member);
+          if (startDate) {
+            const startMs = new Date(`${startDate}T00:00:00`).getTime();
+            if (!memberMs || memberMs < startMs) return false;
+          }
+          if (endDate) {
+            const endMs = new Date(`${endDate}T23:59:59.999`).getTime();
+            if (!memberMs || memberMs > endMs) return false;
+          }
 
           const searchable =
             [
@@ -987,8 +1078,8 @@ function UsersScreen() {
             matchesSubscriptionPlan
           );
 
-        }
-      );
+        })
+        .sort((a, b) => getMemberTime(b) - getMemberTime(a));
 
     }, [
       joinedMembers,
@@ -996,7 +1087,9 @@ function UsersScreen() {
       memberStatusFilter,
       subscriptionStatusFilter,
       subscriptionPlanFilter,
-      showUnpaid
+      showUnpaid,
+      startDate,
+      endDate
     ]);
 
 
@@ -1859,6 +1952,85 @@ function UsersScreen() {
               )}
             </select>
 
+            {/* DATE PRESET FILTER */}
+            <select
+              value={datePreset}
+              onChange={(event) =>
+                handleDatePresetChange(event.target.value)
+              }
+              aria-label="Filter by date"
+              style={{
+                height: 44,
+                minWidth: 140,
+                padding: "0 12px",
+                border: "1px solid #dfe3e8",
+                borderRadius: 9,
+                background: "#ffffff",
+                color: "#202833",
+                fontSize: 13,
+                outline: "none"
+              }}
+            >
+              <option value="all">All dates</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 days</option>
+              <option value="30days">Last 30 days</option>
+              <option value="this_month">This month</option>
+              <option value="custom">Custom date range...</option>
+            </select>
+
+            {/* CUSTOM DATE RANGE PICKERS */}
+            {(datePreset === "custom" || startDate || endDate) && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "#f8fafc",
+                  padding: "4px 10px",
+                  borderRadius: 9,
+                  border: "1px solid #dfe3e8"
+                }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#667085" }}>From</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setDatePreset("custom");
+                  }}
+                  style={{
+                    height: 34,
+                    border: "1px solid #dfe3e8",
+                    borderRadius: 7,
+                    padding: "0 8px",
+                    fontSize: 12,
+                    background: "#fff",
+                    color: "#202833"
+                  }}
+                />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#667085" }}>To</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setDatePreset("custom");
+                  }}
+                  style={{
+                    height: 34,
+                    border: "1px solid #dfe3e8",
+                    borderRadius: 7,
+                    padding: "0 8px",
+                    fontSize: 12,
+                    background: "#fff",
+                    color: "#202833"
+                  }}
+                />
+              </div>
+            )}
 
           </div>
 
@@ -1880,7 +2052,10 @@ function UsersScreen() {
               {search ||
               memberStatusFilter !== "all" ||
               subscriptionStatusFilter !== "all" ||
-              subscriptionPlanFilter !== "all"
+              subscriptionPlanFilter !== "all" ||
+              startDate ||
+              endDate ||
+              datePreset !== "all"
                 ? `${filteredMembers.length} result${filteredMembers.length === 1 ? "" : "s"}`
                 : `${listedMemberCount} members`}
             </div>
@@ -1916,12 +2091,18 @@ function UsersScreen() {
                 setMemberStatusFilter("all");
                 setSubscriptionStatusFilter("all");
                 setSubscriptionPlanFilter("all");
+                setDatePreset("all");
+                setStartDate("");
+                setEndDate("");
               }}
               disabled={
                 !search &&
                 memberStatusFilter === "all" &&
                 subscriptionStatusFilter === "all" &&
-                subscriptionPlanFilter === "all"
+                subscriptionPlanFilter === "all" &&
+                !startDate &&
+                !endDate &&
+                datePreset === "all"
               }
               style={{
                 height: 38,
@@ -1936,14 +2117,20 @@ function UsersScreen() {
                   !search &&
                   memberStatusFilter === "all" &&
                   subscriptionStatusFilter === "all" &&
-                  subscriptionPlanFilter === "all"
+                  subscriptionPlanFilter === "all" &&
+                  !startDate &&
+                  !endDate &&
+                  datePreset === "all"
                     ? "not-allowed"
                     : "pointer",
                 opacity:
                   !search &&
                   memberStatusFilter === "all" &&
                   subscriptionStatusFilter === "all" &&
-                  subscriptionPlanFilter === "all"
+                  subscriptionPlanFilter === "all" &&
+                  !startDate &&
+                  !endDate &&
+                  datePreset === "all"
                     ? 0.5
                     : 1
               }}

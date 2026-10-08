@@ -420,23 +420,41 @@ function PrebookOrders() {
             ...doc.data()
           }))
           .filter((order) => {
-            const payStatus = String(order.paymentStatus || order.status || "").toLowerCase();
-            // Strictly exclude failed, unpaid, or cancelled attempts
-            if (payStatus === "failed" || payStatus === "cancelled" || payStatus === "unpaid") {
+            const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
+            // Strictly exclude failed, unpaid, cancelled, or pending attempts
+            if (
+              payStatus === "failed" ||
+              payStatus === "cancelled" ||
+              payStatus === "canceled" ||
+              payStatus === "unpaid" ||
+              payStatus === "pending" ||
+              payStatus === "draft"
+            ) {
               return false;
             }
-            const hasPaymentId = Boolean(
+
+            // Check for genuine Razorpay payment ID (must not be 'null', 'undefined', empty, etc.)
+            const rawPaymentId =
               order.razorpayPaymentId ||
               order.paymentId ||
               order.payment_id ||
-              (order.payment && order.payment.id)
-            );
+              (order.payment && typeof order.payment === "object" ? order.payment.id : order.payment);
+
+            const cleanPaymentId = String(rawPaymentId || "").trim().toLowerCase();
+            const hasValidPaymentId =
+              cleanPaymentId !== "" &&
+              cleanPaymentId !== "null" &&
+              cleanPaymentId !== "undefined" &&
+              cleanPaymentId !== "n/a" &&
+              cleanPaymentId !== "none" &&
+              cleanPaymentId !== "-";
+
             const isPaidStatus =
               payStatus === "paid" ||
               payStatus === "captured" ||
               payStatus === "success";
 
-            return isPaidStatus || hasPaymentId;
+            return isPaidStatus || hasValidPaymentId;
           });
 
         // Strict descending order: newest orders first
@@ -3149,6 +3167,49 @@ function PrebookOrders() {
                 <DetailField label="Created">{formatDate(selected.createdAt)}</DetailField>
                 <DetailField label="Updated">{formatDate(selected.updatedAt)}</DetailField>
                 <DetailField label="Shipping Error">{selected.shippingError}</DetailField>
+              </div>
+
+              {/* DANGER / DELETE ACTION */}
+              <div
+                style={{
+                  marginTop: 20,
+                  display: "flex",
+                  justifyContent: "flex-end"
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (
+                      window.confirm(
+                        `Are you sure you want to permanently delete order "${selected.bookingId || selected.id}" for ${selected.customer?.name || "this customer"} from Firestore?`
+                      )
+                    ) {
+                      try {
+                        await window.db.collection("bookOrders").doc(selected.id).delete();
+                        setSelected(null);
+                      } catch (err) {
+                        alert("Failed to delete order: " + err.message);
+                      }
+                    }
+                  }}
+                  style={{
+                    height: 38,
+                    padding: "0 16px",
+                    background: "#fff1f0",
+                    border: "1px solid #ffa39e",
+                    color: "#cf1322",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  🗑️ Delete Order Record
+                </button>
               </div>
             </div>
           </div>

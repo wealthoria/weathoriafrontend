@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wealthoria — Meta Ads & Pixel Master Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e8473f;
+      --primary-dark: #c53028;
+      --primary-light: #fff1f0;
+      --primary-gradient: linear-gradient(135deg, #e8473f 0%, #ff6b64 100%);
+      --meta-blue: #0064e0;
+      --meta-gradient: linear-gradient(135deg, #0064e0 0%, #0084ff 100%);
+      --dark: #0f172a;
+      --dark-card: #1e293b;
+      --text: #334155;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+    }
+
+    @media screen {
+      body {
+        background: #f1f5f9;
+        padding: 24px 0 60px;
+      }
+      .page-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .page {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        padding: 40px;
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+      }
+      .print-bar {
+        position: sticky;
+        top: 16px;
+        z-index: 1000;
+        max-width: 900px;
+        margin: 0 auto 20px;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(12px);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+      }
+      .btn-download {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(232, 71, 63, 0.35);
+        transition: transform 0.15s ease;
+      }
+      .btn-download:hover {
+        transform: translateY(-2px);
+      }
+    }
+
+    @media print {
+      .print-bar { display: none !important; }
+      body { background: white; padding: 0; }
+      .page { box-shadow: none; border: none; padding: 0; }
+    }
+      font-size: 14px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    @page {
+      size: A4;
+      margin: 15mm 15mm 15mm 15mm;
+    }
+
+    .page {
+      page-break-after: always;
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Header & Branding */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: var(--primary-gradient);
+      color: white;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      letter-spacing: -0.5px;
+      box-shadow: 0 4px 12px rgba(232, 71, 63, 0.25);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
+
+    .doc-meta {
+      text-align: right;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--success-bg);
+      color: var(--success);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 11px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .dot-pulse {
+      width: 7px;
+      height: 7px;
+      background: var(--success);
+      border-radius: 50%;
+    }
+
+    /* Hero Cover */
+    .cover-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      padding: 32px 28px;
+      border-radius: 16px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+    }
+
+    .cover-hero::after {
+      content: "";
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(232, 71, 63, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-eyebrow {
+      color: #ff857e;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+
+    .hero-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      max-width: 90%;
+      line-height: 1.5;
+    }
+
+    /* Key Specs Grid */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .spec-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .spec-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .spec-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+      word-break: break-all;
+    }
+
+    .spec-status {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    /* Section Headings */
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-number {
+      background: var(--primary-gradient);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Cards & Content */
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    .card-highlight {
+      border-left: 4px solid var(--primary);
+    }
+
+    .card-meta {
+      border-left: 4px solid var(--meta-blue);
+    }
+
+    .card-success {
+      border-left: 4px solid var(--success);
+      background: #fbfdfc;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 12px;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--dark);
+      font-weight: 700;
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tag-objective {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .tag-leads { background: #e0f2fe; color: #0369a1; }
+    .tag-sales { background: #dcfce7; color: #15803d; }
+    .tag-traffic { background: #fef3c7; color: #b45309; }
+    .tag-awareness { background: #f3e8ff; color: #7e22ce; }
+    .tag-engagement { background: #ffe4e6; color: #be123c; }
+
+    /* Code Snippets */
+    .code-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      overflow-x: auto;
+      margin: 8px 0;
+      border: 1px solid #334155;
+    }
+
+    .code-keyword { color: #f43f5e; font-weight: bold; }
+    .code-str { color: #38bdf8; }
+    .code-fn { color: #a78bfa; }
+    .code-comment { color: #64748b; font-style: italic; }
+
+    /* Grid 2 Column */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .feature-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .feature-box h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feature-box p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      margin: 8px 0;
+    }
+
+    .checklist li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 8px;
+      font-size: 12.5px;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: 900;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FLOATING PRINT / DOWNLOAD TOOLBAR (Screen Only) -->
+  <div class="print-bar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="background: #e8473f; color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">PDF DOC</span>
+      <span style="font-weight: 600; font-size: 13px;">Wealthoria — Meta Ads &amp; Pixel Master Guide</span>
+    </div>
+    <button class="btn-download" onclick="window.print()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Save / Print as PDF
+    </button>
+  </div>
+
+  <div class="page-container">
+
+  <!-- PAGE 1: ARCHITECTURE & PIXEL SETUP -->
+  <div class="page">
+    <header class="header">
+      <div class="brand">
+        <div class="logo-badge">W</div>
+        <div>
+          <div class="brand-title">WEALTHORIA</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Marketing & Ads Master Guide</div>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span class="badge-live"><span class="dot-pulse"></span> SYSTEM STATUS: LIVE</span>
+        <div style="margin-top: 4px;">Verified: October 2026</div>
+      </div>
+    </header>
+
+    <div class="cover-hero">
+      <div class="hero-eyebrow">Meta Business & Growth Blueprint</div>
+      <h1 class="hero-title">Meta Ads, Pixel & Conversion Tracking Guide</h1>
+      <p class="hero-desc">
+        Complete end-to-end technical and marketing blueprint for <strong>Wealthoria Education Pvt. Ltd.</strong> 
+        Covers domain verification, Pixel integration, conversion events, campaign setup, and automated lead synchronization.
+      </p>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-label">Meta Pixel / Dataset ID</div>
+        <div class="spec-value">969336462877276</div>
+        <div class="spec-status">● Active & Receiving Events</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Connected Ad Account</div>
+        <div class="spec-value">Wealthoria Ads (1456806689711266)</div>
+        <div class="spec-status">● Linked for Auto-Attribution</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Verified Domain</div>
+        <div class="spec-value">wealthoria.in</div>
+        <div class="spec-status">● HTML Verification Live</div>
+      </div>
+    </div>
+
+    <h3 class="section-title"><span class="step-number">1</span> Domain Verification Architecture</h3>
+    <div class="card card-highlight">
+      <p style="font-size: 12.5px; margin-bottom: 8px;">
+        To comply with Apple iOS 14.5+ privacy frameworks and Meta's Aggregated Event Measurement, domain ownership was verified by inserting the official Meta verification tag in <code>index.html</code>:
+      </p>
+      <div class="code-box">
+<span class="code-comment">&lt;!-- Meta Domain Verification in &lt;head&gt; --&gt;</span>
+&lt;<span class="code-keyword">meta</span> <span class="code-fn">name</span>=<span class="code-str">"facebook-domain-verification"</span> <span class="code-fn">content</span>=<span class="code-str">"h3m20j2qgbxkj94pa7nn1lspaq3n9u"</span> /&gt;
+      </div>
+    </div>
+
+    <h3 class="section-title"><span class="step-number">2</span> Meta Pixel & Real-Time Conversion Events</h3>
+    <p style="font-size: 12.5px; margin-bottom: 10px;">
+      The Meta Pixel snippet executes on every page load and dispatches standardized conversion payloads to Meta's AI algorithms:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Standard Event</th>
+          <th>Trigger Location</th>
+          <th>Payload Data</th>
+          <th>Campaign Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong><code>PageView</code></strong></td>
+          <td><code>index.html</code> (All site routes)</td>
+          <td>URL, Referrer, User Agent</td>
+          <td>Website Retargeting & Traffic</td>
+        </tr>
+        <tr>
+          <td><strong><code>Lead</code></strong></td>
+          <td><code>src/app/EnquiryForm.jsx</code></td>
+          <td><code>{ content_name: "Consultation" }</code></td>
+          <td>Optimizes Lead Generation Ads</td>
+        </tr>
+        <tr>
+          <td><strong><code>Purchase</code></strong></td>
+          <td><code>src/components/PrebookForm.jsx</code></td>
+          <td><code>{ value: 999, currency: "INR" }</code></td>
+          <td>*Hoodikeya Vijnana* Book Sales</td>
+        </tr>
+        <tr>
+          <td><strong><code>Subscribe</code></strong></td>
+          <td><code>src/members/subscription.jsx</code></td>
+          <td><code>{ value: 99, currency: "INR" }</code></td>
+          <td>₹99/mo Member Subscription Ads</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer class="footer">
+      <div>Wealthoria Education Private Limited • No.2687/1, D-1, 2nd Floor, V V Mohalla, Mysuru</div>
+      <div>Page 1 of 3</div>
+    </footer>
+  </div>
+
+  <!-- PAGE 2: CAMPAIGN OBJECTIVES & TARGETING BLUEPRINT -->
+  <div class="page">
+    <header class="header">
+      <div class="brand">
+        <div class="logo-badge">W</div>
+        <div>
+          <div class="brand-title">WEALTHORIA</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Campaign Strategy Blueprint</div>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span class="badge-live">STRATEGY GUIDE</span>
+      </div>
+    </header>
+
+    <h3 class="section-title"><span class="step-number">3</span> Meta Campaign Objectives Master Guide</h3>
+    <p style="font-size: 12.5px; margin-bottom: 12px;">
+      Meta Ads Manager uses AI bidding. Choosing the correct objective tells Meta which users to find:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Objective</th>
+          <th>How Meta's Algorithm Operates</th>
+          <th>Best Use Case for Wealthoria</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag-objective tag-leads">🎯 Leads</span></td>
+          <td>Finds users likely to fill contact forms, share phone numbers, or register for webinars.</td>
+          <td><strong>Highest Priority</strong>: Student admissions, Kannada webinar registrations, and 1-on-1 financial education calls.</td>
+        </tr>
+        <tr>
+          <td><span class="tag-objective tag-sales">🛍️ Sales</span></td>
+          <td>Optimizes for direct checkouts using the Pixel <code>Purchase</code> and <code>Subscribe</code> events.</td>
+          <td><strong>Direct Revenue</strong>: Selling the <em>Hoodikeya Vijnana</em> book pre-orders and ₹99/mo monthly subscriptions.</td>
+        </tr>
+        <tr>
+          <td><span class="tag-objective tag-engagement">💬 Engagement</span></td>
+          <td>Maximizes video reel views, comments, shares, and direct Instagram DMs / WhatsApp chats.</td>
+          <td><strong>Viral Reach</strong>: Boosting Kannada educational reels and starting WhatsApp conversations.</td>
+        </tr>
+        <tr>
+          <td><span class="tag-objective tag-traffic">🚦 Traffic</span></td>
+          <td>Drives maximum link clicks to your website at the lowest Cost Per Click (CPC).</td>
+          <td><strong>Content Promotion</strong>: Reading blog articles or testing financial calculators.</td>
+        </tr>
+        <tr>
+          <td><span class="tag-objective tag-awareness">📢 Awareness</span></td>
+          <td>Maximizes brand impressions and ad recall across a wide audience.</td>
+          <td><strong>Brand Launch</strong>: Announcing new branches or broad awareness campaigns in Karnataka.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="section-title"><span class="step-number">4</span> High-Converting Audience Targeting Formula</h3>
+    <div class="grid-2">
+      <div class="feature-box">
+        <h4>📍 Geographic Targeting</h4>
+        <p><strong>Primary</strong>: Karnataka, India</p>
+        <p><strong>Tier 1 Cities</strong>: Bengaluru, Mysuru, Hubballi-Dharwad, Mangaluru, Belagavi, Davanagere, Shivamogga.</p>
+        <p style="margin-top: 6px;"><strong>Languages</strong>: Kannada & English.</p>
+      </div>
+      <div class="feature-box">
+        <h4>👥 Demographics & Interests</h4>
+        <p><strong>Age Group</strong>: 21 – 52 years (working professionals, business owners, beginners).</p>
+        <p><strong>Interests</strong>: Stock Market, National Stock Exchange (NSE), Bombay Stock Exchange (BSE), Mutual Funds, SIP, Personal Finance, Fixed Deposit alternatives.</p>
+      </div>
+    </div>
+
+    <div class="card card-meta">
+      <h4 style="font-size: 13px; color: var(--meta-blue); margin-bottom: 6px;">💡 Recommended Budget & Placement Strategy</h4>
+      <ul class="checklist">
+        <li><strong>Starting Budget</strong>: ₹300 – ₹500/day per Ad Set for 3–5 days during initial algorithmic learning phase.</li>
+        <li><strong>Advantage+ Placements</strong>: Keep enabled so Meta distributes impressions across Instagram Reels (9:16), Stories, Feed, and Facebook Feed.</li>
+        <li><strong>Creative Ratio</strong>: 9:16 vertical video format (Reel style) achieves 3x higher engagement and lower Cost Per Lead in Karnataka.</li>
+      </ul>
+    </div>
+
+    <footer class="footer">
+      <div>Wealthoria Education Private Limited • No.2687/1, D-1, 2nd Floor, V V Mohalla, Mysuru</div>
+      <div>Page 2 of 3</div>
+    </footer>
+  </div>
+
+  <!-- PAGE 3: AD CREATION WORKFLOW & ADMIN INTEGRATION -->
+  <div class="page">
+    <header class="header">
+      <div class="brand">
+        <div class="logo-badge">W</div>
+        <div>
+          <div class="brand-title">WEALTHORIA</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Execution & Automation Hub</div>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span class="badge-live">STEP-BY-STEP BLUEPRINT</span>
+      </div>
+    </header>
+
+    <h3 class="section-title"><span class="step-number">5</span> 5-Step Ad Creation Checklist</h3>
+    <div class="card">
+      <ol style="padding-left: 18px; font-size: 12.5px; line-height: 1.8;">
+        <li><strong>Open Ads Manager</strong>: Navigate to <code>https://adsmanager.facebook.com</code> $\rightarrow$ Select <code>Wealthoria Ads</code> account.</li>
+        <li><strong>Create Campaign</strong>: Click <code>+ Create</code> $\rightarrow$ Select <strong>Leads</strong> (or <strong>Sales</strong>) $\rightarrow$ Choose Manual Setup.</li>
+        <li><strong>Configure Ad Set</strong>:
+          <br>• Conversion Location: <code>Website</code>
+          <br>• Pixel: <code>https://wealthoria.in</code> (ID: <code>969336462877276</code>)
+          <br>• Event: <code>Lead</code> or <code>Purchase</code>
+          <br>• Location: <em>Karnataka</em> | Age: <em>21–55</em> | Interests: <em>Investing, NSE, Mutual Funds</em>.
+        </li>
+        <li><strong>Upload Creative</strong>:
+          <br>• Format: 9:16 Vertical Reel Video or Educational Carousel.
+          <br>• Primary Text: <em>"ಹಣ ಹೂಡುವ ಮುನ್ನ ಮಾರುಕಟ್ಟೆಯ ನಿಯಮಗಳನ್ನು ಕಲಿಯಿರಿ. 800+ ಕನ್ನಡಿಗರು ಕಲಿತ ಸಂಸ್ಥೆ — Wealthoria."</em>
+          <br>• Call to Action: <code>Learn More</code> or <code>Order Now</code>.
+          <br>• Website URL: <code>https://wealthoria.in</code> (or <code>https://wealthoria.in/prebook.html</code>).
+        </li>
+        <li><strong>Publish & Monitor</strong>: Click <strong>Publish</strong>. Meta approves ads within 15–60 minutes.</li>
+      </ol>
+    </div>
+
+    <h3 class="section-title"><span class="step-number">6</span> Wealthoria Admin Portal Integration Hub</h3>
+    <div class="grid-2">
+      <div class="feature-box">
+        <h4>📊 Meta Ads & Leads Hub</h4>
+        <p><strong>Route</strong>: <code>/admin/meta-ads</code></p>
+        <p>Synchronizes real-time ad spend, CPC, impressions, campaign ROI, and instant lead form downloads directly into your admin portal.</p>
+      </div>
+      <div class="feature-box">
+        <h4>📸 Instagram & Reel Manager</h4>
+        <p><strong>Route</strong>: <code>/admin/instagram</code></p>
+        <p>Preview Reels, monitor video metrics, and reply to Instagram comments/student inquiries directly without leaving the dashboard.</p>
+      </div>
+    </div>
+
+    <div class="card card-success">
+      <h4 style="font-size: 13px; color: var(--success); margin-bottom: 6px;">✅ Verification Summary</h4>
+      <p style="font-size: 12px; color: var(--text);">
+        Your technical foundation is 100% complete. Domain verification is confirmed, Pixel <code>969336462877276</code> is actively receiving events on <code>https://wealthoria.in</code>, Advanced Matching is active, and custom conversion events for Leads, Prebook purchases, and Subscriptions are live!
+      </p>
+    </div>
+
+    <footer class="footer">
+      <div>Wealthoria Education Private Limited • No.2687/1, D-1, 2nd Floor, V V Mohalla, Mysuru</div>
+      <div>Page 3 of 3</div>
+    </footer>
+  </div>
+
+  </div><!-- end page-container -->
+
+</body>
+</html>

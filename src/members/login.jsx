@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -1581,6 +1581,15 @@ if (checkingSession) {
       href="/"
       className="members-login-brand"
       aria-label="Go to Wealthoria website"
+      onClick={(e) => {
+        const isPwa =
+          (typeof window.isPwaStandalone === "function" && window.isPwaStandalone()) ||
+          sessionStorage.getItem("wealthoria_is_pwa") === "true";
+        if (isPwa) {
+          e.preventDefault();
+          // In PWA, stay on login page
+        }
+      }}
       style={{
         display: "flex",
         alignItems: "center",

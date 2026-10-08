@@ -141,12 +141,15 @@ const isPwaStandalone = () => {
     const isPwaParam =
       new URLSearchParams(window.location.search).get("source") === "pwa" ||
       new URLSearchParams(window.location.search).get("pwa") === "1";
+    const isPwaStored =
+      sessionStorage.getItem("wealthoria_is_pwa") === "true";
 
-    return isStandaloneDisplay || isIosStandalone || isAndroidApp || isPwaParam;
+    return isStandaloneDisplay || isIosStandalone || isAndroidApp || isPwaParam || isPwaStored;
   } catch (e) {
     return false;
   }
 };
+window.isPwaStandalone = isPwaStandalone;
 
 const hasActiveMemberSession = () => {
   try {
@@ -205,6 +208,11 @@ if (
 
   // If in PWA standalone mode OR if the user installed/set PWA default to members:
   if (isPwa || defaultPortal === "members") {
+    if (isPwa) {
+      try {
+        sessionStorage.setItem("wealthoria_is_pwa", "true");
+      } catch (e) {}
+    }
     let targetRoute = "/members/login";
 
     if (hasSession) {

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -314,6 +314,19 @@ function ForgotPassword() {
         href="/"
         className="members-login-brand"
         aria-label="Go to Wealthoria website"
+        onClick={(e) => {
+          const isPwa =
+            (typeof window.isPwaStandalone === "function" && window.isPwaStandalone()) ||
+            sessionStorage.getItem("wealthoria_is_pwa") === "true";
+          if (isPwa) {
+            e.preventDefault();
+            if (typeof window.membersNavigate === "function") {
+              window.membersNavigate("/members/login");
+            } else {
+              window.location.href = "/members/login";
+            }
+          }
+        }}
         style={{
           display: "flex",
           alignItems: "center",

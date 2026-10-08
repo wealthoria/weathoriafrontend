@@ -1894,9 +1894,9 @@ a { color: inherit; }
 
 .wealthoria-back-to-top {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 9999;
+  right: 28px;
+  bottom: 96px;
+  z-index: 99999;
 
   width: 48px;
   height: 48px;
@@ -1914,7 +1914,7 @@ a { color: inherit; }
   align-items: center;
   justify-content: center;
 
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 .wealthoria-back-to-top img {
@@ -1954,11 +1954,11 @@ a { color: inherit; }
 
 @media (max-width: 600px) {
   .wealthoria-back-to-top {
-    right: 14px;
-    bottom: 16px;
+    right: 20px;
+    bottom: 88px;
 
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
   }
 }
 

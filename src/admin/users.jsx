@@ -781,20 +781,24 @@ function UsersScreen() {
       return 1;
     }
 
-    return members.map((member) => {
+    const matchedSubscriptionIds = new Set();
+
+    const joined = members.map((member) => {
 
       const memberSubscriptions =
         subscriptions
-          .filter((subscription) =>
-            subscriptionMatches(
+          .filter((subscription) => {
+            const matches = subscriptionMatches(
               member,
               subscription
-            )
-          )
+            );
+            if (matches && subscription.id) {
+              matchedSubscriptionIds.add(subscription.id);
+            }
+            return matches;
+          })
           .sort(
             (a, b) =>
-              // Paid records first, so an abandoned checkout can never
-              // hide the member's real subscription.
               subscriptionRank(b) - subscriptionRank(a) ||
               toMillis(
                 b.updatedAt ||
@@ -811,8 +815,6 @@ function UsersScreen() {
       const hasPaid =
         memberSubscriptions.some(subscriptionIsPaid);
 
-      // For a paying member, ignore abandoned checkout attempts so the
-      // status filter does not list them as "Pending" / "Created".
       const statusSource =
         hasPaid
           ? memberSubscriptions.filter(subscriptionIsPaid)
@@ -852,14 +854,6 @@ function UsersScreen() {
 
       const latestSubscription =
         memberSubscriptions[0] || null;
-
-      const statusLabels = statuses.map(
-        (status) =>
-          status.charAt(0).toUpperCase() +
-          status.slice(1)
-      );
-
-      const planLabels = plans.filter(Boolean);
 
       return {
         ...member,
@@ -960,6 +954,51 @@ function UsersScreen() {
       };
 
     });
+
+
+    const unmatchedPaidSubs = subscriptions.filter(
+      (sub) => subscriptionIsPaid(sub) && sub.id && !matchedSubscriptionIds.has(sub.id)
+    );
+
+    unmatchedPaidSubs.forEach((sub) => {
+      joined.push({
+        id: sub.memberId || sub.userId || sub.id,
+        uid: sub.memberId || sub.userId || sub.id,
+        name: sub.name || sub.customerName || sub.customer?.name || "Subscriber",
+        email: sub.email || sub.customerEmail || sub.customer?.email || "—",
+        phone: sub.phone || sub.phoneNumber || sub.customerPhone || sub.customer?.phone || "—",
+        role: "member",
+        status: normalizeValue(sub.status || "active"),
+        joinedAt: sub.subscriptionStartDate || sub.startDate || sub.createdAt || sub.paidAt || null,
+        city: sub.city || "",
+        state: sub.state || "",
+        country: sub.country || "India",
+        occupation: "",
+        company: "",
+        gender: "",
+        dateOfBirth: "",
+        complimentary: false,
+        notificationEnabled: false,
+        subscriptions: [sub],
+        subscriptionStatuses: [normalizeValue(sub.status || "active")],
+        subscriptionPlans: [sub.plan || sub.planName || "Wealthoria Premium"],
+        subscriptionStatusDisplay: String(sub.status || "active").replace(/^./, (c) => c.toUpperCase()),
+        subscriptionPlanDisplay: String(sub.plan || sub.planName || "Wealthoria Premium"),
+        subscriptionStatusPrimary: normalizeValue(sub.status || "active"),
+        subscriptionPlanPrimary: normalizeValue(sub.plan || sub.planName || ""),
+        subscriptionAmount: sub.amount ?? sub.price ?? 99,
+        subscriptionCurrency: sub.currency || "INR",
+        subscriptionStartDate: sub.subscriptionStartDate || sub.startDate || sub.createdAt || null,
+        nextBillingDate: sub.nextBillingDate || null,
+        razorpaySubscriptionId: sub.razorpaySubscriptionId || sub.id || "",
+        razorpayPaymentId: sub.razorpayPaymentId || "",
+        subscriptionCount: 1,
+        hasPaid: true,
+        isUnpaidSignup: false
+      });
+    });
+
+    return joined;
 
   }, [
     members,

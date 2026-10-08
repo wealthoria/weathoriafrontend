@@ -1725,7 +1725,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                       </div>
                       <div>
                         <div style={{ fontSize: 10, opacity: 0.58 }}>
-                          Paid subscriptions
+                          Payments (₹99)
                         </div>
                         <b>
                           {Number(selectedRevenuePoint.item.subscriptionCount || 0).toLocaleString("en-IN")}

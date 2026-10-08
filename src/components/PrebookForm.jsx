@@ -287,20 +287,20 @@ export default function PrebookForm() {
 
       const billingAddress = form.billingSameAsDelivery
         ? {
-            ...shippingAddress,
-            sameAsDelivery: true,
-          }
+          ...shippingAddress,
+          sameAsDelivery: true,
+        }
         : {
-            name: form.billingName.trim(),
-            phone: form.billingPhone.replace(/\D/g, ""),
-            address: form.billingAddress.trim(),
-            landmark: form.billingLandmark.trim(),
-            city: form.billingCity.trim(),
-            state: form.billingState.trim(),
-            pincode: form.billingPincode.replace(/\D/g, ""),
-            country: "India",
-            sameAsDelivery: false,
-          };
+          name: form.billingName.trim(),
+          phone: form.billingPhone.replace(/\D/g, ""),
+          address: form.billingAddress.trim(),
+          landmark: form.billingLandmark.trim(),
+          city: form.billingCity.trim(),
+          state: form.billingState.trim(),
+          pincode: form.billingPincode.replace(/\D/g, ""),
+          country: "India",
+          sameAsDelivery: false,
+        };
 
       const options = {
         key: keyId,
@@ -360,7 +360,7 @@ export default function PrebookForm() {
             if (!verifyResponse.ok || !verifyData?.success) {
               throw new Error(
                 verifyData?.message ||
-                  "Payment was received, but order verification failed."
+                "Payment was received, but order verification failed."
               );
             }
 
@@ -380,7 +380,7 @@ export default function PrebookForm() {
             console.error("Pre-book payment verification error:", error);
             setErrorMessage(
               error.message ||
-                "Unable to verify the payment. Please contact Wealthoria support with your Razorpay payment ID."
+              "Unable to verify the payment. Please contact Wealthoria support with your Razorpay payment ID."
             );
           } finally {
             setProcessing(false);
@@ -402,7 +402,7 @@ export default function PrebookForm() {
         setProcessing(false);
         setErrorMessage(
           response?.error?.description ||
-            "Payment failed. Please try again."
+          "Payment failed. Please try again."
         );
       });
 
@@ -413,7 +413,7 @@ export default function PrebookForm() {
       setProcessing(false);
       setErrorMessage(
         error.message ||
-          "Unable to start checkout. Please try again."
+        "Unable to start checkout. Please try again."
       );
     }
   };

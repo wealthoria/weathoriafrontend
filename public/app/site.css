@@ -1895,7 +1895,7 @@ a { color: inherit; }
 .wealthoria-back-to-top {
   position: fixed;
   right: 28px;
-  bottom: 96px;
+  bottom: 24px;
   z-index: 99999;
 
   width: 48px;
@@ -1955,7 +1955,7 @@ a { color: inherit; }
 @media (max-width: 600px) {
   .wealthoria-back-to-top {
     right: 20px;
-    bottom: 88px;
+    bottom: 18px;
 
     width: 44px;
     height: 44px;

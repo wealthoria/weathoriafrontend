@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import InstallPopup from "./InstallPopup.jsx";
 
 /* global React, window, localStorage, document */
@@ -496,6 +496,9 @@ V V Mohalla, Mysore - 570002
         </main>
       )}
 
+      {typeof window.WealthoriaAIFloat === "function" && (
+        <window.WealthoriaAIFloat lang={lang} />
+      )}
       <Footer />
       <SiteAnimations />
 

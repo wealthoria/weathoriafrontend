@@ -1,4 +1,4 @@
-﻿/* global React, window */
+/* global React, window */
 
 
 import React, { useState } from "react";
@@ -83,6 +83,13 @@ function EnquiryForm() {
           : new Date()
     });
 
+
+    if (typeof window.fbq === "function") {
+      window.fbq("track", "Lead", {
+        content_name: vals.interest || "General Enquiry",
+        content_category: "Financial Education Consultation",
+      });
+    }
 
     setDone(true);
   } catch (error) {

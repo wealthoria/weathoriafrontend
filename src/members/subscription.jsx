@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -278,6 +278,14 @@ return;
                 completeData.message ||
                 "Payment succeeded but account creation failed."
               );
+            }
+
+            if (typeof window.fbq === "function") {
+              window.fbq("track", "Subscribe", {
+                value: 99,
+                currency: "INR",
+                predicted_ltv: 99,
+              });
             }
 
             alert(

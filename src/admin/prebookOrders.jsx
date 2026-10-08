@@ -414,10 +414,30 @@ function PrebookOrders() {
 
     const unsubscribe = window.db.collection("bookOrders").onSnapshot(
       (snapshot) => {
-        const rows = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const rows = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          .filter((order) => {
+            const payStatus = String(order.paymentStatus || order.status || "").toLowerCase();
+            // Strictly exclude failed, unpaid, or cancelled attempts
+            if (payStatus === "failed" || payStatus === "cancelled" || payStatus === "unpaid") {
+              return false;
+            }
+            const hasPaymentId = Boolean(
+              order.razorpayPaymentId ||
+              order.paymentId ||
+              order.payment_id ||
+              (order.payment && order.payment.id)
+            );
+            const isPaidStatus =
+              payStatus === "paid" ||
+              payStatus === "captured" ||
+              payStatus === "success";
+
+            return isPaidStatus || hasPaymentId;
+          });
 
         // Strict descending order: newest orders first
         rows.sort((a, b) => {

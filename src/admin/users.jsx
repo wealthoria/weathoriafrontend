@@ -115,9 +115,9 @@ function safeTimestamp(value) {
 function getMemberTime(member) {
   if (!member) return 0;
   return (
+    safeTimestamp(member.subscriptionStartDate) ||
     safeTimestamp(member.joinedAt) ||
     safeTimestamp(member.createdAt) ||
-    safeTimestamp(member.subscriptionStartDate) ||
     safeTimestamp(member.registeredAt) ||
     safeTimestamp(member.createdOn) ||
     safeTimestamp(member.updatedAt) ||

@@ -21,12 +21,17 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-
 window.firebase = firebase;
 
-window.auth = firebase.auth();
+if (typeof firebase.auth === "function") {
+  window.auth = firebase.auth();
+}
 
-window.db = firebase.firestore();
+if (typeof firebase.firestore === "function") {
+  window.db = firebase.firestore();
+}
 
-window.storage = firebase.storage();
+if (typeof firebase.storage === "function") {
+  window.storage = firebase.storage();
+}
 

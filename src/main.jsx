@@ -116,6 +116,7 @@ import "./admin/reports.jsx";
 import "./admin/enquiries.jsx";
 import "./admin/prebookOrders.jsx";
 import "./admin/Generatelable.jsx";
+import "./admin/GenerateCoupon.jsx";
 
 import PrebookForm from "./components/PrebookForm.jsx";
 

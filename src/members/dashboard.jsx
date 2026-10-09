@@ -768,7 +768,7 @@ function DashboardBookPromo() {
             <span className="wd-book-ad-kicker">NEW RELEASE</span>
             <h3>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h3>
             <p>Learn investing with practical, simple insights.</p>
-            <div className="wd-book-ad-price"><b>₹999</b><del>₹1499</del></div>
+            <div className="wd-book-ad-price"><b>₹1,499</b></div>
             <span className="wd-book-ad-cta">Pre-book now →</span>
           </div>
           <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
@@ -778,7 +778,7 @@ function DashboardBookPromo() {
           <div className="wd-book-ad-copy">
             <span className="wd-book-ad-kicker">LIMITED OFFER</span>
             <h3>Build wealth with knowledge.</h3>
-            <p>Pre-book today for ₹999. Shipping starts Oct 1.</p>
+            <p>Pre-book today for ₹1,499. Shipping starts soon.</p>
             <span className="wd-book-ad-cta">Explore the book →</span>
           </div>
           <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
@@ -789,7 +789,7 @@ function DashboardBookPromo() {
             <span className="wd-book-ad-kicker">WEALTHORIA BOOK</span>
             <h3>6 Months Ahead.</h3>
             <p>Start your investing journey with Wealthoria.</p>
-            <div className="wd-book-ad-price"><b>₹999</b><del>₹1499</del></div>
+            <div className="wd-book-ad-price"><b>₹1,499</b></div>
             <span className="wd-book-ad-cta">Pre-book now →</span>
           </div>
           <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
@@ -800,7 +800,7 @@ function DashboardBookPromo() {
             <span className="wd-book-ad-kicker">NEW RELEASE</span>
             <h3>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h3>
             <p>Learn investing with practical, simple insights.</p>
-            <div className="wd-book-ad-price"><b>₹999</b><del>₹1499</del></div>
+            <div className="wd-book-ad-price"><b>₹1,499</b></div>
             <span className="wd-book-ad-cta">Pre-book now →</span>
           </div>
           <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>

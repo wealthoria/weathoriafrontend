@@ -1967,7 +1967,7 @@ function PrebookOrders() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search booking, customer, email, phone, Razorpay, AWB..."
+            placeholder="Search by coupon code (e.g. WEALTH20), booking ID, customer, email, phone..."
             style={{
               width: "100%",
               boxSizing: "border-box",
@@ -2384,6 +2384,11 @@ function PrebookOrders() {
                         {order.couponCode ? (
                           <div style={{ display: "inline-flex", flexDirection: "column", gap: 3 }}>
                             <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCouponFilter(`code:${order.couponCode}`);
+                              }}
+                              title={`Click to filter all orders by coupon "${order.couponCode}"`}
                               style={{
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -2395,7 +2400,8 @@ function PrebookOrders() {
                                 color: "#027a48",
                                 fontSize: 11,
                                 fontWeight: 750,
-                                letterSpacing: "0.02em"
+                                letterSpacing: "0.02em",
+                                cursor: "pointer"
                               }}
                             >
                               🏷️ {order.couponCode}
@@ -2578,10 +2584,10 @@ function PrebookOrders() {
                             const bookingId = order.bookingId || "";
                             const amount = order.amount ?? "";
                             setEmailOrder(order);
-                            setEmailSubject(`Wealthoria – Pre-booking Confirmation ${bookingId}`);
+                            setEmailSubject(`Wealthoria – Order Confirmation ${bookingId}`);
                             setEmailMessage(
                               `Dear ${name},\n\n` +
-                              `Thank you for pre-booking the book "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" with Wealthoria.\n\n` +
+                              `Thank you for purchasing the book "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" with Wealthoria.\n\n` +
                               `Booking ID: ${bookingId}\n` +
                               `Amount Paid: ₹${amount}\n\n` +
                               `We will share shipping updates once your book is dispatched.\n\n` +

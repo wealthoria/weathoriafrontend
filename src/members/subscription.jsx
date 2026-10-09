@@ -42,13 +42,24 @@ const [errors, setErrors] = useState({});
   return;
 }
 
-if (!cleanEmail) {
-  setErrors({ email: "Please enter your email address." });
+const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+if (!emailPattern.test(cleanEmail)) {
+  setErrors({ email: "Please enter a valid email address." });
   return;
 }
 
-if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
-  setErrors({ email: "Please enter a valid email address." });
+const typoDomains = {
+  "gamil.com": "gmail.com",
+  "gmaill.com": "gmail.com",
+  "gmial.com": "gmail.com",
+  "gmai.com": "gmail.com",
+  "gmal.com": "gmail.com",
+  "yaho.com": "yahoo.com",
+  "outlok.com": "outlook.com"
+};
+const domain = cleanEmail.split("@")[1];
+if (domain && typoDomains[domain]) {
+  setErrors({ email: `Did you mean @${typoDomains[domain]}? Please check your email spelling.` });
   return;
 }
 

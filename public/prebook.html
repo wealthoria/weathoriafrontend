@@ -18,6 +18,27 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="/firebase/firebase.js"></script>
 
+  <!-- Meta Pixel Code -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '969336462877276');
+    fbq('track', 'PageView');
+    fbq('track', 'InitiateCheckout', {
+      content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
+      content_category: 'Book',
+      value: 1499,
+      currency: 'INR'
+    });
+  </script>
+  <!-- End Meta Pixel Code -->
+
   <style>
     :root {
       --ink: #11201f;
@@ -1301,6 +1322,15 @@
 
 
               /* SUCCESS */
+              if (window.fbq) {
+                fbq('track', 'Purchase', {
+                  content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
+                  content_category: 'Book',
+                  value: BASE_PRICE - appliedDiscountAmount,
+                  currency: 'INR',
+                  order_id: response.razorpay_order_id
+                });
+              }
 
               window.location.href =
                 "/thankyou.html?o=" +

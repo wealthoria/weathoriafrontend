@@ -177,12 +177,13 @@
 
     /* SUMMARY BOX & COUPON */
     .summary-box {
-      background: #fafbf9;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 20px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 20px 22px;
       margin-top: 24px;
       margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
     }
 
     .summary-row {
@@ -195,75 +196,150 @@
     }
 
     .summary-row.total {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px dashed var(--line);
-      font-size: 18px;
-      font-weight: 700;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 17px;
+      font-weight: 800;
       color: var(--ink);
     }
 
-    .coupon-box {
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid var(--line);
+    .coupon-card-wrap {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f5f9;
     }
 
     .coupon-input-wrap {
       display: flex;
       gap: 8px;
+      margin-top: 8px;
     }
 
     .coupon-input-wrap input {
       flex: 1;
-      height: 44px;
+      height: 46px;
       padding: 0 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
+      outline: none;
+      transition: all 0.2s;
+      background: #f8fafc;
+    }
+
+    .coupon-input-wrap input:focus {
+      border-color: #0f172a;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
     }
 
     .coupon-btn {
-      padding: 0 18px;
-      height: 44px;
-      background: #1e293b;
+      padding: 0 20px;
+      height: 46px;
+      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
       color: #fff;
       border: none;
-      border-radius: 6px;
-      font-weight: 600;
+      border-radius: 8px;
+      font-weight: 750;
       font-size: 13px;
+      letter-spacing: 0.02em;
       cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+    }
+
+    .coupon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.22);
     }
 
     .coupon-msg {
       margin-top: 8px;
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .coupon-msg.success {
-      color: var(--green);
+      color: #16a34a;
+      background: #f0fdf4;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #bbf7d0;
     }
 
     .coupon-msg.error {
-      color: var(--coral);
+      color: #dc2626;
+      background: #fef2f2;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #fecaca;
     }
 
-    .wa-coupon-link {
-      display: inline-flex;
+    .wa-coupon-card {
+      display: flex;
       align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-      color: #25D366;
-      font-size: 13px;
-      font-weight: 600;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 1.5px solid #a7f3d0;
+      border-radius: 10px;
       text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
     }
 
-    .wa-coupon-link:hover {
-      text-decoration: underline;
+    .wa-coupon-card:hover {
+      background: #dcfce7;
+      border-color: #86efac;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
+    }
+
+    .wa-coupon-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(37, 211, 102, 0.35);
+    }
+
+    .wa-coupon-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wa-coupon-text strong {
+      font-size: 13px;
+      color: #065f46;
+      font-weight: 750;
+      line-height: 1.2;
+    }
+
+    .wa-coupon-text span {
+      font-size: 11px;
+      color: #047857;
+      margin-top: 2px;
+    }
+
+    .wa-coupon-arrow {
+      font-size: 16px;
+      font-weight: 800;
+      color: #059669;
+      transition: transform 0.2s;
+    }
+
+    .wa-coupon-card:hover .wa-coupon-arrow {
+      transform: translateX(3px);
     }
 
     .error {
@@ -503,33 +579,38 @@
            ORDER SUMMARY & DYNAMIC COUPON CODE
            ===================================================== -->
         <div class="summary-box">
-          <div style="font-weight:700;font-size:16px;color:var(--ink);margin-bottom:14px;">
-            Order Summary
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-weight:800;font-size:16.5px;color:var(--ink);letter-spacing:-.01em;">Order Summary</span>
+            <span
+              style="font-size:11px;font-weight:700;background:#eefbf2;color:#16a34a;padding:3px 8px;border-radius:6px;border:1px solid #bbf7d0;">Official
+              Release</span>
           </div>
 
           <div class="summary-row">
-            <span>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (Hardcover)</span>
-            <span id="summaryBasePrice">₹1,499.00</span>
+            <span style="font-weight:600;color:#334155;">ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (Hardcover)</span>
+            <span id="summaryBasePrice" style="font-weight:700;color:#0f172a;">₹1,499.00</span>
           </div>
 
 
-          <div class="summary-row" id="discountRow" style="display:none;color:var(--green);font-weight:600;">
+
+          <div class="summary-row" id="discountRow" style="display:none;color:#16a34a;font-weight:700;">
             <span id="discountLabel">Coupon Discount</span>
             <span id="discountValue">-₹0.00</span>
           </div>
 
           <div class="summary-row total">
             <span>Total Payable</span>
-            <span id="summaryTotal" style="color:var(--coral);">₹1,499.00</span>
+            <span id="summaryTotal" style="color:var(--coral);font-weight:850;font-size:20px;">₹1,499.00</span>
           </div>
 
-          <!-- Coupon Code Input -->
-          <div class="coupon-box">
-            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">
-              Have a Coupon Code?
+          <!-- Modern Coupon Card -->
+          <div class="coupon-card-wrap">
+            <label
+              style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:750;color:#1e293b;margin-bottom:2px;">
+              <span>🏷️</span> Have a Coupon Code?
             </label>
             <div class="coupon-input-wrap">
-              <input type="text" id="couponInput" placeholder="Enter coupon code"
+              <input type="text" id="couponInput" placeholder="ENTER COUPON CODE"
                 onkeydown="if(event.key==='Enter'){event.preventDefault();applyCoupon();}">
               <button type="button" class="coupon-btn" id="applyCouponBtn" onclick="applyCoupon()">
                 Apply
@@ -538,8 +619,18 @@
             <div id="couponMsg" class="coupon-msg"></div>
 
             <a href="https://wa.me/919019759001?text=Hi%20Wealthoria%2C%20I%20want%20to%20purchase%20'ಹೂಡಿಕೆಯ%20ವಿಜ್ಞಾನ'%20book.%20Please%20share%20a%20coupon%20code!"
-              target="_blank" class="wa-coupon-link">
-              <span>💬</span> Request Coupon Code on WhatsApp
+              target="_blank" class="wa-coupon-card">
+              <div class="wa-coupon-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+                  <path
+                    d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.766c0 5.518-4.482 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.304 1.34-4.887c-.896-1.493-1.424-3.238-1.424-5.175 0-5.518 4.482-10 10-10 5.518 0 10 4.482 10 10z" />
+                </svg>
+              </div>
+              <div class="wa-coupon-text">
+                <strong>Request Coupon Code</strong>
+                <span>Chat with Wealthoria team on WhatsApp</span>
+              </div>
+              <span class="wa-coupon-arrow">→</span>
             </a>
           </div>
         </div>

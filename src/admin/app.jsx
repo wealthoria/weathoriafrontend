@@ -351,6 +351,15 @@ function resolve(path) {
   }
 
   if (
+    path === "/admin/meta-ads" ||
+    path === "/admin/ads"
+  ) {
+    return {
+      name: "meta-ads"
+    };
+  }
+
+  if (
     path === "/admin/reports"
   ) {
     return {

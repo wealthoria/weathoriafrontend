@@ -55,12 +55,13 @@ function AdminMetaAds() {
   const [campaignsData, setCampaignsData] = useState({ campaigns: [], summary: {} });
   const [leadsList, setLeadsList] = useState([]);
   const [activeTab, setActiveTab] = useState("CAMPAIGNS"); // "CAMPAIGNS" | "LEADS"
+  const [datePreset, setDatePreset] = useState("today"); // "today" | "yesterday" | "last_7d" | "last_30d" | "maximum"
   const [search, setSearch] = useState("");
 
   /* ---------------------------------------------------------
      LOAD STATUS, CAMPAIGNS & LEADS
      --------------------------------------------------------- */
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (preset = datePreset) => {
     setLoading(true);
     try {
       // 1. Fetch Meta Ads Status
@@ -69,8 +70,8 @@ function AdminMetaAds() {
       setStatus(statusJson);
 
       if (statusJson.connected) {
-        // 2. Fetch Active Campaigns & Insights
-        const campRes = await fetch(`${API_BASE}/meta-ads/campaigns`);
+        // 2. Fetch Active Campaigns & Insights with datePreset
+        const campRes = await fetch(`${API_BASE}/meta-ads/campaigns?datePreset=${preset}`);
         const campJson = await campRes.json();
         if (campJson.success) {
           setCampaignsData(campJson);
@@ -89,11 +90,11 @@ function AdminMetaAds() {
     } finally {
       setLoading(false);
     }
-  }, [pushToast]);
+  }, [datePreset, pushToast]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData(datePreset);
+  }, [datePreset, fetchData]);
 
   /* ---------------------------------------------------------
      CONNECT META AD ACCOUNT
@@ -334,6 +335,44 @@ function AdminMetaAds() {
       </div>
 
       {/* =======================================================
+          DATE PRESET SELECTOR & CONTROLS
+          ======================================================= */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          marginBottom: "16px"
+        }}
+      >
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+          {[
+            { id: "today", label: "Today" },
+            { id: "yesterday", label: "Yesterday" },
+            { id: "last_7d", label: "Last 7 Days" },
+            { id: "last_30d", label: "Last 30 Days" },
+            { id: "maximum", label: "Lifetime" }
+          ].map((dp) => (
+            <button
+              key={dp.id}
+              type="button"
+              className={`meta-pill-btn ${datePreset === dp.id ? "active" : ""}`}
+              onClick={() => setDatePreset(dp.id)}
+              style={{ fontSize: 12, padding: "6px 12px" }}
+            >
+              {dp.label}
+            </button>
+          ))}
+        </div>
+
+        <span style={{ fontSize: 12, color: "var(--mute, #6b7280)", fontWeight: 600 }}>
+          {status?.connected ? `Showing ${datePreset.toUpperCase()} performance` : ""}
+        </span>
+      </div>
+
+      {/* =======================================================
           KPI METRICS SUMMARY CARDS
           ======================================================= */}
       <div
@@ -346,34 +385,22 @@ function AdminMetaAds() {
       >
         <div className="meta-stat-card">
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-            Total Ad Spend (30d)
+            Total Spend
           </span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "var(--fg, #111827)" }}>
             {formatINR(summary.totalSpend || 0)}
           </b>
           <span style={{ fontSize: 11.5, color: "#10b981", fontWeight: 600 }}>
-            Across all active ad sets
+            Budget: ₹300/day
           </span>
         </div>
 
         <div className="meta-stat-card">
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-            Leads Generated
-          </span>
-          <b style={{ fontSize: 24, fontWeight: 800, color: "#2563eb" }}>
-            {Number(summary.totalLeads || leadsList.length || 0).toLocaleString("en-IN")}
-          </b>
-          <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
-            Via Instant Lead Forms
-          </span>
-        </div>
-
-        <div className="meta-stat-card">
-          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-            Total Clicks
+            Reach & Impressions
           </span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "var(--fg, #111827)" }}>
-            {Number(summary.totalClicks || 0).toLocaleString("en-IN")}
+            {Number(summary.totalReach || 0).toLocaleString("en-IN")}
           </b>
           <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
             {Number(summary.totalImpressions || 0).toLocaleString("en-IN")} Impressions
@@ -382,13 +409,25 @@ function AdminMetaAds() {
 
         <div className="meta-stat-card">
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-            Avg Cost Per Click (CPC)
+            Link Clicks & CPC
           </span>
-          <b style={{ fontSize: 24, fontWeight: 800, color: "var(--fg, #111827)" }}>
-            ₹{summary.avgCpc || "0.00"}
+          <b style={{ fontSize: 24, fontWeight: 800, color: "#2563eb" }}>
+            {Number(summary.totalClicks || 0).toLocaleString("en-IN")} Clicks
           </b>
           <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
-            Cost per link click
+            Avg CPC: ₹{summary.avgCpc || "0.00"}
+          </span>
+        </div>
+
+        <div className="meta-stat-card">
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
+            Purchases & Leads
+          </span>
+          <b style={{ fontSize: 24, fontWeight: 800, color: "#10b981" }}>
+            {summary.totalPurchases || 0} Purchases
+          </b>
+          <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
+            {summary.totalLeads || 0} Leads
           </span>
         </div>
       </div>
@@ -469,12 +508,14 @@ function AdminMetaAds() {
                   <tr>
                     <th>Campaign Name</th>
                     <th>Status</th>
-                    <th>Objective</th>
                     <th>Spend (₹)</th>
-                    <th>Leads</th>
-                    <th>Cost / Lead</th>
+                    <th>Reach</th>
+                    <th>Impressions</th>
                     <th>Clicks</th>
+                    <th>CPC (₹)</th>
                     <th>CTR</th>
+                    <th>Purchases</th>
+                    <th>Cost/Purchase</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -501,24 +542,28 @@ function AdminMetaAds() {
                         </span>
                       </td>
                       <td>
-                        <span style={{ fontSize: 12, color: "var(--mute, #6b7280)" }}>
-                          {c.objective?.replace("OUTCOME_", "") || "TRAFFIC"}
-                        </span>
-                      </td>
-                      <td>
                         <b>{formatINR(c.metrics?.spend || 0)}</b>
                       </td>
                       <td>
-                        <b style={{ color: "#2563eb" }}>{c.metrics?.leads || 0}</b>
+                        <span>{Number(c.metrics?.reach || 0).toLocaleString("en-IN")}</span>
                       </td>
                       <td>
-                        <span>{c.metrics?.leads > 0 ? `₹${c.metrics.costPerLead}` : "—"}</span>
+                        <span>{Number(c.metrics?.impressions || 0).toLocaleString("en-IN")}</span>
                       </td>
                       <td>
-                        <span>{Number(c.metrics?.clicks || 0).toLocaleString("en-IN")}</span>
+                        <b style={{ color: "#2563eb" }}>{Number(c.metrics?.clicks || 0).toLocaleString("en-IN")}</b>
+                      </td>
+                      <td>
+                        <span>{c.metrics?.cpc ? `₹${c.metrics.cpc.toFixed(2)}` : "—"}</span>
                       </td>
                       <td>
                         <span>{c.metrics?.ctr ? `${c.metrics.ctr.toFixed(2)}%` : "—"}</span>
+                      </td>
+                      <td>
+                        <b style={{ color: "#10b981" }}>{c.metrics?.purchases || 0}</b>
+                      </td>
+                      <td>
+                        <span>{c.metrics?.costPerPurchase > 0 ? `₹${c.metrics.costPerPurchase}` : "—"}</span>
                       </td>
                     </tr>
                   ))}

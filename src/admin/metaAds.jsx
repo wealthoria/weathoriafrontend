@@ -96,8 +96,73 @@ function AdminMetaAds() {
     fetchData(datePreset);
   }, [datePreset, fetchData]);
 
+  const [showTokenModal, setShowTokenModal] = useState(false);
+  const [tokenInput, setTokenInput] = useState("");
+  const [savingToken, setSavingToken] = useState(false);
+
   /* ---------------------------------------------------------
-     CONNECT META AD ACCOUNT
+     HANDLE OAUTH CODE EXCHANGE ON REDIRECT BACK
+     --------------------------------------------------------- */
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (code) {
+      (async () => {
+        pushToast("Connecting your Meta Ads account...", "info");
+        try {
+          const res = await fetch(`${API_BASE}/meta-ads/exchange-code`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code,
+              redirectUri: window.location.origin + window.location.pathname
+            })
+          });
+          const json = await res.json();
+          if (json.success) {
+            pushToast("Meta Ads connected successfully!", "success");
+            window.history.replaceState({}, document.title, window.location.pathname);
+            fetchData();
+          } else {
+            pushToast(json.error || json.message || "Failed to exchange code", "error");
+          }
+        } catch (e) {
+          pushToast("Network error exchanging Meta code", "error");
+        }
+      })();
+    }
+  }, [fetchData, pushToast]);
+
+  /* ---------------------------------------------------------
+     SAVE TOKEN MANUALLY (FALLBACK)
+     --------------------------------------------------------- */
+  const handleSaveToken = async () => {
+    if (!tokenInput.trim()) return pushToast("Please paste an Access Token", "error");
+    setSavingToken(true);
+    try {
+      const res = await fetch(`${API_BASE}/meta-ads/save-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: tokenInput.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        pushToast(data.message || "Connected successfully!", "success");
+        setShowTokenModal(false);
+        setTokenInput("");
+        fetchData();
+      } else {
+        pushToast(data.error || data.message || "Failed to verify token", "error");
+      }
+    } catch (e) {
+      pushToast("Network error verifying token", "error");
+    } finally {
+      setSavingToken(false);
+    }
+  };
+
+  /* ---------------------------------------------------------
+     CONNECT META AD ACCOUNT VIA OAUTH
      --------------------------------------------------------- */
   const handleConnect = async () => {
     try {
@@ -291,14 +356,25 @@ function AdminMetaAds() {
         {/* Action Controls */}
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {!status?.connected ? (
-            <button
-              type="button"
-              className="meta-pill-btn"
-              onClick={handleConnect}
-              style={{ background: "#1877f2", color: "#fff", borderColor: "#1877f2" }}
-            >
-              🚀 Connect Meta Ads Account
-            </button>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="meta-pill-btn"
+                onClick={handleConnect}
+                style={{ background: "#1877f2", color: "#fff", borderColor: "#1877f2" }}
+              >
+                🚀 Connect Meta Ads Account
+              </button>
+
+              <button
+                type="button"
+                className="meta-pill-btn"
+                onClick={() => setShowTokenModal(true)}
+                style={{ background: "#059669", color: "#fff", borderColor: "#059669" }}
+              >
+                🔑 Paste Token
+              </button>
+            </div>
           ) : (
             <>
               <button
@@ -660,6 +736,78 @@ function AdminMetaAds() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* MANUAL TOKEN MODAL */}
+      {showTokenModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 99999,
+            padding: "20px"
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface, #ffffff)",
+              borderRadius: "18px",
+              padding: "28px",
+              maxWidth: "520px",
+              width: "100%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)"
+            }}
+          >
+            <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 800, color: "var(--fg, #111827)" }}>
+              Connect via Meta Access Token
+            </h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--mute, #6b7280)", lineHeight: 1.5 }}>
+              Paste your Meta System User Token or Graph API Explorer token to link your ad account directly without OAuth redirect.
+            </p>
+            <textarea
+              rows={4}
+              placeholder="Paste Meta Access Token here (EAA...)"
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "10px",
+                border: "1px solid var(--line, #e5e7eb)",
+                fontSize: "12px",
+                fontFamily: "monospace",
+                boxSizing: "border-box",
+                outline: "none",
+                marginBottom: "16px",
+                background: "var(--bg-muted, #f9fafb)",
+                color: "var(--fg, #111827)"
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                className="meta-pill-btn"
+                onClick={() => setShowTokenModal(false)}
+                disabled={savingToken}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="meta-pill-btn"
+                onClick={handleSaveToken}
+                disabled={savingToken}
+                style={{ background: "#2563eb", color: "#fff", borderColor: "#2563eb" }}
+              >
+                {savingToken ? "Verifying..." : "Verify & Connect"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { takePendingPage, queueNotificationLink } from "./memberContent.js";
+import { takePendingPage, queueNotificationLink, trackMemberContentOpen } from "./memberContent.js";
 const {
   useState,
   useEffect,
@@ -619,18 +619,16 @@ useEffect(() => {
   loadWeeklyRoundup();
 }, []);
 
-  const openWeekly =
-    () => {
-
-      if (
-        window.membersNavigate
-      ) {
-
-       onOpen();
-
-      }
-
-    };
+  const openWeekly = () => {
+    trackMemberContentOpen({
+      type: "weekly_roundup",
+      contentId: report?.id || "dashboard_roundup_card",
+      contentTitle: report?.title || "Weekly Roundup Card"
+    });
+    if (window.membersNavigate) {
+      onOpen();
+    }
+  };
 
 
   if (loading) {

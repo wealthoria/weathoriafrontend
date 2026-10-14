@@ -1,4 +1,5 @@
 import React from "react";
+import { trackMemberContentOpen } from "./memberContent.js";
 
 /* global React, window */
 
@@ -219,6 +220,14 @@ const COURSE_LEVELS = [
 ========================================================= */
 
 function CourseVideos() {
+  // Track Course Videos section visit
+  useEffect(() => {
+    trackMemberContentOpen({
+      type: "video",
+      contentId: "course_videos_section",
+      contentTitle: "Course Videos Section"
+    });
+  }, []);
 
   /* =======================================================
      LOAD RAZORPAY CHECKOUT SDK
@@ -601,6 +610,13 @@ useEffect(() => {
   ======================================================= */
 
  const openCourse = (course) => {
+  if (course) {
+    trackMemberContentOpen({
+      type: "video",
+      contentId: course.id || "course_video",
+      contentTitle: course.title || "Course Video"
+    });
+  }
 
   setSelectedCourse(course);
 

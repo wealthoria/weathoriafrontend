@@ -1,4 +1,8 @@
-﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
+import {
+  fetchSecurePdfUrl,
+  usePendingContent,
+  trackMemberContentOpen
+} from "./memberContent.js";
 import React from "react";
 
 /* global React, window */
@@ -14,12 +18,11 @@ function WeeklyRoundup() {
   const openReport = async (report) => {
     if (!report?.id) return;
 
-    if (typeof window.gtag === "function") {
-      window.gtag("event", "weekly_roundup_opened", {
-        content_id: String(report.id || ""),
-        content_title: report.title || ""
-      });
-    }
+    trackMemberContentOpen({
+      type: "weekly_roundup",
+      contentId: report.id,
+      contentTitle: report.title || "Weekly Roundup"
+    });
 
     try {
       const pdfUrl = await fetchSecurePdfUrl(report.id);
@@ -32,6 +35,15 @@ function WeeklyRoundup() {
 
   // Opens the PDF a push notification points to.
   usePendingContent(reports, openReport);
+
+  // Track that the member opened Weekly Roundup section
+  useEffect(() => {
+    trackMemberContentOpen({
+      type: "weekly_roundup",
+      contentId: "weekly_roundup_section",
+      contentTitle: "Weekly Roundup Page"
+    });
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

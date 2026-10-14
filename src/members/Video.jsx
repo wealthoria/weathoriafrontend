@@ -1,4 +1,5 @@
 import React from "react";
+import { trackMemberContentOpen } from "./memberContent.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -148,6 +149,16 @@ function MemberVideoPlayer({
     return null;
   }
 
+  useEffect(() => {
+    if (video) {
+      trackMemberContentOpen({
+        type: "video",
+        contentId: video.id || "video_modal",
+        contentTitle: video.title || "Video Player"
+      });
+    }
+  }, [video?.id]);
+
   const embedUrl = getVideoEmbedUrl(
     video.vdocipherUrl
   );
@@ -285,6 +296,15 @@ function MemberVideo() {
   const [endDate, setEndDate] =
     useState("");
 
+  // Track visiting the Videos section
+  useEffect(() => {
+    trackMemberContentOpen({
+      type: "video",
+      contentId: "videos_section",
+      contentTitle: "Recorded Videos Section"
+    });
+  }, []);
+
   /* =======================================================
      LOAD PUBLISHED VIDEOS
   ======================================================= */
@@ -346,6 +366,11 @@ function MemberVideo() {
                 : null;
 
               if (remembered) {
+                trackMemberContentOpen({
+                  type: "video",
+                  contentId: remembered.id,
+                  contentTitle: remembered.title || "Restored Video"
+                });
                 setSelectedVideo(remembered);
               } else {
                 rememberOpenVideo("");
@@ -496,14 +521,11 @@ function MemberVideo() {
 function openVideo(video) {
   if (!video) return;
 
-  // Google Analytics - track member video opened
-  if (typeof window.gtag === "function") {
-    window.gtag("event", "video_opened", {
-      content_id: String(video.id || ""),
-      content_title: video.title || "",
-      content_category: video.category || ""
-    });
-  }
+  trackMemberContentOpen({
+    type: "video",
+    contentId: video.id,
+    contentTitle: video.title || "Video"
+  });
 
   rememberOpenVideo(video.id);
 

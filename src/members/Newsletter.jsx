@@ -1,4 +1,8 @@
-﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
+import {
+  fetchSecurePdfUrl,
+  usePendingContent,
+  trackMemberContentOpen
+} from "./memberContent.js";
 import React from "react";
 
 /* global React, window */
@@ -15,12 +19,11 @@ function Newsletter() {
   const openNewsletter = async (newsletter) => {
     if (!newsletter?.id) return;
 
-    if (typeof window.gtag === "function") {
-      window.gtag("event", "newsletter_opened", {
-        content_id: String(newsletter.id || ""),
-        content_title: newsletter.title || ""
-      });
-    }
+    trackMemberContentOpen({
+      type: "newsletter",
+      contentId: newsletter.id,
+      contentTitle: newsletter.title || "Newsletter"
+    });
 
     try {
       const pdfUrl = await fetchSecurePdfUrl(newsletter.id);
@@ -34,6 +37,14 @@ function Newsletter() {
   // Opens the PDF a push notification points to.
   usePendingContent(newsletters, openNewsletter);
 
+  // Track that the member opened Newsletter section
+  useEffect(() => {
+    trackMemberContentOpen({
+      type: "newsletter",
+      contentId: "newsletter_section",
+      contentTitle: "Newsletter Page"
+    });
+  }, []);
 
   const [loading, setLoading] =  useState(true);
 

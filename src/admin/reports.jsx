@@ -418,10 +418,1588 @@ function RevenueAreaChart({ data, selectedPoint, onSelectPoint }) {
 }
 
 /* =========================================================
+   MEMBER ENGAGEMENT (DAY-BY-DAY) COMPONENT
+   ========================================================= */
+
+function MemberEngagementDailyView({ onBackToDashboard }) {
+  const [dailyData, setDailyData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  // Filter & interaction states
+  const [timeFilter, setTimeFilter] = useState("all"); // "today", "yesterday", "7d", "30d", "this_month", "all", "custom"
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [selectedDay, setSelectedDay] = useState(null); // Click a bar to inspect specific day
+  const [activeDetailTab, setActiveDetailTab] = useState("table"); // "table" or "logs"
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Date helper utilities in Asia/Kolkata timezone
+  const getTodayKey = useCallback(() => {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date());
+  }, []);
+
+  const getOffsetDateKey = useCallback((offsetDays) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(d);
+  }, []);
+
+  const formatReadableDate = useCallback((dateKey) => {
+    if (!dateKey) return "—";
+    try {
+      const parts = String(dateKey).split("-");
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return d.toLocaleDateString("en-IN", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        });
+      }
+    } catch {}
+    return dateKey;
+  }, []);
+
+  const todayKey = getTodayKey();
+  const yesterdayKey = getOffsetDateKey(-1);
+
+  // Compute active date boundaries
+  const { startKey, endKey, rangeLabel } = useMemo(() => {
+    if (timeFilter === "today") {
+      return {
+        startKey: todayKey,
+        endKey: todayKey,
+        rangeLabel: `Today (${formatReadableDate(todayKey)})`
+      };
+    }
+    if (timeFilter === "yesterday") {
+      return {
+        startKey: yesterdayKey,
+        endKey: yesterdayKey,
+        rangeLabel: `Yesterday (${formatReadableDate(yesterdayKey)})`
+      };
+    }
+    if (timeFilter === "7d") {
+      const start = getOffsetDateKey(-6);
+      return {
+        startKey: start,
+        endKey: todayKey,
+        rangeLabel: `Last 7 Days (${formatReadableDate(start)} – ${formatReadableDate(todayKey)})`
+      };
+    }
+    if (timeFilter === "30d") {
+      const start = getOffsetDateKey(-29);
+      return {
+        startKey: start,
+        endKey: todayKey,
+        rangeLabel: `Last 30 Days (${formatReadableDate(start)} – ${formatReadableDate(todayKey)})`
+      };
+    }
+    if (timeFilter === "this_month") {
+      const start = `${todayKey.slice(0, 7)}-01`;
+      return {
+        startKey: start,
+        endKey: todayKey,
+        rangeLabel: `This Month (${formatReadableDate(start)} – ${formatReadableDate(todayKey)})`
+      };
+    }
+    if (timeFilter === "custom") {
+      const start = customFrom || "1970-01-01";
+      const end = customTo || "2099-12-31";
+      let lbl = "Custom Date Range";
+      if (customFrom && customTo) {
+        lbl = `${formatReadableDate(customFrom)} to ${formatReadableDate(customTo)}`;
+      } else if (customFrom) {
+        lbl = `From ${formatReadableDate(customFrom)}`;
+      } else if (customTo) {
+        lbl = `Until ${formatReadableDate(customTo)}`;
+      }
+      return {
+        startKey: start,
+        endKey: end,
+        rangeLabel: lbl
+      };
+    }
+    // "all"
+    return {
+      startKey: "1970-01-01",
+      endKey: "2099-12-31",
+      rangeLabel: "All Time (Complete History)"
+    };
+  }, [timeFilter, customFrom, customTo, todayKey, yesterdayKey, getOffsetDateKey, formatReadableDate]);
+
+  // Real-time Firestore sync with member_usage_daily
+  useEffect(() => {
+    if (!window.db || typeof window.db.collection !== "function") {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = window.db
+      .collection("member_usage_daily")
+      .onSnapshot(
+        (snapshot) => {
+          const map = {};
+          snapshot.forEach((doc) => {
+            map[doc.id] = doc.data();
+          });
+          setDailyData(map);
+          setLoading(false);
+        },
+        (err) => {
+          console.warn("member_usage_daily listener error:", err);
+          setLoading(false);
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Real-time Firestore sync with member_activity_logs (audit stream)
+  useEffect(() => {
+    if (!window.db || typeof window.db.collection !== "function") return;
+
+    setLoadingLogs(true);
+    const unsubscribe = window.db
+      .collection("member_activity_logs")
+      .orderBy("timestamp", "desc")
+      .limit(100)
+      .onSnapshot(
+        (snapshot) => {
+          const list = [];
+          snapshot.forEach((doc) => {
+            list.push({ id: doc.id, ...doc.data() });
+          });
+          setActivityLogs(list);
+          setLoadingLogs(false);
+        },
+        (err) => {
+          // If Firestore reports index required for orderBy, fallback to simple fetch
+          window.db
+            .collection("member_activity_logs")
+            .limit(100)
+            .get()
+            .then((snap) => {
+              const list = [];
+              snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+              list.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
+              setActivityLogs(list);
+              setLoadingLogs(false);
+            })
+            .catch(() => setLoadingLogs(false));
+        }
+      );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Filter dailyData by the active date range
+  const filteredDailyData = useMemo(() => {
+    const map = {};
+    Object.entries(dailyData).forEach(([docId, data]) => {
+      let docDate =
+        data?.date && /^\d{4}-\d{2}-\d{2}$/.test(String(data.date))
+          ? String(data.date)
+          : /^\d{4}-\d{2}-\d{2}$/.test(String(docId))
+          ? String(docId)
+          : null;
+
+      if (!docDate && (data?.lastUpdated || data?.timestamp)) {
+        const ms = toMillis(data.lastUpdated || data.timestamp);
+        if (ms) {
+          try {
+            docDate = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            }).format(new Date(ms));
+          } catch {}
+        }
+      }
+
+      const effectiveKey = docDate || docId;
+      if (timeFilter === "all" || (docDate && docDate >= startKey && docDate <= endKey)) {
+        map[effectiveKey] = {
+          ...data,
+          date: effectiveKey
+        };
+      }
+    });
+    return map;
+  }, [dailyData, startKey, endKey, timeFilter]);
+
+  // Aggregate metrics strictly across the filtered period
+  const metrics = useMemo(() => {
+    let roundup = 0;
+    let newsletter = 0;
+    let report = 0;
+    let video = 0;
+
+    Object.values(filteredDailyData).forEach((d) => {
+      roundup += Number(d.weekly_roundup || 0);
+      newsletter += Number(d.newsletter || 0);
+      report += Number(d.weekly_report || 0);
+      video += Number(d.video || 0);
+    });
+
+    const total = roundup + newsletter + report + video;
+    const safeTotal = total > 0 ? total : 1;
+
+    const roundupPct = total > 0 ? Math.round((roundup / safeTotal) * 100) : 0;
+    const newsPct = total > 0 ? Math.round((newsletter / safeTotal) * 100) : 0;
+    const reportPct = total > 0 ? Math.round((report / safeTotal) * 100) : 0;
+    const videoPct = total > 0 ? Math.round((video / safeTotal) * 100) : 0;
+
+    const categories = [
+      {
+        id: "roundup",
+        name: "Weekly Roundup",
+        count: roundup,
+        pct: roundupPct,
+        icon: "📈",
+        color: "#2563eb",
+        bgColor: "rgba(37, 99, 235, 0.08)",
+        borderColor: "rgba(37, 99, 235, 0.25)",
+        description: "Weekly market digests & roundups"
+      },
+      {
+        id: "newsletter",
+        name: "Newsletter",
+        count: newsletter,
+        pct: newsPct,
+        icon: "📰",
+        color: "#7c3aed",
+        bgColor: "rgba(124, 58, 237, 0.08)",
+        borderColor: "rgba(124, 58, 237, 0.25)",
+        description: "Curated investor newsletters"
+      },
+      {
+        id: "report",
+        name: "Articles & Reports",
+        count: report,
+        pct: reportPct,
+        icon: "📑",
+        color: "#059669",
+        bgColor: "rgba(5, 150, 105, 0.08)",
+        borderColor: "rgba(5, 150, 105, 0.25)",
+        description: "Research articles & weekly reports"
+      },
+      {
+        id: "video",
+        name: "Videos",
+        count: video,
+        pct: videoPct,
+        icon: "🎥",
+        color: "#d97706",
+        bgColor: "rgba(217, 119, 6, 0.08)",
+        borderColor: "rgba(217, 119, 6, 0.25)",
+        description: "Video lessons & recorded sessions"
+      }
+    ];
+
+    // Determine the #1 Most Used category or tied leaders
+    const sorted = [...categories].sort((a, b) => b.count - a.count);
+    const topCount = sorted[0].count;
+    const tiedLeaders = topCount > 0 ? sorted.filter((c) => c.count === topCount) : [];
+    const isTie = tiedLeaders.length > 1;
+    const mostUsed = topCount > 0 ? sorted[0] : null;
+
+    return {
+      roundup,
+      newsletter,
+      report,
+      video,
+      total,
+      categories,
+      mostUsed,
+      tiedLeaders,
+      isTie
+    };
+  }, [filteredDailyData]);
+
+  // Compute days for the trend graph based on active filter
+  const chartDays = useMemo(() => {
+    const list = [];
+
+    const buildDay = (key) => {
+      const rec = dailyData[key] || {};
+      const weeklyRoundup = Number(rec.weekly_roundup || 0);
+      const newsletter = Number(rec.newsletter || 0);
+      const weeklyReport = Number(rec.weekly_report || 0);
+      const video = Number(rec.video || 0);
+      const dayTotal =
+        Number(rec.total || 0) ||
+        weeklyRoundup + newsletter + weeklyReport + video;
+
+      let label = key;
+      try {
+        const parts = key.split("-");
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        label = d.toLocaleDateString("en-IN", {
+          weekday: "short",
+          day: "numeric",
+          month: "short"
+        });
+      } catch {}
+
+      return {
+        dateKey: key,
+        label,
+        isToday: key === todayKey,
+        weeklyRoundup,
+        newsletter,
+        weeklyReport,
+        video,
+        dayTotal
+      };
+    };
+
+    if (timeFilter === "today") {
+      list.push(buildDay(todayKey));
+      return list;
+    }
+    if (timeFilter === "yesterday") {
+      list.push(buildDay(yesterdayKey));
+      return list;
+    }
+    if (timeFilter === "7d") {
+      for (let i = 6; i >= 0; i--) {
+        list.push(buildDay(getOffsetDateKey(-i)));
+      }
+      return list;
+    }
+    if (timeFilter === "30d" || timeFilter === "this_month") {
+      try {
+        const s = new Date(startKey);
+        const e = new Date(endKey);
+        const cur = new Date(s);
+        while (cur <= e) {
+          const k = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Kolkata",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+          }).format(cur);
+          list.push(buildDay(k));
+          cur.setDate(cur.getDate() + 1);
+        }
+      } catch {
+        for (let i = 29; i >= 0; i--) list.push(buildDay(getOffsetDateKey(-i)));
+      }
+      return list;
+    }
+    if (timeFilter === "custom" && customFrom && customTo) {
+      try {
+        const s = new Date(customFrom);
+        const e = new Date(customTo);
+        const diffDays = Math.round((e - s) / 86400000);
+        if (diffDays >= 0 && diffDays <= 45) {
+          const cur = new Date(s);
+          while (cur <= e) {
+            const k = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            }).format(cur);
+            list.push(buildDay(k));
+            cur.setDate(cur.getDate() + 1);
+          }
+          return list;
+        }
+      } catch {}
+    }
+
+    // "all" or broad custom: include all recorded days + past 7 days, sorted
+    const keySet = new Set(Object.keys(dailyData));
+    for (let i = 6; i >= 0; i--) {
+      keySet.add(getOffsetDateKey(-i));
+    }
+    const sortedKeys = Array.from(keySet)
+      .filter((k) => k >= startKey && k <= endKey)
+      .sort();
+
+    return sortedKeys.map(buildDay);
+  }, [timeFilter, startKey, endKey, todayKey, yesterdayKey, dailyData, customFrom, customTo, getOffsetDateKey]);
+
+  const maxDayTotal = Math.max(1, ...chartDays.map((d) => d.dayTotal));
+
+  // Compute active days list for the audit table (sorted newest first)
+  const breakdownDays = useMemo(() => {
+    const items = Object.keys(filteredDailyData).map((dateKey) => {
+      const rec = filteredDailyData[dateKey] || {};
+      const weeklyRoundup = Number(rec.weekly_roundup || 0);
+      const newsletter = Number(rec.newsletter || 0);
+      const weeklyReport = Number(rec.weekly_report || 0);
+      const video = Number(rec.video || 0);
+      const dayTotal =
+        Number(rec.total || 0) ||
+        weeklyRoundup + newsletter + weeklyReport + video;
+
+      return {
+        dateKey,
+        label: formatReadableDate(dateKey),
+        isToday: dateKey === todayKey,
+        weeklyRoundup,
+        newsletter,
+        weeklyReport,
+        video,
+        dayTotal
+      };
+    });
+
+    // If an individual day is clicked, highlight that day
+    if (selectedDay) {
+      return items.filter((d) => d.dateKey === selectedDay);
+    }
+
+    return items.sort((a, b) => (b.dateKey > a.dateKey ? 1 : -1));
+  }, [filteredDailyData, todayKey, selectedDay, formatReadableDate]);
+
+  // Filter logs for the audit stream
+  const filteredLogs = useMemo(() => {
+    return activityLogs.filter((log) => {
+      const logDate =
+        log.date ||
+        (log.timestamp
+          ? new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            }).format(new Date(toMillis(log.timestamp)))
+          : "");
+
+      if (selectedDay) {
+        return logDate === selectedDay;
+      }
+      return logDate >= startKey && logDate <= endKey;
+    });
+  }, [activityLogs, startKey, endKey, selectedDay]);
+
+  // Export filtered engagement report to Excel (.xlsx)
+  const handleExportEngagement = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Daily breakdown
+      const dailyRows = [
+        ["Date", "Weekly Roundup", "Newsletter", "Articles & Reports", "Videos", "Total Opens"]
+      ];
+      breakdownDays.forEach((d) => {
+        dailyRows.push([
+          d.dateKey,
+          d.weeklyRoundup,
+          d.newsletter,
+          d.weeklyReport,
+          d.video,
+          d.dayTotal
+        ]);
+      });
+      dailyRows.push([
+        "PERIOD TOTAL",
+        metrics.roundup,
+        metrics.newsletter,
+        metrics.report,
+        metrics.video,
+        metrics.total
+      ]);
+      const wsDaily = XLSX.utils.aoa_to_sheet(dailyRows);
+      XLSX.utils.book_append_sheet(wb, wsDaily, "Daily_Engagement");
+
+      // Sheet 2: Category Summary
+      const catRows = [
+        ["Content Category", "Total Opens", "Engagement Share (%)"]
+      ];
+      metrics.categories.forEach((cat) => {
+        catRows.push([cat.name, cat.count, `${cat.pct}%`]);
+      });
+      catRows.push(["Overall Total", metrics.total, "100%"]);
+      const wsCat = XLSX.utils.aoa_to_sheet(catRows);
+      XLSX.utils.book_append_sheet(wb, wsCat, "Category_Summary");
+
+      // Sheet 3: Activity logs
+      if (filteredLogs.length > 0) {
+        const logRows = [
+          ["Date / Time", "Member Name", "Content Type", "Content Title"]
+        ];
+        filteredLogs.forEach((l) => {
+          logRows.push([
+            formatDateTime(l.timestamp) || l.date || "—",
+            l.memberName || "Member",
+            l.contentType || "—",
+            l.contentTitle || "—"
+          ]);
+        });
+        const wsLogs = XLSX.utils.aoa_to_sheet(logRows);
+        XLSX.utils.book_append_sheet(wb, wsLogs, "Activity_Logs");
+      }
+
+      XLSX.writeFile(wb, `Wealthoria_Engagement_${startKey}_to_${endKey}.xlsx`);
+    } catch (err) {
+      console.error("Export error:", err);
+      alert("Failed to export Excel spreadsheet.");
+    }
+  };
+
+  // Manual refresh
+  const handleRefresh = () => {
+    if (!window.db) return;
+    setLoading(true);
+    window.db
+      .collection("member_usage_daily")
+      .get()
+      .then((snapshot) => {
+        const map = {};
+        snapshot.forEach((doc) => {
+          map[doc.id] = doc.data();
+        });
+        setDailyData(map);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  };
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      {/* =======================================================
+          TOP HEADER
+          ======================================================= */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+          flexWrap: "wrap",
+          gap: 12
+        }}
+      >
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: "var(--fg, #111827)", letterSpacing: "-0.02em" }}>
+              Member Content Engagement
+            </h2>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: "rgba(16, 185, 129, 0.1)",
+                color: "#059669",
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "3px 10px",
+                borderRadius: 20
+              }}
+            >
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
+              Live Real-Time
+            </span>
+          </div>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--mute, #6b7280)" }}>
+            Comparing member consumption across the 4 primary content categories
+          </p>
+        </div>
+
+        {onBackToDashboard && (
+          <button
+            type="button"
+            className="rep-pill-btn"
+            style={{ fontSize: 12, padding: "8px 14px", fontWeight: 600 }}
+            onClick={onBackToDashboard}
+          >
+            ← Back to Control Panel
+          </button>
+        )}
+      </div>
+
+      {/* =======================================================
+          DATE FILTER CONTROL BAR
+          ======================================================= */}
+      <div
+        style={{
+          background: "var(--surface, #ffffff)",
+          border: "1px solid var(--line, #e5e7eb)",
+          borderRadius: 16,
+          padding: "16px 20px",
+          marginBottom: 22,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.03)"
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          {/* Quick Preset Buttons */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: "var(--mute, #6b7280)", marginRight: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Date Filter:
+            </span>
+            {[
+              { id: "today", label: "Today" },
+              { id: "yesterday", label: "Yesterday" },
+              { id: "7d", label: "Last 7 Days" },
+              { id: "30d", label: "Last 30 Days" },
+              { id: "this_month", label: "This Month" },
+              { id: "all", label: "All Time" },
+              { id: "custom", label: "Custom Range 📅" }
+            ].map((tf) => {
+              const active = timeFilter === tf.id;
+              return (
+                <button
+                  key={tf.id}
+                  type="button"
+                  className={`rep-pill-btn ${active ? "active" : ""}`}
+                  style={{
+                    fontSize: 12,
+                    padding: "6px 13px",
+                    background: active ? "#2563eb" : undefined,
+                    borderColor: active ? "#2563eb" : undefined,
+                    color: active ? "#ffffff" : undefined,
+                    boxShadow: active ? "0 2px 8px rgba(37, 99, 235, 0.28)" : undefined
+                  }}
+                  onClick={() => {
+                    setTimeFilter(tf.id);
+                    setSelectedDay(null); // Reset day drilldown when changing filter
+                  }}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Action Buttons: Export & Refresh */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              type="button"
+              className="rep-pill-btn"
+              style={{
+                fontSize: 12,
+                padding: "6px 14px",
+                background: "rgba(16, 185, 129, 0.08)",
+                color: "#059669",
+                borderColor: "rgba(16, 185, 129, 0.3)"
+              }}
+              onClick={handleExportEngagement}
+              title="Download engagement breakdown (.xlsx)"
+            >
+              <ReportIcon name="download" size={14} color="#059669" />
+              Export Excel
+            </button>
+            <button
+              type="button"
+              className="rep-pill-btn"
+              style={{ fontSize: 12, padding: "6px 14px" }}
+              onClick={handleRefresh}
+              disabled={loading}
+              title="Sync latest Firestore data"
+            >
+              <ReportIcon name="refresh" size={13} />
+              {loading ? "Syncing..." : "Refresh"}
+            </button>
+          </div>
+        </div>
+
+        {/* Custom Date Range Pickers */}
+        {timeFilter === "custom" && (
+          <div
+            style={{
+              paddingTop: 12,
+              borderTop: "1px dashed var(--line, #e5e7eb)",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              flexWrap: "wrap",
+              fontSize: 13
+            }}
+          >
+            <span style={{ fontWeight: 700, color: "var(--fg, #374151)", fontSize: 12.5 }}>
+              Choose Date Range:
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 12, color: "var(--mute, #6b7280)", fontWeight: 600 }}>From:</label>
+              <input
+                type="date"
+                value={customFrom}
+                onChange={(e) => {
+                  setCustomFrom(e.target.value);
+                  setSelectedDay(null);
+                }}
+                style={{
+                  padding: "5px 10px",
+                  borderRadius: 8,
+                  border: "1px solid var(--line, #d1d5db)",
+                  fontSize: 12,
+                  outline: "none"
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 12, color: "var(--mute, #6b7280)", fontWeight: 600 }}>To:</label>
+              <input
+                type="date"
+                value={customTo}
+                onChange={(e) => {
+                  setCustomTo(e.target.value);
+                  setSelectedDay(null);
+                }}
+                style={{
+                  padding: "5px 10px",
+                  borderRadius: 8,
+                  border: "1px solid var(--line, #d1d5db)",
+                  fontSize: 12,
+                  outline: "none"
+                }}
+              />
+            </div>
+            {(customFrom || customTo) && (
+              <button
+                type="button"
+                className="rep-pill-btn"
+                style={{ fontSize: 11, padding: "4px 10px" }}
+                onClick={() => {
+                  setCustomFrom("");
+                  setCustomTo("");
+                  setSelectedDay(null);
+                }}
+              >
+                Clear Dates
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Active Scope Summary Info */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 10,
+            fontSize: 12,
+            paddingTop: 4
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: "rgba(37, 99, 235, 0.08)",
+                color: "#2563eb",
+                fontWeight: 700,
+                padding: "3px 10px",
+                borderRadius: 14,
+                fontSize: 12
+              }}
+            >
+              📅 {rangeLabel}
+            </span>
+            <span style={{ color: "var(--mute, #6b7280)" }}>
+              Filtered Results: <b>{metrics.total}</b> total opens across <b>{Object.keys(filteredDailyData).length}</b> active days
+            </span>
+          </div>
+
+          {selectedDay && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 11.5, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 10, fontWeight: 700 }}>
+                Focused on Day: {formatReadableDate(selectedDay)}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedDay(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#dc2626",
+                  fontSize: 11.5,
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  textDecoration: "underline"
+                }}
+              >
+                Clear Day Drilldown
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* =======================================================
+          HERO: WHICH CATEGORY IS USING MOST (OR TIED)
+          ======================================================= */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(139, 92, 246, 0.1) 100%)",
+          border: "1px solid rgba(139, 92, 246, 0.25)",
+          borderRadius: 20,
+          padding: "24px 28px",
+          marginBottom: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: "50%",
+              background: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 30,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              flexShrink: 0
+            }}
+          >
+            🏆
+          </div>
+
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Most Used Category by Members
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "var(--fg, #111827)", marginTop: 2 }}>
+              {metrics.total === 0 ? (
+                "No Member Activity in this Date Range"
+              ) : metrics.isTie ? (
+                <>
+                  <span style={{ color: "#4f46e5" }}>{metrics.tiedLeaders.length} Categories Tied</span> for #1
+                </>
+              ) : metrics.mostUsed ? (
+                <>
+                  <span style={{ color: metrics.mostUsed.color }}>{metrics.mostUsed.name}</span> is #1
+                </>
+              ) : (
+                "Awaiting Initial Member Activity"
+              )}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--mute, #4b5563)", marginTop: 4 }}>
+              {metrics.total === 0 ? (
+                `No content opens were recorded for ${rangeLabel}. Select a broader date filter like "All Time" or "Last 30 Days" to review historical volume.`
+              ) : metrics.isTie ? (
+                <>
+                  <b>{metrics.tiedLeaders.map((c) => c.name).join(", ")}</b> are tied with <b>{metrics.tiedLeaders[0].count} opens</b> each ({metrics.tiedLeaders[0].pct}% of all {metrics.total} member interactions in this period).
+                </>
+              ) : metrics.mostUsed ? (
+                <>
+                  Members opened <b>{metrics.mostUsed.name}</b> {metrics.mostUsed.count} times ({metrics.mostUsed.pct}% of all {metrics.total} member interactions in this period).
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {metrics.total > 0 && (
+          <div
+            style={{
+              background: "#ffffff",
+              padding: "12px 20px",
+              borderRadius: 14,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              border: `1px solid ${metrics.isTie ? "rgba(79, 70, 229, 0.3)" : metrics.mostUsed?.borderColor || "var(--line, #e5e7eb)"}`,
+              textAlign: "right"
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
+              {metrics.isTie ? "Tied Top Share" : "Engagement Share"}
+            </div>
+            <div
+              style={{
+                fontSize: 26,
+                fontWeight: 900,
+                color: metrics.isTie ? "#4f46e5" : metrics.mostUsed?.color || "#111827",
+                lineHeight: 1.1,
+                marginTop: 2
+              }}
+            >
+              {metrics.isTie ? `${metrics.tiedLeaders[0].pct}%` : `${metrics.mostUsed?.pct || 0}%`}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--mute, #6b7280)", marginTop: 2 }}>
+              {metrics.isTie
+                ? `${metrics.tiedLeaders[0].count} opens each`
+                : `${metrics.mostUsed?.count || 0} total opens`}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* =======================================================
+          THE 4 CATEGORIES (METRIC CARDS)
+          ======================================================= */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+          gap: 16,
+          marginBottom: 24
+        }}
+      >
+        {metrics.categories.map((cat) => {
+          const isWinner = !metrics.isTie && metrics.mostUsed?.id === cat.id;
+          const isTiedWinner = metrics.isTie && metrics.tiedLeaders.some((c) => c.id === cat.id);
+          const hasHighlight = isWinner || isTiedWinner;
+
+          return (
+            <div
+              key={cat.id}
+              style={{
+                background: "var(--surface, #ffffff)",
+                border: hasHighlight ? `2px solid ${cat.color}` : "1px solid var(--line, #e5e7eb)",
+                borderRadius: 16,
+                padding: "20px 22px",
+                position: "relative",
+                boxShadow: hasHighlight ? `0 6px 20px ${cat.bgColor}` : "0 1px 3px rgba(0,0,0,0.03)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease"
+              }}
+            >
+              {isWinner && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 12,
+                    background: cat.color,
+                    color: "#ffffff",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: "2px 7px",
+                    borderRadius: 10,
+                    letterSpacing: "0.03em"
+                  }}
+                >
+                  ★ LEADING
+                </div>
+              )}
+
+              {isTiedWinner && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 12,
+                    background: cat.color,
+                    color: "#ffffff",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: "2px 7px",
+                    borderRadius: 10,
+                    letterSpacing: "0.03em"
+                  }}
+                >
+                  🤝 TIED #1
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 12,
+                    background: cat.bgColor,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 22
+                  }}
+                >
+                  {cat.icon}
+                </div>
+
+                <span
+                  style={{
+                    background: cat.bgColor,
+                    color: cat.color,
+                    fontSize: 12,
+                    fontWeight: 800,
+                    padding: "4px 10px",
+                    borderRadius: 20
+                  }}
+                >
+                  {cat.pct}% share
+                </span>
+              </div>
+
+              <div style={{ fontSize: 32, fontWeight: 900, color: cat.color, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                {cat.count.toLocaleString("en-IN")}
+              </div>
+
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--fg, #111827)", marginTop: 6 }}>
+                {cat.name}
+              </div>
+
+              <div style={{ fontSize: 11.5, color: "var(--mute, #6b7280)", marginTop: 2 }}>
+                {cat.description}
+              </div>
+
+              {/* Mini visual fill bar */}
+              <div
+                style={{
+                  height: 5,
+                  background: "rgba(0,0,0,0.05)",
+                  borderRadius: 3,
+                  marginTop: 14,
+                  overflow: "hidden"
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${Math.max(cat.pct, cat.count > 0 ? 8 : 0)}%`,
+                    background: cat.color,
+                    borderRadius: 3,
+                    transition: "width 0.3s ease"
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* =======================================================
+          THE GRAPH: USAGE COMPARISON & DAILY ACTIVITY
+          ======================================================= */}
+      <div
+        style={{
+          background: "var(--surface, #ffffff)",
+          border: "1px solid var(--line, #e5e7eb)",
+          borderRadius: 20,
+          padding: "24px 28px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+          marginBottom: 24
+        }}
+      >
+        {/* Graph Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "var(--fg, #111827)" }}>
+              Content Usage Graph & Comparison
+            </h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--mute, #6b7280)" }}>
+              Side-by-side consumption volume for: <b>{rangeLabel}</b>
+            </p>
+          </div>
+
+          {/* Color Legend */}
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12, fontWeight: 700 }}>
+            {metrics.categories.map((cat) => (
+              <span key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6, color: cat.color }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: cat.color }} />
+                {cat.name} ({cat.count})
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* 1. Proportional Overall Share Bar */}
+        <div style={{ marginBottom: 26 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Total Engagement Distribution (100%)
+          </div>
+
+          <div
+            style={{
+              height: 20,
+              width: "100%",
+              background: "rgba(0,0,0,0.05)",
+              borderRadius: 8,
+              overflow: "hidden",
+              display: "flex"
+            }}
+          >
+            {metrics.total > 0 ? (
+              metrics.categories.map((cat) => {
+                if (cat.count === 0) return null;
+                const widthPct = Math.max(2, (cat.count / metrics.total) * 100);
+
+                return (
+                  <div
+                    key={cat.id}
+                    style={{
+                      height: "100%",
+                      width: `${widthPct}%`,
+                      background: cat.color,
+                      transition: "width 0.3s ease"
+                    }}
+                    title={`${cat.name}: ${cat.count} (${cat.pct}%)`}
+                  />
+                );
+              })
+            ) : (
+              <div style={{ width: "100%", textAlign: "center", fontSize: 11, color: "#9ca3af", lineHeight: "20px" }}>
+                No usage recorded in this date range
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Direct 4-Category Comparison Bars */}
+        <div style={{ marginBottom: 30, display: "flex", flexDirection: "column", gap: 12 }}>
+          {metrics.categories.map((cat) => {
+            const maxCount = Math.max(1, ...metrics.categories.map((c) => c.count));
+            const barWidth = metrics.total > 0 ? Math.max(4, (cat.count / maxCount) * 100) : 0;
+
+            return (
+              <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 140, fontSize: 13, fontWeight: 700, color: "var(--fg, #111827)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </div>
+
+                <div style={{ flex: 1, background: "rgba(0,0,0,0.04)", height: 16, borderRadius: 6, overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${barWidth}%`,
+                      background: cat.color,
+                      borderRadius: 6,
+                      transition: "width 0.4s ease"
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: 85, textAlign: "right", fontSize: 13, fontWeight: 800, color: cat.color }}>
+                  {cat.count} <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mute, #6b7280)" }}>({cat.pct}%)</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 3. Day-by-Day Volume Trend Chart */}
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Day-by-Day Activity Volume ({chartDays.length} {chartDays.length === 1 ? "day" : "days"})
+            </div>
+            <div style={{ fontSize: 11, color: "var(--mute, #9ca3af)" }}>
+              Tip: Click any day bar to inspect its exact audit entries below
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              gap: 12,
+              minHeight: 160,
+              padding: "16px 8px 6px",
+              overflowX: "auto"
+            }}
+          >
+            {chartDays.map((day) => {
+              const hRoundup = (day.weeklyRoundup / maxDayTotal) * 110;
+              const hNews = (day.newsletter / maxDayTotal) * 110;
+              const hReport = (day.weeklyReport / maxDayTotal) * 110;
+              const hVideo = (day.video / maxDayTotal) * 110;
+              const totalH = Math.max(day.dayTotal > 0 ? 10 : 4, (day.dayTotal / maxDayTotal) * 110);
+              const isFocused = selectedDay === day.dateKey;
+
+              return (
+                <div
+                  key={day.dateKey}
+                  onClick={() => setSelectedDay(isFocused ? null : day.dateKey)}
+                  style={{
+                    flex: 1,
+                    minWidth: 46,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: "4px 2px",
+                    borderRadius: 8,
+                    background: isFocused ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                    transition: "background 0.15s ease"
+                  }}
+                  title={`Click to focus: ${day.label} (${day.dateKey})\nTotal: ${day.dayTotal}\n• Weekly Roundup: ${day.weeklyRoundup}\n• Newsletter: ${day.newsletter}\n• Articles: ${day.weeklyReport}\n• Videos: ${day.video}`}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: isFocused ? "#2563eb" : day.dayTotal > 0 ? "var(--fg, #111827)" : "var(--mute, #9ca3af)"
+                    }}
+                  >
+                    {day.dayTotal}
+                  </div>
+
+                  <div
+                    style={{
+                      width: "100%",
+                      maxWidth: 34,
+                      height: totalH,
+                      background: "rgba(0,0,0,0.04)",
+                      borderRadius: 6,
+                      display: "flex",
+                      flexDirection: "column-reverse",
+                      overflow: "hidden",
+                      boxShadow: isFocused ? "0 0 0 2px #2563eb" : undefined
+                    }}
+                  >
+                    {day.weeklyRoundup > 0 && <div style={{ height: hRoundup, background: "#2563eb" }} />}
+                    {day.newsletter > 0 && <div style={{ height: hNews, background: "#7c3aed" }} />}
+                    {day.weeklyReport > 0 && <div style={{ height: hReport, background: "#059669" }} />}
+                    {day.video > 0 && <div style={{ height: hVideo, background: "#d97706" }} />}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: day.isToday || isFocused ? 800 : 600,
+                      color: isFocused ? "#2563eb" : day.isToday ? "#059669" : "var(--mute, #6b7280)",
+                      textAlign: "center",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {day.isToday ? "Today" : day.label}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* =======================================================
+          DETAILED AUDIT & BREAKDOWN SECTION
+          ======================================================= */}
+      <div
+        style={{
+          background: "var(--surface, #ffffff)",
+          border: "1px solid var(--line, #e5e7eb)",
+          borderRadius: 20,
+          padding: "24px 28px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.03)"
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+            flexWrap: "wrap",
+            gap: 12
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "var(--fg, #111827)" }}>
+              {activeDetailTab === "table" ? "📅 Daily Activity Audit Table" : "⚡ Live Member Activity Feed"}
+            </h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--mute, #6b7280)" }}>
+              {activeDetailTab === "table"
+                ? `Mathematical day-by-day proof for ${rangeLabel}${selectedDay ? ` (filtered to ${formatReadableDate(selectedDay)})` : ""}`
+                : `Individual real-time member open events matching the active filter`}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              type="button"
+              className={`rep-pill-btn ${activeDetailTab === "table" ? "active" : ""}`}
+              style={{
+                fontSize: 12,
+                padding: "6px 14px",
+                background: activeDetailTab === "table" ? "#2563eb" : undefined,
+                color: activeDetailTab === "table" ? "#ffffff" : undefined,
+                borderColor: activeDetailTab === "table" ? "#2563eb" : undefined
+              }}
+              onClick={() => setActiveDetailTab("table")}
+            >
+              📊 Daily Table ({breakdownDays.length})
+            </button>
+            <button
+              type="button"
+              className={`rep-pill-btn ${activeDetailTab === "logs" ? "active" : ""}`}
+              style={{
+                fontSize: 12,
+                padding: "6px 14px",
+                background: activeDetailTab === "logs" ? "#2563eb" : undefined,
+                color: activeDetailTab === "logs" ? "#ffffff" : undefined,
+                borderColor: activeDetailTab === "logs" ? "#2563eb" : undefined
+              }}
+              onClick={() => setActiveDetailTab("logs")}
+            >
+              ⚡ Activity Stream ({filteredLogs.length})
+            </button>
+          </div>
+        </div>
+
+        {/* Tab 1: Daily Table View */}
+        {activeDetailTab === "table" ? (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+              <thead>
+                <tr
+                  style={{
+                    borderBottom: "2px solid var(--line, #e5e7eb)",
+                    color: "var(--mute, #6b7280)",
+                    fontSize: 11.5,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  <th style={{ padding: "10px 12px" }}>Date</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right", color: "#2563eb" }}>📈 Weekly Roundup</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right", color: "#7c3aed" }}>📰 Newsletter</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right", color: "#059669" }}>📑 Articles & Reports</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right", color: "#d97706" }}>🎥 Videos</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right", fontWeight: 800 }}>Total Opens</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right" }}>% Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {breakdownDays.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "32px", textAlign: "center", color: "var(--mute, #9ca3af)" }}>
+                      No content engagement recorded for this period.
+                    </td>
+                  </tr>
+                ) : (
+                  breakdownDays.map((day) => {
+                    const share = metrics.total > 0 ? Math.round((day.dayTotal / metrics.total) * 100) : 0;
+
+                    return (
+                      <tr
+                        key={day.dateKey}
+                        style={{
+                          borderBottom: "1px solid var(--line, #f3f4f6)",
+                          background: day.isToday ? "rgba(37, 99, 235, 0.03)" : undefined
+                        }}
+                      >
+                        <td style={{ padding: "12px", fontWeight: day.isToday ? 800 : 600 }}>
+                          <span>{day.label}</span>
+                          {day.isToday && (
+                            <span
+                              style={{
+                                marginLeft: 8,
+                                fontSize: 10,
+                                background: "#2563eb",
+                                color: "#fff",
+                                padding: "2px 7px",
+                                borderRadius: 8,
+                                fontWeight: 800
+                              }}
+                            >
+                              TODAY
+                            </span>
+                          )}
+                          <div style={{ fontSize: 11, color: "var(--mute, #9ca3af)", fontWeight: 400 }}>{day.dateKey}</div>
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: day.weeklyRoundup > 0 ? "#2563eb" : "var(--mute, #9ca3af)"
+                          }}
+                        >
+                          {day.weeklyRoundup}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: day.newsletter > 0 ? "#7c3aed" : "var(--mute, #9ca3af)"
+                          }}
+                        >
+                          {day.newsletter}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: day.weeklyReport > 0 ? "#059669" : "var(--mute, #9ca3af)"
+                          }}
+                        >
+                          {day.weeklyReport}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: day.video > 0 ? "#d97706" : "var(--mute, #9ca3af)"
+                          }}
+                        >
+                          {day.video}
+                        </td>
+                        <td style={{ padding: "12px", textAlign: "right", fontWeight: 800, color: "var(--fg, #111827)", fontSize: 14 }}>
+                          {day.dayTotal}
+                        </td>
+                        <td style={{ padding: "12px", textAlign: "right", fontWeight: 600, color: "var(--mute, #6b7280)" }}>
+                          {share}%
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              {breakdownDays.length > 0 && (
+                <tfoot>
+                  <tr
+                    style={{
+                      borderTop: "2px solid var(--line, #e5e7eb)",
+                      background: "rgba(0,0,0,0.02)",
+                      fontWeight: 800
+                    }}
+                  >
+                    <td style={{ padding: "14px 12px" }}>
+                      PERIOD TOTAL
+                      {selectedDay && (
+                        <div style={{ fontSize: 11, color: "var(--mute, #9ca3af)", fontWeight: 400 }}>
+                          Filtered to single day
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", color: "#2563eb", fontSize: 14 }}>
+                      {breakdownDays.reduce((acc, d) => acc + d.weeklyRoundup, 0)}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", color: "#7c3aed", fontSize: 14 }}>
+                      {breakdownDays.reduce((acc, d) => acc + d.newsletter, 0)}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", color: "#059669", fontSize: 14 }}>
+                      {breakdownDays.reduce((acc, d) => acc + d.weeklyReport, 0)}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", color: "#d97706", fontSize: 14 }}>
+                      {breakdownDays.reduce((acc, d) => acc + d.video, 0)}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", fontSize: 16, color: "var(--fg, #111827)" }}>
+                      {breakdownDays.reduce((acc, d) => acc + d.dayTotal, 0)}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", color: "var(--fg, #111827)" }}>
+                      100%
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        ) : (
+          /* Tab 2: Activity Logs Feed */
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+              <thead>
+                <tr
+                  style={{
+                    borderBottom: "2px solid var(--line, #e5e7eb)",
+                    color: "var(--mute, #6b7280)",
+                    fontSize: 11.5,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  <th style={{ padding: "10px 12px" }}>Date & Time</th>
+                  <th style={{ padding: "10px 12px" }}>Member</th>
+                  <th style={{ padding: "10px 12px" }}>Category</th>
+                  <th style={{ padding: "10px 12px" }}>Content Item / Title</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ padding: "32px", textAlign: "center", color: "var(--mute, #9ca3af)" }}>
+                      {loadingLogs
+                        ? "Loading real-time activity stream..."
+                        : "No individual activity logs found for this date range."}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLogs.map((log) => {
+                    const normType = String(log.contentType || "").toLowerCase();
+                    const badgeColor = normType.includes("roundup")
+                      ? "#2563eb"
+                      : normType.includes("news")
+                      ? "#7c3aed"
+                      : normType.includes("video")
+                      ? "#d97706"
+                      : "#059669";
+                    const badgeBg = normType.includes("roundup")
+                      ? "rgba(37, 99, 235, 0.1)"
+                      : normType.includes("news")
+                      ? "rgba(124, 58, 237, 0.1)"
+                      : normType.includes("video")
+                      ? "rgba(217, 119, 6, 0.1)"
+                      : "rgba(5, 150, 105, 0.1)";
+                    const typeLabel = normType.includes("roundup")
+                      ? "Weekly Roundup"
+                      : normType.includes("news")
+                      ? "Newsletter"
+                      : normType.includes("video")
+                      ? "Video"
+                      : "Articles & Reports";
+
+                    return (
+                      <tr key={log.id} style={{ borderBottom: "1px solid var(--line, #f3f4f6)" }}>
+                        <td style={{ padding: "12px", color: "var(--mute, #6b7280)", whiteSpace: "nowrap" }}>
+                          {formatDateTime(log.timestamp) || log.date || "—"}
+                        </td>
+                        <td style={{ padding: "12px", fontWeight: 700, color: "var(--fg, #111827)" }}>
+                          {log.memberName || "Member"}
+                        </td>
+                        <td style={{ padding: "12px" }}>
+                          <span
+                            style={{
+                              background: badgeBg,
+                              color: badgeColor,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              padding: "3px 9px",
+                              borderRadius: 12
+                            }}
+                          >
+                            {typeLabel}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px", color: "var(--fg, #111827)" }}>
+                          {log.contentTitle || log.contentId || "—"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
    MAIN REPORTS PAGE
    ========================================================= */
 
 function ReportsPage() {
+
   const useAdminRouter = getAdmin("useAdminRouter");
   const useMToast = getAdmin("useMToast");
   const router = typeof useAdminRouter === "function" ? useAdminRouter() || {} : {};
@@ -433,6 +2011,7 @@ function ReportsPage() {
   const { loading, error, members, purchases, subscriptions } = backend;
 
   // Filter & Tab states
+  const [activeMainReportTab, setActiveMainReportTab] = useState("engagement"); // "engagement" or "financial"
   const [timeFilter, setTimeFilter] = useState("all"); // "7d", "30d", "90d", "all", "custom"
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -992,11 +2571,61 @@ function ReportsPage() {
       `}</style>
 
       {/* =======================================================
-          EXECUTIVE HEADER & CONTROLS
+          TOP-LEVEL VIEW NAVIGATION TABS
           ======================================================= */}
-      <div className="rep-header">
-        <div className="rep-title-group">
-          <h2>Financial & Plan Analytics</h2>
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          marginBottom: 24,
+          borderBottom: "1px solid var(--line, #e5e7eb)",
+          paddingBottom: 14,
+          flexWrap: "wrap"
+        }}
+      >
+        <button
+          type="button"
+          className={`rep-pill-btn ${activeMainReportTab === "engagement" ? "active" : ""}`}
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            padding: "9px 20px",
+            background: activeMainReportTab === "engagement" ? "#2563eb" : "transparent",
+            color: activeMainReportTab === "engagement" ? "#fff" : "var(--fg, #111827)",
+            borderColor: activeMainReportTab === "engagement" ? "#2563eb" : "var(--line, #e5e7eb)"
+          }}
+          onClick={() => setActiveMainReportTab("engagement")}
+        >
+          📊 Member Content Engagement (Day by Day)
+        </button>
+        <button
+          type="button"
+          className={`rep-pill-btn ${activeMainReportTab === "financial" ? "active" : ""}`}
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            padding: "9px 20px",
+            background: activeMainReportTab === "financial" ? "#e8473f" : "transparent",
+            color: activeMainReportTab === "financial" ? "#fff" : "var(--fg, #111827)",
+            borderColor: activeMainReportTab === "financial" ? "#e8473f" : "var(--line, #e5e7eb)"
+          }}
+          onClick={() => setActiveMainReportTab("financial")}
+        >
+          💰 Financial & Plan Analytics
+        </button>
+      </div>
+
+      {activeMainReportTab === "engagement" ? (
+        <MemberEngagementDailyView onBackToDashboard={() => navigate("/admin/dashboard")} />
+      ) : (
+        <>
+          {/* =======================================================
+              EXECUTIVE HEADER & CONTROLS
+              ======================================================= */}
+          <div className="rep-header">
+            <div className="rep-title-group">
+              <h2>Financial & Plan Analytics</h2>
+
           <div className="rep-sub">
             <span className="rep-live-dot" />
             <span>
@@ -1498,9 +3127,12 @@ function ReportsPage() {
           ← Back to Control Panel
         </button>
       </div>
-    </div>
-  );
+    </>
+  )}
+</div>
+);
 }
+
 
 /* =========================================================
    PUBLIC EXPORT

@@ -401,6 +401,9 @@ function UsersScreen() {
   const [subscriptions, setSubscriptions] =
     useState([]);
 
+  const [memberUsageMap, setMemberUsageMap] =
+    useState({});
+
   const [actionLoading, setActionLoading] =
     useState("");
 
@@ -654,6 +657,22 @@ function UsersScreen() {
 
           );
 
+      unsubscribeUsage =
+        window.db
+          .collection("member_usage_summary")
+          .onSnapshot(
+            (snapshot) => {
+              const map = {};
+              snapshot.forEach((doc) => {
+                map[doc.id] = doc.data();
+              });
+              setMemberUsageMap(map);
+            },
+            (err) => {
+              console.warn("member_usage_summary error:", err);
+            }
+          );
+
     } catch (error) {
 
       console.error(
@@ -686,9 +705,17 @@ function UsersScreen() {
         unsubscribeSubscriptions();
       }
 
+      if (
+        typeof unsubscribeUsage ===
+        "function"
+      ) {
+        unsubscribeUsage();
+      }
+
     };
 
   }, []);
+
 
 
   /* =======================================================
@@ -2412,7 +2439,9 @@ function UsersScreen() {
                       "MEMBER",
                       "EMAIL",
                       "PHONE",
-                      "MEMBER ID",                      "ROLE",
+                      "MEMBER ID",
+                      "ROLE",
+                      "MOST USED CONTENT",
                       "MEMBER STATUS",
                       "SUBSCRIPTION STATUS",
                       "PLAN",
@@ -2713,8 +2742,113 @@ function UsersScreen() {
                           )}
                         </td>
 
+                        {/* MOST USED CONTENT */}
+                        <td
+                          style={{
+                            padding: "15px 14px",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {(() => {
+                            const usage =
+                              memberUsageMap[member.uid] ||
+                              memberUsageMap[member.id] ||
+                              member.contentUsage ||
+                              {};
+                            const roundup = Number(usage.weekly_roundup || 0);
+                            const news = Number(usage.newsletter || 0);
+                            const report = Number(usage.weekly_report || 0);
+                            const video = Number(usage.video || 0);
+                            const total =
+                              Number(usage.total || 0) ||
+                              roundup + news + report + video;
+
+                            let topType = "None";
+                            let topCount = 0;
+                            if (roundup > topCount) {
+                              topCount = roundup;
+                              topType = "Weekly Roundup";
+                            }
+                            if (news > topCount) {
+                              topCount = news;
+                              topType = "Newsletter";
+                            }
+                            if (report > topCount) {
+                              topCount = report;
+                              topType = "Articles & Reports";
+                            }
+                            if (video > topCount) {
+                              topCount = video;
+                              topType = "Videos";
+                            }
+
+                            if (total === 0) {
+                              return (
+                                <span style={{ fontSize: 11.5, color: "#9ca3af" }}>
+                                  No activity yet
+                                </span>
+                              );
+                            }
+
+                            const isRoundup = topType === "Weekly Roundup";
+                            const isNews = topType === "Newsletter";
+                            const isReport = topType === "Articles & Reports";
+                            const bg = isRoundup
+                              ? "rgba(37, 99, 235, 0.1)"
+                              : isNews
+                              ? "rgba(124, 58, 237, 0.1)"
+                              : isReport
+                              ? "rgba(5, 150, 105, 0.1)"
+                              : "rgba(217, 119, 6, 0.1)";
+                            const color = isRoundup
+                              ? "#2563eb"
+                              : isNews
+                              ? "#7c3aed"
+                              : isReport
+                              ? "#059669"
+                              : "#d97706";
+                            const icon = isRoundup
+                              ? "📈"
+                              : isNews
+                              ? "📰"
+                              : isReport
+                              ? "📑"
+                              : "🎥";
+
+                            return (
+                              <div>
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 5,
+                                    padding: "3px 8px",
+                                    borderRadius: 6,
+                                    fontSize: 11.5,
+                                    fontWeight: 750,
+                                    background: bg,
+                                    color: color
+                                  }}
+                                  title={`Total: ${total} (Roundup: ${roundup}, News: ${news}, Reports: ${report}, Videos: ${video})`}
+                                >
+                                  {icon} {topType} ({topCount})
+                                </span>
+                                <div
+                                  style={{
+                                    fontSize: 10.5,
+                                    color: "#6b7280",
+                                    marginTop: 2
+                                  }}
+                                >
+                                  Total {total} opens
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </td>
 
                         {/* STATUS */}
+
 
                         <td
                           style={{

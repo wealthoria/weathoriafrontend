@@ -2,7 +2,7 @@
 
 /* global React, window */
 import React from "react";
-import { usePendingContent } from "./memberContent.js";
+import { usePendingContent, trackMemberContentOpen } from "./memberContent.js";
 
 
 const { useState, useEffect } = React;
@@ -22,6 +22,15 @@ function MemberArticles() {
 
   const [expandedTagsId, setExpandedTagsId] =
     useState(null);
+
+  // Track that the member opened Weekly Reports & Articles section
+  useEffect(() => {
+    trackMemberContentOpen({
+      type: "weekly_report",
+      contentId: "articles_section",
+      contentTitle: "Weekly Reports & Articles Page"
+    });
+  }, []);
 
 const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
@@ -132,13 +141,11 @@ const openPdf = async (article) => {
     return;
   }
 
-  // Google Analytics - track article/report opened
-  if (typeof window.gtag === "function") {
-    window.gtag("event", "article_report_opened", {
-      content_id: String(article.id || ""),
-      content_title: article.title || ""
-    });
-  }
+  trackMemberContentOpen({
+    type: "weekly_report",
+    contentId: article.id,
+    contentTitle: article.title || "Weekly Report"
+  });
 
   try {
     const currentUid =

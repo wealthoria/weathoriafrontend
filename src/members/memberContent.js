@@ -86,7 +86,8 @@ export async function fetchSecurePdfUrl(contentId) {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-client-tracked": "true"
       }
     }
   );
@@ -352,6 +353,30 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
       } catch {}
     }
 
+    // Helper to send to Cloud Functions API fallback
+    const sendToBackendApi = () => {
+      fetch(`${API_BASE_URL}/api/members/track-usage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          type: normType,
+          contentId: String(contentId || ""),
+          title: contentTitle || "",
+          member
+        })
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(`[Wealthoria Track] 🌐 Backend tracking response:`, data);
+      })
+      .catch((err) => {
+        console.warn(`[Wealthoria Track] ⚠️ Backend tracking request failed:`, err);
+      });
+    };
+
     // 2. Direct Firestore log for real-time reactivity (preferred)
     const hasDirectDb = Boolean(window.db && window.firebase);
 
@@ -380,7 +405,8 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
           console.log(`[Wealthoria Track] ✅ Daily stats updated for ${today} (${normType})`);
         })
         .catch((err) => {
-          console.error("[Wealthoria Track] ❌ Daily stats write failed:", err);
+          console.warn("[Wealthoria Track] ⚠️ Direct Firestore daily stats failed, invoking backend API fallback:", err);
+          sendToBackendApi();
         });
 
       // Add to activity stream
@@ -399,7 +425,7 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
           console.log("[Wealthoria Track] ✅ Activity log recorded");
         })
         .catch((err) => {
-          console.error("[Wealthoria Track] ❌ Activity log write failed:", err);
+          console.warn("[Wealthoria Track] ⚠️ Direct Firestore activity log failed:", err);
         });
 
       // Update per-member summary
@@ -424,24 +450,12 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
             console.log("[Wealthoria Track] ✅ Member summary updated for:", member.uid);
           })
           .catch((err) => {
-            console.error("[Wealthoria Track] ❌ Member summary write failed:", err);
+            console.warn("[Wealthoria Track] ⚠️ Member summary write failed:", err);
           });
       }
     } else {
-      // Fallback to Cloud Functions backend ONLY when direct Firestore is not available
-      fetch(`${API_BASE_URL}/api/members/track-usage`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          type: normType,
-          contentId: String(contentId || ""),
-          title: contentTitle || "",
-          member
-        })
-      }).catch(() => {});
+      // Direct Firestore not available, use backend API
+      sendToBackendApi();
     }
   } catch (err) {
     console.error("[Wealthoria Track] ❌ Error in trackMemberContentOpen:", err);

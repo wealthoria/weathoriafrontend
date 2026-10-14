@@ -542,6 +542,8 @@ const newsletterMonths = (() => {
                       <article
                         className="member-newsletter-card"
                         key={newsletter.id}
+                        onClick={() => openNewsletter(newsletter)}
+                        style={{ cursor: "pointer" }}
                       >
 
                         <div className="member-newsletter-icon">
@@ -602,7 +604,11 @@ const newsletterMonths = (() => {
                           type="button"
                           className="member-newsletter-button"
                           disabled={!(newsletter.pdfPath || newsletter.pdfUrl)}
-                        onClick={() => openNewsletter(newsletter)}             >
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openNewsletter(newsletter);
+                          }}
+                        >
                           Read Newsletter →
                         </button>
 

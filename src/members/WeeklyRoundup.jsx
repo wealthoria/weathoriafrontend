@@ -479,6 +479,8 @@ function WeeklyRoundup() {
                   <article
                     className="member-newsletter-card"
                     key={report.id}
+                    onClick={() => openReport(report)}
+                    style={{ cursor: "pointer" }}
                   >
                     <div className="member-newsletter-icon">
                       {report.thumbnailUrl ? (
@@ -518,7 +520,10 @@ function WeeklyRoundup() {
                       type="button"
                       className="member-newsletter-button"
                       disabled={!(report.pdfPath || report.pdfUrl)}
-                     onClick={() => openReport(report)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openReport(report);
+                      }}
                     >
                       Read Report →
                     </button>

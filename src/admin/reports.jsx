@@ -540,69 +540,117 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
     };
   }, [timeFilter, customFrom, customTo, todayKey, yesterdayKey, getOffsetDateKey, formatReadableDate]);
 
-  // Real-time Firestore sync with member_usage_daily
+  // Real-time Firestore sync with member_usage_daily (with connection retry & fallback)
   useEffect(() => {
-    if (!window.db || typeof window.db.collection !== "function") {
-      setLoading(false);
-      return;
-    }
+    let unsubscribe = null;
+    let timer = null;
 
-    const unsubscribe = window.db
-      .collection("member_usage_daily")
-      .onSnapshot(
-        (snapshot) => {
-          const map = {};
-          snapshot.forEach((doc) => {
-            map[doc.id] = doc.data();
-          });
-          setDailyData(map);
-          setLoading(false);
-        },
-        (err) => {
-          console.warn("member_usage_daily listener error:", err);
+    const setupListener = () => {
+      if (!window.db || typeof window.db.collection !== "function") return false;
+
+      unsubscribe = window.db
+        .collection("member_usage_daily")
+        .onSnapshot(
+          (snapshot) => {
+            const map = {};
+            snapshot.forEach((doc) => {
+              map[doc.id] = doc.data();
+            });
+            setDailyData(map);
+            setLoading(false);
+          },
+          (err) => {
+            console.warn("member_usage_daily listener error, falling back to direct get:", err);
+            window.db
+              .collection("member_usage_daily")
+              .get()
+              .then((snapshot) => {
+                const map = {};
+                snapshot.forEach((doc) => {
+                  map[doc.id] = doc.data();
+                });
+                setDailyData(map);
+              })
+              .catch(() => {});
+            setLoading(false);
+          }
+        );
+      return true;
+    };
+
+    if (!setupListener()) {
+      let attempts = 0;
+      timer = setInterval(() => {
+        attempts++;
+        if (setupListener() || attempts > 10) {
+          clearInterval(timer);
           setLoading(false);
         }
-      );
+      }, 350);
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   // Real-time Firestore sync with member_activity_logs (audit stream)
   useEffect(() => {
-    if (!window.db || typeof window.db.collection !== "function") return;
+    let unsubscribe = null;
+    let timer = null;
 
-    setLoadingLogs(true);
-    const unsubscribe = window.db
-      .collection("member_activity_logs")
-      .orderBy("timestamp", "desc")
-      .limit(100)
-      .onSnapshot(
-        (snapshot) => {
-          const list = [];
-          snapshot.forEach((doc) => {
-            list.push({ id: doc.id, ...doc.data() });
-          });
-          setActivityLogs(list);
+    const setupLogListener = () => {
+      if (!window.db || typeof window.db.collection !== "function") return false;
+
+      setLoadingLogs(true);
+      unsubscribe = window.db
+        .collection("member_activity_logs")
+        .orderBy("timestamp", "desc")
+        .limit(100)
+        .onSnapshot(
+          (snapshot) => {
+            const list = [];
+            snapshot.forEach((doc) => {
+              list.push({ id: doc.id, ...doc.data() });
+            });
+            setActivityLogs(list);
+            setLoadingLogs(false);
+          },
+          (err) => {
+            console.warn("member_activity_logs orderBy listener error, falling back to limit(100):", err);
+            window.db
+              .collection("member_activity_logs")
+              .limit(100)
+              .get()
+              .then((snap) => {
+                const list = [];
+                snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+                list.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
+                setActivityLogs(list);
+                setLoadingLogs(false);
+              })
+              .catch(() => setLoadingLogs(false));
+          }
+        );
+      return true;
+    };
+
+    if (!setupLogListener()) {
+      let attempts = 0;
+      timer = setInterval(() => {
+        attempts++;
+        if (setupLogListener() || attempts > 10) {
+          clearInterval(timer);
           setLoadingLogs(false);
-        },
-        (err) => {
-          // If Firestore reports index required for orderBy, fallback to simple fetch
-          window.db
-            .collection("member_activity_logs")
-            .limit(100)
-            .get()
-            .then((snap) => {
-              const list = [];
-              snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
-              list.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
-              setActivityLogs(list);
-              setLoadingLogs(false);
-            })
-            .catch(() => setLoadingLogs(false));
         }
-      );
+      }, 350);
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   // Filter dailyData by the active date range
@@ -631,7 +679,8 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       }
 
       const effectiveKey = docDate || docId;
-      if (timeFilter === "all" || (docDate && docDate >= startKey && docDate <= endKey)) {
+      const compareKey = docDate || effectiveKey;
+      if (timeFilter === "all" || (compareKey && compareKey >= startKey && compareKey <= endKey)) {
         map[effectiveKey] = {
           ...data,
           date: effectiveKey
@@ -641,7 +690,29 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
     return map;
   }, [dailyData, startKey, endKey, timeFilter]);
 
-  // Aggregate metrics strictly across the filtered period
+  // Filter logs for the active period
+  const filteredLogs = useMemo(() => {
+    return activityLogs.filter((log) => {
+      const logDate =
+        log.date ||
+        (log.timestamp
+          ? new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            }).format(new Date(toMillis(log.timestamp)))
+          : "");
+
+      if (selectedDay) {
+        return logDate === selectedDay;
+      }
+      if (timeFilter === "all") return true;
+      return logDate && logDate >= startKey && logDate <= endKey;
+    });
+  }, [activityLogs, startKey, endKey, selectedDay, timeFilter]);
+
+  // Aggregate metrics strictly across the filtered period with dual-source reconciliation
   const metrics = useMemo(() => {
     let roundup = 0;
     let newsletter = 0;
@@ -654,6 +725,26 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       report += Number(d.weekly_report || 0);
       video += Number(d.video || 0);
     });
+
+    // Reconcile with real-time audit logs so no opens are ever missing
+    const logsCount = {
+      weekly_roundup: 0,
+      newsletter: 0,
+      weekly_report: 0,
+      video: 0
+    };
+    filteredLogs.forEach((log) => {
+      const t = String(log.contentType || "").toLowerCase();
+      if (t.includes("roundup")) logsCount.weekly_roundup++;
+      else if (t.includes("news")) logsCount.newsletter++;
+      else if (t.includes("video") || t.includes("vedio")) logsCount.video++;
+      else logsCount.weekly_report++;
+    });
+
+    roundup = Math.max(roundup, logsCount.weekly_roundup);
+    newsletter = Math.max(newsletter, logsCount.newsletter);
+    report = Math.max(report, logsCount.weekly_report);
+    video = Math.max(video, logsCount.video);
 
     const total = roundup + newsletter + report + video;
     const safeTotal = total > 0 ? total : 1;
@@ -728,7 +819,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       tiedLeaders,
       isTie
     };
-  }, [filteredDailyData]);
+  }, [filteredDailyData, filteredLogs]);
 
   // Compute days for the trend graph based on active filter
   const chartDays = useMemo(() => {
@@ -736,13 +827,31 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
 
     const buildDay = (key) => {
       const rec = dailyData[key] || {};
-      const weeklyRoundup = Number(rec.weekly_roundup || 0);
-      const newsletter = Number(rec.newsletter || 0);
-      const weeklyReport = Number(rec.weekly_report || 0);
-      const video = Number(rec.video || 0);
-      const dayTotal =
-        Number(rec.total || 0) ||
-        weeklyRoundup + newsletter + weeklyReport + video;
+      let weeklyRoundup = Number(rec.weekly_roundup || 0);
+      let newsletter = Number(rec.newsletter || 0);
+      let weeklyReport = Number(rec.weekly_report || 0);
+      let video = Number(rec.video || 0);
+
+      // Reconcile with activity logs for this day
+      const dayLogs = activityLogs.filter((l) => {
+        const d = l.date || (l.timestamp && new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(toMillis(l.timestamp))));
+        return d === key;
+      });
+      let logRoundup = 0, logNews = 0, logReport = 0, logVideo = 0;
+      dayLogs.forEach((l) => {
+        const t = String(l.contentType || "").toLowerCase();
+        if (t.includes("roundup")) logRoundup++;
+        else if (t.includes("news")) logNews++;
+        else if (t.includes("video") || t.includes("vedio")) logVideo++;
+        else logReport++;
+      });
+      weeklyRoundup = Math.max(weeklyRoundup, logRoundup);
+      newsletter = Math.max(newsletter, logNews);
+      weeklyReport = Math.max(weeklyReport, logReport);
+      video = Math.max(video, logVideo);
+
+      const computedTotal = weeklyRoundup + newsletter + weeklyReport + video;
+      const dayTotal = Number(rec.total || 0) > computedTotal ? Number(rec.total) : computedTotal;
 
       let label = key;
       try {
@@ -833,21 +942,61 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       .sort();
 
     return sortedKeys.map(buildDay);
-  }, [timeFilter, startKey, endKey, todayKey, yesterdayKey, dailyData, customFrom, customTo, getOffsetDateKey]);
+  }, [timeFilter, startKey, endKey, todayKey, yesterdayKey, dailyData, activityLogs, customFrom, customTo, getOffsetDateKey]);
 
   const maxDayTotal = Math.max(1, ...chartDays.map((d) => d.dayTotal));
 
-  // Compute active days list for the audit table (sorted newest first)
+  // Compute active days list for the audit table with dual-source reconciliation (sorted newest first)
   const breakdownDays = useMemo(() => {
-    const items = Object.keys(filteredDailyData).map((dateKey) => {
-      const rec = filteredDailyData[dateKey] || {};
-      const weeklyRoundup = Number(rec.weekly_roundup || 0);
-      const newsletter = Number(rec.newsletter || 0);
-      const weeklyReport = Number(rec.weekly_report || 0);
-      const video = Number(rec.video || 0);
-      const dayTotal =
-        Number(rec.total || 0) ||
-        weeklyRoundup + newsletter + weeklyReport + video;
+    const combinedData = { ...filteredDailyData };
+
+    // Also include any day that has activity logs
+    filteredLogs.forEach((log) => {
+      const logDate =
+        log.date ||
+        (log.timestamp
+          ? new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            }).format(new Date(toMillis(log.timestamp)))
+          : "");
+      if (logDate && (!timeFilter || timeFilter === "all" || (logDate >= startKey && logDate <= endKey))) {
+        if (!combinedData[logDate]) {
+          combinedData[logDate] = { date: logDate };
+        }
+      }
+    });
+
+    const items = Object.keys(combinedData).map((dateKey) => {
+      const rec = combinedData[dateKey] || {};
+      let weeklyRoundup = Number(rec.weekly_roundup || 0);
+      let newsletter = Number(rec.newsletter || 0);
+      let weeklyReport = Number(rec.weekly_report || 0);
+      let video = Number(rec.video || 0);
+
+      // Reconcile with logs for this specific day
+      const dayLogs = activityLogs.filter((l) => {
+        const d = l.date || (l.timestamp && new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(toMillis(l.timestamp))));
+        return d === dateKey;
+      });
+      let logRoundup = 0, logNews = 0, logReport = 0, logVideo = 0;
+      dayLogs.forEach((l) => {
+        const t = String(l.contentType || "").toLowerCase();
+        if (t.includes("roundup")) logRoundup++;
+        else if (t.includes("news")) logNews++;
+        else if (t.includes("video") || t.includes("vedio")) logVideo++;
+        else logReport++;
+      });
+
+      weeklyRoundup = Math.max(weeklyRoundup, logRoundup);
+      newsletter = Math.max(newsletter, logNews);
+      weeklyReport = Math.max(weeklyReport, logReport);
+      video = Math.max(video, logVideo);
+
+      const computedTotal = weeklyRoundup + newsletter + weeklyReport + video;
+      const dayTotal = Number(rec.total || 0) > computedTotal ? Number(rec.total) : computedTotal;
 
       return {
         dateKey,
@@ -867,28 +1016,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
     }
 
     return items.sort((a, b) => (b.dateKey > a.dateKey ? 1 : -1));
-  }, [filteredDailyData, todayKey, selectedDay, formatReadableDate]);
-
-  // Filter logs for the audit stream
-  const filteredLogs = useMemo(() => {
-    return activityLogs.filter((log) => {
-      const logDate =
-        log.date ||
-        (log.timestamp
-          ? new Intl.DateTimeFormat("en-CA", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit"
-            }).format(new Date(toMillis(log.timestamp)))
-          : "");
-
-      if (selectedDay) {
-        return logDate === selectedDay;
-      }
-      return logDate >= startKey && logDate <= endKey;
-    });
-  }, [activityLogs, startKey, endKey, selectedDay]);
+  }, [filteredDailyData, filteredLogs, activityLogs, timeFilter, startKey, endKey, todayKey, selectedDay, formatReadableDate]);
 
   // Export filtered engagement report to Excel (.xlsx)
   const handleExportEngagement = () => {
@@ -955,22 +1083,50 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
     }
   };
 
-  // Manual refresh
+  // Manual refresh with parallel dual-collection fetch
   const handleRefresh = () => {
     if (!window.db) return;
     setLoading(true);
-    window.db
-      .collection("member_usage_daily")
-      .get()
-      .then((snapshot) => {
-        const map = {};
-        snapshot.forEach((doc) => {
-          map[doc.id] = doc.data();
-        });
-        setDailyData(map);
+    setLoadingLogs(true);
+    Promise.all([
+      window.db
+        .collection("member_usage_daily")
+        .get()
+        .then((snapshot) => {
+          const map = {};
+          snapshot.forEach((doc) => {
+            map[doc.id] = doc.data();
+          });
+          setDailyData(map);
+        }),
+      window.db
+        .collection("member_activity_logs")
+        .orderBy("timestamp", "desc")
+        .limit(100)
+        .get()
+        .then((snap) => {
+          const list = [];
+          snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+          setActivityLogs(list);
+        })
+        .catch(() => {
+          return window.db
+            .collection("member_activity_logs")
+            .limit(100)
+            .get()
+            .then((snap) => {
+              const list = [];
+              snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+              list.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
+              setActivityLogs(list);
+            });
+        })
+    ])
+      .catch((err) => console.warn("Refresh error:", err))
+      .finally(() => {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        setLoadingLogs(false);
+      });
   };
 
   return (

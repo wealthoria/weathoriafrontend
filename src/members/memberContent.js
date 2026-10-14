@@ -86,8 +86,7 @@ export async function fetchSecurePdfUrl(contentId) {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "x-client-tracked": "true"
+        "Content-Type": "application/json"
       }
     }
   );

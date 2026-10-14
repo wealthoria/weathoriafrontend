@@ -1,4 +1,8 @@
-﻿import { fetchSecurePdfUrl, usePendingContent } from "./memberContent.js";
+import {
+  fetchSecurePdfUrl,
+  usePendingContent,
+  trackMemberContentOpen
+} from "./memberContent.js";
 import React from "react";
 
 /* global React, window */
@@ -14,12 +18,11 @@ function RatioAnalysis() {
   const openReport = async (report) => {
     if (!report?.id) return;
 
-    if (typeof window.gtag === "function") {
-      window.gtag("event", "ratio_analysis_opened", {
-        content_id: String(report.id || ""),
-        content_title: report.title || ""
-      });
-    }
+    trackMemberContentOpen({
+      type: "ratio_analysis",
+      contentId: report.id,
+      contentTitle: report.title || "Ratio Analysis"
+    });
 
     try {
       const pdfUrl = await fetchSecurePdfUrl(report.id);
@@ -32,6 +35,15 @@ function RatioAnalysis() {
 
   // Opens the PDF a push notification points to.
   usePendingContent(reports, openReport);
+
+  // Track that the member opened Ratio Analysis section
+  useEffect(() => {
+    trackMemberContentOpen({
+      type: "ratio_analysis",
+      contentId: "ratio_analysis_section",
+      contentTitle: "Ratio Analysis Page"
+    });
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

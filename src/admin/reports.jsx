@@ -718,12 +718,14 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
     let newsletter = 0;
     let report = 0;
     let video = 0;
+    let ratioAnalysis = 0;
 
     Object.values(filteredDailyData).forEach((d) => {
       roundup += Number(d.weekly_roundup || 0);
       newsletter += Number(d.newsletter || 0);
       report += Number(d.weekly_report || 0);
       video += Number(d.video || 0);
+      ratioAnalysis += Number(d.ratio_analysis || 0);
     });
 
     // Reconcile with real-time audit logs so no opens are ever missing
@@ -731,13 +733,15 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       weekly_roundup: 0,
       newsletter: 0,
       weekly_report: 0,
-      video: 0
+      video: 0,
+      ratio_analysis: 0
     };
     filteredLogs.forEach((log) => {
       const t = String(log.contentType || "").toLowerCase();
       if (t.includes("roundup")) logsCount.weekly_roundup++;
       else if (t.includes("news")) logsCount.newsletter++;
       else if (t.includes("video") || t.includes("vedio")) logsCount.video++;
+      else if (t.includes("ratio")) logsCount.ratio_analysis++;
       else logsCount.weekly_report++;
     });
 
@@ -745,14 +749,16 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
     newsletter = Math.max(newsletter, logsCount.newsletter);
     report = Math.max(report, logsCount.weekly_report);
     video = Math.max(video, logsCount.video);
+    ratioAnalysis = Math.max(ratioAnalysis, logsCount.ratio_analysis);
 
-    const total = roundup + newsletter + report + video;
+    const total = roundup + newsletter + report + video + ratioAnalysis;
     const safeTotal = total > 0 ? total : 1;
 
     const roundupPct = total > 0 ? Math.round((roundup / safeTotal) * 100) : 0;
     const newsPct = total > 0 ? Math.round((newsletter / safeTotal) * 100) : 0;
     const reportPct = total > 0 ? Math.round((report / safeTotal) * 100) : 0;
     const videoPct = total > 0 ? Math.round((video / safeTotal) * 100) : 0;
+    const ratioPct = total > 0 ? Math.round((ratioAnalysis / safeTotal) * 100) : 0;
 
     const categories = [
       {
@@ -798,6 +804,17 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
         bgColor: "rgba(217, 119, 6, 0.08)",
         borderColor: "rgba(217, 119, 6, 0.25)",
         description: "Video lessons & recorded sessions"
+      },
+      {
+        id: "ratio_analysis",
+        name: "Ratio Analysis",
+        count: ratioAnalysis,
+        pct: ratioPct,
+        icon: "📊",
+        color: "#dc2626",
+        bgColor: "rgba(220, 38, 38, 0.08)",
+        borderColor: "rgba(220, 38, 38, 0.25)",
+        description: "Financial ratio analysis reports"
       }
     ];
 
@@ -813,6 +830,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       newsletter,
       report,
       video,
+      ratioAnalysis,
       total,
       categories,
       mostUsed,
@@ -831,26 +849,29 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       let newsletter = Number(rec.newsletter || 0);
       let weeklyReport = Number(rec.weekly_report || 0);
       let video = Number(rec.video || 0);
+      let ratioAnalysis = Number(rec.ratio_analysis || 0);
 
       // Reconcile with activity logs for this day
       const dayLogs = activityLogs.filter((l) => {
         const d = l.date || (l.timestamp && new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(toMillis(l.timestamp))));
         return d === key;
       });
-      let logRoundup = 0, logNews = 0, logReport = 0, logVideo = 0;
+      let logRoundup = 0, logNews = 0, logReport = 0, logVideo = 0, logRatio = 0;
       dayLogs.forEach((l) => {
         const t = String(l.contentType || "").toLowerCase();
         if (t.includes("roundup")) logRoundup++;
         else if (t.includes("news")) logNews++;
         else if (t.includes("video") || t.includes("vedio")) logVideo++;
+        else if (t.includes("ratio")) logRatio++;
         else logReport++;
       });
       weeklyRoundup = Math.max(weeklyRoundup, logRoundup);
       newsletter = Math.max(newsletter, logNews);
       weeklyReport = Math.max(weeklyReport, logReport);
       video = Math.max(video, logVideo);
+      ratioAnalysis = Math.max(ratioAnalysis, logRatio);
 
-      const computedTotal = weeklyRoundup + newsletter + weeklyReport + video;
+      const computedTotal = weeklyRoundup + newsletter + weeklyReport + video + ratioAnalysis;
       const dayTotal = Number(rec.total || 0) > computedTotal ? Number(rec.total) : computedTotal;
 
       let label = key;
@@ -872,6 +893,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
         newsletter,
         weeklyReport,
         video,
+        ratioAnalysis,
         dayTotal
       };
     };
@@ -975,18 +997,20 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       let newsletter = Number(rec.newsletter || 0);
       let weeklyReport = Number(rec.weekly_report || 0);
       let video = Number(rec.video || 0);
+      let ratioAnalysis = Number(rec.ratio_analysis || 0);
 
       // Reconcile with logs for this specific day
       const dayLogs = activityLogs.filter((l) => {
         const d = l.date || (l.timestamp && new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(toMillis(l.timestamp))));
         return d === dateKey;
       });
-      let logRoundup = 0, logNews = 0, logReport = 0, logVideo = 0;
+      let logRoundup = 0, logNews = 0, logReport = 0, logVideo = 0, logRatio = 0;
       dayLogs.forEach((l) => {
         const t = String(l.contentType || "").toLowerCase();
         if (t.includes("roundup")) logRoundup++;
         else if (t.includes("news")) logNews++;
         else if (t.includes("video") || t.includes("vedio")) logVideo++;
+        else if (t.includes("ratio")) logRatio++;
         else logReport++;
       });
 
@@ -994,8 +1018,9 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       newsletter = Math.max(newsletter, logNews);
       weeklyReport = Math.max(weeklyReport, logReport);
       video = Math.max(video, logVideo);
+      ratioAnalysis = Math.max(ratioAnalysis, logRatio);
 
-      const computedTotal = weeklyRoundup + newsletter + weeklyReport + video;
+      const computedTotal = weeklyRoundup + newsletter + weeklyReport + video + ratioAnalysis;
       const dayTotal = Number(rec.total || 0) > computedTotal ? Number(rec.total) : computedTotal;
 
       return {
@@ -1006,6 +1031,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
         newsletter,
         weeklyReport,
         video,
+        ratioAnalysis,
         dayTotal
       };
     });
@@ -1025,7 +1051,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
 
       // Sheet 1: Daily breakdown
       const dailyRows = [
-        ["Date", "Weekly Roundup", "Newsletter", "Articles & Reports", "Videos", "Total Opens"]
+        ["Date", "Weekly Roundup", "Newsletter", "Articles & Reports", "Videos", "Ratio Analysis", "Total Opens"]
       ];
       breakdownDays.forEach((d) => {
         dailyRows.push([
@@ -1034,6 +1060,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
           d.newsletter,
           d.weeklyReport,
           d.video,
+          d.ratioAnalysis,
           d.dayTotal
         ]);
       });
@@ -1043,6 +1070,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
         metrics.newsletter,
         metrics.report,
         metrics.video,
+        metrics.ratioAnalysis,
         metrics.total
       ]);
       const wsDaily = XLSX.utils.aoa_to_sheet(dailyRows);
@@ -1167,7 +1195,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
             </span>
           </div>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--mute, #6b7280)" }}>
-            Comparing member consumption across the 4 primary content categories
+            Comparing member consumption across the 5 primary content categories
           </p>
         </div>
 
@@ -1772,6 +1800,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
               const hNews = (day.newsletter / maxDayTotal) * 110;
               const hReport = (day.weeklyReport / maxDayTotal) * 110;
               const hVideo = (day.video / maxDayTotal) * 110;
+              const hRatio = (day.ratioAnalysis / maxDayTotal) * 110;
               const totalH = Math.max(day.dayTotal > 0 ? 10 : 4, (day.dayTotal / maxDayTotal) * 110);
               const isFocused = selectedDay === day.dateKey;
 
@@ -1792,7 +1821,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                     background: isFocused ? "rgba(37, 99, 235, 0.08)" : "transparent",
                     transition: "background 0.15s ease"
                   }}
-                  title={`Click to focus: ${day.label} (${day.dateKey})\nTotal: ${day.dayTotal}\n• Weekly Roundup: ${day.weeklyRoundup}\n• Newsletter: ${day.newsletter}\n• Articles: ${day.weeklyReport}\n• Videos: ${day.video}`}
+                  title={`Click to focus: ${day.label} (${day.dateKey})\nTotal: ${day.dayTotal}\n• Weekly Roundup: ${day.weeklyRoundup}\n• Newsletter: ${day.newsletter}\n• Articles: ${day.weeklyReport}\n• Videos: ${day.video}\n• Ratio Analysis: ${day.ratioAnalysis}`}
                 >
                   <div
                     style={{
@@ -1821,6 +1850,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                     {day.newsletter > 0 && <div style={{ height: hNews, background: "#7c3aed" }} />}
                     {day.weeklyReport > 0 && <div style={{ height: hReport, background: "#059669" }} />}
                     {day.video > 0 && <div style={{ height: hVideo, background: "#d97706" }} />}
+                    {day.ratioAnalysis > 0 && <div style={{ height: hRatio, background: "#dc2626" }} />}
                   </div>
 
                   <div
@@ -1925,6 +1955,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                   <th style={{ padding: "10px 12px", textAlign: "right", color: "#7c3aed" }}>📰 Newsletter</th>
                   <th style={{ padding: "10px 12px", textAlign: "right", color: "#059669" }}>📑 Articles & Reports</th>
                   <th style={{ padding: "10px 12px", textAlign: "right", color: "#d97706" }}>🎥 Videos</th>
+                  <th style={{ padding: "10px 12px", textAlign: "right", color: "#dc2626" }}>📊 Ratio Analysis</th>
                   <th style={{ padding: "10px 12px", textAlign: "right", fontWeight: 800 }}>Total Opens</th>
                   <th style={{ padding: "10px 12px", textAlign: "right" }}>% Share</th>
                 </tr>
@@ -1932,7 +1963,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
               <tbody>
                 {breakdownDays.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: "32px", textAlign: "center", color: "var(--mute, #9ca3af)" }}>
+                    <td colSpan={8} style={{ padding: "32px", textAlign: "center", color: "var(--mute, #9ca3af)" }}>
                       No content engagement recorded for this period.
                     </td>
                   </tr>
@@ -2007,6 +2038,16 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                         >
                           {day.video}
                         </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: day.ratioAnalysis > 0 ? "#dc2626" : "var(--mute, #9ca3af)"
+                          }}
+                        >
+                          {day.ratioAnalysis}
+                        </td>
                         <td style={{ padding: "12px", textAlign: "right", fontWeight: 800, color: "var(--fg, #111827)", fontSize: 14 }}>
                           {day.dayTotal}
                         </td>
@@ -2046,6 +2087,9 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                     </td>
                     <td style={{ padding: "14px 12px", textAlign: "right", color: "#d97706", fontSize: 14 }}>
                       {breakdownDays.reduce((acc, d) => acc + d.video, 0)}
+                    </td>
+                    <td style={{ padding: "14px 12px", textAlign: "right", color: "#dc2626", fontSize: 14 }}>
+                      {breakdownDays.reduce((acc, d) => acc + d.ratioAnalysis, 0)}
                     </td>
                     <td style={{ padding: "14px 12px", textAlign: "right", fontSize: 16, color: "var(--fg, #111827)" }}>
                       {breakdownDays.reduce((acc, d) => acc + d.dayTotal, 0)}
@@ -2096,6 +2140,8 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                       ? "#7c3aed"
                       : normType.includes("video")
                       ? "#d97706"
+                      : normType.includes("ratio")
+                      ? "#dc2626"
                       : "#059669";
                     const badgeBg = normType.includes("roundup")
                       ? "rgba(37, 99, 235, 0.1)"
@@ -2103,6 +2149,8 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                       ? "rgba(124, 58, 237, 0.1)"
                       : normType.includes("video")
                       ? "rgba(217, 119, 6, 0.1)"
+                      : normType.includes("ratio")
+                      ? "rgba(220, 38, 38, 0.1)"
                       : "rgba(5, 150, 105, 0.1)";
                     const typeLabel = normType.includes("roundup")
                       ? "Weekly Roundup"
@@ -2110,6 +2158,8 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                       ? "Newsletter"
                       : normType.includes("video")
                       ? "Video"
+                      : normType.includes("ratio")
+                      ? "Ratio Analysis"
                       : "Articles & Reports";
 
                     return (

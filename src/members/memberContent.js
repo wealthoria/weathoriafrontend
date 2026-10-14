@@ -324,6 +324,8 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
         ? "newsletter"
         : (t.includes("video") || t.includes("vedio") || t.includes("course") || t.includes("watch"))
         ? "video"
+        : t.includes("ratio")
+        ? "ratio_analysis"
         : "weekly_report";
 
     const member = getCurrentMemberInfo();

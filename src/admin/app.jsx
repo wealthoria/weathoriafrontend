@@ -360,6 +360,14 @@ function resolve(path) {
   }
 
   if (
+    path === "/admin/youtube-ads"
+  ) {
+    return {
+      name: "youtube-ads"
+    };
+  }
+
+  if (
     path === "/admin/reports"
   ) {
     return {
@@ -750,6 +758,27 @@ function ProtectedRoute({
             <div className="page">
               <h1>Meta Ads & Leads</h1>
               <p>Meta Ads management component is not loaded.</p>
+            </div>
+          )}
+        </AdminShell>
+      );
+    }
+
+    /* ---------------------------------------------------------------------
+       YOUTUBE ADS
+       --------------------------------------------------------------------- */
+
+    case "youtube-ads": {
+      const AdminYouTubeAds = getAdmin("AdminYouTubeAds");
+
+      return (
+        <AdminShell title="YouTube Ads">
+          {AdminYouTubeAds ? (
+            <AdminYouTubeAds />
+          ) : (
+            <div className="page">
+              <h1>YouTube Video Ads</h1>
+              <p>YouTube Ads component is loading...</p>
             </div>
           )}
         </AdminShell>

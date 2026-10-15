@@ -180,6 +180,12 @@ const NAV = [
   },
 
   {
+    to: "/admin/youtube-ads",
+    label: "YouTube Ads",
+    icon: "youtube"
+  },
+
+  {
     to: "/admin/reports",
     label: "Reports",
     icon: "reports"

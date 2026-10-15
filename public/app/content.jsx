@@ -189,7 +189,7 @@ const CONTENT = {
         { ic: "shield", t: "Education, not sales", d: "No products pushed. Just honest guidance on learning." },
       ],
       contacts: [
-        { ic: "mail", v: "wealthoria.edu@gmail.com", href: "mailto:wealthoria.edu@gmail.com" },
+        { ic: "mail", v: "support@wealthoria.in", href: "mailto:support@wealthoria.in" },
         { ic: "phone", v: "+91 90197 59001", href: "tel:+919019759001" },
         { ic: "pin", v: "Mysuru, Karnataka, India", href: "#" },
       ],
@@ -418,7 +418,7 @@ const CONTENT = {
         { ic: "shield", t: "ಶಿಕ್ಷಣ, ಮಾರಾಟವಲ್ಲ", d: "ಯಾವುದೇ ಉತ್ಪನ್ನ ತಳ್ಳುವುದಿಲ್ಲ. ಕೇವಲ ಪ್ರಾಮಾಣಿಕ ಮಾರ್ಗದರ್ಶನ." },
       ],
       contacts: [
-        { ic: "mail", v: "wealthoria.edu@gmail.com", href: "mailto:wealthoria.edu@gmail.com" },
+        { ic: "mail", v: "support@wealthoria.in", href: "mailto:support@wealthoria.in" },
         { ic: "phone", v: "+91 90197 59001", href: "tel:+919019759001" },
         { ic: "pin", v: "ಮೈಸೂರು, ಕರ್ನಾಟಕ, ಭಾರತ", href: "#" },
       ],

@@ -30,14 +30,23 @@
     'https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', '969336462877276');
     fbq('track', 'PageView');
-    fbq('track', 'InitiateCheckout', {
+    fbq('track', 'ViewContent', {
       content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
       content_category: 'Book',
-      value: 1499,
+      value: 1199,
       currency: 'INR'
     });
   </script>
   <!-- End Meta Pixel Code -->
+
+  <!-- Google Ads tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18500990314"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18500990314');
+  </script>
 
   <style>
     :root {
@@ -1197,6 +1206,15 @@
 
         }
 
+        /* TRACK LEAD: Form successfully filled with contact & address */
+        if (window.fbq) {
+          fbq('track', 'Lead', {
+            content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
+            content_category: 'Book Pre-Order Lead',
+            value: BASE_PRICE - appliedDiscountAmount,
+            currency: 'INR'
+          });
+        }
 
         /* RAZORPAY */
 
@@ -1329,6 +1347,16 @@
                   value: BASE_PRICE - appliedDiscountAmount,
                   currency: 'INR',
                   order_id: response.razorpay_order_id
+                });
+              }
+
+              /* GOOGLE ADS CONVERSION */
+              if (window.gtag) {
+                gtag('event', 'conversion', {
+                  'send_to': 'AW-18500990314/oSuRCKXXh5sdEOrq-vVE',
+                  'value': BASE_PRICE - appliedDiscountAmount,
+                  'currency': 'INR',
+                  'transaction_id': response.razorpay_order_id
                 });
               }
 

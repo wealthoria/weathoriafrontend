@@ -54,7 +54,9 @@ function AdminMetaAds() {
   const [status, setStatus] = useState(null);
   const [campaignsData, setCampaignsData] = useState({ campaigns: [], summary: {} });
   const [leadsList, setLeadsList] = useState([]);
-  const [activeTab, setActiveTab] = useState("CAMPAIGNS"); // "CAMPAIGNS" | "LEADS"
+  const [buyersList, setBuyersList] = useState([]);
+  const [activeTab, setActiveTab] = useState("CAMPAIGNS"); // "CAMPAIGNS" | "BUYERS" | "LEADS"
+  const [buyerStatusFilter, setBuyerStatusFilter] = useState("ALL"); // "ALL" | "PAID" | "PENDING"
   const [datePreset, setDatePreset] = useState("today"); // "today" | "yesterday" | "last_7d" | "last_30d" | "maximum"
   const [search, setSearch] = useState("");
 
@@ -83,6 +85,17 @@ function AdminMetaAds() {
         if (leadsJson.success && Array.isArray(leadsJson.data)) {
           setLeadsList(leadsJson.data);
         }
+
+        // 4. Fetch Book Buyers filtered by datePreset
+        try {
+          const buyersRes = await fetch(`${API_BASE}/meta-ads/buyers?datePreset=${preset}`);
+          const buyersJson = await buyersRes.json();
+          if (buyersJson.success && Array.isArray(buyersJson.data)) {
+            setBuyersList(buyersJson.data);
+          }
+        } catch (buyerErr) {
+          console.warn("Failed to load buyers via API:", buyerErr);
+        }
       }
     } catch (err) {
       console.error("Failed to load Meta Ads data:", err);
@@ -95,6 +108,63 @@ function AdminMetaAds() {
   useEffect(() => {
     fetchData(datePreset);
   }, [datePreset, fetchData]);
+
+  // Real-time listener on bookOrders if Firestore window.db is available
+  useEffect(() => {
+    if (!window.db || typeof window.db.collection !== "function") return;
+    const unsub = window.db
+      .collection("bookOrders")
+      .orderBy("createdAt", "desc")
+      .limit(60)
+      .onSnapshot(
+        (snap) => {
+          const orders = snap.docs
+            .map((d) => ({ id: d.id, ...d.data() }))
+            .filter((o) => {
+              const name = o.customer?.name || o.shippingAddress?.name || o.name || "";
+              const phone = o.customer?.phone || o.shippingAddress?.phone || o.phone || "";
+              return !!name || !!phone;
+            })
+            .map((o) => {
+              const payStatus = String(o.paymentStatus || o.status || "").toLowerCase();
+              const isPaid =
+                payStatus === "paid" ||
+                payStatus === "captured" ||
+                payStatus === "success" ||
+                o.orderStatus === "confirmed" ||
+                !!o.razorpayPaymentId;
+
+              let createdAt = o.createdAt;
+              if (createdAt && createdAt._seconds) {
+                createdAt = new Date(createdAt._seconds * 1000).toISOString();
+              } else if (createdAt && typeof createdAt.toDate === "function") {
+                createdAt = createdAt.toDate().toISOString();
+              }
+              return {
+                id: o.id,
+                bookingId: o.bookingId || "—",
+                name: o.customer?.name || o.shippingAddress?.name || o.name || "Customer",
+                phone: o.customer?.phone || o.shippingAddress?.phone || o.phone || "—",
+                email: o.customer?.email || o.email || "—",
+                city: o.shippingAddress?.city || o.city || "—",
+                state: o.shippingAddress?.state || o.state || "—",
+                productName: o.product?.name || o.productName || "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ",
+                amount: o.amount || 1499,
+                couponCode: o.couponCode || null,
+                paymentStatus: isPaid ? "paid" : "pending",
+                paymentId: o.razorpayPaymentId || "—",
+                source: o.source || "Website / Ad",
+                createdAt: createdAt || new Date().toISOString()
+              };
+            });
+          if (orders.length > 0) {
+            setBuyersList(orders);
+          }
+        },
+        (err) => console.warn("bookOrders listener warning:", err)
+      );
+    return () => unsub();
+  }, []);
 
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [tokenInput, setTokenInput] = useState("");
@@ -184,7 +254,11 @@ function AdminMetaAds() {
   const handleSyncLeads = async () => {
     setSyncingLeads(true);
     try {
-      const res = await fetch(`${API_BASE}/meta-ads/sync-leads`, { method: "POST" });
+      const res = await fetch(`${API_BASE}/meta-ads/sync-leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
       const data = await res.json();
       if (data.success) {
         pushToast(data.message || "Leads synced successfully!", "success");
@@ -201,6 +275,8 @@ function AdminMetaAds() {
 
   const summary = campaignsData.summary || {};
   const campaigns = campaignsData.campaigns || [];
+  const platforms = campaignsData.platforms || [];
+  const totalDailyBudget = campaigns.reduce((acc, c) => acc + (Number(c.dailyBudget) || 0), 0);
 
   const filteredCampaigns = useMemo(() => {
     if (!search.trim()) return campaigns;
@@ -225,6 +301,64 @@ function AdminMetaAds() {
         (l.campaignName || "").toLowerCase().includes(q)
     );
   }, [leadsList, search]);
+
+  const dateFilteredBuyers = useMemo(() => {
+    const now = new Date();
+    // Midnight today in local timezone
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    return buyersList.filter((b) => {
+      if (!b.createdAt) return false;
+      const d = new Date(b.createdAt);
+      if (isNaN(d.getTime())) return false;
+
+      if (datePreset === "today") {
+        return d >= startOfToday;
+      }
+      if (datePreset === "yesterday") {
+        return d >= startOfYesterday && d < startOfToday;
+      }
+      if (datePreset === "last_7d") {
+        return d >= sevenDaysAgo;
+      }
+      if (datePreset === "last_30d") {
+        return d >= thirtyDaysAgo;
+      }
+      return true; // "maximum" / lifetime
+    });
+  }, [buyersList, datePreset]);
+
+  const paidCount = dateFilteredBuyers.filter((b) => b.paymentStatus === "paid").length;
+  const pendingCount = dateFilteredBuyers.filter((b) => b.paymentStatus !== "paid").length;
+  const paidTotal = dateFilteredBuyers
+    .filter((b) => b.paymentStatus === "paid")
+    .reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+
+  const filteredBuyers = useMemo(() => {
+    let list = dateFilteredBuyers;
+    if (buyerStatusFilter === "PAID") {
+      list = list.filter((b) => b.paymentStatus === "paid");
+    } else if (buyerStatusFilter === "PENDING") {
+      list = list.filter((b) => b.paymentStatus !== "paid");
+    }
+
+    if (!search.trim()) return list;
+    const q = search.toLowerCase();
+    return list.filter(
+      (b) =>
+        (b.name || "").toLowerCase().includes(q) ||
+        (b.phone || "").toLowerCase().includes(q) ||
+        (b.email || "").toLowerCase().includes(q) ||
+        (b.city || "").toLowerCase().includes(q) ||
+        (b.bookingId || "").toLowerCase().includes(q) ||
+        (b.couponCode || "").toLowerCase().includes(q) ||
+        (b.paymentId || "").toLowerCase().includes(q) ||
+        (b.paymentStatus || "").toLowerCase().includes(q)
+    );
+  }, [dateFilteredBuyers, buyerStatusFilter, search]);
 
   return (
     <div className="reveal-fade" style={{ padding: "8px 0 40px" }}>
@@ -467,7 +601,7 @@ function AdminMetaAds() {
             {formatINR(summary.totalSpend || 0)}
           </b>
           <span style={{ fontSize: 11.5, color: "#10b981", fontWeight: 600 }}>
-            Budget: ₹300/day
+            {totalDailyBudget > 0 ? `Budget: ₹${totalDailyBudget}/day` : "Active"}
           </span>
         </div>
 
@@ -497,16 +631,116 @@ function AdminMetaAds() {
 
         <div className="meta-stat-card">
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-            Purchases & Leads
+            Verified Sales & Leads
           </span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "#10b981" }}>
-            {summary.totalPurchases || 0} Purchases
+            {paidCount} Paid {paidCount === 1 ? "Sale" : "Sales"}
           </b>
           <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
-            {summary.totalLeads || 0} Leads
+            {pendingCount > 0 ? `${pendingCount} Form Leads · ` : ""}{formatINR(paidTotal)} revenue
           </span>
         </div>
       </div>
+
+      {/* =======================================================
+          PLATFORM BREAKDOWN: INSTAGRAM VS FACEBOOK
+          ======================================================= */}
+      {platforms.length > 0 && (
+        <div style={{ marginBottom: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+            <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--fg, #111827)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              📱 Platform Performance ({datePreset.toUpperCase()})
+            </h4>
+            <span style={{ fontSize: 12, color: "var(--mute, #6b7280)" }}>
+              Instagram vs Facebook traffic & conversion comparison
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "14px"
+            }}
+          >
+            {platforms.map((p) => {
+              const isInsta = p.platform === "instagram";
+              const isFb = p.platform === "facebook";
+              const isWa = p.platform === "whatsapp";
+              const title = isInsta ? "Instagram" : isFb ? "Facebook" : isWa ? "WhatsApp" : p.platform.toUpperCase();
+              const icon = isInsta ? "📸" : isFb ? "👥" : isWa ? "💬" : "🌐";
+              const bgGradient = isInsta
+                ? "linear-gradient(135deg, rgba(225, 48, 108, 0.08) 0%, rgba(253, 29, 29, 0.04) 100%)"
+                : isFb
+                ? "linear-gradient(135deg, rgba(24, 119, 242, 0.08) 0%, rgba(0, 102, 255, 0.04) 100%)"
+                : "var(--surface, #ffffff)";
+              const borderColor = isInsta
+                ? "rgba(225, 48, 108, 0.3)"
+                : isFb
+                ? "rgba(24, 119, 242, 0.3)"
+                : "var(--line, #e5e7eb)";
+
+              return (
+                <div
+                  key={p.platform}
+                  style={{
+                    background: bgGradient,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: "16px",
+                    padding: "16px 18px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "20px" }}>{icon}</span>
+                      <b style={{ fontSize: "15px", color: "var(--fg, #111827)" }}>{title}</b>
+                    </div>
+                    {isInsta && (paidCount > 0 || p.purchases > 0) && (
+                      <span
+                        style={{
+                          background: "#10b981",
+                          color: "#fff",
+                          fontSize: "10px",
+                          fontWeight: 800,
+                          padding: "3px 8px",
+                          borderRadius: "10px",
+                          letterSpacing: "0.03em"
+                        }}
+                      >
+                        🏆 {paidCount} PAID {pendingCount > 0 ? `· ${pendingCount} LEADS` : ""}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "12px" }}>
+                    <div>
+                      <span style={{ color: "var(--mute, #6b7280)", display: "block", fontSize: "11px" }}>Clicks</span>
+                      <b style={{ fontSize: "16px", color: isInsta ? "#e1306c" : isFb ? "#1877f2" : "var(--fg, #111827)" }}>
+                        {p.clicks} clicks
+                      </b>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--mute, #6b7280)", display: "block", fontSize: "11px" }}>Spend</span>
+                      <b style={{ fontSize: "16px", color: "var(--fg, #111827)" }}>
+                        {formatINR(p.spend)}
+                      </b>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--mute, #6b7280)", display: "block", fontSize: "11px" }}>Avg CPC</span>
+                      <b>₹{p.cpc ? p.cpc.toFixed(2) : "0.00"}</b>
+                    </div>
+                    <div>
+                      <span style={{ color: "var(--mute, #6b7280)", display: "block", fontSize: "11px" }}>Impressions</span>
+                      <b>{p.impressions ? p.impressions.toLocaleString("en-IN") : 0}</b>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* =======================================================
           TABS & SEARCH BAR
@@ -521,13 +755,25 @@ function AdminMetaAds() {
           marginBottom: "16px"
         }}
       >
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <button
             type="button"
             className={`meta-pill-btn ${activeTab === "CAMPAIGNS" ? "active" : ""}`}
             onClick={() => setActiveTab("CAMPAIGNS")}
           >
             📊 Ad Campaigns ({campaigns.length})
+          </button>
+          <button
+            type="button"
+            className={`meta-pill-btn ${activeTab === "BUYERS" ? "active" : ""}`}
+            onClick={() => setActiveTab("BUYERS")}
+            style={{
+              borderColor: activeTab === "BUYERS" ? "#10b981" : undefined,
+              background: activeTab === "BUYERS" ? "#10b981" : undefined,
+              color: activeTab === "BUYERS" ? "#fff" : undefined
+            }}
+          >
+            🛍️ Book Buyers ({dateFilteredBuyers.length})
           </button>
           <button
             type="button"
@@ -540,7 +786,13 @@ function AdminMetaAds() {
 
         <input
           type="text"
-          placeholder={activeTab === "CAMPAIGNS" ? "Search campaigns..." : "Search leads by name, phone, email..."}
+          placeholder={
+            activeTab === "CAMPAIGNS"
+              ? "Search campaigns..."
+              : activeTab === "BUYERS"
+              ? "Search buyers by name, phone, city, order ID..."
+              : "Search leads by name, phone, email..."
+          }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -732,6 +984,249 @@ function AdminMetaAds() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =======================================================
+          TAB 3: BOOK BUYERS TABLE (PAID VS FORM FILLED)
+          ======================================================= */}
+      {activeTab === "BUYERS" && (
+        <div
+          style={{
+            background: "var(--surface, #ffffff)",
+            border: "1px solid var(--line, #e5e7eb)",
+            borderRadius: "16px",
+            overflow: "hidden",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
+          }}
+        >
+          {/* SUB-FILTER BAR: ALL VS PAID VS FORM FILLED */}
+          <div
+            style={{
+              padding: "14px 20px",
+              background: "var(--bg-muted, #f9fafb)",
+              borderBottom: "1px solid var(--line, #e5e7eb)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px"
+            }}
+          >
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className={`meta-pill-btn ${buyerStatusFilter === "ALL" ? "active" : ""}`}
+                onClick={() => setBuyerStatusFilter("ALL")}
+                style={{ fontSize: 12, padding: "5px 12px" }}
+              >
+                All Activity ({dateFilteredBuyers.length})
+              </button>
+              <button
+                type="button"
+                className={`meta-pill-btn ${buyerStatusFilter === "PAID" ? "active" : ""}`}
+                onClick={() => setBuyerStatusFilter("PAID")}
+                style={{
+                  fontSize: 12,
+                  padding: "5px 12px",
+                  borderColor: buyerStatusFilter === "PAID" ? "#059669" : "#a7f3d0",
+                  background: buyerStatusFilter === "PAID" ? "#059669" : "#ecfdf5",
+                  color: buyerStatusFilter === "PAID" ? "#ffffff" : "#065f46",
+                  fontWeight: 800
+                }}
+              >
+                ✅ Actually Purchased ({paidCount})
+              </button>
+              <button
+                type="button"
+                className={`meta-pill-btn ${buyerStatusFilter === "PENDING" ? "active" : ""}`}
+                onClick={() => setBuyerStatusFilter("PENDING")}
+                style={{
+                  fontSize: 12,
+                  padding: "5px 12px",
+                  borderColor: buyerStatusFilter === "PENDING" ? "#d97706" : "#fde68a",
+                  background: buyerStatusFilter === "PENDING" ? "#d97706" : "#fffbeb",
+                  color: buyerStatusFilter === "PENDING" ? "#ffffff" : "#92400e",
+                  fontWeight: 800
+                }}
+              >
+                ⏳ Just Filled Form ({pendingCount})
+              </button>
+            </div>
+
+            <span style={{ fontSize: 12, color: "var(--mute, #6b7280)" }}>
+              {paidCount} confirmed purchase{paidCount === 1 ? "" : "s"} · {pendingCount} form-filled lead{pendingCount === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {filteredBuyers.length === 0 ? (
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--mute, #6b7280)" }}>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>🛍️</div>
+              <b>No matching buyers found for this filter.</b>
+              <p style={{ margin: "6px 0 0", fontSize: 13 }}>
+                {buyerStatusFilter === "PAID"
+                  ? "No completed payments found for this date range."
+                  : "No pending checkouts found for this date range."}
+              </p>
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table className="meta-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Order / Booking ID</th>
+                    <th>Customer Name</th>
+                    <th>Phone</th>
+                    <th>City / State</th>
+                    <th>Amount</th>
+                    <th>Payment ID</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredBuyers.map((b) => {
+                    const isPaid = b.paymentStatus === "paid";
+                    const cleanPhone = String(b.phone || "").replace(/[^\d]/g, "");
+                    const waMessage = encodeURIComponent(
+                      `Namaskara ${b.name}, thank you for your interest in "Hoodikeya Vijnana" book from Wealthoria! We noticed your order form was submitted. Would you like assistance to complete your purchase and dispatch?`
+                    );
+
+                    return (
+                      <tr
+                        key={b.id || b.bookingId}
+                        style={{
+                          background: isPaid ? "rgba(16, 185, 129, 0.03)" : "rgba(245, 158, 11, 0.03)"
+                        }}
+                      >
+                        <td>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              background: isPaid ? "#d1fae5" : "#fef3c7",
+                              color: isPaid ? "#065f46" : "#92400e",
+                              fontSize: 10.5,
+                              fontWeight: 800,
+                              padding: "3px 8px",
+                              borderRadius: 6,
+                              letterSpacing: "0.03em"
+                            }}
+                          >
+                            {isPaid ? "✅ PAID" : "⏳ FORM FILLED"}
+                          </span>
+                        </td>
+                        <td>
+                          <b style={{ color: "var(--fg, #111827)", fontFamily: "monospace", fontSize: 13 }}>
+                            {b.bookingId}
+                          </b>
+                          {b.couponCode && (
+                            <span
+                              style={{
+                                display: "block",
+                                fontSize: 10.5,
+                                color: "#b45309",
+                                fontWeight: 700
+                              }}
+                            >
+                              🏷️ {b.couponCode}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <b style={{ color: "var(--fg, #111827)", display: "block" }}>{b.name}</b>
+                          <span style={{ fontSize: 11, color: "var(--mute, #6b7280)" }}>{b.email}</span>
+                        </td>
+                        <td>
+                          {b.phone && b.phone !== "—" ? (
+                            <a
+                              href={`tel:${cleanPhone}`}
+                              style={{ color: "#2563eb", textDecoration: "none", fontWeight: 700 }}
+                            >
+                              {b.phone}
+                            </a>
+                          ) : (
+                            <span style={{ color: "var(--mute, #6b7280)" }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 600 }}>{b.city || "—"}</span>
+                          {b.state && b.state !== "—" && (
+                            <span style={{ fontSize: 11, color: "var(--mute, #6b7280)", display: "block" }}>
+                              {b.state}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <b style={{ color: isPaid ? "#059669" : "#d97706", fontSize: 13.5 }}>
+                            {formatINR(b.amount)}
+                          </b>
+                          <span style={{ fontSize: 10.5, color: "var(--mute, #6b7280)", display: "block" }}>
+                            {isPaid ? "Paid" : "Unpaid"}
+                          </span>
+                        </td>
+                        <td>
+                          {isPaid ? (
+                            <span
+                              style={{
+                                fontFamily: "monospace",
+                                fontSize: 11,
+                                color: "#065f46",
+                                background: "#ecfdf5",
+                                padding: "3px 7px",
+                                borderRadius: 4,
+                                border: "1px solid #a7f3d0"
+                              }}
+                            >
+                              {b.paymentId}
+                            </span>
+                          ) : (
+                            <span style={{ color: "var(--mute, #6b7280)", fontSize: 11.5 }}>
+                              Not Paid Yet
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
+                            {formatRelativeTime(b.createdAt)}
+                          </span>
+                        </td>
+                        <td>
+                          {!isPaid && cleanPhone ? (
+                            <a
+                              href={`https://wa.me/91${cleanPhone}?text=${waMessage}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="meta-pill-btn"
+                              style={{
+                                background: "#25D366",
+                                color: "#ffffff",
+                                borderColor: "#25D366",
+                                padding: "4px 10px",
+                                fontSize: 11,
+                                textDecoration: "none",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4
+                              }}
+                            >
+                              💬 Follow Up
+                            </a>
+                          ) : (
+                            <span style={{ color: "#059669", fontSize: 11.5, fontWeight: 700 }}>
+                              ✓ Confirmed
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

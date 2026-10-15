@@ -1,5 +1,10 @@
 import React from "react";
-import { trackMemberContentOpen } from "./memberContent.js";
+
+import {
+  trackMemberContentOpen,
+  getCurrentMemberInfo,
+  getMemberToken
+} from "./memberContent.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -19,7 +24,7 @@ function rememberOpenVideo(videoId) {
     } else {
       localStorage.removeItem(OPEN_VIDEO_KEY);
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function getRememberedVideoId() {
@@ -28,11 +33,11 @@ function getRememberedVideoId() {
     if (saved?.id && Date.now() - Number(saved.at || 0) < OPEN_VIDEO_MAX_AGE) {
       return saved.id;
     }
-  } catch (e) {}
+  } catch (e) { }
   return "";
 }
 
-const MEMBER_API ="https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+const MEMBER_API = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 /* =========================================================
    HELPERS
@@ -135,6 +140,27 @@ function getVideoEmbedUrl(value) {
   }
 
   return raw;
+}
+
+/* =========================================================
+   RELATIVE TIME HELPER (YOUTUBE STYLE)
+========================================================= */
+
+function formatRelativeTime(dateVal) {
+  const t = getTime(dateVal);
+  if (!t) return "Recently";
+  const diffSec = Math.floor((Date.now() - t) / 1000);
+  if (diffSec < 60) return "Just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(t).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short"
+  });
 }
 
 /* =========================================================
@@ -276,6 +302,16 @@ function MemberVideo() {
   const [videos, setVideos] =
     useState([]);
 
+
+  const [likeStats, setLikeStats] = useState({});
+  const [likeLoading, setLikeLoading] = useState({});
+
+  const [commentOpenVideoId, setCommentOpenVideoId] = useState("");
+  const [commentText, setCommentText] = useState("");
+
+  const [videoComments, setVideoComments] = useState({});
+  const [openCommentsVideoId, setOpenCommentsVideoId] = useState("");
+
   const [loading, setLoading] =
     useState(true);
 
@@ -347,11 +383,11 @@ function MemberVideo() {
               (a, b) =>
                 getTime(
                   b.publishedAt ||
-                    b.createdAt
+                  b.createdAt
                 ) -
                 getTime(
                   a.publishedAt ||
-                    a.createdAt
+                  a.createdAt
                 )
             );
 
@@ -389,7 +425,7 @@ function MemberVideo() {
 
             setError(
               snapshotError?.message ||
-                "Unable to load videos."
+              "Unable to load videos."
             );
 
             setLoading(false);
@@ -406,6 +442,140 @@ function MemberVideo() {
     };
   }, []);
 
+  // Load saved like counts whenever the video list loads or changes
+  useEffect(() => {
+    if (videos.length === 0) return;
+
+    const loadVideoLikes = async () => {
+      try {
+        const token = getMemberToken();
+        if (!token) return;
+
+        const videoIds = videos.map((video) => video.id);
+
+        const response = await fetch(
+          `https://api-jsbpm362pq-el.a.run.app/members/video-likes?videoIds=${encodeURIComponent(videoIds.join(","))}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message || "Unable to load saved likes."
+          );
+        }
+
+        setLikeStats((previous) => ({
+          ...previous,
+          ...result.likes,
+        }));
+      } catch (error) {
+        console.error("Loading video likes failed:", error);
+      }
+    };
+
+    loadVideoLikes();
+
+    const loadVideoComments = async () => {
+      try {
+        const token = getMemberToken();
+        if (!token) return;
+
+        const videoIds = videos.map((video) => video.id);
+
+        const response = await fetch(
+          `https://api-jsbpm362pq-el.a.run.app/members/video-comments?videoIds=${encodeURIComponent(videoIds.join(","))}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.success && result.comments) {
+          setVideoComments((previous) => ({
+            ...previous,
+            ...result.comments,
+          }));
+        }
+      } catch (error) {
+        console.warn("Loading video comments via API failed:", error);
+      }
+    };
+
+    loadVideoComments();
+  }, [videos]);
+
+  // Real-time listener for video comments grouped by videoId
+  useEffect(() => {
+    let unsubscribe = null;
+    let timer = null;
+
+    const setupListener = () => {
+      if (!window.db) return false;
+
+      unsubscribe = window.db
+        .collection("videocomments")
+        .onSnapshot(
+          (snapshot) => {
+            if (!snapshot) return;
+            const grouped = {};
+            snapshot.docs.forEach((doc) => {
+              const data = doc.data() || {};
+              const vid = String(data.videoId || "");
+              if (!vid) return;
+              if (!grouped[vid]) grouped[vid] = [];
+              grouped[vid].push({
+                id: doc.id,
+                userName: data.userName || "Member",
+                comment: data.comment || "",
+                createdAt: data.createdAt,
+                userId: data.userId
+              });
+            });
+
+            // Sort newest comments first
+            Object.keys(grouped).forEach((vid) => {
+              grouped[vid].sort((a, b) => getTime(b.createdAt) - getTime(a.createdAt));
+            });
+
+            setVideoComments((prev) => ({
+              ...prev,
+              ...grouped
+            }));
+          },
+          (error) => {
+            console.warn("videocomments listener error:", error);
+          }
+        );
+      return true;
+    };
+
+    if (!setupListener()) {
+      let attempts = 0;
+      timer = setInterval(() => {
+        attempts++;
+        if (setupListener() || attempts > 20) {
+          clearInterval(timer);
+        }
+      }, 250);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, []);
+
   /* =======================================================
      SEARCH
   ======================================================= */
@@ -419,7 +589,7 @@ function MemberVideo() {
 
       const videoTime = getTime(
         video.publishedAt ||
-          video.createdAt
+        video.createdAt
       );
 
       // Inclusive date-wise filtering.
@@ -468,8 +638,8 @@ function MemberVideo() {
         Array.isArray(video.tags)
           ? video.tags.join(" ")
           : String(
-              video.tags || ""
-            );
+            video.tags || ""
+          );
 
       return (
         title.includes(query) ||
@@ -518,401 +688,712 @@ function MemberVideo() {
      OPEN VIDEO
   ======================================================= */
 
-function openVideo(video) {
-  if (!video) return;
+  function openVideo(video) {
+    if (!video) return;
 
-  trackMemberContentOpen({
-    type: "video",
-    contentId: video.id,
-    contentTitle: video.title || "Video"
-  });
+    trackMemberContentOpen({
+      type: "video",
+      contentId: video.id,
+      contentTitle: video.title || "Video"
+    });
 
-  rememberOpenVideo(video.id);
+    rememberOpenVideo(video.id);
 
-  setSelectedVideo(video);
-}
+    setSelectedVideo(video);
+  }
   /* =======================================================
      CLOSE VIDEO
   ======================================================= */
 
- function closeVideo() {
-  // Google Analytics - track video closed
-  if (
-    typeof window.gtag === "function" &&
-    selectedVideo
-  ) {
-    window.gtag("event", "video_closed", {
-      content_id: String(selectedVideo.id || ""),
-      content_title: selectedVideo.title || ""
-    });
+  function closeVideo() {
+    // Google Analytics - track video closed
+    if (
+      typeof window.gtag === "function" &&
+      selectedVideo
+    ) {
+      window.gtag("event", "video_closed", {
+        content_id: String(selectedVideo.id || ""),
+        content_title: selectedVideo.title || ""
+      });
+    }
+
+    rememberOpenVideo("");
+
+    setSelectedVideo(null);
   }
 
-  rememberOpenVideo("");
 
-  setSelectedVideo(null);
-}
-  /* =======================================================
-     RENDER
-  ======================================================= */
 
-  return (
-    <>
-      <section className="member-video-page">
-        
-        {/* =================================================
+
+
+
+  const handleLike = async (video) => {
+    try {
+      const videoData =
+        typeof video === "string"
+          ? videos.find((item) => item.id === video)
+          : video;
+
+      if (!videoData) {
+        console.error("Video not found.");
+        return;
+      }
+
+      const token = getMemberToken();
+
+      if (!token) {
+        alert("Please log in again to like this video.");
+        return;
+      }
+
+      const response = await fetch(
+        "https://api-jsbpm362pq-el.a.run.app/members/video-like",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            videoId: videoData.id,
+            category: videoData.category || "",
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to update video like."
+        );
+      }
+
+      console.log(
+        result.liked ? "Video liked successfully." : "Like removed.",
+        result
+      );
+
+
+      setLikeStats((previous) => {
+        const current = previous[videoData.id] || {
+          count: 0,
+          liked: false,
+        };
+
+        const liked = result.liked === true;
+
+        return {
+          ...previous,
+          [videoData.id]: {
+            liked,
+            count: Math.max(
+              0,
+              current.count + (liked ? 1 : -1)
+            ),
+          },
+        };
+      });
+
+    } catch (error) {
+      console.error("Like error:", error);
+      alert(error.message || "Unable to update like. Please try again.");
+    }
+  };
+
+
+
+  const [commentSaving, setCommentSaving] = useState(false);
+
+  const handleSaveComment = async (event, videoId) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const text = commentText.trim();
+    if (!text || !videoId || commentSaving) return;
+
+    const token = getMemberToken();
+
+    if (!token) {
+      alert("Please log in again to comment.");
+      return;
+    }
+
+    setCommentSaving(true);
+
+    try {
+      const response = await fetch(
+        "https://api-jsbpm362pq-el.a.run.app/members/video-comment",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            videoId,
+            comment: text,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to save comment."
+        );
+      }
+
+      setCommentText("");
+
+      const memberInfo = getCurrentMemberInfo() || {};
+      const newComment = {
+        id: result?.comment?.id || `temp-${Date.now()}`,
+        userName: result?.comment?.userName || memberInfo?.name || "Member",
+        comment: text,
+        createdAt: Date.now(),
+        userId: result?.comment?.userId || memberInfo?.uid || ""
+      };
+
+      setVideoComments((previous) => ({
+        ...previous,
+        [videoId]: [newComment, ...(previous[videoId] || [])]
+      }));
+
+      // Make sure comments are open and visible
+      setOpenCommentsVideoId(videoId);
+
+      alert("Comment saved successfully.");
+    } catch (error) {
+      console.error("Save comment error:", error);
+      alert(error.message || "Unable to save comment. Please try again.");
+    } finally {
+      setCommentSaving(false);
+    }
+  };
+
+
+
+/* =======================================================
+   RENDER
+======================================================= */
+
+return (
+  <>
+    <section className="member-video-page">
+
+      {/* =================================================
             HEADER
         ================================================= */}
 
-        <div className="member-video-header">
-          <div>
-            <span className="member-eyebrow">
-              LEARNING
-            </span>
+      <div className="member-video-header">
+        <div>
+          <span className="member-eyebrow">
+            LEARNING
+          </span>
 
-            <h2>
-              Videos
-            </h2>
+          <h2>
+            Videos
+          </h2>
 
-            <p>
-              Watch the latest video
-              content from Wealthoria.
-            </p>
-          </div>
-
-          <div className="member-video-count">
-            {filteredVideos.length}{" "}
-            {filteredVideos.length === 1
-              ? "Video"
-              : "Videos"}
-          </div>
+          <p>
+            Watch the latest video
+            content from Wealthoria.
+          </p>
         </div>
 
-        {/* =================================================
+        <div className="member-video-count">
+          {filteredVideos.length}{" "}
+          {filteredVideos.length === 1
+            ? "Video"
+            : "Videos"}
+        </div>
+      </div>
+
+      {/* =================================================
             SEARCH
         ================================================= */}
 
-        <div className="member-video-search">
-          <span
-            className="member-video-search-icon"
-            aria-hidden="true"
-          >
-            🔍
-          </span>
+      <div className="member-video-search">
+        <span
+          className="member-video-search-icon"
+          aria-hidden="true"
+        >
+          🔍
+        </span>
 
-          <input
-            type="text"
-            value={searchQuery}
+        <input
+          type="text"
+          value={searchQuery}
           onChange={(event) => {
-  const value = event.target.value;
-  setSearchQuery(value);
+            const value = event.target.value;
+            setSearchQuery(value);
 
-  // Google Analytics - track video search
-  if (
-    typeof window.gtag === "function" &&
-    value.trim().length >= 3
-  ) {
-    window.gtag("event", "video_search", {
-      search_term: value.trim()
-    });
-  }
-}}
-            placeholder="Search videos..."
-            aria-label="Search videos"
-          />
+            // Google Analytics - track video search
+            if (
+              typeof window.gtag === "function" &&
+              value.trim().length >= 3
+            ) {
+              window.gtag("event", "video_search", {
+                search_term: value.trim()
+              });
+            }
+          }}
+          placeholder="Search videos..."
+          aria-label="Search videos"
+        />
 
-          {searchQuery && (
-            <button
-              type="button"
-              className="member-video-search-clear"
-              onClick={() =>
-                setSearchQuery("")
-              }
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          )}
-        </div>
+        {searchQuery && (
+          <button
+            type="button"
+            className="member-video-search-clear"
+            onClick={() =>
+              setSearchQuery("")
+            }
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
+      </div>
 
 
 
-        {/* =================================================
+      {/* =================================================
             DATE-WISE FILTER
         ================================================= */}
-{/* =================================================
+      {/* =================================================
     DATE-WISE FILTER
 ================================================= */}
 
-<div className="member-video-date-filter">
+      <div className="member-video-date-filter">
 
-  <div className="member-video-date-field">
-    <label htmlFor="member-video-start-date">
-      From Date
-    </label>
+        <div className="member-video-date-field">
+          <label htmlFor="member-video-start-date">
+            From Date
+          </label>
 
-    <input
-      id="member-video-start-date"
-      type="date"
-      value={startDate}
-      onChange={(event) =>
-        setStartDate(event.target.value)
-      }
-      aria-label="Filter videos from date"
-    />
-  </div>
-
-
-  <div className="member-video-date-field">
-    <label htmlFor="member-video-end-date">
-      To Date
-    </label>
-
-    <input
-      id="member-video-end-date"
-      type="date"
-      value={endDate}
-      min={startDate || undefined}
-      onChange={(event) =>
-        setEndDate(event.target.value)
-      }
-      aria-label="Filter videos to date"
-    />
-  </div>
+          <input
+            id="member-video-start-date"
+            type="date"
+            value={startDate}
+            onChange={(event) =>
+              setStartDate(event.target.value)
+            }
+            aria-label="Filter videos from date"
+          />
+        </div>
 
 
-  {(startDate || endDate) && (
-    <button
-      type="button"
-      className="member-video-date-clear"
-      onClick={() => {
-        setStartDate("");
-        setEndDate("");
-      }}
-    >
-      Clear Dates
-    </button>
-  )}
+        <div className="member-video-date-field">
+          <label htmlFor="member-video-end-date">
+            To Date
+          </label>
 
-</div>
+          <input
+            id="member-video-end-date"
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(event) =>
+              setEndDate(event.target.value)
+            }
+            aria-label="Filter videos to date"
+          />
+        </div>
 
-        {/* =================================================
+
+        {(startDate || endDate) && (
+          <button
+            type="button"
+            className="member-video-date-clear"
+            onClick={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
+          >
+            Clear Dates
+          </button>
+        )}
+
+      </div>
+
+      {/* =================================================
             LOADING
         ================================================= */}
 
-        {loading && (
-          <div className="member-video-empty">
-            <div className="member-video-empty-icon">
-              ⏳
-            </div>
-
-            <h3>
-              Loading videos...
-            </h3>
-
-            <p>
-              Please wait while we
-              load the latest videos.
-            </p>
+      {loading && (
+        <div className="member-video-empty">
+          <div className="member-video-empty-icon">
+            ⏳
           </div>
-        )}
 
-        {/* =================================================
+          <h3>
+            Loading videos...
+          </h3>
+
+          <p>
+            Please wait while we
+            load the latest videos.
+          </p>
+        </div>
+      )}
+
+      {/* =================================================
             ERROR
         ================================================= */}
 
-        {!loading && error && (
+      {!loading && error && (
+        <div className="member-video-empty">
+          <div className="member-video-empty-icon">
+            !
+          </div>
+
+          <h3>
+            Unable to load videos
+          </h3>
+
+          <p>
+            {error}
+          </p>
+        </div>
+      )}
+
+
+
+
+      {/* =================================================
+            EMPTY
+        ================================================= */}
+
+      {!loading &&
+        !error &&
+        filteredVideos.length === 0 && (
           <div className="member-video-empty">
             <div className="member-video-empty-icon">
-              !
+              ▶
             </div>
 
             <h3>
-              Unable to load videos
+              {searchQuery
+                ? "No videos found"
+                : "No videos available"}
             </h3>
 
             <p>
-              {error}
+              {searchQuery
+                ? "Try another search."
+                : "Published videos will appear here."}
             </p>
           </div>
         )}
 
-        {/* =================================================
-            EMPTY
-        ================================================= */}
-
-        {!loading &&
-          !error &&
-          filteredVideos.length === 0 && (
-            <div className="member-video-empty">
-              <div className="member-video-empty-icon">
-                ▶
-              </div>
-
-              <h3>
-                {searchQuery
-                  ? "No videos found"
-                  : "No videos available"}
-              </h3>
-
-              <p>
-                {searchQuery
-                  ? "Try another search."
-                  : "Published videos will appear here."}
-              </p>
-            </div>
-          )}
-
-        {/* =================================================
+      {/* =================================================
             MONTH-WISE VIDEO GRID
         ================================================= */}
 
-        {!loading &&
-          !error &&
-          filteredVideos.length > 0 && (
-            <div className="member-video-months">
+      {!loading &&
+        !error &&
+        filteredVideos.length > 0 && (
+          <div className="member-video-months">
 
-              {videoMonths.map(
-                ([monthKey, month]) => (
-                  <section
-                    className="member-video-month"
-                    key={monthKey}
-                  >
+            {videoMonths.map(
+              ([monthKey, month]) => (
+                <section
+                  className="member-video-month"
+                  key={monthKey}
+                >
 
-                    <div className="member-video-month-header">
-                      <div>
-                        <span className="member-video-month-eyebrow">
-                          VIDEO LIBRARY
-                        </span>
-
-                        <h3>
-                          {month.label}
-                        </h3>
-                      </div>
-
-                      <span className="member-video-month-count">
-                        {month.videos.length}{" "}
-                        {month.videos.length === 1
-                          ? "Video"
-                          : "Videos"}
+                  <div className="member-video-month-header">
+                    <div>
+                      <span className="member-video-month-eyebrow">
+                        VIDEO LIBRARY
                       </span>
+
+                      <h3>
+                        {month.label}
+                      </h3>
                     </div>
 
-                    <div className="member-video-grid">
+                    <span className="member-video-month-count">
+                      {month.videos.length}{" "}
+                      {month.videos.length === 1
+                        ? "Video"
+                        : "Videos"}
+                    </span>
+                  </div>
 
-                      {month.videos.map(
-                        (video) => (
-                          <article
-                            className="member-video-card"
-                            key={video.id}
-                          >
+                  <div className="member-video-grid">
 
-                            {/* THUMBNAIL */}
+                    {month.videos.map(
+                      (video) => (
+                        <article
+                          className="member-video-card"
+                          key={video.id}
+                        >
 
-                            <button
-                              type="button"
-                              className="member-video-thumbnail"
-                              onClick={() =>
-                                openVideo(video)
-                              }
-                              aria-label={`Play ${
-                                video.title ||
-                                "video"
+                          {/* THUMBNAIL */}
+
+                          <button
+                            type="button"
+                            className="member-video-thumbnail"
+                            onClick={() =>
+                              openVideo(video)
+                            }
+                            aria-label={`Play ${video.title ||
+                              "video"
                               }`}
-                            >
-                              {video.thumbnailUrl ? (
-                                <img
-                                  src={getFileUrl(
-                                    video.thumbnailUrl
-                                  )}
-                                  alt={
-                                    video.title ||
-                                    "Video thumbnail"
-                                  }
-                                />
-                              ) : (
-                                <div className="member-video-no-thumbnail">
-                                  ▶
-                                </div>
-                              )}
-
-                              <span className="member-video-badge">
-                                VIDEO
-                              </span>
-
-                              <span className="member-video-play">
-                                ▶
-                              </span>
-                            </button>
-
-                            {/* BODY */}
-
-                            <div className="member-video-body">
-
-                              <h3>
-                                {video.title ||
-                                  "Untitled Video"}
-                              </h3>
-
-                              {video.description && (
-                                <p>
-                                  {video.description}
-                                </p>
-                              )}
-
-                              <div className="member-video-meta">
-
-                                <span>
-                                  {video.category ||
-                                    "Video"}
-                                </span>
-
-                                <span>
-                                  {getDate(
-                                    video.publishedAt ||
-                                      video.createdAt
-                                  )}
-                                </span>
-
-                              </div>
-
-                              <button
-                                type="button"
-                                className="member-video-open"
-                                onClick={() =>
-                                  openVideo(video)
+                          >
+                            {video.thumbnailUrl ? (
+                              <img
+                                src={getFileUrl(
+                                  video.thumbnailUrl
+                                )}
+                                alt={
+                                  video.title ||
+                                  "Video thumbnail"
                                 }
-                              >
-                                ▶ Watch Video
-                              </button>
+                              />
+                            ) : (
+                              <div className="member-video-no-thumbnail">
+                                ▶
+                              </div>
+                            )}
+
+                            <span className="member-video-badge">
+                              VIDEO
+                            </span>
+
+                            <span className="member-video-play">
+                              ▶
+                            </span>
+                          </button>
+
+                          {/* BODY */}
+
+                          <div className="member-video-body">
+
+                            <h3>
+                              {video.title ||
+                                "Untitled Video"}
+                            </h3>
+
+                            {video.description && (
+                              <p>
+                                {video.description}
+                              </p>
+                            )}
+
+                            <div className="member-video-meta">
+
+                              <span>
+                                {video.category ||
+                                  "Video"}
+                              </span>
+
+                              <span>
+                                {getDate(
+                                  video.publishedAt ||
+                                  video.createdAt
+                                )}
+                              </span>
 
                             </div>
 
-                          </article>
-                        )
-                      )}
 
-                    </div>
-                  </section>
-                )
-              )}
 
-            </div>
-          )}
+                            <div className="member-video-card-actions">
+                              {/* Like button */}
+                              <button
+                                type="button"
+                                className="member-video-card-action"
+                                aria-label="Like video"
+                                onClick={() => handleLike(video)}
+                              >
+                                <svg
+                                  width="19"
+                                  height="19"
+                                  viewBox="0 0 24 24"
+                                  fill={likeStats[video.id]?.liked ? "currentColor" : "none"}
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{
+                                    color: likeStats[video.id]?.liked ? "#e11d48" : "inherit",
+                                  }}
+                                >
+                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                                </svg>
 
-      </section>
+                                {likeStats[video.id]?.count > 0 && (
+                                  <span>{likeStats[video.id].count}</span>
+                                )}
+                              </button>
 
-      {/* =================================================
+                              {/* Comment button */}
+                              <button
+                                type="button"
+                                className="member-video-card-action"
+                                aria-label="Comment on video"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  const nextState = commentOpenVideoId === video.id ? "" : video.id;
+                                  setCommentOpenVideoId(nextState);
+                                  setOpenCommentsVideoId(nextState);
+                                  setCommentText("");
+                                }}
+                              >
+                                <svg
+                                  width="19"
+                                  height="19"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden="true"
+                                >
+                                  <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
+                                </svg>
+
+                                {(videoComments[video.id]?.length || 0) > 0 && (
+                                  <span>{videoComments[video.id].length}</span>
+                                )}
+                              </button>
+
+                              {/* Watch Video button */}
+                              <button
+                                type="button"
+                                className="member-video-open"
+                                onClick={() => openVideo(video)}
+                              >
+                                ▶ Watch Video
+                              </button>
+                            </div>
+
+
+
+
+                            <div
+                              className={`member-video-comment-panel ${commentOpenVideoId === video.id ? "is-open" : ""
+                                }`}
+                            >
+                              <form
+                                className="member-video-comment-form"
+                                onSubmit={(event) =>
+                                  handleSaveComment(event, video.id)
+                                }
+                              >
+                                <input
+                                  type="text"
+                                  value={commentOpenVideoId === video.id ? commentText : ""}
+                                  onChange={(event) => setCommentText(event.target.value)}
+                                  placeholder="Write a comment..."
+                                  aria-label="Write a comment"
+                                  maxLength={1000}
+                                  onClick={(event) => event.stopPropagation()}
+                                  disabled={commentSaving}
+                                />
+
+                                <button
+                                  type="submit"
+                                  disabled={!commentText.trim() || commentSaving}
+                                >
+                                  {commentSaving ? "Saving..." : "Send"}
+                                </button>
+                              </form>
+                            </div>
+
+                            {/* View Comments button & YouTube style comments list */}
+                            {((videoComments[video.id]?.length || 0) > 0 ||
+                              commentOpenVideoId === video.id ||
+                              openCommentsVideoId === video.id) && (
+                              <div className="member-video-comments-wrap">
+                                <button
+                                  type="button"
+                                  className="member-video-view-comments-btn"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setOpenCommentsVideoId((previous) =>
+                                      previous === video.id ? "" : video.id
+                                    );
+                                  }}
+                                >
+                                  <span>
+                                    {openCommentsVideoId === video.id
+                                      ? "Hide Comments"
+                                      : (videoComments[video.id]?.length || 0) > 0
+                                        ? `View Comments (${videoComments[video.id].length})`
+                                        : "Comments (0)"}
+                                  </span>
+                                  <span className="member-video-view-comments-arrow">
+                                    {openCommentsVideoId === video.id ? "▲" : "▼"}
+                                  </span>
+                                </button>
+
+                                {openCommentsVideoId === video.id && (
+                                  <div className="member-video-comments-list">
+                                    {(videoComments[video.id] || []).length === 0 ? (
+                                      <p className="member-video-comments-empty">
+                                        No comments yet. Be the first to share your thoughts!
+                                      </p>
+                                    ) : (
+                                      videoComments[video.id].map((c) => (
+                                        <div key={c.id} className="member-video-comment-card">
+                                          <div className="member-video-comment-avatar">
+                                            {(c.userName || "M").charAt(0).toUpperCase()}
+                                          </div>
+                                          <div className="member-video-comment-body">
+                                            <div className="member-video-comment-header">
+                                              <span className="member-video-comment-author">
+                                                {c.userName || "Member"}
+                                              </span>
+                                              <span className="member-video-comment-date">
+                                                {formatRelativeTime(c.createdAt)}
+                                              </span>
+                                            </div>
+                                            <p className="member-video-comment-content">{c.comment}</p>
+                                          </div>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                          </div>
+                        </article>
+                      )
+                    )}
+
+                  </div>
+                </section>
+              )
+            )}
+
+          </div>
+        )}
+
+    </section>
+
+    {/* =================================================
           VIDEO MODAL
       ================================================= */}
 
-      {selectedVideo && (
-        <MemberVideoPlayer
-          video={selectedVideo}
-          onClose={closeVideo}
-        />
-      )}
-    </>
-  );
+    {selectedVideo && (
+      <MemberVideoPlayer
+        video={selectedVideo}
+        onClose={closeVideo}
+      />
+    )}
+  </>
+);
 }
 
 /* =========================================================

@@ -330,85 +330,162 @@ function ReportIcon({ name, size = 18, color = "currentColor" }) {
 }
 
 /* =========================================================
-   CHART COMPONENT
+   REVENUE BAR CHART COMPONENT (MODERN BAR GRAPH)
    ========================================================= */
 
-function RevenueAreaChart({ data, selectedPoint, onSelectPoint }) {
+function RevenueBarChart({ data, selectedPoint, onSelectPoint }) {
   const W = 800;
-  const H = 240;
-  const pad = { l: 60, r: 20, t: 20, b: 40 };
+  const H = 260;
+  const pad = { l: 60, r: 24, t: 32, b: 48 };
 
   const chartW = W - pad.l - pad.r;
   const chartH = H - pad.t - pad.b;
 
   const maxVal = Math.max(1, ...data.map((d) => Number(d.totalRevenue || 0)));
-
-  const getX = (idx) => pad.l + (idx / Math.max(1, data.length - 1)) * chartW;
-  const getY = (val) => H - pad.b - (Number(val || 0) / maxVal) * chartH;
-
-  const totalPoints = data.map((d, i) => `${getX(i)},${getY(d.totalRevenue)}`).join(" ");
-  const subPoints = data.map((d, i) => `${getX(i)},${getY(d.subscriptionRevenue)}`).join(" ");
-
-  const totalArea = data.length ? `${pad.l},${H - pad.b} ${totalPoints} ${getX(data.length - 1)},${H - pad.b}` : "";
+  const stepCount = Math.max(1, data.length);
+  const colW = chartW / stepCount;
+  const barW = Math.min(38, Math.max(18, colW * 0.52));
 
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ minWidth: 540, display: "block" }}>
         <defs>
-          <linearGradient id="repAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#e8473f" stopOpacity="0.32" />
-            <stop offset="100%" stopColor="#e8473f" stopOpacity="0.02" />
+          <linearGradient id="barCourseGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#e8473f" />
+            <stop offset="100%" stopColor="#c53028" />
           </linearGradient>
-          <linearGradient id="repSubGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
+          <linearGradient id="barSubGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#4f46e5" />
           </linearGradient>
         </defs>
 
-        {/* Grid lines */}
-        {[0, 0.33, 0.66, 1].map((ratio, i) => {
+        {/* Horizontal grid lines & Y-axis currency labels */}
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
           const val = maxVal * ratio;
-          const y = getY(val);
+          const y = H - pad.b - ratio * chartH;
           return (
             <g key={i}>
-              <line x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="currentColor" strokeOpacity="0.08" strokeDasharray="3 3" />
-              <text x={pad.l - 8} y={y + 4} textAnchor="end" fontSize="10" fill="currentColor" opacity="0.5">
-                {val >= 1000 ? `₹${(val / 1000).toFixed(0)}k` : `₹${Math.round(val)}`}
+              <line
+                x1={pad.l}
+                x2={W - pad.r}
+                y1={y}
+                y2={y}
+                stroke="currentColor"
+                strokeOpacity="0.08"
+                strokeDasharray="4 4"
+              />
+              <text
+                x={pad.l - 10}
+                y={y + 4}
+                textAnchor="end"
+                fontSize="11"
+                fill="currentColor"
+                opacity="0.55"
+                fontFamily="system-ui, sans-serif"
+                fontWeight="600"
+              >
+                {val >= 100000
+                  ? `₹${(val / 100000).toFixed(1)}L`
+                  : val >= 1000
+                  ? `₹${(val / 1000).toFixed(0)}k`
+                  : `₹${Math.round(val)}`}
               </text>
             </g>
           );
         })}
 
-        {/* Area fill */}
-        {totalArea && <polygon fill="url(#repAreaGrad)" points={totalArea} />}
-
-        {/* Total line */}
-        <polyline fill="none" stroke="#e8473f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={totalPoints} />
-
-        {/* Subscription line */}
-        <polyline fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="4 2" strokeLinecap="round" strokeLinejoin="round" points={subPoints} />
-
-        {/* Interactive dots */}
+        {/* Bars */}
         {data.map((item, idx) => {
-          const x = getX(idx);
-          const y = getY(item.totalRevenue);
+          const cx = pad.l + idx * colW + colW / 2;
+          const totalRev = Number(item.totalRevenue || 0);
+          const subRev = Number(item.subscriptionRevenue || 0);
+
+          const totalH = (totalRev / maxVal) * chartH;
+          const subH = (subRev / maxVal) * chartH;
           const isSelected = selectedPoint?.key === item.key;
+          const barX = cx - barW / 2;
+          const barY = H - pad.b - totalH;
+
           return (
-            <g key={item.key} onClick={() => onSelectPoint?.(item)} style={{ cursor: "pointer" }}>
-              <circle cx={x} cy={y} r={14} fill="transparent" />
-              <circle
-                cx={x}
-                cy={y}
-                r={isSelected ? 6 : 4}
-                fill="#e8473f"
-                stroke="var(--canvas, #fff)"
-                strokeWidth={isSelected ? 2.5 : 1.5}
+            <g
+              key={item.key}
+              onClick={() => onSelectPoint?.(item)}
+              style={{ cursor: "pointer" }}
+            >
+              {/* Column interactive highlight backdrop */}
+              <rect
+                x={cx - colW / 2 + 2}
+                y={pad.t - 8}
+                width={colW - 4}
+                height={chartH + 16}
+                fill={isSelected ? "rgba(232, 71, 63, 0.08)" : "transparent"}
+                rx={8}
               />
-              {idx % Math.ceil(data.length / 7) === 0 && (
-                <text x={x} y={H - 12} textAnchor="middle" fontSize="10.5" fill="currentColor" opacity="0.6">
-                  {item.label}
-                </text>
+
+              {totalRev === 0 ? (
+                <rect
+                  x={barX}
+                  y={H - pad.b - 4}
+                  width={barW}
+                  height={4}
+                  rx={2}
+                  fill="rgba(0,0,0,0.08)"
+                />
+              ) : (
+                <g>
+                  {/* Total / Course Bar with rounded top */}
+                  <rect
+                    x={barX}
+                    y={barY}
+                    width={barW}
+                    height={Math.max(6, totalH)}
+                    rx={6}
+                    fill="url(#barCourseGrad)"
+                    opacity={isSelected ? 1 : 0.9}
+                  />
+
+                  {/* Subscription portion on top if both exist */}
+                  {subH > 0 && subH < totalH && (
+                    <rect
+                      x={barX}
+                      y={barY}
+                      width={barW}
+                      height={Math.max(4, subH)}
+                      rx={6}
+                      fill="url(#barSubGrad)"
+                    />
+                  )}
+
+                  {/* Amount badge on top of bar */}
+                  <text
+                    x={cx}
+                    y={barY - 8}
+                    textAnchor="middle"
+                    fontSize="10.5"
+                    fontWeight="800"
+                    fill={isSelected ? "#e8473f" : "currentColor"}
+                    opacity={isSelected ? 1 : 0.8}
+                    fontFamily="system-ui, sans-serif"
+                  >
+                    {totalRev >= 1000 ? `₹${(totalRev / 1000).toFixed(0)}k` : `₹${totalRev}`}
+                  </text>
+                </g>
               )}
+
+              {/* X-axis date / period label */}
+              <text
+                x={cx}
+                y={H - pad.b + 18}
+                textAnchor="middle"
+                fontSize="11"
+                fontWeight={isSelected ? "800" : "600"}
+                fill={isSelected ? "#e8473f" : "currentColor"}
+                opacity={isSelected ? 1 : 0.65}
+                fontFamily="system-ui, sans-serif"
+              >
+                {item.label}
+              </text>
             </g>
           );
         })}
@@ -1427,117 +1504,67 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       </div>
 
       {/* =======================================================
-          HERO: WHICH CATEGORY IS USING MOST (OR TIED)
+          TOP INSIGHT BANNER (SLIM & PROFESSIONAL)
           ======================================================= */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(139, 92, 246, 0.1) 100%)",
-          border: "1px solid rgba(139, 92, 246, 0.25)",
-          borderRadius: 20,
-          padding: "24px 28px",
-          marginBottom: 24,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 16
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: "50%",
-              background: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 30,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              flexShrink: 0
-            }}
-          >
-            🏆
-          </div>
-
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Most Used Category by Members
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "var(--fg, #111827)", marginTop: 2 }}>
-              {metrics.total === 0 ? (
-                "No Member Activity in this Date Range"
-              ) : metrics.isTie ? (
-                <>
-                  <span style={{ color: "#4f46e5" }}>{metrics.tiedLeaders.length} Categories Tied</span> for #1
-                </>
-              ) : metrics.mostUsed ? (
-                <>
-                  <span style={{ color: metrics.mostUsed.color }}>{metrics.mostUsed.name}</span> is #1
-                </>
-              ) : (
-                "Awaiting Initial Member Activity"
-              )}
-            </div>
-            <div style={{ fontSize: 13, color: "var(--mute, #4b5563)", marginTop: 4 }}>
-              {metrics.total === 0 ? (
-                `No content opens were recorded for ${rangeLabel}. Select a broader date filter like "All Time" or "Last 30 Days" to review historical volume.`
-              ) : metrics.isTie ? (
-                <>
-                  <b>{metrics.tiedLeaders.map((c) => c.name).join(", ")}</b> are tied with <b>{metrics.tiedLeaders[0].count} opens</b> each ({metrics.tiedLeaders[0].pct}% of all {metrics.total} member interactions in this period).
-                </>
-              ) : metrics.mostUsed ? (
-                <>
-                  Members opened <b>{metrics.mostUsed.name}</b> {metrics.mostUsed.count} times ({metrics.mostUsed.pct}% of all {metrics.total} member interactions in this period).
-                </>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        {metrics.total > 0 && (
-          <div
-            style={{
-              background: "#ffffff",
-              padding: "12px 20px",
-              borderRadius: 14,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              border: `1px solid ${metrics.isTie ? "rgba(79, 70, 229, 0.3)" : metrics.mostUsed?.borderColor || "var(--line, #e5e7eb)"}`,
-              textAlign: "right"
-            }}
-          >
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-              {metrics.isTie ? "Tied Top Share" : "Engagement Share"}
-            </div>
-            <div
+      {metrics.total > 0 && (
+        <div
+          style={{
+            background: "var(--surface, #ffffff)",
+            border: "1px solid var(--line, #e2e8f0)",
+            borderRadius: 14,
+            padding: "14px 20px",
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span
               style={{
-                fontSize: 26,
-                fontWeight: 900,
-                color: metrics.isTie ? "#4f46e5" : metrics.mostUsed?.color || "#111827",
-                lineHeight: 1.1,
-                marginTop: 2
+                fontSize: 13,
+                padding: "5px 11px",
+                borderRadius: 8,
+                background: "rgba(37, 99, 235, 0.08)",
+                color: "#2563eb",
+                fontWeight: 800
               }}
             >
-              {metrics.isTie ? `${metrics.tiedLeaders[0].pct}%` : `${metrics.mostUsed?.pct || 0}%`}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--mute, #6b7280)", marginTop: 2 }}>
-              {metrics.isTie
-                ? `${metrics.tiedLeaders[0].count} opens each`
-                : `${metrics.mostUsed?.count || 0} total opens`}
-            </div>
+              📊 Overview
+            </span>
+            <span style={{ fontSize: 13, color: "var(--fg, #1e293b)", fontWeight: 600 }}>
+              {metrics.isTie ? (
+                <>
+                  <b>{metrics.tiedLeaders.map((c) => c.name).join(" and ")}</b> are tied for #1 with <b>{metrics.tiedLeaders[0].count} opens</b> each ({metrics.tiedLeaders[0].pct}% of total).
+                </>
+              ) : metrics.mostUsed ? (
+                <>
+                  Top consumption category is <b style={{ color: metrics.mostUsed.color }}>{metrics.mostUsed.name}</b> with <b>{metrics.mostUsed.count} opens</b> ({metrics.mostUsed.pct}% of all {metrics.total} interactions).
+                </>
+              ) : (
+                "Awaiting member activity in this period."
+              )}
+            </span>
           </div>
-        )}
-      </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+            <span style={{ color: "var(--mute, #64748b)" }}>Total Period Interactions:</span>
+            <span style={{ fontWeight: 800, fontSize: 15, color: "#2563eb" }}>{metrics.total} opens</span>
+          </div>
+        </div>
+      )}
 
       {/* =======================================================
-          THE 4 CATEGORIES (METRIC CARDS)
+          THE 5 CATEGORY METRIC CARDS (BALANCED 5-COLUMN GRID)
           ======================================================= */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-          gap: 16,
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: 14,
           marginBottom: 24
         }}
       >
@@ -1551,100 +1578,84 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
               key={cat.id}
               style={{
                 background: "var(--surface, #ffffff)",
-                border: hasHighlight ? `2px solid ${cat.color}` : "1px solid var(--line, #e5e7eb)",
-                borderRadius: 16,
-                padding: "20px 22px",
+                border: hasHighlight ? `1.5px solid ${cat.color}` : "1px solid var(--line, #e2e8f0)",
+                borderRadius: 14,
+                padding: "16px 18px",
                 position: "relative",
-                boxShadow: hasHighlight ? `0 6px 20px ${cat.bgColor}` : "0 1px 3px rgba(0,0,0,0.03)",
-                transition: "transform 0.2s ease, box-shadow 0.2s ease"
+                boxShadow: hasHighlight ? `0 4px 14px ${cat.bgColor}` : "0 1px 3px rgba(0,0,0,0.02)",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
               }}
             >
-              {isWinner && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 12,
-                    background: cat.color,
-                    color: "#ffffff",
-                    fontSize: 10,
-                    fontWeight: 800,
-                    padding: "2px 7px",
-                    borderRadius: 10,
-                    letterSpacing: "0.03em"
-                  }}
-                >
-                  ★ LEADING
-                </div>
-              )}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 10,
+                      background: cat.bgColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 18
+                    }}
+                  >
+                    {cat.icon}
+                  </div>
 
-              {isTiedWinner && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 10,
-                    right: 12,
-                    background: cat.color,
-                    color: "#ffffff",
-                    fontSize: 10,
-                    fontWeight: 800,
-                    padding: "2px 7px",
-                    borderRadius: 10,
-                    letterSpacing: "0.03em"
-                  }}
-                >
-                  🤝 TIED #1
-                </div>
-              )}
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 12,
-                    background: cat.bgColor,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 22
-                  }}
-                >
-                  {cat.icon}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {hasHighlight && (
+                      <span
+                        style={{
+                          background: cat.color,
+                          color: "#ffffff",
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          padding: "2px 6px",
+                          borderRadius: 6,
+                          letterSpacing: "0.03em"
+                        }}
+                      >
+                        {isWinner ? "★ #1" : "TIED"}
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        background: cat.bgColor,
+                        color: cat.color,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        padding: "3px 8px",
+                        borderRadius: 12
+                      }}
+                    >
+                      {cat.pct}%
+                    </span>
+                  </div>
                 </div>
 
-                <span
-                  style={{
-                    background: cat.bgColor,
-                    color: cat.color,
-                    fontSize: 12,
-                    fontWeight: 800,
-                    padding: "4px 10px",
-                    borderRadius: 20
-                  }}
-                >
-                  {cat.pct}% share
-                </span>
+                <div style={{ fontSize: 28, fontWeight: 900, color: "var(--fg, #0f172a)", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+                  {cat.count.toLocaleString("en-IN")}
+                </div>
+
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--fg, #1e293b)", marginTop: 6 }}>
+                  {cat.name}
+                </div>
+
+                <div style={{ fontSize: 11, color: "var(--mute, #64748b)", marginTop: 2, lineHeight: 1.3 }}>
+                  {cat.description}
+                </div>
               </div>
 
-              <div style={{ fontSize: 32, fontWeight: 900, color: cat.color, lineHeight: 1, letterSpacing: "-0.02em" }}>
-                {cat.count.toLocaleString("en-IN")}
-              </div>
-
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--fg, #111827)", marginTop: 6 }}>
-                {cat.name}
-              </div>
-
-              <div style={{ fontSize: 11.5, color: "var(--mute, #6b7280)", marginTop: 2 }}>
-                {cat.description}
-              </div>
-
-              {/* Mini visual fill bar */}
+              {/* Progress bar */}
               <div
                 style={{
-                  height: 5,
+                  height: 4,
                   background: "rgba(0,0,0,0.05)",
-                  borderRadius: 3,
+                  borderRadius: 2,
                   marginTop: 14,
                   overflow: "hidden"
                 }}
@@ -1652,9 +1663,9 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                 <div
                   style={{
                     height: "100%",
-                    width: `${Math.max(cat.pct, cat.count > 0 ? 8 : 0)}%`,
+                    width: `${Math.max(cat.pct, cat.count > 0 ? 6 : 0)}%`,
                     background: cat.color,
-                    borderRadius: 3,
+                    borderRadius: 2,
                     transition: "width 0.3s ease"
                   }}
                 />
@@ -1665,51 +1676,143 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
       </div>
 
       {/* =======================================================
-          THE GRAPH: USAGE COMPARISON & DAILY ACTIVITY
+          MODERN BAR GRAPH: CATEGORY COMPARISON & VOLUME
           ======================================================= */}
       <div
         style={{
           background: "var(--surface, #ffffff)",
-          border: "1px solid var(--line, #e5e7eb)",
-          borderRadius: 20,
-          padding: "24px 28px",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+          border: "1px solid var(--line, #e2e8f0)",
+          borderRadius: 18,
+          padding: "24px 26px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
           marginBottom: 24
         }}
       >
-        {/* Graph Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 14 }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "var(--fg, #111827)" }}>
-              Content Usage Graph & Comparison
+            <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 800, color: "var(--fg, #0f172a)" }}>
+              Content Usage Comparison Bar Graph
             </h3>
-            <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--mute, #6b7280)" }}>
-              Side-by-side consumption volume for: <b>{rangeLabel}</b>
+            <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--mute, #64748b)" }}>
+              Direct consumption comparison across all 5 content types for: <b>{rangeLabel}</b>
             </p>
           </div>
 
-          {/* Color Legend */}
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12, fontWeight: 700 }}>
             {metrics.categories.map((cat) => (
-              <span key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6, color: cat.color }}>
+              <span key={cat.id} style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--fg, #334155)" }}>
                 <span style={{ width: 10, height: 10, borderRadius: 3, background: cat.color }} />
-                {cat.name} ({cat.count})
+                {cat.name} <span style={{ color: cat.color, fontWeight: 800 }}>({cat.count})</span>
               </span>
             ))}
           </div>
         </div>
 
-        {/* 1. Proportional Overall Share Bar */}
-        <div style={{ marginBottom: 26 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Total Engagement Distribution (100%)
+        {/* 1. Dedicated Vertical Category Bar Chart */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: 16,
+            height: 220,
+            padding: "20px 16px 12px",
+            background: "#f8fafc",
+            borderRadius: 14,
+            border: "1px solid #f1f5f9",
+            marginBottom: 20
+          }}
+        >
+          {metrics.categories.map((cat) => {
+            const maxCategoryCount = Math.max(1, ...metrics.categories.map((c) => c.count));
+            const barHeightPct = metrics.total > 0 ? Math.max(8, (cat.count / maxCategoryCount) * 100) : 4;
+            const isWinner = !metrics.isTie && metrics.mostUsed?.id === cat.id;
+
+            return (
+              <div
+                key={cat.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  height: "100%",
+                  gap: 8
+                }}
+              >
+                {/* Count badge */}
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: cat.count > 0 ? cat.color : "#94a3b8",
+                    background: cat.count > 0 ? "#ffffff" : "transparent",
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    boxShadow: cat.count > 0 ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
+                    lineHeight: 1
+                  }}
+                >
+                  {cat.count}
+                </div>
+
+                {/* Vertical Bar track & fill */}
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: 52,
+                    height: 120,
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                    background: "rgba(0,0,0,0.03)",
+                    borderRadius: 8,
+                    padding: "3px"
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      height: `${barHeightPct}%`,
+                      background: cat.color,
+                      borderRadius: 6,
+                      boxShadow: isWinner ? `0 2px 8px ${cat.bgColor}` : undefined,
+                      transition: "height 0.4s ease"
+                    }}
+                    title={`${cat.name}: ${cat.count} opens (${cat.pct}%)`}
+                  />
+                </div>
+
+                {/* Label & Share */}
+                <div style={{ textAlign: "center", width: "100%" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--fg, #0f172a)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <span>{cat.icon} </span>
+                    <span>{cat.name}</span>
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: cat.color, marginTop: 1 }}>
+                    {cat.pct}%
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 2. Total Proportional Distribution Bar */}
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mute, #64748b)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Total Distribution Share (100%)
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--fg, #1e293b)" }}>
+              {metrics.total} total opens
+            </span>
           </div>
 
           <div
             style={{
-              height: 20,
+              height: 14,
               width: "100%",
-              background: "rgba(0,0,0,0.05)",
+              background: "#f1f5f9",
               borderRadius: 8,
               overflow: "hidden",
               display: "flex"
@@ -1718,7 +1821,7 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
             {metrics.total > 0 ? (
               metrics.categories.map((cat) => {
                 if (cat.count === 0) return null;
-                const widthPct = Math.max(2, (cat.count / metrics.total) * 100);
+                const widthPct = Math.max(1.5, (cat.count / metrics.total) * 100);
 
                 return (
                   <div
@@ -1729,146 +1832,115 @@ function MemberEngagementDailyView({ onBackToDashboard }) {
                       background: cat.color,
                       transition: "width 0.3s ease"
                     }}
-                    title={`${cat.name}: ${cat.count} (${cat.pct}%)`}
+                    title={`${cat.name}: ${cat.count} opens (${cat.pct}%)`}
                   />
                 );
               })
             ) : (
-              <div style={{ width: "100%", textAlign: "center", fontSize: 11, color: "#9ca3af", lineHeight: "20px" }}>
-                No usage recorded in this date range
+              <div style={{ width: "100%", textAlign: "center", fontSize: 11, color: "#94a3b8", lineHeight: "14px" }}>
+                No usage recorded
               </div>
             )}
           </div>
         </div>
 
-        {/* 2. Direct 4-Category Comparison Bars */}
-        <div style={{ marginBottom: 30, display: "flex", flexDirection: "column", gap: 12 }}>
-          {metrics.categories.map((cat) => {
-            const maxCount = Math.max(1, ...metrics.categories.map((c) => c.count));
-            const barWidth = metrics.total > 0 ? Math.max(4, (cat.count / maxCount) * 100) : 0;
-
-            return (
-              <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 140, fontSize: 13, fontWeight: 700, color: "var(--fg, #111827)", display: "flex", alignItems: "center", gap: 6 }}>
-                  <span>{cat.icon}</span>
-                  <span>{cat.name}</span>
-                </div>
-
-                <div style={{ flex: 1, background: "rgba(0,0,0,0.04)", height: 16, borderRadius: 6, overflow: "hidden" }}>
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${barWidth}%`,
-                      background: cat.color,
-                      borderRadius: 6,
-                      transition: "width 0.4s ease"
-                    }}
-                  />
-                </div>
-
-                <div style={{ width: 85, textAlign: "right", fontSize: 13, fontWeight: 800, color: cat.color }}>
-                  {cat.count} <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mute, #6b7280)" }}>({cat.pct}%)</span>
-                </div>
+        {/* 3. Day-by-Day Activity Volume (when showing multiple days) */}
+        {chartDays.length > 1 && (
+          <div style={{ marginTop: 26, paddingTop: 22, borderTop: "1px dashed var(--line, #e2e8f0)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--mute, #64748b)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Day-by-Day Activity Volume ({chartDays.length} days)
               </div>
-            );
-          })}
-        </div>
-
-        {/* 3. Day-by-Day Volume Trend Chart */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              Day-by-Day Activity Volume ({chartDays.length} {chartDays.length === 1 ? "day" : "days"})
+              <div style={{ fontSize: 11, color: "var(--mute, #94a3b8)" }}>
+                Click any day bar to filter the audit table below
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: "var(--mute, #9ca3af)" }}>
-              Tip: Click any day bar to inspect its exact audit entries below
-            </div>
-          </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 12,
-              minHeight: 160,
-              padding: "16px 8px 6px",
-              overflowX: "auto"
-            }}
-          >
-            {chartDays.map((day) => {
-              const hRoundup = (day.weeklyRoundup / maxDayTotal) * 110;
-              const hNews = (day.newsletter / maxDayTotal) * 110;
-              const hReport = (day.weeklyReport / maxDayTotal) * 110;
-              const hVideo = (day.video / maxDayTotal) * 110;
-              const hRatio = (day.ratioAnalysis / maxDayTotal) * 110;
-              const totalH = Math.max(day.dayTotal > 0 ? 10 : 4, (day.dayTotal / maxDayTotal) * 110);
-              const isFocused = selectedDay === day.dateKey;
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                gap: 12,
+                minHeight: 150,
+                padding: "16px 8px 6px",
+                overflowX: "auto"
+              }}
+            >
+              {chartDays.map((day) => {
+                const hRoundup = (day.weeklyRoundup / maxDayTotal) * 100;
+                const hNews = (day.newsletter / maxDayTotal) * 100;
+                const hReport = (day.weeklyReport / maxDayTotal) * 100;
+                const hVideo = (day.video / maxDayTotal) * 100;
+                const hRatio = (day.ratioAnalysis / maxDayTotal) * 100;
+                const totalH = Math.max(day.dayTotal > 0 ? 10 : 4, (day.dayTotal / maxDayTotal) * 100);
+                const isFocused = selectedDay === day.dateKey;
 
-              return (
-                <div
-                  key={day.dateKey}
-                  onClick={() => setSelectedDay(isFocused ? null : day.dateKey)}
-                  style={{
-                    flex: 1,
-                    minWidth: 46,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 8,
-                    cursor: "pointer",
-                    padding: "4px 2px",
-                    borderRadius: 8,
-                    background: isFocused ? "rgba(37, 99, 235, 0.08)" : "transparent",
-                    transition: "background 0.15s ease"
-                  }}
-                  title={`Click to focus: ${day.label} (${day.dateKey})\nTotal: ${day.dayTotal}\n• Weekly Roundup: ${day.weeklyRoundup}\n• Newsletter: ${day.newsletter}\n• Articles: ${day.weeklyReport}\n• Videos: ${day.video}\n• Ratio Analysis: ${day.ratioAnalysis}`}
-                >
+                return (
                   <div
+                    key={day.dateKey}
+                    onClick={() => setSelectedDay(isFocused ? null : day.dateKey)}
                     style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: isFocused ? "#2563eb" : day.dayTotal > 0 ? "var(--fg, #111827)" : "var(--mute, #9ca3af)"
-                    }}
-                  >
-                    {day.dayTotal}
-                  </div>
-
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: 34,
-                      height: totalH,
-                      background: "rgba(0,0,0,0.04)",
-                      borderRadius: 6,
+                      flex: 1,
+                      minWidth: 44,
                       display: "flex",
-                      flexDirection: "column-reverse",
-                      overflow: "hidden",
-                      boxShadow: isFocused ? "0 0 0 2px #2563eb" : undefined
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      padding: "4px 2px",
+                      borderRadius: 8,
+                      background: isFocused ? "rgba(37, 99, 235, 0.08)" : "transparent",
+                      transition: "background 0.15s ease"
                     }}
+                    title={`Click to focus: ${day.label} (${day.dateKey})\nTotal: ${day.dayTotal}\n• Weekly Roundup: ${day.weeklyRoundup}\n• Newsletter: ${day.newsletter}\n• Articles: ${day.weeklyReport}\n• Videos: ${day.video}\n• Ratio Analysis: ${day.ratioAnalysis}`}
                   >
-                    {day.weeklyRoundup > 0 && <div style={{ height: hRoundup, background: "#2563eb" }} />}
-                    {day.newsletter > 0 && <div style={{ height: hNews, background: "#7c3aed" }} />}
-                    {day.weeklyReport > 0 && <div style={{ height: hReport, background: "#059669" }} />}
-                    {day.video > 0 && <div style={{ height: hVideo, background: "#d97706" }} />}
-                    {day.ratioAnalysis > 0 && <div style={{ height: hRatio, background: "#dc2626" }} />}
-                  </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: isFocused ? "#2563eb" : day.dayTotal > 0 ? "var(--fg, #0f172a)" : "var(--mute, #94a3b8)"
+                      }}
+                    >
+                      {day.dayTotal}
+                    </div>
 
-                  <div
-                    style={{
-                      fontSize: 10.5,
-                      fontWeight: day.isToday || isFocused ? 800 : 600,
-                      color: isFocused ? "#2563eb" : day.isToday ? "#059669" : "var(--mute, #6b7280)",
-                      textAlign: "center",
-                      whiteSpace: "nowrap"
-                    }}
-                  >
-                    {day.isToday ? "Today" : day.label}
+                    <div
+                      style={{
+                        width: "100%",
+                        maxWidth: 32,
+                        height: totalH,
+                        background: "rgba(0,0,0,0.04)",
+                        borderRadius: 6,
+                        display: "flex",
+                        flexDirection: "column-reverse",
+                        overflow: "hidden",
+                        boxShadow: isFocused ? "0 0 0 2px #2563eb" : undefined
+                      }}
+                    >
+                      {day.weeklyRoundup > 0 && <div style={{ height: hRoundup, background: "#2563eb" }} />}
+                      {day.newsletter > 0 && <div style={{ height: hNews, background: "#7c3aed" }} />}
+                      {day.weeklyReport > 0 && <div style={{ height: hReport, background: "#059669" }} />}
+                      {day.video > 0 && <div style={{ height: hVideo, background: "#d97706" }} />}
+                      {day.ratioAnalysis > 0 && <div style={{ height: hRatio, background: "#dc2626" }} />}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 10.5,
+                        fontWeight: day.isToday || isFocused ? 800 : 600,
+                        color: isFocused ? "#2563eb" : day.isToday ? "#059669" : "var(--mute, #64748b)",
+                        textAlign: "center",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {day.isToday ? "Today" : day.label}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* =======================================================
@@ -3107,18 +3179,21 @@ function ReportsPage() {
         </div>
 
         {/* Legend */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11.5, color: "var(--mute, #6b7280)", margin: "8px 0 16px" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 14, height: 3, background: "#e8473f", borderRadius: 2 }} />
-            Total Net Revenue (INR)
+        <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 12, color: "var(--mute, #6b7280)", margin: "8px 0 16px" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
+            <span style={{ width: 12, height: 12, background: "#e8473f", borderRadius: 3 }} />
+            Course / Pre-book Revenue (₹999)
           </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 14, height: 3, background: "#6366f1", borderRadius: 2 }} />
-            Subscription Only (₹99)
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
+            <span style={{ width: 12, height: 12, background: "#6366f1", borderRadius: 3 }} />
+            Subscription Revenue (₹99)
+          </span>
+          <span style={{ fontSize: 11, color: "var(--mute, #9ca3af)", marginLeft: "auto" }}>
+            Tip: Click any bar to inspect financial details for that period
           </span>
         </div>
 
-        <RevenueAreaChart
+        <RevenueBarChart
           data={chartData}
           selectedPoint={selectedChartPoint}
           onSelectPoint={setSelectedChartPoint}

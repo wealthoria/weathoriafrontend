@@ -90,6 +90,10 @@ enquiries: (
   calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 9h18M8 3v4M16 3v4" /></>,
   cert: <><circle cx="12" cy="9" r="5" /><path d="M9 13.5L8 21l4-2.2L16 21l-1-7.5" /></>,
   copy: <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h8" /></>,
+  play: <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none" />,
+  chat: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+  edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>,
+  rupee: <><path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h3a4 4 0 0 0 0-8" /></>,
 };
 
 function MIcon({ name, size = 20, stroke = 2, ...rest }) {

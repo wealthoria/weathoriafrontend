@@ -1,4 +1,6 @@
-﻿import React from "react";
+import React from "react";
+import { createPortal } from "react-dom";
+import AdminVideoCommentsModal from "./AdminVideoCommentsModal.jsx";
 
 /* =========================================================================
    WEALTHORIA ADMIN — UPLOADS
@@ -625,9 +627,27 @@ onSave({
   };
 
 
-  return (
+  const modalContent = (
     <div
       className="mscrim open"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(10, 12, 16, 0.65)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        padding: 20,
+        boxSizing: "border-box"
+      }}
       onClick={(event) => {
         if (
           event.target ===
@@ -642,9 +662,16 @@ onSave({
         role="dialog"
         aria-modal="true"
         style={{
+          width: "94vw",
           maxWidth: 720,
           maxHeight: "92vh",
-          overflowY: "auto"
+          overflowY: "auto",
+          background: "var(--surface, #ffffff)",
+          borderRadius: 16,
+          boxShadow: "0 25px 60px -15px rgba(0,0,0,0.35)",
+          display: "flex",
+          flexDirection: "column",
+          margin: "auto"
         }}
       >
 
@@ -1061,6 +1088,10 @@ onSave({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }
 
 
@@ -1404,9 +1435,27 @@ onSave({
     "video";
 
 
-  return (
+  const modalContent = (
     <div
       className="mscrim open"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(10, 12, 16, 0.65)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        padding: 20,
+        boxSizing: "border-box"
+      }}
       onClick={(event) => {
         if (
           event.target ===
@@ -1422,8 +1471,13 @@ onSave({
         aria-modal="true"
         style={{
           maxWidth: 720,
+          width: "94vw",
           maxHeight: "92vh",
-          overflowY: "auto"
+          overflowY: "auto",
+          margin: "auto",
+          borderRadius: 16,
+          background: "var(--surface, #ffffff)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
         }}
       >
 
@@ -1824,6 +1878,10 @@ onSave({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }
 
 
@@ -1889,6 +1947,68 @@ function UploadsScreen() {
     expandedTagsId,
     setExpandedTagsId
   ] = useState(null);
+
+  const [videoLikes, setVideoLikes] = useState({});
+  const [videoComments, setVideoComments] = useState({});
+  const [activeCommentsVideo, setActiveCommentsVideo] = useState(null);
+
+  // Real-time listeners for video likes and comments
+  useEffect(() => {
+    if (!window.db) return;
+
+    const unsubLikes = window.db
+      .collection("videolikes")
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot) return;
+          const counts = {};
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data() || {};
+            const vid = data.videoId;
+            if (vid) {
+              counts[vid] = (counts[vid] || 0) + 1;
+            }
+          });
+          setVideoLikes(counts);
+        },
+        (err) => console.warn("Admin videolikes listener error:", err)
+      );
+
+    const unsubComments = window.db
+      .collection("videocomments")
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot) return;
+          const grouped = {};
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data() || {};
+            const vid = data.videoId;
+            if (!vid) return;
+            if (!grouped[vid]) grouped[vid] = [];
+            grouped[vid].push({
+              id: doc.id,
+              videoId: data.videoId,
+              userName: data.userName || "Member",
+              comment: data.comment || "",
+              createdAt: data.createdAt,
+              userId: data.userId,
+              parentId: data.parentId || null,
+              replyToUser: data.replyToUser || "",
+              replyToUserId: data.replyToUserId || "",
+              isAdminReply: Boolean(data.isAdminReply || data.role === "admin"),
+              role: data.role || (data.isAdminReply ? "admin" : "member")
+            });
+          });
+          setVideoComments(grouped);
+        },
+        (err) => console.warn("Admin videocomments listener error:", err)
+      );
+
+    return () => {
+      if (typeof unsubLikes === "function") unsubLikes();
+      if (typeof unsubComments === "function") unsubComments();
+    };
+  }, []);
 
 
   /* =======================================================
@@ -2959,181 +3079,74 @@ function UploadsScreen() {
 
 
         {/* =================================================
-            UPLOAD OPTIONS
-        ================================================= */}
+        {/* HIDDEN FILE INPUT */}
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".pdf, application/pdf"
+          multiple
+          hidden
+          onChange={(event) => {
+            if (event.target.files?.length) {
+              startUploads(event.target.files);
+            }
+            event.target.value = "";
+          }}
+        />
 
+        {/* =================================================
+            TOP UPLOAD BAR
+        ================================================= */}
         <div
           style={{
             display: "flex",
-            gap: 10,
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
             marginBottom: 16,
-            flexWrap: "wrap"
+            flexWrap: "wrap",
+            background: "var(--surface, #ffffff)",
+            padding: "12px 16px",
+            borderRadius: 12,
+            border: "1px solid var(--hair, #e2e8f0)",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.02)"
           }}
         >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              type="button"
+              className="btn btn-green"
+              onClick={() => inputRef.current?.click()}
+              style={{ display: "inline-flex", alignItems: "center", gap: 7 }}
+            >
+              <MIcon name="upload" size={16} />
+              <span>Upload PDF</span>
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-green"
-            onClick={() =>
-              inputRef
-                .current
-                ?.click()
-            }
-          >
-            <MIcon
-              name="upload"
-              size={16}
-            />
-
-            Upload PDF
-          </button>
-
-
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() =>
-              setVideoModalOpen(
-                true
-              )
-            }
-          >
-            <MIcon
-              name="play"
-              size={16}
-            />
-
-            Add Video
-          </button>
-
-        </div>
-
-
-        {/* =================================================
-            PDF DROPZONE
-        ================================================= */}
-
-        <div
-          className={
-            `dropzone ${
-              drag
-                ? "drag"
-                : ""
-            }`
-          }
-
-          onDragOver={
-            (
-              event
-            ) => {
-
-              event.preventDefault();
-
-              setDrag(
-                true
-              );
-
-            }
-          }
-
-          onDragLeave={
-            (
-              event
-            ) => {
-
-              event.preventDefault();
-
-              setDrag(
-                false
-              );
-
-            }
-          }
-
-          onDrop={
-            onDrop
-          }
-
-          onClick={() =>
-            inputRef
-              .current
-              ?.click()
-          }
-        >
-
-          <div
-            className="dz-ic"
-          >
-            <MIcon
-              name="upload"
-              size={26}
-            />
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setVideoModalOpen(true)}
+              style={{ display: "inline-flex", alignItems: "center", gap: 7 }}
+            >
+              <MIcon name="play" size={16} />
+              <span>Add Video</span>
+            </button>
           </div>
 
-
-          <h3>
-            {
-              drag
-                ? "Drop PDF files to upload"
-                : "Drag and drop PDF files here"
-            }
-          </h3>
-
-
-          <p>
-            or click to browse.
-            Newsletter and Weekly Roundup PDFs.
-          </p>
-
-
           <div
-            className="dz-hint"
+            style={{
+              fontSize: 12,
+              color: "var(--mute, #64748b)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8
+            }}
           >
-            Up to 8 files at a time.
-            Maximum PDF size 25 MB.
+            <span>PDFs up to 25 MB</span>
+            <span style={{ opacity: 0.4 }}>&bull;</span>
+            <span>VdoCipher Videos</span>
           </div>
-
-
-          <input
-            ref={
-              inputRef
-            }
-
-            type="file"
-
-            accept="
-              .pdf,
-              application/pdf
-            "
-
-            multiple
-
-            hidden
-
-            onChange={
-              (
-                event
-              ) => {
-
-                if (
-                  event.target.files
-                    ?.length
-                ) {
-
-                  startUploads(
-                    event.target.files
-                  );
-
-                }
-
-
-                event.target.value =
-                  "";
-
-              }
-            }
-          />
-
         </div>
 
 
@@ -3231,7 +3244,7 @@ function UploadsScreen() {
         <div
           className="toolbar"
           style={{
-            marginTop: 24
+            marginTop: 10
           }}
         >
 
@@ -3411,12 +3424,42 @@ function UploadsScreen() {
 
           <React.Fragment>
 
-            {groupedPageRows.map(
+            {groupedPageRows.map((group) => {
+              const bucketMap = new Map();
 
+              group.items.forEach((item) => {
+                const isVid =
+                  (item.type || "").toLowerCase() === "video" ||
+                  (item.category || "").toLowerCase() === "vedios" ||
+                  (item.category || "").toLowerCase() === "videos";
+                const catName = isVid
+                  ? "Videos"
+                  : (item.category || "Articles & Reports");
 
-              (group) => (
+                if (!bucketMap.has(catName)) {
+                  bucketMap.set(catName, []);
+                }
+                bucketMap.get(catName).push(item);
+              });
 
+              const CATEGORY_ORDER = [
+                "Videos",
+                "Articles & Reports",
+                "Weekly Roundup",
+                "Newsletter",
+                "Ratio Analysis"
+              ];
 
+              const sortedCategories = Array.from(bucketMap.keys()).sort((a, b) => {
+                const idxA = CATEGORY_ORDER.indexOf(a);
+                const idxB = CATEGORY_ORDER.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+              });
+
+              return (
                 <section
 
 
@@ -3471,13 +3514,81 @@ function UploadsScreen() {
             
 
 
-                  <div className="asset-month-grid">
+                  {sortedCategories.map((catName, catIdx) => {
+                    const catItems = bucketMap.get(catName);
+                    const isVidCategory = catName === "Videos";
 
+                    return (
+                      <div
+                        key={catName}
+                        className="asset-subcategory-group"
+                        style={{
+                          marginBottom: 18
+                        }}
+                      >
+                        <div
+                          className="asset-subcategory-title"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            margin: catIdx === 0 ? "8px 0 10px" : "18px 0 10px",
+                            padding: "2px 0"
+                          }}
+                        >
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              letterSpacing: "0.04em",
+                              textTransform: "uppercase",
+                              color: isVidCategory ? "#2563eb" : "var(--ink)",
+                              background: isVidCategory
+                                ? "rgba(37, 99, 235, 0.08)"
+                                : "var(--canvas-soft, rgba(0, 0, 0, 0.04))",
+                              padding: "3px 8px",
+                              borderRadius: 6,
+                              border: isVidCategory
+                                ? "1px solid rgba(37, 99, 235, 0.2)"
+                                : "1px solid var(--hair, #e2e8f0)"
+                            }}
+                          >
+                            <MIcon
+                              name={isVidCategory ? "video" : catName === "Articles & Reports" ? "reports" : "file"}
+                              size={12}
+                            />
+                            <span>{catName}</span>
+                          </span>
 
-                    {group.items.map(
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: "var(--mute)",
+                              padding: "1px 6px",
+                              borderRadius: 9999,
+                              background: "var(--canvas-soft, rgba(0, 0, 0, 0.03))",
+                              border: "1px solid var(--hair, #e2e8f0)"
+                            }}
+                          >
+                            {catItems.length} {catItems.length === 1 ? "item" : "items"}
+                          </span>
 
+                          <span
+                            style={{
+                              flex: 1,
+                              height: 1,
+                              background: "var(--hair, #e2e8f0)",
+                              opacity: 0.5
+                            }}
+                          />
+                        </div>
 
-                      (item) => {
+                        <div className="asset-month-grid">
+                          {catItems.map((item) => {
 
                   const itemIsVideo =
                     (
@@ -4007,6 +4118,148 @@ function UploadsScreen() {
                         )}
 
 
+                        {/* LIKES & COMMENTS (VIDEOS) */}
+                        {itemIsVideo && (() => {
+                          const likesCount = videoLikes[item.id] || 0;
+                          const commentsCount = (videoComments[item.id] || []).length;
+
+                          return (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "7px 10px",
+                                marginTop: 10,
+                                background: "var(--canvas-soft, rgba(0, 0, 0, 0.02))",
+                                borderRadius: 8,
+                                fontSize: 11.5,
+                                border: "1px solid var(--hair, #e2e8f0)",
+                                gap: 8
+                              }}
+                            >
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  color: likesCount > 0 ? "#e11d48" : "var(--mute, #94a3b8)",
+                                  fontWeight: 600,
+                                  fontSize: 11.5
+                                }}
+                                title={`${likesCount} Like${likesCount === 1 ? "" : "s"}`}
+                              >
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill={likesCount > 0 ? "#e11d48" : "none"}
+                                  stroke={likesCount > 0 ? "#e11d48" : "currentColor"}
+                                  strokeWidth="2"
+                                >
+                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                                </svg>
+                                <span>{likesCount}</span>
+                              </span>
+
+                              {commentsCount > 0 ? (
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+                                  <span
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 4,
+                                      color: "var(--ink, #1e293b)",
+                                      fontWeight: 600,
+                                      fontSize: 11.5
+                                    }}
+                                    title={`${commentsCount} comment${commentsCount === 1 ? "" : "s"}`}
+                                  >
+                                    <svg
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      style={{ opacity: 0.7 }}
+                                    >
+                                      <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
+                                    </svg>
+                                    <span>{commentsCount}</span>
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setActiveCommentsVideo(item)}
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 3.5,
+                                      background: "var(--ink, #0f172a)",
+                                      color: "var(--canvas, #ffffff)",
+                                      border: "none",
+                                      borderRadius: 5,
+                                      padding: "3px 8px",
+                                      fontSize: 10.5,
+                                      fontWeight: 600,
+                                      letterSpacing: "0.01em",
+                                      cursor: "pointer",
+                                      boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                                      transition: "all 0.15s ease"
+                                    }}
+                                    title="Reply to comments"
+                                  >
+                                    <svg
+                                      width="10"
+                                      height="10"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <polyline points="9 17 4 12 9 7" />
+                                      <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                                    </svg>
+                                    <span>Reply</span>
+                                  </button>
+                                </div>
+                              ) : (
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    color: "var(--mute, #94a3b8)",
+                                    fontSize: 11,
+                                    fontWeight: 500
+                                  }}
+                                  title="No comments"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    style={{ opacity: 0.6 }}
+                                  >
+                                    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
+                                  </svg>
+                                  <span>0 comments</span>
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+
                         {/* ===================================
                             ACTIONS
                         =================================== */}
@@ -4126,6 +4379,32 @@ function UploadsScreen() {
                           )}
 
 
+                          {/* VIEW COMMENTS (VIDEO) */}
+
+                          {itemIsVideo && (videoComments[item.id] || []).length > 0 && (
+                            <button
+                              type="button"
+                              className="row-act"
+                              title="View Comments & Reply"
+                              onClick={() =>
+                                setActiveCommentsVideo(item)
+                              }
+                              style={{
+                                width: 34,
+                                height: 34,
+                                justifyContent: "center",
+                                boxShadow: "inset 0 0 0 1px var(--hair)",
+                                color: "#2563eb"
+                              }}
+                            >
+                              <MIcon
+                                name="chat"
+                                size={15}
+                              />
+                            </button>
+                          )}
+
+
                           {/* DELETE */}
 
                           <button
@@ -4190,21 +4469,14 @@ function UploadsScreen() {
 
 
                       }
-
-
                     )}
-
-
-                  </div>
-
-
+                        </div>
+                      </div>
+                    );
+                  })}
                 </section>
-
-
-              )
-
-
-            )}
+              );
+            })}
 
             {/* =================================================
                 PAGER
@@ -4336,176 +4608,131 @@ function UploadsScreen() {
         ================================================= */}
 
         {pdfAsset &&
-          pdfAsset.pdfUrl && (
-
-          <div
-            className="mscrim open"
-
-            onClick={
-              (event) => {
-
-                if (
-                  event.target ===
-                  event.currentTarget
-                ) {
-
-                  setPdfAsset(
-                    null
-                  );
-
-                }
-
-              }
-            }
-          >
-
+          pdfAsset.pdfUrl &&
+          typeof document !== "undefined" &&
+          createPortal(
             <div
-              className="mmodal"
-
+              className="mscrim open"
               style={{
-                width:
-                  "94vw",
-
-                maxWidth:
-                  1100,
-
-                height:
-                  "88vh",
-
-                padding:
-                  12
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 999999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(10, 12, 16, 0.65)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                padding: 20,
+                boxSizing: "border-box"
+              }}
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setPdfAsset(null);
+                }
               }}
             >
-
               <div
+                className="mmodal"
                 style={{
-                  display:
-                    "flex",
-
-                  alignItems:
-                    "center",
-
-                  justifyContent:
-                    "space-between",
-
-                  paddingBottom:
-                    10
+                  width: "94vw",
+                  maxWidth: 1100,
+                  height: "88vh",
+                  padding: 14,
+                  margin: "auto",
+                  borderRadius: 16,
+                  background: "var(--surface, #ffffff)",
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
                 }}
               >
-
-                <strong>
-                  {
-                    pdfAsset.title ||
-                    "PDF Preview"
-                  }
-                </strong>
-
-
-                <button
-                  type="button"
-                  className="row-act"
-
-                  onClick={() =>
-                    setPdfAsset(
-                      null
-                    )
-                  }
-
+                <div
                   style={{
-                    width:
-                      34,
-
-                    height:
-                      34
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingBottom: 10
                   }}
                 >
-                  ×
-                </button>
+                  <strong>{pdfAsset.title || "PDF Preview"}</strong>
+                  <button
+                    type="button"
+                    className="row-act"
+                    onClick={() => setPdfAsset(null)}
+                    style={{ width: 34, height: 34 }}
+                  >
+                    ×
+                  </button>
+                </div>
 
+                <iframe
+                  src={`${getFileUrl(pdfAsset.pdfUrl)}#toolbar=0&navpanes=0`}
+                  title={pdfAsset.title || "PDF Preview"}
+                  style={{
+                    width: "100%",
+                    height: "calc(100% - 44px)",
+                    border: 0,
+                    borderRadius: 10,
+                    display: "block"
+                  }}
+                />
               </div>
-
-
-              <iframe
-                src={
-                  `${getFileUrl(
-                    pdfAsset.pdfUrl
-                  )}#toolbar=0&navpanes=0`
-                }
-
-                title={
-                  pdfAsset.title ||
-                  "PDF Preview"
-                }
-
-                style={{
-                  width:
-                    "100%",
-
-                  height:
-                    "calc(100% - 44px)",
-
-                  border:
-                    0,
-
-                  display:
-                    "block"
-                }}
-              />
-
-            </div>
-
-          </div>
-
-        )}
+            </div>,
+            document.body
+          )}
 
 
         {/* =================================================
             VIDEO PREVIEW
         ================================================= */}
 
-        {videoAsset && (
-
-          <div
-            className="mscrim open"
-
-            onClick={
-              (event) => {
-
-                if (
-                  event.target ===
-                  event.currentTarget
-                ) {
-
-                  setVideoAsset(
-                    null
-                  );
-
-                }
-
-              }
-            }
-          >
-
+        {videoAsset &&
+          typeof document !== "undefined" &&
+          createPortal(
             <div
-              className="mmodal"
-
+              className="mscrim open"
               style={{
-                width:
-                  "94vw",
-
-                maxWidth:
-                  1100,
-
-                maxHeight:
-                  "90vh",
-
-                overflowY:
-                  "auto",
-
-                padding:
-                  18
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 999999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(10, 12, 16, 0.65)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                padding: 20,
+                boxSizing: "border-box"
+              }}
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setVideoAsset(null);
+                }
               }}
             >
+              <div
+                className="mmodal"
+                style={{
+                  width: "94vw",
+                  maxWidth: 1000,
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  padding: 20,
+                  margin: "auto",
+                  borderRadius: 16,
+                  background: "var(--surface, #ffffff)",
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                }}
+              >
 
               <div
                 style={{
@@ -4550,26 +4777,31 @@ function UploadsScreen() {
                 </div>
 
 
-                <button
-                  type="button"
-                  className="row-act"
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        const itemToEdit = videoAsset;
+                        setVideoAsset(null);
+                        setEditingAsset(itemToEdit);
+                      }}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12 }}
+                      title="Edit / update video details"
+                    >
+                      <MIcon name="pencil" size={14} />
+                      <span>Edit Video</span>
+                    </button>
 
-                  onClick={() =>
-                    setVideoAsset(
-                      null
-                    )
-                  }
-
-                  style={{
-                    width:
-                      34,
-
-                    height:
-                      34
-                  }}
-                >
-                  ×
-                </button>
+                    <button
+                      type="button"
+                      className="row-act"
+                      onClick={() => setVideoAsset(null)}
+                      style={{ width: 34, height: 34 }}
+                    >
+                      ×
+                    </button>
+                  </div>
 
               </div>
 
@@ -4752,10 +4984,71 @@ function UploadsScreen() {
 
               </div>
 
+
+              {/* VIDEO LIKES & COMMENTS SUMMARY */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 14,
+                  padding: "10px 14px",
+                  background: "var(--surface-muted, #f8fafc)",
+                  borderRadius: 10,
+                  border: "1px solid var(--hair, #e2e8f0)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#e11d48", fontWeight: 700, fontSize: 13 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                    </svg>
+                    {videoLikes[videoAsset.id] || 0} Likes
+                  </span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#2563eb", fontWeight: 700, fontSize: 13 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
+                    </svg>
+                    {(videoComments[videoAsset.id] || []).length} Comments
+                  </span>
+                </div>
+
+                {(videoComments[videoAsset.id] || []).length > 0 ? (
+                  <button
+                    type="button"
+                    className="btn btn-green btn-sm"
+                    onClick={() =>
+                      setActiveCommentsVideo(videoAsset)
+                    }
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                  >
+                    <MIcon name="chat" size={14} />
+                    <span>View & Reply to Comments</span>
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 12, color: "var(--mute, #94a3b8)", fontStyle: "italic" }}>
+                    No comments to reply to
+                  </span>
+                )}
+              </div>
+
             </div>
 
-          </div>
+          </div>,
+          document.body
+        )}
 
+
+        {/* =================================================
+            ADMIN VIDEO COMMENTS & REPLIES MODAL
+        ================================================= */}
+
+        {activeCommentsVideo && (
+          <AdminVideoCommentsModal
+            video={activeCommentsVideo}
+            likesCount={videoLikes[activeCommentsVideo.id] || 0}
+            onClose={() => setActiveCommentsVideo(null)}
+          />
         )}
 
 
@@ -5436,45 +5729,49 @@ onSave({
   };
 
 
-  return (
-
+  const modalContent = (
     <div
       className="mscrim open"
-
-      onClick={
-        (
-          event
-        ) => {
-
-          if (
-            event.target ===
-            event.currentTarget
-          ) {
-
-            onCancel();
-
-          }
-
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(10, 12, 16, 0.65)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        padding: 20,
+        boxSizing: "border-box"
+      }}
+      onClick={(event) => {
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          onCancel();
         }
-      }
+      }}
     >
-
       <div
         className="mmodal upload-edit-modal"
-
         role="dialog"
-
         aria-modal="true"
-
         style={{
-          maxWidth:
-            680,
-
-          maxHeight:
-            "92vh",
-
-          overflowY:
-            "auto"
+          maxWidth: 680,
+          width: "94vw",
+          maxHeight: "92vh",
+          overflowY: "auto",
+          margin: "auto",
+          borderRadius: 16,
+          background: "var(--surface, #ffffff)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
         }}
       >
 
@@ -5899,8 +6196,11 @@ onSave({
       </div>
 
     </div>
-
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }
 
 

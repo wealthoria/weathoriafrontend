@@ -1,7 +1,7 @@
-﻿import React from "react";
+import React from "react";
+import AdminVideoCommentsModal from "./AdminVideoCommentsModal.jsx";
 
-
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect } = React;
 const { useAdminAuth, useRole } = window;
 const { useAdminData } = window;
 const { useMRouter, MIcon, StatusPill, useMToast, useConfirm } = window;
@@ -22,6 +22,67 @@ function ContentScreen() {
   const [to, setTo] = useState("");
   const [sel, setSel] = useState([]);
   const [editing, setEditing] = useState(null);
+
+  const [videoLikes, setVideoLikes] = useState({});
+  const [videoComments, setVideoComments] = useState({});
+  const [activeCommentsVideo, setActiveCommentsVideo] = useState(null);
+
+  useEffect(() => {
+    if (!window.db) return;
+
+    const unsubLikes = window.db
+      .collection("videolikes")
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot) return;
+          const counts = {};
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data() || {};
+            const vid = data.videoId;
+            if (vid) {
+              counts[vid] = (counts[vid] || 0) + 1;
+            }
+          });
+          setVideoLikes(counts);
+        },
+        (err) => console.warn("Content screen videolikes error:", err)
+      );
+
+    const unsubComments = window.db
+      .collection("videocomments")
+      .onSnapshot(
+        (snapshot) => {
+          if (!snapshot) return;
+          const grouped = {};
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data() || {};
+            const vid = data.videoId;
+            if (!vid) return;
+            if (!grouped[vid]) grouped[vid] = [];
+            grouped[vid].push({
+              id: doc.id,
+              videoId: data.videoId,
+              userName: data.userName || "Member",
+              comment: data.comment || "",
+              createdAt: data.createdAt,
+              userId: data.userId,
+              parentId: data.parentId || null,
+              replyToUser: data.replyToUser || "",
+              replyToUserId: data.replyToUserId || "",
+              isAdminReply: Boolean(data.isAdminReply || data.role === "admin"),
+              role: data.role || (data.isAdminReply ? "admin" : "member")
+            });
+          });
+          setVideoComments(grouped);
+        },
+        (err) => console.warn("Content screen videocomments error:", err)
+      );
+
+    return () => {
+      if (typeof unsubLikes === "function") unsubLikes();
+      if (typeof unsubComments === "function") unsubComments();
+    };
+  }, []);
 
   const scoped = useMemo(
     () =>
@@ -406,6 +467,11 @@ function ContentScreen() {
                     Author
                   </th>
 
+                  {/* ENGAGEMENT (LIKES & COMMENTS) */}
+                  <th>
+                    Engagement
+                  </th>
+
                   {/* LAST MODIFIED */}
                   <th>
                     Last modified
@@ -513,6 +579,116 @@ function ContentScreen() {
                       {c.author}
                     </td>
 
+                    {/* ENGAGEMENT */}
+                    <td>
+                      {c.type === "video" ? (() => {
+                        const commentsCount = (videoComments[c.id] || []).length;
+                        const likesCount = videoLikes[c.id] || 0;
+                        return (
+                          <div
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              background: "var(--canvas-soft, #f8fafc)",
+                              border: "1px solid var(--hair, #e2e8f0)",
+                              fontSize: 11.5
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3.5,
+                                color: likesCount > 0 ? "#e11d48" : "var(--mute, #94a3b8)",
+                                fontWeight: 600
+                              }}
+                              title={`${likesCount} Like${likesCount === 1 ? "" : "s"}`}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill={likesCount > 0 ? "#e11d48" : "none"}
+                                stroke={likesCount > 0 ? "#e11d48" : "currentColor"}
+                                strokeWidth="2"
+                              >
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                              </svg>
+                              <span>{likesCount}</span>
+                            </span>
+
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3.5,
+                                color: commentsCount > 0 ? "var(--ink, #1e293b)" : "var(--mute, #94a3b8)",
+                                fontWeight: commentsCount > 0 ? 600 : 500
+                              }}
+                              title={`${commentsCount} Comment${commentsCount === 1 ? "" : "s"}`}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                style={{ opacity: 0.7 }}
+                              >
+                                <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
+                              </svg>
+                              <span>{commentsCount}</span>
+                            </span>
+
+                            {commentsCount > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveCommentsVideo(c)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 3,
+                                  background: "var(--ink, #0f172a)",
+                                  color: "var(--canvas, #ffffff)",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  padding: "2px 7px",
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                  marginLeft: 2,
+                                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)"
+                                }}
+                                title="Reply to comments"
+                              >
+                                <svg
+                                  width="9"
+                                  height="9"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <polyline points="9 17 4 12 9 7" />
+                                  <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                                </svg>
+                                <span>Reply</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })() : (
+                        <span className="muted" style={{ fontSize: 11 }}>—</span>
+                      )}
+                    </td>
 
                     {/* LAST MODIFIED */}
                     <td className="muted">
@@ -540,6 +716,23 @@ function ContentScreen() {
                             size={16}
                           />
                         </button>
+
+                        {/* COMMENTS (VIDEO) */}
+                        {c.type === "video" && (videoComments[c.id] || []).length > 0 && (
+                          <button
+                            className="row-act"
+                            title="View Comments & Reply"
+                            onClick={() => setActiveCommentsVideo(c)}
+                            style={{
+                              color: "#2563eb"
+                            }}
+                          >
+                            <MIcon
+                              name="chat"
+                              size={15}
+                            />
+                          </button>
+                        )}
 
 
                         {/* PUBLISH / UNPUBLISH */}
@@ -667,6 +860,15 @@ function ContentScreen() {
 
             setEditing(null);
           }}
+        />
+      )}
+
+      {/* ADMIN VIDEO COMMENTS & REPLIES MODAL */}
+      {activeCommentsVideo && (
+        <AdminVideoCommentsModal
+          video={activeCommentsVideo}
+          likesCount={videoLikes[activeCommentsVideo.id] || 0}
+          onClose={() => setActiveCommentsVideo(null)}
         />
       )}
 

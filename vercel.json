@@ -33,6 +33,14 @@
 
   "rewrites": [
     {
+      "source": "/customer-details",
+      "destination": "/customer-details.html"
+    },
+    {
+      "source": "/prebook",
+      "destination": "/prebook.html"
+    },
+    {
       "source": "/",
       "destination": "/index.html"
     },

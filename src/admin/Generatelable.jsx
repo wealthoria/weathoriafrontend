@@ -95,15 +95,15 @@ function Generatelables() {
       const pageWidth = 210;
       const pageHeight = 297;
 
-      const columns = 3;
-      const rows = 11;
+      const columns = 4;
+      const rows = 14;
       const labelsPerPage = columns * rows;
 
-      const labelWidth = 67;
-      const labelHeight = 24;
+      const labelWidth = 48;
+      const labelHeight = 18.5;
 
       const gapX = 2;
-      const gapY = 2;
+      const gapY = 1.8;
 
       const totalWidth = columns * labelWidth + (columns - 1) * gapX;
       const totalHeight = rows * labelHeight + (rows - 1) * gapY;
@@ -124,7 +124,7 @@ function Generatelables() {
         const x = marginX + column * (labelWidth + gapX);
         const y = marginY + row * (labelHeight + gapY);
 
-        const paddingX = 2;
+        const paddingX = 1.8;
         const left = x + paddingX;
         const right = x + labelWidth - paddingX;
         const contentWidth = labelWidth - paddingX * 2;
@@ -138,37 +138,37 @@ function Generatelables() {
 
         // Company title
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(5.5);
+        pdf.setFontSize(5.0);
         pdf.text(
           "WEALTHORIA EDUCATION PRIVATE LIMITED",
           left,
-          y + 3.8,
+          y + 2.8,
           { maxWidth: contentWidth }
         );
 
         // Divider
         pdf.setDrawColor(120, 120, 120);
         pdf.setLineWidth(0.12);
-        pdf.line(left, y + 5.2, right, y + 5.2);
+        pdf.line(left, y + 3.9, right, y + 3.9);
 
         // Return message
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(4.8);
+        pdf.setFontSize(4.2);
         pdf.text(
           "IF UNDELIVERED, PLEASE RETURN TO:",
           left,
-          y + 8.2,
+          y + 6.3,
           { maxWidth: contentWidth }
         );
 
         // Return address
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(5.4);
+        pdf.setFontSize(4.7);
 
-        pdf.text("Wealthoria Education Private Limited", left, y + 11.6, { maxWidth: contentWidth });
-        pdf.text("No.2687/1, D-1, 2nd Floor, 5th Cross,", left, y + 14.9, { maxWidth: contentWidth });
-        pdf.text("Kalidasa Road, V V Mohalla, Mysore - 570002", left, y + 18.2, { maxWidth: contentWidth });
-        pdf.text("Phone: 9019759001", left, y + 21.5, { maxWidth: contentWidth });
+        pdf.text("Wealthoria Education Private Limited", left, y + 9.1, { maxWidth: contentWidth });
+        pdf.text("No.2687/1, D-1, 2nd Floor, 5th Cross,", left, y + 11.8, { maxWidth: contentWidth });
+        pdf.text("Kalidasa Road, V V Mohalla, Mysore - 570002", left, y + 14.5, { maxWidth: contentWidth });
+        pdf.text("Phone: 9019759001", left, y + 17.2, { maxWidth: contentWidth });
       }
 
       const today = new Date()
@@ -246,7 +246,7 @@ function Generatelables() {
                 color: "#667085"
               }}
             >
-              Return address labels · 33 labels per A4
+              Return address labels · 56 labels per A4 (48mm × 18.5mm)
             </div>
           </div>
 

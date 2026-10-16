@@ -95,23 +95,18 @@ function Generatelables() {
       const pageWidth = 210;
       const pageHeight = 297;
 
-      // Compact label matching the requested reference.
-      const columns = 7;
-      const rows = 22;
+      const columns = 3;
+      const rows = 11;
       const labelsPerPage = columns * rows;
 
-      const labelWidth = 25;
-      const labelHeight = 9.55;
+      const labelWidth = 67;
+      const labelHeight = 24;
 
-      // Small cutting gap between labels.
       const gapX = 2;
-      const gapY = 1.5;
+      const gapY = 2;
 
-      const totalWidth =
-        columns * labelWidth + (columns - 1) * gapX;
-
-      const totalHeight =
-        rows * labelHeight + (rows - 1) * gapY;
+      const totalWidth = columns * labelWidth + (columns - 1) * gapX;
+      const totalHeight = rows * labelHeight + (rows - 1) * gapY;
 
       const marginX = (pageWidth - totalWidth) / 2;
       const marginY = (pageHeight - totalHeight) / 2;
@@ -126,69 +121,54 @@ function Generatelables() {
         const column = position % columns;
         const row = Math.floor(position / columns);
 
-        const x =
-          marginX + column * (labelWidth + gapX);
+        const x = marginX + column * (labelWidth + gapX);
+        const y = marginY + row * (labelHeight + gapY);
 
-        const y =
-          marginY + row * (labelHeight + gapY);
-
-        // ONE small padding for the whole label.
-        const padding = 1.0;
-        const left = x + padding;
-        const right = x + labelWidth - padding;
+        const paddingX = 2;
+        const left = x + paddingX;
+        const right = x + labelWidth - paddingX;
+        const contentWidth = labelWidth - paddingX * 2;
 
         // Label border
-        pdf.setDrawColor(145, 145, 145);
-        pdf.setLineWidth(0.16);
+        pdf.setDrawColor(140, 140, 140);
+        pdf.setLineWidth(0.2);
         pdf.setLineDashPattern([1.0, 1.0], 0);
         pdf.rect(x, y, labelWidth, labelHeight);
         pdf.setLineDashPattern([], 0);
 
-        // Tiny company title
+        // Company title
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(2.15);
+        pdf.setFontSize(5.5);
         pdf.text(
           "WEALTHORIA EDUCATION PRIVATE LIMITED",
           left,
-          y + 2.0
+          y + 3.8,
+          { maxWidth: contentWidth }
         );
 
         // Divider
-        pdf.setDrawColor(100, 100, 100);
-        pdf.setLineWidth(0.10);
-        pdf.line(left, y + 2.65, right, y + 2.65);
+        pdf.setDrawColor(120, 120, 120);
+        pdf.setLineWidth(0.12);
+        pdf.line(left, y + 5.2, right, y + 5.2);
 
         // Return message
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(1.55);
+        pdf.setFontSize(4.8);
         pdf.text(
           "IF UNDELIVERED, PLEASE RETURN TO:",
           left,
-          y + 3.85
+          y + 8.2,
+          { maxWidth: contentWidth }
         );
 
-        // Address — exactly two lines
+        // Return address
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(1.65);
+        pdf.setFontSize(5.4);
 
-        pdf.text(
-          "No.2687/1, D-1, 2nd Floor, 5th Cross,",
-          left,
-          y + 5.45
-        );
-
-        pdf.text(
-          "Kalidasa Road, V V Mohalla, Mysore - 570002",
-          left,
-          y + 6.95
-        );
-
-        // Phone — immediately after address, with tiny bottom padding
-        pdf.text(
-          "Phone: 9019759001",
-          left,
-          y + 8.35
-        );
+        pdf.text("Wealthoria Education Private Limited", left, y + 11.6, { maxWidth: contentWidth });
+        pdf.text("No.2687/1, D-1, 2nd Floor, 5th Cross,", left, y + 14.9, { maxWidth: contentWidth });
+        pdf.text("Kalidasa Road, V V Mohalla, Mysore - 570002", left, y + 18.2, { maxWidth: contentWidth });
+        pdf.text("Phone: 9019759001", left, y + 21.5, { maxWidth: contentWidth });
       }
 
       const today = new Date()
@@ -266,7 +246,7 @@ function Generatelables() {
                 color: "#667085"
               }}
             >
-              Return address labels · 132 compact labels per A4
+              Return address labels · 33 labels per A4
             </div>
           </div>
 

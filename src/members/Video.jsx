@@ -164,6 +164,74 @@ function formatRelativeTime(dateVal) {
 }
 
 /* =========================================================
+   VIDEO DESCRIPTION (EXPANDABLE)
+========================================================= */
+
+function MemberVideoDescription({ description }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!description) return null;
+
+  const isLong = description.length > 90;
+
+  if (!isLong) {
+    return (
+      <p style={{ margin: 0, whiteSpace: "pre-line" }}>
+        {description}
+      </p>
+    );
+  }
+
+  const preview = description.slice(0, 90).trim();
+
+  return (
+    <p style={{ margin: 0, whiteSpace: expanded ? "pre-line" : "normal" }}>
+      {expanded ? description : `${preview}...`}
+      <button
+        type="button"
+        className="member-video-desc-toggle"
+        onClick={(e) => {
+          e.stopPropagation();
+          setExpanded((prev) => !prev);
+        }}
+        aria-expanded={expanded}
+      >
+        {expanded ? " Show less" : " ...more"}
+      </button>
+    </p>
+  );
+}
+
+function MemberVideoCardDescription({ description }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!description) return null;
+
+  const isLong = description.length > 80;
+
+  if (!isLong) {
+    return <p>{description}</p>;
+  }
+
+  return (
+    <p className={expanded ? "is-expanded" : ""}>
+      {expanded ? description : `${description.slice(0, 80).trim()}...`}
+      <button
+        type="button"
+        className="member-video-desc-toggle"
+        onClick={(e) => {
+          e.stopPropagation();
+          setExpanded((prev) => !prev);
+        }}
+        aria-expanded={expanded}
+      >
+        {expanded ? " Show less" : " ...more"}
+      </button>
+    </p>
+  );
+}
+
+/* =========================================================
    VIDEO PLAYER MODAL
 ========================================================= */
 
@@ -277,11 +345,7 @@ function MemberVideoPlayer({
               "Untitled Video"}
           </strong>
 
-          {video.description && (
-            <p>
-              {video.description}
-            </p>
-          )}
+          <MemberVideoDescription description={video.description} />
 
           {video.category && (
             <span>
@@ -311,6 +375,105 @@ function MemberVideo() {
 
   const [videoComments, setVideoComments] = useState({});
   const [openCommentsVideoId, setOpenCommentsVideoId] = useState("");
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null); // { videoId, commentId, userName, userId }
+  const [replyText, setReplyText] = useState("");
+  const [replySaving, setReplySaving] = useState(false);
+
+  // Check if the current viewer is logged in as an Admin
+  useEffect(() => {
+    let mounted = true;
+
+    const checkAdminStatus = async (user) => {
+      // 1. Check Firebase Auth user claims
+      if (user) {
+        try {
+          const tokenRes = await user.getIdTokenResult();
+          if (tokenRes?.claims?.admin === true) {
+            if (mounted) {
+              setIsAdmin(true);
+              setAdminUser({
+                uid: user.uid,
+                name: user.displayName || "Wealthoria Admin",
+                email: user.email,
+                isAdmin: true
+              });
+            }
+            return;
+          }
+        } catch (err) {
+          console.warn("Could not read admin claim from Firebase user:", err);
+        }
+      }
+
+      // 2. Check current member info in session
+      const mem = getCurrentMemberInfo() || {};
+      if (mem?.role === "admin" || mem?.isAdmin === true) {
+        if (mounted) {
+          setIsAdmin(true);
+          setAdminUser({
+            uid: mem.uid || mem.id || "admin",
+            name: mem.name || "Wealthoria Admin",
+            email: mem.email || "",
+            isAdmin: true
+          });
+        }
+        return;
+      }
+
+      // 3. Check window.useAdminAuth if available
+      try {
+        if (typeof window.useAdminAuth === "function") {
+          const admAuth = window.useAdminAuth();
+          if (admAuth?.isAdmin && admAuth?.user) {
+            if (mounted) {
+              setIsAdmin(true);
+              setAdminUser(admAuth.user);
+            }
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // 4. Fallback: check window.auth?.currentUser directly
+      if (window.auth?.currentUser) {
+        try {
+          const tr = await window.auth.currentUser.getIdTokenResult();
+          if (tr?.claims?.admin === true) {
+            if (mounted) {
+              setIsAdmin(true);
+              setAdminUser({
+                uid: window.auth.currentUser.uid,
+                name: window.auth.currentUser.displayName || "Wealthoria Admin",
+                email: window.auth.currentUser.email,
+                isAdmin: true
+              });
+            }
+            return;
+          }
+        } catch (e) {}
+      }
+
+      if (mounted) {
+        setIsAdmin(false);
+        setAdminUser(null);
+      }
+    };
+
+    if (window.auth?.onAuthStateChanged) {
+      const unsub = window.auth.onAuthStateChanged((u) => {
+        checkAdminStatus(u);
+      });
+      return () => {
+        mounted = false;
+        if (typeof unsub === "function") unsub();
+      };
+    } else {
+      checkAdminStatus(null);
+    }
+  }, []);
 
   const [loading, setLoading] =
     useState(true);
@@ -539,7 +702,12 @@ function MemberVideo() {
                 userName: data.userName || "Member",
                 comment: data.comment || "",
                 createdAt: data.createdAt,
-                userId: data.userId
+                userId: data.userId,
+                parentId: data.parentId || null,
+                replyToUser: data.replyToUser || "",
+                replyToUserId: data.replyToUserId || "",
+                isAdminReply: Boolean(data.isAdminReply || data.role === "admin"),
+                role: data.role || (data.isAdminReply ? "admin" : "member")
               });
             });
 
@@ -814,65 +982,200 @@ function MemberVideo() {
     const text = commentText.trim();
     if (!text || !videoId || commentSaving) return;
 
-    const token = getMemberToken();
+    let token = getMemberToken();
+    if (!token && window.auth?.currentUser) {
+      try {
+        token = await window.auth.currentUser.getIdToken();
+      } catch (e) {}
+    }
 
-    if (!token) {
+    if (!token && !isAdmin) {
       alert("Please log in again to comment.");
       return;
     }
 
     setCommentSaving(true);
 
-    try {
-      const response = await fetch(
-        "https://api-jsbpm362pq-el.a.run.app/members/video-comment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            videoId,
-            comment: text,
-          }),
+    const memberInfo = getCurrentMemberInfo() || {};
+    const authorName = isAdmin ? (adminUser?.name || "Wealthoria Admin") : (memberInfo?.name || "Member");
+    const authorUid = isAdmin ? (adminUser?.uid || "admin") : (memberInfo?.uid || "");
+
+    const newComment = {
+      id: `temp-${Date.now()}`,
+      videoId,
+      userName: authorName,
+      comment: text,
+      createdAt: Date.now(),
+      userId: authorUid,
+      isAdminReply: isAdmin,
+      role: isAdmin ? "admin" : "member"
+    };
+
+    setCommentText("");
+
+    // Optimistically update
+    setVideoComments((previous) => ({
+      ...previous,
+      [videoId]: [newComment, ...(previous[videoId] || [])]
+    }));
+
+    // Ensure comments section is opened
+    setOpenCommentsVideoId(videoId);
+
+    // Save directly to Firestore if available
+    let saved = false;
+    if (window.db) {
+      try {
+        const docRef = await window.db.collection("videocomments").add({
+          videoId,
+          userId: authorUid,
+          userName: authorName,
+          comment: text,
+          isAdminReply: isAdmin,
+          role: isAdmin ? "admin" : "member",
+          createdAt: window.firebase?.firestore?.FieldValue?.serverTimestamp() || new Date()
+        });
+        if (docRef?.id) {
+          newComment.id = docRef.id;
+          saved = true;
         }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.message || "Unable to save comment."
-        );
+      } catch (err) {
+        console.warn("Direct Firestore comment save error:", err);
       }
-
-      setCommentText("");
-
-      const memberInfo = getCurrentMemberInfo() || {};
-      const newComment = {
-        id: result?.comment?.id || `temp-${Date.now()}`,
-        userName: result?.comment?.userName || memberInfo?.name || "Member",
-        comment: text,
-        createdAt: Date.now(),
-        userId: result?.comment?.userId || memberInfo?.uid || ""
-      };
-
-      setVideoComments((previous) => ({
-        ...previous,
-        [videoId]: [newComment, ...(previous[videoId] || [])]
-      }));
-
-      // Make sure comments are open and visible
-      setOpenCommentsVideoId(videoId);
-
-      alert("Comment saved successfully.");
-    } catch (error) {
-      console.error("Save comment error:", error);
-      alert(error.message || "Unable to save comment. Please try again.");
-    } finally {
-      setCommentSaving(false);
     }
+
+    if (!saved) {
+      try {
+        const response = await fetch(
+          "https://api-jsbpm362pq-el.a.run.app/members/video-comment",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              videoId,
+              comment: text,
+              isAdminReply: isAdmin
+            })
+          }
+        );
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Unable to save comment.");
+        }
+      } catch (error) {
+        console.error("Save comment error:", error);
+      }
+    }
+
+    setCommentSaving(false);
+  };
+
+  const handleSaveReply = async (event, videoId, parentComment) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const text = replyText.trim();
+    if (!text || !videoId || !parentComment || replySaving) return;
+
+    setReplySaving(true);
+
+    const parentId = parentComment.id;
+    const replyToUser = parentComment.userName || "Member";
+    const replyToUserId = parentComment.userId || "";
+    const adminName = adminUser?.name || "Wealthoria Admin";
+    const adminUid = adminUser?.uid || "admin";
+
+    const newReply = {
+      id: `temp-reply-${Date.now()}`,
+      videoId,
+      userId: adminUid,
+      userName: adminName,
+      comment: text,
+      createdAt: Date.now(),
+      parentId,
+      replyToUser,
+      replyToUserId,
+      isAdminReply: true,
+      role: "admin"
+    };
+
+    // Optimistically update
+    setVideoComments((prev) => ({
+      ...prev,
+      [videoId]: [...(prev[videoId] || []), newReply]
+    }));
+
+    setReplyText("");
+    setReplyingTo(null);
+
+    // Save directly to Firestore if available
+    let saved = false;
+    if (window.db) {
+      try {
+        const docRef = await window.db.collection("videocomments").add({
+          videoId,
+          userId: adminUid,
+          userName: adminName,
+          comment: text,
+          parentId,
+          replyToUser,
+          replyToUserId,
+          isAdminReply: true,
+          role: "admin",
+          createdAt: window.firebase?.firestore?.FieldValue?.serverTimestamp() || new Date()
+        });
+        if (docRef?.id) {
+          newReply.id = docRef.id;
+          saved = true;
+        }
+      } catch (err) {
+        console.warn("Direct Firestore reply save failed:", err);
+      }
+    }
+
+    if (!saved) {
+      try {
+        let token = getMemberToken();
+        if (!token && window.auth?.currentUser) {
+          try {
+            token = await window.auth.currentUser.getIdToken();
+          } catch (e) {}
+        }
+
+        const response = await fetch(
+          "https://api-jsbpm362pq-el.a.run.app/members/video-comment",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              videoId,
+              comment: text,
+              parentId,
+              replyToUser,
+              replyToUserId,
+              isAdminReply: true
+            })
+          }
+        );
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Unable to save reply.");
+        }
+      } catch (error) {
+        console.error("Save reply error:", error);
+      }
+    }
+
+    setReplySaving(false);
   };
 
 
@@ -1181,11 +1484,7 @@ return (
                                 "Untitled Video"}
                             </h3>
 
-                            {video.description && (
-                              <p>
-                                {video.description}
-                              </p>
-                            )}
+                            <MemberVideoCardDescription description={video.description} />
 
                             <div className="member-video-meta">
 
@@ -1336,34 +1635,173 @@ return (
                                   </span>
                                 </button>
 
-                                {openCommentsVideoId === video.id && (
-                                  <div className="member-video-comments-list">
-                                    {(videoComments[video.id] || []).length === 0 ? (
-                                      <p className="member-video-comments-empty">
-                                        No comments yet. Be the first to share your thoughts!
-                                      </p>
-                                    ) : (
-                                      videoComments[video.id].map((c) => (
-                                        <div key={c.id} className="member-video-comment-card">
-                                          <div className="member-video-comment-avatar">
-                                            {(c.userName || "M").charAt(0).toUpperCase()}
-                                          </div>
-                                          <div className="member-video-comment-body">
-                                            <div className="member-video-comment-header">
-                                              <span className="member-video-comment-author">
-                                                {c.userName || "Member"}
-                                              </span>
-                                              <span className="member-video-comment-date">
-                                                {formatRelativeTime(c.createdAt)}
-                                              </span>
-                                            </div>
-                                            <p className="member-video-comment-content">{c.comment}</p>
-                                          </div>
+                                {openCommentsVideoId === video.id && (() => {
+                                  const allComments = videoComments[video.id] || [];
+                                  const topComments = allComments.filter((item) => !item.parentId);
+                                  const repliesByParent = {};
+                                  allComments.forEach((item) => {
+                                    if (item.parentId) {
+                                      if (!repliesByParent[item.parentId]) {
+                                        repliesByParent[item.parentId] = [];
+                                      }
+                                      repliesByParent[item.parentId].push(item);
+                                    }
+                                  });
+                                  // Sort replies chronological (oldest first)
+                                  Object.keys(repliesByParent).forEach((pid) => {
+                                    repliesByParent[pid].sort((a, b) => getTime(a.createdAt) - getTime(b.createdAt));
+                                  });
+                                  // Keep orphan replies visible if parent is missing
+                                  const orphanReplies = allComments.filter(
+                                    (item) => item.parentId && !topComments.some((top) => top.id === item.parentId)
+                                  );
+                                  const displayComments = [...topComments, ...orphanReplies];
+
+                                  return (
+                                    <div className="member-video-comments-list">
+                                      {isAdmin && (
+                                        <div className="member-video-admin-badge-notice">
+                                          <span className="member-video-admin-badge">Admin 🛡️</span>
+                                          <span>Logged in as Admin. You can reply directly to any member comment.</span>
                                         </div>
-                                      ))
-                                    )}
-                                  </div>
-                                )}
+                                      )}
+
+                                      {displayComments.length === 0 ? (
+                                        <p className="member-video-comments-empty">
+                                          No comments yet. Be the first to share your thoughts!
+                                        </p>
+                                      ) : (
+                                        displayComments.map((c) => (
+                                          <div key={c.id} className="member-video-comment-thread">
+                                            <div className="member-video-comment-card">
+                                              <div className={`member-video-comment-avatar ${c.isAdminReply ? "is-admin" : ""}`}>
+                                                {c.isAdminReply ? "★" : (c.userName || "M").charAt(0).toUpperCase()}
+                                              </div>
+                                              <div className="member-video-comment-body">
+                                                <div className="member-video-comment-header">
+                                                  <span className="member-video-comment-author">
+                                                    {c.userName || "Member"}
+                                                  </span>
+                                                  {c.isAdminReply && (
+                                                    <span className="member-video-admin-badge">Admin</span>
+                                                  )}
+                                                  <span className="member-video-comment-date">
+                                                    {formatRelativeTime(c.createdAt)}
+                                                  </span>
+                                                </div>
+                                                <p className="member-video-comment-content">{c.comment}</p>
+
+                                                {/* Admin Reply Action Button */}
+                                                {isAdmin && (
+                                                  <div className="member-video-comment-actions">
+                                                    <button
+                                                      type="button"
+                                                      className="member-video-comment-reply-btn"
+                                                      onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        if (replyingTo?.commentId === c.id) {
+                                                          setReplyingTo(null);
+                                                          setReplyText("");
+                                                        } else {
+                                                          setReplyingTo({
+                                                           videoId: video.id,
+                                                           commentId: c.id,
+                                                           userName: c.userName || "Member",
+                                                           userId: c.userId || ""
+                                                          });
+                                                          setReplyText("");
+                                                        }
+                                                      }}
+                                                      title={`Reply to ${c.userName || "Member"}`}
+                                                    >
+                                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <polyline points="9 17 4 12 9 7" />
+                                                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                                                      </svg>
+                                                      <span>{replyingTo?.commentId === c.id ? "Cancel" : "Reply"}</span>
+                                                    </button>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            {/* Inline Reply Form for Admin */}
+                                            {isAdmin && replyingTo?.commentId === c.id && (
+                                              <form
+                                                className="member-video-inline-reply-form"
+                                                onSubmit={(event) => handleSaveReply(event, video.id, c)}
+                                                onClick={(event) => event.stopPropagation()}
+                                              >
+                                                <div className="member-video-inline-reply-header">
+                                                  <span>Replying to <b>@{c.userName || "Member"}</b> as Admin</span>
+                                                  <button
+                                                    type="button"
+                                                    className="member-video-reply-cancel-btn"
+                                                    onClick={() => {
+                                                      setReplyingTo(null);
+                                                      setReplyText("");
+                                                    }}
+                                                  >
+                                                    ✕
+                                                  </button>
+                                                </div>
+                                                <div className="member-video-inline-reply-input-wrap">
+                                                  <input
+                                                    type="text"
+                                                    autoFocus
+                                                    value={replyText}
+                                                    onChange={(event) => setReplyText(event.target.value)}
+                                                    placeholder={`Reply to ${c.userName || "this member"}...`}
+                                                    maxLength={1000}
+                                                    disabled={replySaving}
+                                                  />
+                                                  <button
+                                                    type="submit"
+                                                    disabled={!replyText.trim() || replySaving}
+                                                  >
+                                                    {replySaving ? "Sending..." : "Reply"}
+                                                  </button>
+                                                </div>
+                                              </form>
+                                            )}
+
+                                            {/* Threaded Replies under parent comment */}
+                                            {(repliesByParent[c.id] || []).length > 0 && (
+                                              <div className="member-video-replies-list">
+                                                {repliesByParent[c.id].map((r) => (
+                                                  <div key={r.id} className="member-video-comment-card member-video-reply-card">
+                                                    <div className={`member-video-comment-avatar ${r.isAdminReply ? "is-admin" : ""}`}>
+                                                      {r.isAdminReply ? "★" : (r.userName || "M").charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="member-video-comment-body">
+                                                      <div className="member-video-comment-header">
+                                                        <span className="member-video-comment-author">
+                                                          {r.userName || "Admin"}
+                                                        </span>
+                                                        {r.isAdminReply && (
+                                                          <span className="member-video-admin-badge">Admin</span>
+                                                        )}
+                                                        {r.replyToUser && (
+                                                         <span className="member-video-reply-target">
+                                                           replied to <b>@{r.replyToUser}</b>
+                                                         </span>
+                                                        )}
+                                                        <span className="member-video-comment-date">
+                                                          {formatRelativeTime(r.createdAt)}
+                                                        </span>
+                                                      </div>
+                                                      <p className="member-video-comment-content">{r.comment}</p>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
 

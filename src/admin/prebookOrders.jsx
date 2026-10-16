@@ -421,6 +421,22 @@ function PrebookOrders() {
           }))
           .filter((order) => {
             const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
+            const source = String(order.source || "").trim().toLowerCase();
+
+            // Allow direct customer details form orders (source: customer-details-page, COD / payment pending, or confirmed book orders)
+            const isDirectBookOrder =
+              source === "customer-details-page" ||
+              order.orderStatus === "confirmed" ||
+              (Boolean(order.bookingId) && !order.razorpayOrderId);
+
+            if (isDirectBookOrder) {
+              return (
+                payStatus !== "failed" &&
+                payStatus !== "cancelled" &&
+                payStatus !== "canceled"
+              );
+            }
+
             // Strictly exclude failed, unpaid, cancelled, or pending attempts
             if (
               payStatus === "failed" ||

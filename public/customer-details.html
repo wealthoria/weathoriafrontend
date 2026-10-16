@@ -1,169 +1,611 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kn">
+
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <title>Customer Details | ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ | Wealthoria</title>
 
-  <title>Customer Details | Wealthoria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="/firebase/firebase.js"></script>
+
+  <!-- Meta Pixel Code -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '969336462877276');
+    fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+      content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
+      content_category: 'Book Customer Details',
+      value: 1499,
+      currency: 'INR'
+    });
+  </script>
+  <!-- End Meta Pixel Code -->
+
+  <!-- Google Ads tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18500990314"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'AW-18500990314');
+  </script>
 
   <style>
+    :root {
+      --ink: #11201f;
+      --ink-soft: #1a2b29;
+      --cream: #f7f8f3;
+      --white: #ffffff;
+      --coral: #e8473f;
+      --orange: #f4823c;
+      --line: #e2e6df;
+      --muted: #68736f;
+      --green: #15803d;
+    }
+
     * {
       box-sizing: border-box;
     }
 
+    html,
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f7f3ed;
-      color: #222;
-    }
-
-    .header {
-      background: #241c15;
-      color: white;
-      padding: 18px;
-      text-align: center;
-    }
-
-    .header h2 {
-      margin: 0;
-      font-size: 22px;
-    }
-
-    .container {
+      padding: 0;
+      min-height: 100%;
       width: 100%;
-      max-width: 700px;
-      margin: 40px auto;
-      padding: 0 20px;
+      max-width: 100vw;
+      overflow-x: hidden;
     }
 
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 14px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: "Noto Sans Kannada", "Nirmala UI", Arial, sans-serif;
+      line-height: 1.6;
     }
 
-    h1 {
-      margin-top: 0;
-      text-align: center;
-      font-size: 28px;
+    .page {
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      padding: 45px 20px 60px;
+      display: flex;
+      justify-content: center;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
 
-    .description {
-      text-align: center;
-      color: #666;
-      margin-bottom: 30px;
+    .form-card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(17, 32, 31, 0.08);
+      box-sizing: border-box;
+    }
+
+    .form-head {
+      background: var(--ink);
+      color: white;
+      padding: 34px 42px;
+      box-sizing: border-box;
+    }
+
+    .brand {
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 10px;
+    }
+
+    .form-head h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .form-head p {
+      margin: 0;
+      color: rgba(255, 255, 255, .75);
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .form-body {
+      padding: 42px;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     .section-title {
-      font-size: 19px;
-      font-weight: bold;
-      margin: 25px 0 18px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #ddd;
+      margin: 28px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .section-title:first-child {
+      margin-top: 0;
     }
 
     .field {
       margin-bottom: 18px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    label {
+    .field label {
       display: block;
       margin-bottom: 7px;
-      font-weight: 600;
-      font-size: 14px;
+      font-size: 15px;
+      font-weight: 500;
     }
 
-    input,
-    textarea,
-    select {
+    .field input,
+    .field textarea {
+      display: block;
       width: 100%;
-      padding: 13px;
-      border: 1px solid #ccc;
-      border-radius: 7px;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 13px 14px;
+      border: 1px solid #d8ded8;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-family: inherit;
       font-size: 15px;
       outline: none;
     }
 
-    input:focus,
-    textarea:focus,
-    select:focus {
-      border-color: #e1622b;
+    .field input {
+      height: 52px;
     }
 
-    textarea {
+    .field textarea {
       min-height: 100px;
       resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(232, 71, 63, .08);
+    }
+
+    .field input[readonly] {
+      background: #f4f5f1;
+      font-weight: 600;
     }
 
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 16px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    .save-btn {
+    .same-billing {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      cursor: pointer;
+      font-size: 14px;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+
+    .same-billing input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      flex-shrink: 0;
+      accent-color: var(--coral);
+    }
+
+    /* SUMMARY BOX & COUPON */
+    .summary-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-top: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
       width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #334155;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .summary-row.total {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .no-payment-notice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      margin-top: 14px;
+      line-height: 1.4;
+    }
+
+    .coupon-card-wrap {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f5f9;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .coupon-input-wrap {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      align-items: stretch;
+    }
+
+    .coupon-input-wrap input {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+      height: 46px;
+      padding: 0 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      outline: none;
+      transition: all 0.2s;
+      background: #f8fafc;
+      box-sizing: border-box;
+    }
+
+    .coupon-input-wrap input:focus {
+      border-color: #0f172a;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .coupon-btn {
+      flex: 0 0 auto;
+      flex-shrink: 0;
+      padding: 0 18px;
+      height: 46px;
+      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+      color: #fff;
       border: none;
       border-radius: 8px;
-      padding: 15px;
-      background: #e1622b;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
+      font-weight: 750;
+      font-size: 13px;
+      letter-spacing: 0.02em;
       cursor: pointer;
-      margin-top: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+      white-space: nowrap;
+      box-sizing: border-box;
     }
 
-    .save-btn:hover {
-      background: #c9511e;
+    .coupon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.22);
     }
 
-    .save-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    .coupon-msg {
+      margin-top: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      word-break: break-word;
+      box-sizing: border-box;
+      width: 100%;
     }
 
-    .message {
-      display: none;
-      margin-top: 18px;
-      padding: 13px;
-      border-radius: 7px;
-      text-align: center;
-      font-size: 14px;
+    .coupon-msg.success {
+      color: #16a34a;
+      background: #f0fdf4;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #bbf7d0;
     }
 
-    .success {
-      display: block;
-      background: #e8f6ee;
-      color: #1d7045;
+    .coupon-msg.error {
+      color: #dc2626;
+      background: #fef2f2;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #fecaca;
+    }
+
+    .wa-coupon-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 1.5px solid #a7f3d0;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .wa-coupon-card:hover {
+      background: #dcfce7;
+      border-color: #86efac;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
+    }
+
+    .wa-coupon-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(37, 211, 102, 0.35);
+    }
+
+    .wa-coupon-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wa-coupon-text strong {
+      font-size: 13px;
+      color: #065f46;
+      font-weight: 750;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-coupon-text span {
+      font-size: 11px;
+      color: #047857;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wa-coupon-arrow {
+      font-size: 16px;
+      font-weight: 800;
+      color: #059669;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .wa-coupon-card:hover .wa-coupon-arrow {
+      transform: translateX(3px);
     }
 
     .error {
+      display: none;
+      margin-top: 18px;
+      padding: 13px 15px;
+      border-radius: 8px;
+      background: #fff1ed;
+      color: #c24f1e;
+      border: 1px solid #f2c2b0;
+      font-size: 14px;
+      box-sizing: border-box;
+      word-break: break-word;
+      width: 100%;
+    }
+
+    .error.show {
       display: block;
-      background: #fff0eb;
-      color: #b33d19;
+    }
+
+    .submit-btn {
+      width: 100%;
+      height: 56px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(120deg, var(--coral), var(--orange));
+      color: white;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(232, 71, 63, 0.25);
+    }
+
+    .submit-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .note {
+      margin-top: 12px;
       text-align: center;
-      margin-top: 20px;
-      font-size: 13px;
-      color: #777;
+      color: var(--muted);
+      font-size: 12.5px;
+      box-sizing: border-box;
     }
 
-    @media (max-width: 600px) {
-      .container {
-        margin: 20px auto;
+    /* SUCCESS CONFIRMATION CARD */
+    .success-card {
+      display: none;
+      text-align: center;
+      padding: 30px 10px 10px;
+    }
+
+    .success-icon-wrap {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #ecfdf3;
+      border: 2px solid #a6f4c5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      color: #039855;
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .success-card h2 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      color: var(--ink);
+    }
+
+    .success-card p {
+      color: #475467;
+      font-size: 15px;
+      margin: 0 0 22px;
+    }
+
+    .booking-badge-box {
+      background: #f8fafc;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 0 auto 24px;
+      max-width: 420px;
+    }
+
+    .booking-badge-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 5px;
+    }
+
+    .booking-badge-id {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--coral);
+      letter-spacing: .02em;
+    }
+
+    .details-preview-box {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-align: left;
+      font-size: 13.5px;
+      color: #334155;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .details-preview-box strong {
+      color: var(--ink);
+    }
+
+    .home-btn {
+      display: inline-block;
+      padding: 14px 28px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .home-btn:hover {
+      background: var(--ink-soft);
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 12px 10px 30px;
       }
 
-      .card {
-        padding: 22px 18px;
+      .form-card {
+        border-radius: 16px;
+      }
+
+      .form-head {
+        padding: 24px 18px;
+      }
+
+      .form-head h1 {
+        font-size: 24px;
+      }
+
+      .form-body {
+        padding: 20px 16px;
       }
 
       .row {
@@ -171,8 +613,33 @@
         gap: 0;
       }
 
-      h1 {
-        font-size: 24px;
+      .summary-box {
+        padding: 16px 14px;
+        margin-top: 20px;
+      }
+
+      .coupon-input-wrap input {
+        padding: 0 10px;
+        font-size: 13px;
+        min-width: 0;
+      }
+
+      .coupon-btn {
+        padding: 0 14px;
+        font-size: 12.5px;
+      }
+
+      .wa-coupon-card {
+        padding: 9px 12px;
+        gap: 10px;
+      }
+
+      .wa-coupon-text strong {
+        font-size: 12.5px;
+      }
+
+      .wa-coupon-text span {
+        font-size: 10.5px;
       }
     }
   </style>
@@ -180,181 +647,266 @@
 
 <body>
 
-  <div class="header">
-    <h2>Wealthoria</h2>
-  </div>
+  <div class="page">
 
-  <div class="container">
+    <div class="form-card">
 
-    <div class="card">
+      <div class="form-head">
+        <div class="brand">Wealthoria · Customer Details</div>
 
-      <h1>Customer Details</h1>
+        <h1>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h1>
 
-      <p class="description">
-        Please enter your details and delivery address.
-      </p>
+        <p>
+          ಪುಸ್ತಕ ತಲುಪಿಸಲ� <!-- FORM WRAPPER -->
+        <form id="formSection" onsubmit="event.preventDefault(); handleSubmit();">
 
-      <form id="customerForm">
-
-        <!-- CUSTOMER DETAILS -->
-
-        <div class="section-title">
-          Customer Information
-        </div>
-
-        <div class="field">
-          <label for="name">
-            Full Name *
-          </label>
-
-          <input
-            type="text"
-            id="name"
-            placeholder="Enter your full name"
-            required
-          >
-        </div>
-
-        <div class="field">
-          <label for="email">
-            Email *
-          </label>
-
-          <input
-            type="email"
-            id="email"
-            placeholder="Enter your email"
-            required
-          >
-        </div>
-
-        <div class="field">
-          <label for="phone">
-            Phone Number *
-          </label>
-
-          <input
-            type="tel"
-            id="phone"
-            placeholder="10 digit mobile number"
-            maxlength="10"
-            required
-          >
-        </div>
-
-
-        <!-- SHIPPING ADDRESS -->
-
-        <div class="section-title">
-          Delivery Address
-        </div>
-
-        <div class="field">
-          <label for="address">
-            Address *
-          </label>
-
-          <textarea
-            id="address"
-            placeholder="House number, street, area"
-            required
-          ></textarea>
-        </div>
-
-        <div class="field">
-          <label for="landmark">
-            Landmark
-          </label>
-
-          <input
-            type="text"
-            id="landmark"
-            placeholder="Nearby landmark"
-          >
-        </div>
-
-        <div class="row">
-
-          <div class="field">
-            <label for="city">
-              City *
-            </label>
-
-            <input
-              type="text"
-              id="city"
-              placeholder="City"
-              required
-            >
+          <!-- CUSTOMER -->
+          <div class="section-title">
+            Customer Details
           </div>
 
           <div class="field">
-            <label for="state">
-              State *
-            </label>
-
-            <input
-              type="text"
-              id="state"
-              placeholder="State"
-              required
-            >
-          </div>
-
-        </div>
-
-        <div class="row">
-
-          <div class="field">
-            <label for="pincode">
-              Pincode *
-            </label>
-
-            <input
-              type="text"
-              id="pincode"
-              placeholder="6 digit pincode"
-              maxlength="6"
-              required
-            >
+            <label for="bookName">Name *</label>
+            <input type="text" id="bookName" placeholder="Enter your full name" required>
           </div>
 
           <div class="field">
-            <label for="country">
-              Country
-            </label>
-
-            <input
-              type="text"
-              id="country"
-              value="India"
-              readonly
-            >
+            <label for="bookEmail">Email *</label>
+            <input type="email" id="bookEmail" placeholder="Enter your email address" required>
           </div>
 
+          <div class="field">
+            <label for="bookPhone">Phone *</label>
+            <input type="tel" id="bookPhone" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"
+              required>
+          </div>
+
+
+          <!-- DELIVERY -->
+          <div class="section-title">
+            Delivery Address
+          </div>
+
+          <div class="field">
+            <label for="bookDeliveryName">Full Name *</label>
+            <input type="text" id="bookDeliveryName" placeholder="Recipient's full name">
+          </div>
+
+          <div class="field">
+            <label for="bookDeliveryPhone">Phone *</label>
+            <input type="tel" id="bookDeliveryPhone" maxlength="10" inputmode="numeric"
+              placeholder="Delivery contact number">
+          </div>
+
+          <div class="field">
+            <label for="bookAddress">Address Line 1 *</label>
+            <input type="text" id="bookAddress" maxlength="30" required
+              placeholder="House number, street name (max 30 characters)">
+          </div>
+
+          <div class="field">
+            <label for="bookAddress2">Address Line 2</label>
+            <input type="text" id="bookAddress2" maxlength="30" placeholder="Area, locality (max 30 characters)">
+          </div>
+
+          <div class="row">
+
+            <div class="field">
+              <label for="bookCity">City *</label>
+              <input type="text" id="bookCity" placeholder="City" required>
+            </div>
+
+            <div class="field">
+              <label for="bookState">State *</label>
+              <input type="text" id="bookState" placeholder="State" required>
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <div class="field">
+              <label for="bookPincode">Pincode *</label>
+              <input type="text" id="bookPincode" maxlength="6" inputmode="numeric" placeholder="6-digit pincode"
+                required>
+            </div>
+
+            <div class="field">
+              <label>Country</label>
+              <input type="text" value="India" readonly>
+            </div>
+
+          </div>
+
+
+          <!-- BILLING -->
+          <label class="same-billing">
+            <input type="checkbox" id="billingSameAsDelivery" checked>
+            <span>Billing address is same as delivery address</span>
+          </label>
+
+          <div id="billingAddressSection" style="display:none;">
+
+            <div class="section-title">
+              Billing Address
+            </div>
+
+            <div class="field">
+              <label for="bookBillingName">Full Name *</label>
+              <input type="text" id="bookBillingName" placeholder="Billing full name">
+            </div>
+
+            <div class="field">
+              <label for="bookBillingPhone">Phone *</label>
+              <input type="tel" id="bookBillingPhone" maxlength="10" inputmode="numeric"
+                placeholder="Billing phone number">
+            </div>
+
+            <div class="field">
+              <label for="bookBillingAddress">Address Line 1 *</label>
+              <input type="text" id="bookBillingAddress" maxlength="30"
+                placeholder="House number, street name (max 30 characters)">
+            </div>
+
+            <div class="field">
+              <label for="bookBillingAddress2">Address Line 2</label>
+              <input type="text" id="bookBillingAddress2" maxlength="30"
+                placeholder="Area, locality (max 30 characters)">
+            </div>
+
+            <div class="row">
+
+              <div class="field">
+                <label for="bookBillingCity">City *</label>
+                <input type="text" id="bookBillingCity" placeholder="City">
+              </div>
+
+              <div class="field">
+                <label for="bookBillingState">State *</label>
+                <input type="text" id="bookBillingState" placeholder="State">
+              </div>
+
+            </div>
+
+            <div class="row">
+
+              <div class="field">
+                <label for="bookBillingPincode">Pincode *</label>
+                <input type="text" id="bookBillingPincode" maxlength="6" inputmode="numeric"
+                  placeholder="6-digit pincode">
+              </div>
+
+              <div class="field">
+                <label>Country</label>
+                <input type="text" value="India" readonly>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- =====================================================
+             ORDER SUMMARY & DYNAMIC COUPON CODE
+             ===================================================== -->
+          <div class="summary-box">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <span style="font-weight:800;font-size:16.5px;color:var(--ink);letter-spacing:-.01em;">Order
+                Summary</span>
+              <span
+                style="font-size:11px;font-weight:700;background:#eefbf2;color:#16a34a;padding:3px 8px;border-radius:6px;border:1px solid #bbf7d0;">Official
+                Release</span>
+            </div>
+
+            <div class="summary-row">
+              <span style="font-weight:600;color:#334155;">ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (Hardcover)</span>
+              <span id="summaryBasePrice" style="font-weight:700;color:#0f172a;">₹1,499.00</span>
+            </div>
+
+            <div class="summary-row" id="discountRow" style="display:none;color:#16a34a;font-weight:700;">
+              <span id="discountLabel">Coupon Discount</span>
+              <span id="discountValue">-₹0.00</span>
+            </div>
+
+            <div class="summary-row total">
+              <span>Total Price</span>
+              <span id="summaryTotal" style="color:var(--coral);font-weight:850;font-size:20px;">₹1,499.00</span>
+            </div>
+
+            <div class="no-payment-notice">
+              <span>ℹ️</span>
+              <div>
+                <strong>ಯಾವುದೇ ಆನ್‌ಲೈನ್ ಪಾವತಿ ಅಗತ್ಯವಿಲ್ಲ.</strong><br>
+                ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಉಳಿಸಿದ ನಂತರ, ನಮ್ಮ ತಂಡವು ಆರ್ಡರ್ ದೃಢೀಕರಣ ಮತ್ತು ಡೆಲಿವರಿಗಾಗಿ ಸಂಪರ್ಕಿಸುತ್ತದೆ.
+              </div>
+            </div>
+
+            <!-- Modern Coupon Card -->
+            <div class="coupon-card-wrap">
+              <label
+                style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:750;color:#1e293b;margin-bottom:2px;">
+                <span>🏷️</span> Have a Coupon Code?
+              </label>
+              <div class="coupon-input-wrap">
+                <input type="text" id="couponInput" placeholder="ENTER COUPON CODE"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();applyCoupon();}">
+                <button type="button" class="coupon-btn" id="applyCouponBtn" onclick="applyCoupon()">
+                  Apply
+                </button>
+              </div>
+              <div id="couponMsg" class="coupon-msg"></div>
+
+              <a href="https://wa.me/919019759001?text=Hi%20Wealthoria%2C%20I%20want%20to%20submit%20details%20for%20'ಹೂಡಿಕೆಯ%20ವಿಜ್ಞಾನ'%20book.%20Please%20share%20a%20coupon%20code!"
+                target="_blank" class="wa-coupon-card">
+                <div class="wa-coupon-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+                    <path
+                      d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.766c0 5.518-4.482 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.304 1.34-4.887c-.896-1.493-1.424-3.238-1.424-5.175 0-5.518 4.482-10 10-10 5.518 0 10 4.482 10 10z" />
+                  </svg>
+                </div>
+                <div class="wa-coupon-text">
+                  <strong>Request Coupon Code</strong>
+                  <span>Chat with Wealthoria team on WhatsApp</span>
+                </div>
+                <span class="wa-coupon-arrow">→</span>
+              </a>
+            </div>
+          </div>
+
+          <div id="errorBox" class="error"></div>
+
+          <button type="submit" class="submit-btn" id="submitButton">
+            Save Details & Submit Order / ವಿವರಗಳನ್ನು ಸಲ್ಲಿಸಿ
+          </button>
+
+          <div class="note">
+            🔒 No online payment required on this page · Verified by Wealthoria
+          </div>
+
+        </form>
+
+        <!-- SUCCESS CONFIRMATION -->
+        <div id="successSection" class="success-card">
+          <div class="success-icon-wrap">✓</div>
+          <h2>ವಿವರಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ!</h2>
+          <p>Thank you! Your customer details have been saved successfully.</p>
+
+          <div class="booking-badge-box">
+            <div class="booking-badge-label">Your Booking ID / ಬುಕಿಂಗ್ ಐಡಿ</div>
+            <div class="booking-badge-id" id="displayBookingId">—</div>
+          </div>
+
+          <div class="details-preview-box" id="detailsPreview">
+            <!-- Populated via JS -->
+          </div>
+
+          <p style="font-size:14px;color:#64748b;margin-bottom:26px;">
+            ಪುಸ್ತಕ ವಿತರಣೆ ಮತ್ತು ಟ್ರ್ಯಾಕಿಂಗ್ ಅಪ್‌ಡೇಟ್‌ಗಳಿಗಾಗಿ ನಮ್ಮ ತಂಡವು ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಗೆ ಸಂಪರ್ಕಿಸಲಿದೆ.
+          </p>
+
+          <a href="/" class="home-btn">ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ (Back to Home)</a>
         </div>
 
-
-        <!-- SAVE -->
-
-        <button
-          type="submit"
-          id="saveButton"
-          class="save-btn"
-        >
-          Save Details
-        </button>
-
-        <div
-          id="message"
-          class="message"
-        ></div>
-
-        <p class="note">
-          No payment is processed on this page.
-        </p>
-
-      </form>
+      </div>
 
     </div>
 
@@ -366,205 +918,487 @@
     const API_BASE =
       "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
 
+    const BASE_PRICE = 1499;
+    let appliedDiscountAmount = 0;
+    let appliedCouponCode = null;
 
-    const form =
-      document.getElementById("customerForm");
 
-    const saveButton =
-      document.getElementById("saveButton");
+    /* AUTO SYNC CUSTOMER NAME/PHONE TO DELIVERY */
 
-    const message =
-      document.getElementById("message");
+    const nameInput = document.getElementById("bookName");
+    const phoneInput = document.getElementById("bookPhone");
+    const deliveryNameInput = document.getElementById("bookDeliveryName");
+    const deliveryPhoneInput = document.getElementById("bookDeliveryPhone");
 
+    let deliveryNameManual = false;
+    let deliveryPhoneManual = false;
+
+    deliveryNameInput.addEventListener("input", () => {
+      deliveryNameManual = true;
+    });
+
+    deliveryPhoneInput.addEventListener("input", () => {
+      deliveryPhoneManual = true;
+    });
+
+    nameInput.addEventListener("input", () => {
+      if (!deliveryNameManual || !deliveryNameInput.value.trim()) {
+        deliveryNameInput.value = nameInput.value;
+      }
+    });
+
+    phoneInput.addEventListener("input", () => {
+      if (!deliveryPhoneManual || !deliveryPhoneInput.value.trim()) {
+        deliveryPhoneInput.value = phoneInput.value;
+      }
+    });
+
+
+    /* BILLING TOGGLE */
+
+    document
+      .getElementById("billingSameAsDelivery")
+      .addEventListener("change", function () {
+
+        document.getElementById("billingAddressSection").style.display =
+          this.checked ? "none" : "block";
+
+      });
+
+
+    /* ERROR */
+
+    function showError(message) {
+
+      const box = document.getElementById("errorBox");
+
+      box.textContent = message;
+      box.classList.add("show");
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    }
+
+    function clearError() {
+
+      const box = document.getElementById("errorBox");
+
+      box.textContent = "";
+      box.classList.remove("show");
+
+    }
+
+
+    /* GET VALUE */
 
     function value(id) {
-      return document
-        .getElementById(id)
-        .value
-        .trim();
+
+      return document.getElementById(id)?.value.trim() || "";
+
     }
 
 
-    function showMessage(text, type) {
+    /* COUPON CODE APPLICATION */
 
-      message.textContent = text;
+    async function applyCoupon() {
+      const input = document.getElementById("couponInput");
+      const msg = document.getElementById("couponMsg");
+      const btn = document.getElementById("applyCouponBtn");
+      const discountRow = document.getElementById("discountRow");
+      const discountLabel = document.getElementById("discountLabel");
+      const discountValue = document.getElementById("discountValue");
+      const summaryTotal = document.getElementById("summaryTotal");
 
-      message.className =
-        "message " + type;
-    }
+      const code = (input.value || "").trim().toUpperCase();
 
+      if (!code) {
+        removeCoupon();
+        return;
+      }
 
-    form.addEventListener(
-      "submit",
-      async function(event) {
+      btn.disabled = true;
+      btn.textContent = "Checking...";
+      msg.className = "coupon-msg";
+      msg.textContent = "";
 
-        event.preventDefault();
+      try {
+        let validCouponData = null;
 
-
-        const name = value("name");
-        const email = value("email");
-        const phone = value("phone");
-
-        const address = value("address");
-        const landmark = value("landmark");
-        const city = value("city");
-        const state = value("state");
-        const pincode = value("pincode");
-
-
-        // -------------------------------
-        // VALIDATION
-        // -------------------------------
-
-        if (!/^[0-9]{10}$/.test(phone)) {
-
-          showMessage(
-            "Please enter a valid 10 digit phone number.",
-            "error"
-          );
-
-          return;
-        }
-
-
-        if (!/^[0-9]{6}$/.test(pincode)) {
-
-          showMessage(
-            "Please enter a valid 6 digit pincode.",
-            "error"
-          );
-
-          return;
-        }
-
-
-        // -------------------------------
-        // DISABLE BUTTON
-        // -------------------------------
-
-        saveButton.disabled = true;
-
-        saveButton.textContent =
-          "Saving...";
-
-
-        try {
-
-          const response = await fetch(
-            API_BASE +
-            "/prebook-customer/save",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type": "application/json"
-              },
-
-              body: JSON.stringify({
-
-                name: name,
-
-                email: email,
-
-                phone: phone,
-
-                shippingAddress: {
-
-                  name: name,
-
-                  phone: phone,
-
-                  address: address,
-
-                  landmark: landmark,
-
-                  city: city,
-
-                  state: state,
-
-                  pincode: pincode,
-
-                  country: "India"
-
-                },
-
-                billingAddress: {
-
-                  sameAsDelivery: true
-
-                },
-
-                source:
-                  "customer-details-page"
-
-              })
+        // 1. Direct Firestore validation
+        if (window.db && typeof window.db.collection === "function") {
+          try {
+            let snap = await window.db.collection("coupons").where("couponCode", "==", code).limit(5).get();
+            if (snap.empty) {
+              snap = await window.db.collection("coupons").where("code", "==", code).limit(5).get();
             }
-          );
+            if (snap.empty) {
+              const directDoc = await window.db.collection("coupons").doc(code).get();
+              if (directDoc.exists) {
+                snap = { empty: false, docs: [directDoc] };
+              }
+            }
 
+            if (!snap.empty) {
+              const cData = snap.docs[0].data() || {};
+              const now = new Date();
+              let isExpired = false;
+              if (cData.expiryDate && cData.expiryDate !== "2099-12-31") {
+                const exp = new Date(`${cData.expiryDate}T23:59:59`);
+                if (!isNaN(exp.getTime()) && exp < now) isExpired = true;
+              }
 
-          const data =
-            await response.json();
+              const isInactive = cData.status === "inactive" || cData.isActive === false;
+              const disc = Number(cData.discountPercentage || cData.discountValue || 0);
 
-
-          if (!response.ok ||
-              !data.success) {
-
-            throw new Error(
-              data.message ||
-              "Unable to save details."
-            );
+              if (!isExpired && !isInactive && disc > 0 && disc <= 100) {
+                const discountAmt = Math.round((BASE_PRICE * disc) / 100);
+                validCouponData = {
+                  valid: true,
+                  couponCode: cData.couponCode || cData.code || code,
+                  discountPercentage: disc,
+                  discountAmount: discountAmt,
+                  finalAmount: Math.max(0, BASE_PRICE - discountAmt)
+                };
+              }
+            }
+          } catch (dbErr) {
+            console.warn("Firestore coupon lookup error:", dbErr);
           }
-
-
-          // -------------------------------
-          // SAVE ORDER ID
-          // -------------------------------
-
-          if (data.orderId) {
-
-            localStorage.setItem(
-              "wealthoriaCustomerOrderId",
-              data.orderId
-            );
-
-          }
-
-
-          showMessage(
-            "Customer details saved successfully.",
-            "success"
-          );
-
-
-          saveButton.textContent =
-            "Details Saved";
-
-
-        } catch (error) {
-
-          console.error(
-            "Customer details error:",
-            error
-          );
-
-
-          showMessage(
-            error.message ||
-            "Unable to save details. Please try again.",
-            "error"
-          );
-
-
-          saveButton.disabled = false;
-
-          saveButton.textContent =
-            "Save Details";
         }
+
+        // 2. Cloud Function fallback
+        if (!validCouponData) {
+          try {
+            const res = await fetch(`${API_BASE}/prebook/validate-coupon`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ couponCode: code })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.valid) {
+                validCouponData = data;
+              }
+            }
+          } catch (apiErr) {
+            // Silently fallback
+          }
+        }
+
+        if (!validCouponData) {
+          removeCoupon();
+          msg.className = "coupon-msg error";
+          msg.textContent = "Invalid or expired coupon code.";
+          return;
+        }
+
+        // Success
+        appliedCouponCode = validCouponData.couponCode || code;
+        appliedDiscountAmount = Number(validCouponData.discountAmount) || 0;
+        const finalAmount = Number(validCouponData.finalAmount) || (BASE_PRICE - appliedDiscountAmount);
+
+        discountRow.style.display = "flex";
+        discountLabel.textContent = `Coupon (${appliedCouponCode}) - ${validCouponData.discountPercentage}% OFF`;
+        discountValue.textContent = `-₹${appliedDiscountAmount.toLocaleString("en-IN")}.00`;
+        summaryTotal.textContent = `₹${finalAmount.toLocaleString("en-IN")}.00`;
+
+        msg.className = "coupon-msg success";
+        msg.textContent = `✓ Coupon "${appliedCouponCode}" applied! You saved ₹${appliedDiscountAmount}.`;
+        btn.textContent = "Applied";
+      } catch (err) {
+        console.error("Coupon validation error:", err);
+        removeCoupon();
+        msg.className = "coupon-msg error";
+        msg.textContent = "Unable to validate coupon. Please check connection.";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function removeCoupon() {
+      appliedCouponCode = null;
+      appliedDiscountAmount = 0;
+
+      document.getElementById("discountRow").style.display = "none";
+      document.getElementById("summaryTotal").textContent = `₹${BASE_PRICE.toLocaleString("en-IN")}.00`;
+      document.getElementById("applyCouponBtn").textContent = "Apply";
+    }
+
+
+    /* SUBMIT CUSTOMER DETAILS (NO PAYMENT REQUIRED) */
+
+    async function handleSubmit() {
+
+      clearError();
+
+      const button = document.getElementById("submitButton");
+
+      const name = value("bookName");
+      const email = value("bookEmail");
+      const rawPhone = value("bookPhone");
+      const phone = rawPhone.replace(/\D/g, "").slice(-10);
+
+      const deliveryName = value("bookDeliveryName") || name;
+      const rawDeliveryPhone = value("bookDeliveryPhone") || rawPhone;
+      const deliveryPhone = rawDeliveryPhone.replace(/\D/g, "").slice(-10);
+
+      const address = value("bookAddress");
+      const address2 = value("bookAddress2");
+
+      const city = value("bookCity");
+      const state = value("bookState");
+      const rawPincode = value("bookPincode");
+      const pincode = rawPincode.replace(/\D/g, "").slice(0, 6);
+
+      if (!name) {
+        showError("Please enter your name.");
+        return;
+      }
+
+      if (
+        !email ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ) {
+        showError("Please enter a valid email address.");
+        return;
+      }
+
+      if (!phone || phone.length !== 10) {
+        showError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+
+      if (!deliveryName) {
+        showError("Please enter the delivery recipient's name.");
+        return;
+      }
+
+      if (!deliveryPhone || deliveryPhone.length !== 10) {
+        showError("Please enter a valid 10-digit delivery phone number.");
+        return;
+      }
+
+      if (!address) {
+        showError("Please enter the delivery address.");
+        return;
+      }
+
+      if (address.length > 30 || address2.length > 30) {
+        showError("Address Line 1 and Address Line 2 can have at most 30 characters each.");
+        return;
+      }
+
+      if (!city) {
+        showError("Please enter the delivery city.");
+        return;
+      }
+
+      if (!state) {
+        showError("Please enter the delivery state.");
+        return;
+      }
+
+      if (!pincode || pincode.length !== 6) {
+        showError("Please enter a valid 6-digit pincode.");
+        return;
+      }
+
+
+      /* BILLING */
+
+      const sameBilling =
+        document.getElementById("billingSameAsDelivery").checked;
+
+      let billingAddress;
+
+      if (sameBilling) {
+
+        billingAddress = {
+          sameAsDelivery: true,
+          name: deliveryName,
+          phone: deliveryPhone,
+          address: address,
+          address2: address2,
+          landmark: address2,
+          city: city,
+          state: state,
+          pincode: pincode,
+          country: "India"
+        };
+
+      } else {
+
+        const bName = value("bookBillingName") || deliveryName;
+        const bPhoneRaw = value("bookBillingPhone") || deliveryPhone;
+        const bPhone = bPhoneRaw.replace(/\D/g, "").slice(-10);
+        const bAddress = value("bookBillingAddress");
+        const bAddress2 = value("bookBillingAddress2");
+        const bCity = value("bookBillingCity");
+        const bState = value("bookBillingState");
+        const bPincodeRaw = value("bookBillingPincode");
+        const bPincode = bPincodeRaw.replace(/\D/g, "").slice(0, 6);
+
+        if (!bName) {
+          showError("Please enter the billing full name.");
+          return;
+        }
+
+        if (!bPhone || bPhone.length !== 10) {
+          showError("Please enter a valid 10-digit billing phone number.");
+          return;
+        }
+
+        if (!bAddress) {
+          showError("Please enter the billing address.");
+          return;
+        }
+
+        if (bAddress.length > 30 || bAddress2.length > 30) {
+          showError("Billing Address Line 1 and Line 2 can have at most 30 characters each.");
+          return;
+        }
+
+        if (!bCity) {
+          showError("Please enter the billing city.");
+          return;
+        }
+
+        if (!bState) {
+          showError("Please enter the billing state.");
+          return;
+        }
+
+        if (!bPincode || bPincode.length !== 6) {
+          showError("Please enter a valid 6-digit billing pincode.");
+          return;
+        }
+
+        billingAddress = {
+          sameAsDelivery: false,
+          name: bName,
+          phone: bPhone,
+          address: bAddress,
+          address2: bAddress2,
+          landmark: bAddress2,
+          city: bCity,
+          state: bState,
+          pincode: bPincode,
+          country: "India"
+        };
 
       }
-    );
+
+      button.disabled = true;
+      button.textContent = "Saving Details...";
+
+      try {
+
+        const finalAmount = Math.max(0, BASE_PRICE - appliedDiscountAmount);
+
+        const response = await fetch(
+          `${API_BASE}/prebook-customer/save`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name: name,
+              email: email,
+              phone: phone,
+              shippingAddress: {
+                name: deliveryName,
+                phone: deliveryPhone,
+                address: address,
+                address2: address2,
+                landmark: address2,
+                city: city,
+                state: state,
+                pincode: pincode,
+                country: "India"
+              },
+              billingAddress: billingAddress,
+              couponCode: appliedCouponCode || "",
+              discountAmount: appliedDiscountAmount,
+              finalAmount: finalAmount,
+              source: "customer-details-page"
+            })
+          }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Unable to save customer details. Please try again."
+          );
+        }
+
+        /* TRACK LEAD: Form successfully saved */
+        if (window.fbq) {
+          fbq('track', 'Lead', {
+            content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
+            content_category: 'Customer Form Lead',
+            value: finalAmount,
+            currency: 'INR'
+          });
+        }
+
+        if (window.gtag) {
+          gtag('event', 'generate_lead', {
+            'value': finalAmount,
+            'currency': 'INR'
+          });
+        }
+
+        if (data.orderId) {
+          localStorage.setItem("wealthoriaCustomerOrderId", data.orderId);
+        }
+        if (data.bookingId) {
+          localStorage.setItem("wealthoriaBookingId", data.bookingId);
+        }
+
+        // Show confirmation screen
+        document.getElementById("formSection").style.display = "none";
+        document.getElementById("displayBookingId").textContent = data.bookingId || "Saved";
+
+        const fullAddressText = [address, address2, city, state, pincode, "India"].filter(Boolean).join(", ");
+        document.getElementById("detailsPreview").innerHTML = `
+          <div style="margin-bottom:6px;"><strong>Name:</strong> ${escapeHtml(deliveryName)}</div>
+          <div style="margin-bottom:6px;"><strong>Phone:</strong> ${escapeHtml(deliveryPhone)}</div>
+          <div style="margin-bottom:6px;"><strong>Email:</strong> ${escapeHtml(email)}</div>
+          <div style="margin-bottom:6px;"><strong>Delivery Address:</strong> ${escapeHtml(fullAddressText)}</div>
+          <div><strong>Product:</strong> ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (Hardcover) · ₹${finalAmount.toLocaleString("en-IN")}</div>
+        `;
+
+        const successSection = document.getElementById("successSection");
+        successSection.style.display = "block";
+        successSection.scrollIntoView({ behavior: "smooth" });
+
+      } catch (error) {
+
+        console.error("Customer details error:", error);
+
+        button.disabled = false;
+        button.textContent = "Save Details & Submit Order / ವಿವರಗಳನ್ನು ಸಲ್ಲಿಸಿ";
+
+        showError(
+          error.message ||
+          "Unable to save details. Please check your internet connection and try again."
+        );
+
+      }
+
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
 
   </script>
 
 </body>
+
 </html>

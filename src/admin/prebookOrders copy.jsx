@@ -653,7 +653,7 @@ useEffect(() => {
     const shippingStatus = String(order.shippingStatus || "")
       .trim()
       .toLowerCase();
-    return shippingStatus !== "shipped" && shippingStatus !== "delivered";
+    return shippingStatus !== "delivered";
   }).length;
 
   const pageGeneratedLabelCount = paginatedOrders.filter(
@@ -1159,7 +1159,8 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
         .trim()
         .toLowerCase();
 
-      return shippingStatus !== "shipped" && shippingStatus !== "delivered";
+      if (reprint) return true;
+      return shippingStatus !== "delivered";
     });
 
     const labelOrders = eligibleRows.map(({ order }) => order);
@@ -1168,7 +1169,7 @@ const generateShippingLabelsPDF = async (ordersToPrint = null, options = {}) => 
       alert(
         reprint
           ? "No eligible order is available for reprint."
-          : "No eligible orders are available on this page. Shipped and delivered orders are excluded."
+          : "No eligible orders are available on this page. Delivered orders are excluded."
       );
       return;
     }
@@ -2269,7 +2270,6 @@ return (
                             checked={selectedLabelOrders.includes(order.id)}
                             disabled={
                               labelGenerating ||
-                              String(order.shippingStatus || "").trim().toLowerCase() === "shipped" ||
                               String(order.shippingStatus || "").trim().toLowerCase() === "delivered"
                             }
                             onChange={(e) => {

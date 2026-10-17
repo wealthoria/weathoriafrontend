@@ -1226,8 +1226,9 @@ function PrebookOrders() {
       }));
 
       const eligibleRows = indexedSourceOrders.filter(({ order }) => {
+        if (reprint) return true;
         const shippingStatus = String(order.shippingStatus || "").trim().toLowerCase();
-        return shippingStatus !== "shipped" && shippingStatus !== "delivered";
+        return shippingStatus !== "delivered";
       });
 
       const labelOrders = eligibleRows.map(({ order }) => order);
@@ -1236,7 +1237,7 @@ function PrebookOrders() {
         alert(
           reprint
             ? "No eligible order is available for reprint."
-            : "No eligible orders are available on this page. Shipped and delivered orders are excluded."
+            : "No eligible orders are available on this page. Delivered orders are excluded."
         );
         return;
       }
@@ -2302,7 +2303,6 @@ function PrebookOrders() {
                           checked={selectedLabelOrders.includes(order.id)}
                           disabled={
                             labelGenerating ||
-                            rowShipping === "shipped" ||
                             rowShipping === "delivered"
                           }
                           onChange={(e) => {

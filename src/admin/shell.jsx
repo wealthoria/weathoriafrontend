@@ -224,6 +224,12 @@ const NAV = [
     icon: "users"
   },
 
+  {
+    to: "/admin/unsubscribed-members",
+    label: "Unsubscribed Members",
+    icon: "users"
+  },
+
 
 
 ];

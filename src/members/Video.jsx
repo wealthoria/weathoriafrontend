@@ -372,6 +372,7 @@ function MemberVideo() {
 
   const [commentOpenVideoId, setCommentOpenVideoId] = useState("");
   const [commentText, setCommentText] = useState("");
+  const [commentSuccessVideoId, setCommentSuccessVideoId] = useState("");
 
   const [videoComments, setVideoComments] = useState({});
   const [openCommentsVideoId, setOpenCommentsVideoId] = useState("");
@@ -435,7 +436,7 @@ function MemberVideo() {
             return;
           }
         }
-      } catch (e) {}
+      } catch (e) { }
 
       // 4. Fallback: check window.auth?.currentUser directly
       if (window.auth?.currentUser) {
@@ -453,7 +454,7 @@ function MemberVideo() {
             }
             return;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (mounted) {
@@ -646,11 +647,13 @@ function MemberVideo() {
     loadVideoLikes();
 
     const loadVideoComments = async () => {
+      if (!isAdmin) return;
       try {
         const token = getMemberToken();
         if (!token) return;
 
         const videoIds = videos.map((video) => video.id);
+        if (videoIds.length === 0) return;
 
         const response = await fetch(
           `https://api-jsbpm362pq-el.a.run.app/members/video-comments?videoIds=${encodeURIComponent(videoIds.join(","))}`,
@@ -675,11 +678,20 @@ function MemberVideo() {
       }
     };
 
-    loadVideoComments();
-  }, [videos]);
+    if (isAdmin) {
+      loadVideoComments();
+    } else {
+      setVideoComments({});
+    }
+  }, [videos, isAdmin]);
 
-  // Real-time listener for video comments grouped by videoId
+  // Real-time listener for video comments grouped by videoId (Admin only)
   useEffect(() => {
+    if (!isAdmin) {
+      setVideoComments({});
+      return;
+    }
+
     let unsubscribe = null;
     let timer = null;
 
@@ -742,7 +754,7 @@ function MemberVideo() {
       if (timer) clearInterval(timer);
       if (typeof unsubscribe === "function") unsubscribe();
     };
-  }, []);
+  }, [isAdmin]);
 
   /* =======================================================
      SEARCH
@@ -986,7 +998,7 @@ function MemberVideo() {
     if (!token && window.auth?.currentUser) {
       try {
         token = await window.auth.currentUser.getIdToken();
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (!token && !isAdmin) {
@@ -1013,14 +1025,22 @@ function MemberVideo() {
 
     setCommentText("");
 
-    // Optimistically update
-    setVideoComments((previous) => ({
-      ...previous,
-      [videoId]: [newComment, ...(previous[videoId] || [])]
-    }));
+    // Optimistically update and open comments for Admin only
+    if (isAdmin) {
+      setVideoComments((previous) => ({
+        ...previous,
+        [videoId]: [newComment, ...(previous[videoId] || [])]
+      }));
 
-    // Ensure comments section is opened
-    setOpenCommentsVideoId(videoId);
+      // Ensure comments section is opened
+      setOpenCommentsVideoId(videoId);
+    } else {
+      setCommentSuccessVideoId(videoId);
+      setTimeout(() => {
+        setCommentSuccessVideoId((prev) => (prev === videoId ? "" : prev));
+        setCommentOpenVideoId((prev) => (prev === videoId ? "" : prev));
+      }, 3500);
+    }
 
     // Save directly to Firestore if available
     let saved = false;
@@ -1145,7 +1165,7 @@ function MemberVideo() {
         if (!token && window.auth?.currentUser) {
           try {
             token = await window.auth.currentUser.getIdToken();
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const response = await fetch(
@@ -1180,658 +1200,678 @@ function MemberVideo() {
 
 
 
-/* =======================================================
-   RENDER
-======================================================= */
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
-return (
-  <>
-    <section className="member-video-page">
+  return (
+    <>
+      <section className="member-video-page">
 
-      {/* =================================================
+        {/* =================================================
             HEADER
         ================================================= */}
 
-      <div className="member-video-header">
-        <div>
-          <span className="member-eyebrow">
-            LEARNING
-          </span>
+        <div className="member-video-header">
+          <div>
+            <span className="member-eyebrow">
+              LEARNING
+            </span>
 
-          <h2>
-            Videos
-          </h2>
+            <h2>
+              Videos
+            </h2>
 
-          <p>
-            Watch the latest video
-            content from Wealthoria.
-          </p>
+            <p>
+              Watch the latest video
+              content from Wealthoria.
+            </p>
+          </div>
+
+          <div className="member-video-count">
+            {filteredVideos.length}{" "}
+            {filteredVideos.length === 1
+              ? "Video"
+              : "Videos"}
+          </div>
         </div>
 
-        <div className="member-video-count">
-          {filteredVideos.length}{" "}
-          {filteredVideos.length === 1
-            ? "Video"
-            : "Videos"}
-        </div>
-      </div>
-
-      {/* =================================================
+        {/* =================================================
             SEARCH
         ================================================= */}
 
-      <div className="member-video-search">
-        <span
-          className="member-video-search-icon"
-          aria-hidden="true"
-        >
-          🔍
-        </span>
-
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(event) => {
-            const value = event.target.value;
-            setSearchQuery(value);
-
-            // Google Analytics - track video search
-            if (
-              typeof window.gtag === "function" &&
-              value.trim().length >= 3
-            ) {
-              window.gtag("event", "video_search", {
-                search_term: value.trim()
-              });
-            }
-          }}
-          placeholder="Search videos..."
-          aria-label="Search videos"
-        />
-
-        {searchQuery && (
-          <button
-            type="button"
-            className="member-video-search-clear"
-            onClick={() =>
-              setSearchQuery("")
-            }
-            aria-label="Clear search"
+        <div className="member-video-search">
+          <span
+            className="member-video-search-icon"
+            aria-hidden="true"
           >
-            ×
-          </button>
-        )}
-      </div>
+            🔍
+          </span>
+
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => {
+              const value = event.target.value;
+              setSearchQuery(value);
+
+              // Google Analytics - track video search
+              if (
+                typeof window.gtag === "function" &&
+                value.trim().length >= 3
+              ) {
+                window.gtag("event", "video_search", {
+                  search_term: value.trim()
+                });
+              }
+            }}
+            placeholder="Search videos..."
+            aria-label="Search videos"
+          />
+
+          {searchQuery && (
+            <button
+              type="button"
+              className="member-video-search-clear"
+              onClick={() =>
+                setSearchQuery("")
+              }
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
 
 
 
-      {/* =================================================
+        {/* =================================================
             DATE-WISE FILTER
         ================================================= */}
-      {/* =================================================
+        {/* =================================================
     DATE-WISE FILTER
 ================================================= */}
 
-      <div className="member-video-date-filter">
+        <div className="member-video-date-filter">
 
-        <div className="member-video-date-field">
-          <label htmlFor="member-video-start-date">
-            From Date
-          </label>
+          <div className="member-video-date-field">
+            <label htmlFor="member-video-start-date">
+              From Date
+            </label>
 
-          <input
-            id="member-video-start-date"
-            type="date"
-            value={startDate}
-            onChange={(event) =>
-              setStartDate(event.target.value)
-            }
-            aria-label="Filter videos from date"
-          />
+            <input
+              id="member-video-start-date"
+              type="date"
+              value={startDate}
+              onChange={(event) =>
+                setStartDate(event.target.value)
+              }
+              aria-label="Filter videos from date"
+            />
+          </div>
+
+
+          <div className="member-video-date-field">
+            <label htmlFor="member-video-end-date">
+              To Date
+            </label>
+
+            <input
+              id="member-video-end-date"
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) =>
+                setEndDate(event.target.value)
+              }
+              aria-label="Filter videos to date"
+            />
+          </div>
+
+
+          {(startDate || endDate) && (
+            <button
+              type="button"
+              className="member-video-date-clear"
+              onClick={() => {
+                setStartDate("");
+                setEndDate("");
+              }}
+            >
+              Clear Dates
+            </button>
+          )}
+
         </div>
 
-
-        <div className="member-video-date-field">
-          <label htmlFor="member-video-end-date">
-            To Date
-          </label>
-
-          <input
-            id="member-video-end-date"
-            type="date"
-            value={endDate}
-            min={startDate || undefined}
-            onChange={(event) =>
-              setEndDate(event.target.value)
-            }
-            aria-label="Filter videos to date"
-          />
-        </div>
-
-
-        {(startDate || endDate) && (
-          <button
-            type="button"
-            className="member-video-date-clear"
-            onClick={() => {
-              setStartDate("");
-              setEndDate("");
-            }}
-          >
-            Clear Dates
-          </button>
-        )}
-
-      </div>
-
-      {/* =================================================
+        {/* =================================================
             LOADING
         ================================================= */}
 
-      {loading && (
-        <div className="member-video-empty">
-          <div className="member-video-empty-icon">
-            ⏳
-          </div>
-
-          <h3>
-            Loading videos...
-          </h3>
-
-          <p>
-            Please wait while we
-            load the latest videos.
-          </p>
-        </div>
-      )}
-
-      {/* =================================================
-            ERROR
-        ================================================= */}
-
-      {!loading && error && (
-        <div className="member-video-empty">
-          <div className="member-video-empty-icon">
-            !
-          </div>
-
-          <h3>
-            Unable to load videos
-          </h3>
-
-          <p>
-            {error}
-          </p>
-        </div>
-      )}
-
-
-
-
-      {/* =================================================
-            EMPTY
-        ================================================= */}
-
-      {!loading &&
-        !error &&
-        filteredVideos.length === 0 && (
+        {loading && (
           <div className="member-video-empty">
             <div className="member-video-empty-icon">
-              ▶
+              ⏳
             </div>
 
             <h3>
-              {searchQuery
-                ? "No videos found"
-                : "No videos available"}
+              Loading videos...
             </h3>
 
             <p>
-              {searchQuery
-                ? "Try another search."
-                : "Published videos will appear here."}
+              Please wait while we
+              load the latest videos.
             </p>
           </div>
         )}
 
-      {/* =================================================
-            MONTH-WISE VIDEO GRID
+        {/* =================================================
+            ERROR
         ================================================= */}
 
-      {!loading &&
-        !error &&
-        filteredVideos.length > 0 && (
-          <div className="member-video-months">
+        {!loading && error && (
+          <div className="member-video-empty">
+            <div className="member-video-empty-icon">
+              !
+            </div>
 
-            {videoMonths.map(
-              ([monthKey, month]) => (
-                <section
-                  className="member-video-month"
-                  key={monthKey}
-                >
+            <h3>
+              Unable to load videos
+            </h3>
 
-                  <div className="member-video-month-header">
-                    <div>
-                      <span className="member-video-month-eyebrow">
-                        VIDEO LIBRARY
-                      </span>
-
-                      <h3>
-                        {month.label}
-                      </h3>
-                    </div>
-
-                    <span className="member-video-month-count">
-                      {month.videos.length}{" "}
-                      {month.videos.length === 1
-                        ? "Video"
-                        : "Videos"}
-                    </span>
-                  </div>
-
-                  <div className="member-video-grid">
-
-                    {month.videos.map(
-                      (video) => (
-                        <article
-                          className="member-video-card"
-                          key={video.id}
-                        >
-
-                          {/* THUMBNAIL */}
-
-                          <button
-                            type="button"
-                            className="member-video-thumbnail"
-                            onClick={() =>
-                              openVideo(video)
-                            }
-                            aria-label={`Play ${video.title ||
-                              "video"
-                              }`}
-                          >
-                            {video.thumbnailUrl ? (
-                              <img
-                                src={getFileUrl(
-                                  video.thumbnailUrl
-                                )}
-                                alt={
-                                  video.title ||
-                                  "Video thumbnail"
-                                }
-                              />
-                            ) : (
-                              <div className="member-video-no-thumbnail">
-                                ▶
-                              </div>
-                            )}
-
-                            <span className="member-video-badge">
-                              VIDEO
-                            </span>
-
-                            <span className="member-video-play">
-                              ▶
-                            </span>
-                          </button>
-
-                          {/* BODY */}
-
-                          <div className="member-video-body">
-
-                            <h3>
-                              {video.title ||
-                                "Untitled Video"}
-                            </h3>
-
-                            <MemberVideoCardDescription description={video.description} />
-
-                            <div className="member-video-meta">
-
-                              <span>
-                                {video.category ||
-                                  "Video"}
-                              </span>
-
-                              <span>
-                                {getDate(
-                                  video.publishedAt ||
-                                  video.createdAt
-                                )}
-                              </span>
-
-                            </div>
-
-
-
-                            <div className="member-video-card-actions">
-                              {/* Like button */}
-                              <button
-                                type="button"
-                                className="member-video-card-action"
-                                aria-label="Like video"
-                                onClick={() => handleLike(video)}
-                              >
-                                <svg
-                                  width="19"
-                                  height="19"
-                                  viewBox="0 0 24 24"
-                                  fill={likeStats[video.id]?.liked ? "currentColor" : "none"}
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  style={{
-                                    color: likeStats[video.id]?.liked ? "#e11d48" : "inherit",
-                                  }}
-                                >
-                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
-                                </svg>
-
-                                {likeStats[video.id]?.count > 0 && (
-                                  <span>{likeStats[video.id].count}</span>
-                                )}
-                              </button>
-
-                              {/* Comment button */}
-                              <button
-                                type="button"
-                                className="member-video-card-action"
-                                aria-label="Comment on video"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  const nextState = commentOpenVideoId === video.id ? "" : video.id;
-                                  setCommentOpenVideoId(nextState);
-                                  setOpenCommentsVideoId(nextState);
-                                  setCommentText("");
-                                }}
-                              >
-                                <svg
-                                  width="19"
-                                  height="19"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  aria-hidden="true"
-                                >
-                                  <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
-                                </svg>
-
-                                {(videoComments[video.id]?.length || 0) > 0 && (
-                                  <span>{videoComments[video.id].length}</span>
-                                )}
-                              </button>
-
-                              {/* Watch Video button */}
-                              <button
-                                type="button"
-                                className="member-video-open"
-                                onClick={() => openVideo(video)}
-                              >
-                                ▶ Watch Video
-                              </button>
-                            </div>
-
-
-
-
-                            <div
-                              className={`member-video-comment-panel ${commentOpenVideoId === video.id ? "is-open" : ""
-                                }`}
-                            >
-                              <form
-                                className="member-video-comment-form"
-                                onSubmit={(event) =>
-                                  handleSaveComment(event, video.id)
-                                }
-                              >
-                                <input
-                                  type="text"
-                                  value={commentOpenVideoId === video.id ? commentText : ""}
-                                  onChange={(event) => setCommentText(event.target.value)}
-                                  placeholder="Write a comment..."
-                                  aria-label="Write a comment"
-                                  maxLength={1000}
-                                  onClick={(event) => event.stopPropagation()}
-                                  disabled={commentSaving}
-                                />
-
-                                <button
-                                  type="submit"
-                                  disabled={!commentText.trim() || commentSaving}
-                                >
-                                  {commentSaving ? "Saving..." : "Send"}
-                                </button>
-                              </form>
-                            </div>
-
-                            {/* View Comments button & YouTube style comments list */}
-                            {((videoComments[video.id]?.length || 0) > 0 ||
-                              commentOpenVideoId === video.id ||
-                              openCommentsVideoId === video.id) && (
-                              <div className="member-video-comments-wrap">
-                                <button
-                                  type="button"
-                                  className="member-video-view-comments-btn"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    setOpenCommentsVideoId((previous) =>
-                                      previous === video.id ? "" : video.id
-                                    );
-                                  }}
-                                >
-                                  <span>
-                                    {openCommentsVideoId === video.id
-                                      ? "Hide Comments"
-                                      : (videoComments[video.id]?.length || 0) > 0
-                                        ? `View Comments (${videoComments[video.id].length})`
-                                        : "Comments (0)"}
-                                  </span>
-                                  <span className="member-video-view-comments-arrow">
-                                    {openCommentsVideoId === video.id ? "▲" : "▼"}
-                                  </span>
-                                </button>
-
-                                {openCommentsVideoId === video.id && (() => {
-                                  const allComments = videoComments[video.id] || [];
-                                  const topComments = allComments.filter((item) => !item.parentId);
-                                  const repliesByParent = {};
-                                  allComments.forEach((item) => {
-                                    if (item.parentId) {
-                                      if (!repliesByParent[item.parentId]) {
-                                        repliesByParent[item.parentId] = [];
-                                      }
-                                      repliesByParent[item.parentId].push(item);
-                                    }
-                                  });
-                                  // Sort replies chronological (oldest first)
-                                  Object.keys(repliesByParent).forEach((pid) => {
-                                    repliesByParent[pid].sort((a, b) => getTime(a.createdAt) - getTime(b.createdAt));
-                                  });
-                                  // Keep orphan replies visible if parent is missing
-                                  const orphanReplies = allComments.filter(
-                                    (item) => item.parentId && !topComments.some((top) => top.id === item.parentId)
-                                  );
-                                  const displayComments = [...topComments, ...orphanReplies];
-
-                                  return (
-                                    <div className="member-video-comments-list">
-                                      {isAdmin && (
-                                        <div className="member-video-admin-badge-notice">
-                                          <span className="member-video-admin-badge">Admin 🛡️</span>
-                                          <span>Logged in as Admin. You can reply directly to any member comment.</span>
-                                        </div>
-                                      )}
-
-                                      {displayComments.length === 0 ? (
-                                        <p className="member-video-comments-empty">
-                                          No comments yet. Be the first to share your thoughts!
-                                        </p>
-                                      ) : (
-                                        displayComments.map((c) => (
-                                          <div key={c.id} className="member-video-comment-thread">
-                                            <div className="member-video-comment-card">
-                                              <div className={`member-video-comment-avatar ${c.isAdminReply ? "is-admin" : ""}`}>
-                                                {c.isAdminReply ? "★" : (c.userName || "M").charAt(0).toUpperCase()}
-                                              </div>
-                                              <div className="member-video-comment-body">
-                                                <div className="member-video-comment-header">
-                                                  <span className="member-video-comment-author">
-                                                    {c.userName || "Member"}
-                                                  </span>
-                                                  {c.isAdminReply && (
-                                                    <span className="member-video-admin-badge">Admin</span>
-                                                  )}
-                                                  <span className="member-video-comment-date">
-                                                    {formatRelativeTime(c.createdAt)}
-                                                  </span>
-                                                </div>
-                                                <p className="member-video-comment-content">{c.comment}</p>
-
-                                                {/* Admin Reply Action Button */}
-                                                {isAdmin && (
-                                                  <div className="member-video-comment-actions">
-                                                    <button
-                                                      type="button"
-                                                      className="member-video-comment-reply-btn"
-                                                      onClick={(event) => {
-                                                        event.stopPropagation();
-                                                        if (replyingTo?.commentId === c.id) {
-                                                          setReplyingTo(null);
-                                                          setReplyText("");
-                                                        } else {
-                                                          setReplyingTo({
-                                                           videoId: video.id,
-                                                           commentId: c.id,
-                                                           userName: c.userName || "Member",
-                                                           userId: c.userId || ""
-                                                          });
-                                                          setReplyText("");
-                                                        }
-                                                      }}
-                                                      title={`Reply to ${c.userName || "Member"}`}
-                                                    >
-                                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <polyline points="9 17 4 12 9 7" />
-                                                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-                                                      </svg>
-                                                      <span>{replyingTo?.commentId === c.id ? "Cancel" : "Reply"}</span>
-                                                    </button>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-
-                                            {/* Inline Reply Form for Admin */}
-                                            {isAdmin && replyingTo?.commentId === c.id && (
-                                              <form
-                                                className="member-video-inline-reply-form"
-                                                onSubmit={(event) => handleSaveReply(event, video.id, c)}
-                                                onClick={(event) => event.stopPropagation()}
-                                              >
-                                                <div className="member-video-inline-reply-header">
-                                                  <span>Replying to <b>@{c.userName || "Member"}</b> as Admin</span>
-                                                  <button
-                                                    type="button"
-                                                    className="member-video-reply-cancel-btn"
-                                                    onClick={() => {
-                                                      setReplyingTo(null);
-                                                      setReplyText("");
-                                                    }}
-                                                  >
-                                                    ✕
-                                                  </button>
-                                                </div>
-                                                <div className="member-video-inline-reply-input-wrap">
-                                                  <input
-                                                    type="text"
-                                                    autoFocus
-                                                    value={replyText}
-                                                    onChange={(event) => setReplyText(event.target.value)}
-                                                    placeholder={`Reply to ${c.userName || "this member"}...`}
-                                                    maxLength={1000}
-                                                    disabled={replySaving}
-                                                  />
-                                                  <button
-                                                    type="submit"
-                                                    disabled={!replyText.trim() || replySaving}
-                                                  >
-                                                    {replySaving ? "Sending..." : "Reply"}
-                                                  </button>
-                                                </div>
-                                              </form>
-                                            )}
-
-                                            {/* Threaded Replies under parent comment */}
-                                            {(repliesByParent[c.id] || []).length > 0 && (
-                                              <div className="member-video-replies-list">
-                                                {repliesByParent[c.id].map((r) => (
-                                                  <div key={r.id} className="member-video-comment-card member-video-reply-card">
-                                                    <div className={`member-video-comment-avatar ${r.isAdminReply ? "is-admin" : ""}`}>
-                                                      {r.isAdminReply ? "★" : (r.userName || "M").charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div className="member-video-comment-body">
-                                                      <div className="member-video-comment-header">
-                                                        <span className="member-video-comment-author">
-                                                          {r.userName || "Admin"}
-                                                        </span>
-                                                        {r.isAdminReply && (
-                                                          <span className="member-video-admin-badge">Admin</span>
-                                                        )}
-                                                        {r.replyToUser && (
-                                                         <span className="member-video-reply-target">
-                                                           replied to <b>@{r.replyToUser}</b>
-                                                         </span>
-                                                        )}
-                                                        <span className="member-video-comment-date">
-                                                          {formatRelativeTime(r.createdAt)}
-                                                        </span>
-                                                      </div>
-                                                      <p className="member-video-comment-content">{r.comment}</p>
-                                                    </div>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            )}
-                                          </div>
-                                        ))
-                                      )}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            )}
-
-                          </div>
-                        </article>
-                      )
-                    )}
-
-                  </div>
-                </section>
-              )
-            )}
-
+            <p>
+              {error}
+            </p>
           </div>
         )}
 
-    </section>
 
-    {/* =================================================
+
+
+        {/* =================================================
+            EMPTY
+        ================================================= */}
+
+        {!loading &&
+          !error &&
+          filteredVideos.length === 0 && (
+            <div className="member-video-empty">
+              <div className="member-video-empty-icon">
+                ▶
+              </div>
+
+              <h3>
+                {searchQuery
+                  ? "No videos found"
+                  : "No videos available"}
+              </h3>
+
+              <p>
+                {searchQuery
+                  ? "Try another search."
+                  : "Published videos will appear here."}
+              </p>
+            </div>
+          )}
+
+        {/* =================================================
+            MONTH-WISE VIDEO GRID
+        ================================================= */}
+
+        {!loading &&
+          !error &&
+          filteredVideos.length > 0 && (
+            <div className="member-video-months">
+
+              {videoMonths.map(
+                ([monthKey, month]) => (
+                  <section
+                    className="member-video-month"
+                    key={monthKey}
+                  >
+
+                    <div className="member-video-month-header">
+                      <div>
+                        <span className="member-video-month-eyebrow">
+                          VIDEO LIBRARY
+                        </span>
+
+                        <h3>
+                          {month.label}
+                        </h3>
+                      </div>
+
+                      <span className="member-video-month-count">
+                        {month.videos.length}{" "}
+                        {month.videos.length === 1
+                          ? "Video"
+                          : "Videos"}
+                      </span>
+                    </div>
+
+                    <div className="member-video-grid">
+
+                      {month.videos.map(
+                        (video) => (
+                          <article
+                            className="member-video-card"
+                            key={video.id}
+                          >
+
+                            {/* THUMBNAIL */}
+
+                            <button
+                              type="button"
+                              className="member-video-thumbnail"
+                              onClick={() =>
+                                openVideo(video)
+                              }
+                              aria-label={`Play ${video.title ||
+                                "video"
+                                }`}
+                            >
+                              {video.thumbnailUrl ? (
+                                <img
+                                  src={getFileUrl(
+                                    video.thumbnailUrl
+                                  )}
+                                  alt={
+                                    video.title ||
+                                    "Video thumbnail"
+                                  }
+                                />
+                              ) : (
+                                <div className="member-video-no-thumbnail">
+                                  ▶
+                                </div>
+                              )}
+
+                              <span className="member-video-badge">
+                                VIDEO
+                              </span>
+
+                              <span className="member-video-play">
+                                ▶
+                              </span>
+                            </button>
+
+                            {/* BODY */}
+
+                            <div className="member-video-body">
+
+                              <h3>
+                                {video.title ||
+                                  "Untitled Video"}
+                              </h3>
+
+                              <MemberVideoCardDescription description={video.description} />
+
+                              <div className="member-video-meta">
+
+                                <span>
+                                  {video.category ||
+                                    "Video"}
+                                </span>
+
+                                <span>
+                                  {getDate(
+                                    video.publishedAt ||
+                                    video.createdAt
+                                  )}
+                                </span>
+
+                              </div>
+
+
+
+                              <div className="member-video-card-actions">
+                                {/* Like button */}
+                                <button
+                                  type="button"
+                                  className="member-video-card-action"
+                                  aria-label="Like video"
+                                  onClick={() => handleLike(video)}
+                                >
+                                  <svg
+                                    width="19"
+                                    height="19"
+                                    viewBox="0 0 24 24"
+                                    fill={likeStats[video.id]?.liked ? "currentColor" : "none"}
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    style={{
+                                      color: likeStats[video.id]?.liked ? "#e11d48" : "inherit",
+                                    }}
+                                  >
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                                  </svg>
+
+                                  {likeStats[video.id]?.count > 0 && (
+                                    <span>{likeStats[video.id].count}</span>
+                                  )}
+                                </button>
+
+                                {/* Comment button */}
+                                <button
+                                  type="button"
+                                  className="member-video-card-action"
+                                  aria-label="Comment on video"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    const nextState = commentOpenVideoId === video.id ? "" : video.id;
+                                    setCommentOpenVideoId(nextState);
+                                    if (isAdmin) {
+                                      setOpenCommentsVideoId(nextState);
+                                    }
+                                    setCommentText("");
+                                  }}
+                                >
+                                  <svg
+                                    width="19"
+                                    height="19"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
+                                  </svg>
+
+                                  {isAdmin && (videoComments[video.id]?.length || 0) > 0 && (
+                                    <span>{videoComments[video.id].length}</span>
+                                  )}
+                                </button>
+
+                                {/* Watch Video button */}
+                                <button
+                                  type="button"
+                                  className="member-video-open"
+                                  onClick={() => openVideo(video)}
+                                >
+                                  ▶ Watch Video
+                                </button>
+                              </div>
+
+
+
+
+                              <div
+                                className={`member-video-comment-panel ${commentOpenVideoId === video.id ? "is-open" : ""
+                                  }`}
+                              >
+                                <form
+                                  className="member-video-comment-form"
+                                  onSubmit={(event) =>
+                                    handleSaveComment(event, video.id)
+                                  }
+                                >
+                                  <input
+                                    type="text"
+                                    value={commentOpenVideoId === video.id ? commentText : ""}
+                                    onChange={(event) => setCommentText(event.target.value)}
+                                    placeholder="Write a comment..."
+                                    aria-label="Write a comment"
+                                    maxLength={1000}
+                                    onClick={(event) => event.stopPropagation()}
+                                    disabled={commentSaving}
+                                  />
+
+                                  <button
+                                    type="submit"
+                                    disabled={!commentText.trim() || commentSaving}
+                                  >
+                                    {commentSaving ? "Saving..." : "Send"}
+                                  </button>
+                                </form>
+
+                                {commentSuccessVideoId === video.id && (
+                                  <div
+                                    style={{
+                                      marginTop: "8px",
+                                      padding: "6px 10px",
+                                      fontSize: "12px",
+                                      color: "#059669",
+                                      background: "#ecfdf5",
+                                      borderRadius: "6px",
+                                      border: "1px solid #a7f3d0",
+                                      fontWeight: 500
+                                    }}
+                                  >
+                                    ✓ Comment submitted successfully!
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* View Comments button & YouTube style comments list (Admin only) */}
+                              {isAdmin &&
+                                ((videoComments[video.id]?.length || 0) > 0 ||
+                                  commentOpenVideoId === video.id ||
+                                  openCommentsVideoId === video.id) && (
+                                  <div className="member-video-comments-wrap">
+                                    <button
+                                      type="button"
+                                      className="member-video-view-comments-btn"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setOpenCommentsVideoId((previous) =>
+                                          previous === video.id ? "" : video.id
+                                        );
+                                      }}
+                                    >
+                                      <span>
+                                        {openCommentsVideoId === video.id
+                                          ? "Hide Comments"
+                                          : (videoComments[video.id]?.length || 0) > 0
+                                            ? `View Comments (${videoComments[video.id].length})`
+                                            : "Comments (0)"}
+                                      </span>
+                                      <span className="member-video-view-comments-arrow">
+                                        {openCommentsVideoId === video.id ? "▲" : "▼"}
+                                      </span>
+                                    </button>
+
+                                    {openCommentsVideoId === video.id && (() => {
+                                      const allComments = videoComments[video.id] || [];
+                                      const topComments = allComments.filter((item) => !item.parentId);
+                                      const repliesByParent = {};
+                                      allComments.forEach((item) => {
+                                        if (item.parentId) {
+                                          if (!repliesByParent[item.parentId]) {
+                                            repliesByParent[item.parentId] = [];
+                                          }
+                                          repliesByParent[item.parentId].push(item);
+                                        }
+                                      });
+                                      // Sort replies chronological (oldest first)
+                                      Object.keys(repliesByParent).forEach((pid) => {
+                                        repliesByParent[pid].sort((a, b) => getTime(a.createdAt) - getTime(b.createdAt));
+                                      });
+                                      // Keep orphan replies visible if parent is missing
+                                      const orphanReplies = allComments.filter(
+                                        (item) => item.parentId && !topComments.some((top) => top.id === item.parentId)
+                                      );
+                                      const displayComments = [...topComments, ...orphanReplies];
+
+                                      return (
+                                        <div className="member-video-comments-list">
+                                          {isAdmin && (
+                                            <div className="member-video-admin-badge-notice">
+                                              <span className="member-video-admin-badge">Admin 🛡️</span>
+                                              <span>Logged in as Admin. You can reply directly to any member comment.</span>
+                                            </div>
+                                          )}
+
+                                          {displayComments.length === 0 ? (
+                                            <p className="member-video-comments-empty">
+                                              No comments yet. Be the first to share your thoughts!
+                                            </p>
+                                          ) : (
+                                            displayComments.map((c) => (
+                                              <div key={c.id} className="member-video-comment-thread">
+                                                <div className="member-video-comment-card">
+                                                  <div className={`member-video-comment-avatar ${c.isAdminReply ? "is-admin" : ""}`}>
+                                                    {c.isAdminReply ? "★" : (c.userName || "M").charAt(0).toUpperCase()}
+                                                  </div>
+                                                  <div className="member-video-comment-body">
+                                                    <div className="member-video-comment-header">
+                                                      <span className="member-video-comment-author">
+                                                        {c.userName || "Member"}
+                                                      </span>
+                                                      {c.isAdminReply && (
+                                                        <span className="member-video-admin-badge">Admin</span>
+                                                      )}
+                                                      <span className="member-video-comment-date">
+                                                        {formatRelativeTime(c.createdAt)}
+                                                      </span>
+                                                    </div>
+                                                    <p className="member-video-comment-content">{c.comment}</p>
+
+                                                    {/* Admin Reply Action Button */}
+                                                    {isAdmin && (
+                                                      <div className="member-video-comment-actions">
+                                                        <button
+                                                          type="button"
+                                                          className="member-video-comment-reply-btn"
+                                                          onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            if (replyingTo?.commentId === c.id) {
+                                                              setReplyingTo(null);
+                                                              setReplyText("");
+                                                            } else {
+                                                              setReplyingTo({
+                                                                videoId: video.id,
+                                                                commentId: c.id,
+                                                                userName: c.userName || "Member",
+                                                                userId: c.userId || ""
+                                                              });
+                                                              setReplyText("");
+                                                            }
+                                                          }}
+                                                          title={`Reply to ${c.userName || "Member"}`}
+                                                        >
+                                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="9 17 4 12 9 7" />
+                                                            <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                                                          </svg>
+                                                          <span>{replyingTo?.commentId === c.id ? "Cancel" : "Reply"}</span>
+                                                        </button>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+
+                                                {/* Inline Reply Form for Admin */}
+                                                {isAdmin && replyingTo?.commentId === c.id && (
+                                                  <form
+                                                    className="member-video-inline-reply-form"
+                                                    onSubmit={(event) => handleSaveReply(event, video.id, c)}
+                                                    onClick={(event) => event.stopPropagation()}
+                                                  >
+                                                    <div className="member-video-inline-reply-header">
+                                                      <span>Replying to <b>@{c.userName || "Member"}</b> as Admin</span>
+                                                      <button
+                                                        type="button"
+                                                        className="member-video-reply-cancel-btn"
+                                                        onClick={() => {
+                                                          setReplyingTo(null);
+                                                          setReplyText("");
+                                                        }}
+                                                      >
+                                                        ✕
+                                                      </button>
+                                                    </div>
+                                                    <div className="member-video-inline-reply-input-wrap">
+                                                      <input
+                                                        type="text"
+                                                        autoFocus
+                                                        value={replyText}
+                                                        onChange={(event) => setReplyText(event.target.value)}
+                                                        placeholder={`Reply to ${c.userName || "this member"}...`}
+                                                        maxLength={1000}
+                                                        disabled={replySaving}
+                                                      />
+                                                      <button
+                                                        type="submit"
+                                                        disabled={!replyText.trim() || replySaving}
+                                                      >
+                                                        {replySaving ? "Sending..." : "Reply"}
+                                                      </button>
+                                                    </div>
+                                                  </form>
+                                                )}
+
+                                                {/* Threaded Replies under parent comment */}
+                                                {(repliesByParent[c.id] || []).length > 0 && (
+                                                  <div className="member-video-replies-list">
+                                                    {repliesByParent[c.id].map((r) => (
+                                                      <div key={r.id} className="member-video-comment-card member-video-reply-card">
+                                                        <div className={`member-video-comment-avatar ${r.isAdminReply ? "is-admin" : ""}`}>
+                                                          {r.isAdminReply ? "★" : (r.userName || "M").charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div className="member-video-comment-body">
+                                                          <div className="member-video-comment-header">
+                                                            <span className="member-video-comment-author">
+                                                              {r.userName || "Admin"}
+                                                            </span>
+                                                            {r.isAdminReply && (
+                                                              <span className="member-video-admin-badge">Admin</span>
+                                                            )}
+                                                            {r.replyToUser && (
+                                                              <span className="member-video-reply-target">
+                                                                replied to <b>@{r.replyToUser}</b>
+                                                              </span>
+                                                            )}
+                                                            <span className="member-video-comment-date">
+                                                              {formatRelativeTime(r.createdAt)}
+                                                            </span>
+                                                          </div>
+                                                          <p className="member-video-comment-content">{r.comment}</p>
+                                                        </div>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
+
+                            </div>
+                          </article>
+                        )
+                      )}
+
+                    </div>
+                  </section>
+                )
+              )}
+
+            </div>
+          )}
+
+      </section>
+
+      {/* =================================================
           VIDEO MODAL
       ================================================= */}
 
-    {selectedVideo && (
-      <MemberVideoPlayer
-        video={selectedVideo}
-        onClose={closeVideo}
-      />
-    )}
-  </>
-);
+      {selectedVideo && (
+        <MemberVideoPlayer
+          video={selectedVideo}
+          onClose={closeVideo}
+        />
+      )}
+    </>
+  );
 }
 
 /* =========================================================

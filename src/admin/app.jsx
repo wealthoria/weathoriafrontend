@@ -409,6 +409,15 @@ function resolve(path) {
     };
   }
 
+  if (
+    path === "/admin/unsubscribed-members" ||
+    path === "/admin/unsubscribed"
+  ) {
+    return {
+      name: "unsubscribed-members"
+    };
+  }
+
 
   return {
     name: "notfound"
@@ -1003,6 +1012,47 @@ function ProtectedRoute({
 
           </div>
 
+        </AdminShell>
+      );
+    }
+
+
+    /* ---------------------------------------------------------------------
+       UNSUBSCRIBED MEMBERS & LEADS
+       --------------------------------------------------------------------- */
+
+    case "unsubscribed-members": {
+      const UnsubscribedScreen =
+        getAdmin("AdminUnsubscribedMembers");
+
+      if (!isAdmin) {
+        const AccessDenied = getAdmin("AccessDenied");
+        return (
+          <AdminShell title="Access Denied">
+            {AccessDenied ? (
+              <AccessDenied />
+            ) : (
+              <div className="page">
+                <h1>Access Denied</h1>
+              </div>
+            )}
+          </AdminShell>
+        );
+      }
+
+      if (UnsubscribedScreen) {
+        return (
+          <AdminShell title="Unsubscribed Members">
+            <UnsubscribedScreen />
+          </AdminShell>
+        );
+      }
+
+      return (
+        <AdminShell title="Unsubscribed Members">
+          <div className="psplash2">
+            <div className="spinner2" />
+          </div>
         </AdminShell>
       );
     }

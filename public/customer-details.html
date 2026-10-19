@@ -953,6 +953,53 @@
       }
     });
 
+    /* PREVENT DUPLICATE SUBMISSION (EMAIL & PHONE) */
+    const emailInput = document.getElementById("bookEmail");
+    let duplicateCheckTimer = null;
+
+    async function checkDuplicateField(type) {
+      const email = value("bookEmail");
+      const rawPhone = value("bookPhone");
+      const phone = rawPhone.replace(/\D/g, "").slice(-10);
+
+      const params = new URLSearchParams();
+      if (type === "email" && email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        params.append("email", email);
+      } else if (type === "phone" && phone.length === 10) {
+        params.append("phone", phone);
+      } else {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/prebook-customer/check-duplicate?${params.toString()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.exists) {
+          showError(data.message || "An order with this email address or phone number has already been registered.");
+          document.getElementById("submitButton").disabled = true;
+        } else {
+          const box = document.getElementById("errorBox");
+          if (box && (box.textContent.includes("already been submitted") || box.textContent.includes("ಈಗಾಗಲೇ"))) {
+            clearError();
+            document.getElementById("submitButton").disabled = false;
+          }
+        }
+      } catch (err) {
+        console.warn("Duplicate check error:", err);
+      }
+    }
+
+    emailInput.addEventListener("blur", () => checkDuplicateField("email"));
+    phoneInput.addEventListener("blur", () => checkDuplicateField("phone"));
+    phoneInput.addEventListener("input", () => {
+      const clean = phoneInput.value.replace(/\D/g, "").slice(-10);
+      if (clean.length === 10) {
+        clearTimeout(duplicateCheckTimer);
+        duplicateCheckTimer = setTimeout(() => checkDuplicateField("phone"), 500);
+      }
+    });
+
 
     /* BILLING TOGGLE */
 
@@ -1289,9 +1336,29 @@
       }
 
       button.disabled = true;
-      button.textContent = "Saving Details...";
+      button.textContent = "Checking...";
 
       try {
+
+        // Check for duplicate order before submitting
+        const checkRes = await fetch(
+          `${API_BASE}/prebook-customer/check-duplicate?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`
+        ).catch(() => null);
+
+        if (checkRes && checkRes.ok) {
+          const checkData = await checkRes.json().catch(() => null);
+          if (checkData && checkData.exists) {
+            button.disabled = false;
+            button.textContent = "Save Details & Submit Order / ವಿವರಗಳನ್ನು ಸಲ್ಲಿಸಿ";
+            showError(
+              checkData.message ||
+              "An order with this email address or mobile number has already been submitted."
+            );
+            return;
+          }
+        }
+
+        button.textContent = "Saving Details...";
 
         const finalAmount = Math.max(0, BASE_PRICE - appliedDiscountAmount);
 

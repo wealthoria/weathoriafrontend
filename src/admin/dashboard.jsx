@@ -218,16 +218,23 @@ function MetricCard({
   );
 }
 
-function SubscriptionAuditBreakdown({ breakdown, loading }) {
+function SubscriptionAuditBreakdown({
+  breakdown,
+  monthWiseSplit = [],
+  selectedMonthKey = "",
+  onSelectMonth = () => {},
+  loading
+}) {
+  const [activeTab, setActiveTab] = useState("month_split"); // "month_split" | "runrate"
+
   if (loading || !breakdown) return null;
 
-  const totalAmount = breakdown.total?.amount || 1;
   const rows = [
     {
       category: "Active Members",
       plan: "₹99 / month",
       count: breakdown.active99.count,
-      amount: breakdown.active99.amount,
+      amount: breakdown.active99.monthly || (breakdown.active99.count * 99),
       tone: "#16a34a",
       bgTone: "rgba(46, 173, 75, 0.12)",
       statusText: "Active"
@@ -236,7 +243,7 @@ function SubscriptionAuditBreakdown({ breakdown, loading }) {
       category: "Cancelled Members",
       plan: "₹99 / month",
       count: breakdown.cancelled99.count,
-      amount: breakdown.cancelled99.amount,
+      amount: breakdown.cancelled99.monthly || (breakdown.cancelled99.count * 99),
       tone: "#e8473f",
       bgTone: "rgba(232, 71, 63, 0.12)",
       statusText: "Cancelled"
@@ -245,7 +252,7 @@ function SubscriptionAuditBreakdown({ breakdown, loading }) {
       category: "Paused Members",
       plan: "₹99 / month",
       count: breakdown.paused99.count,
-      amount: breakdown.paused99.amount,
+      amount: breakdown.paused99.monthly || (breakdown.paused99.count * 99),
       tone: "#d97706",
       bgTone: "rgba(245, 158, 11, 0.12)",
       statusText: "Paused"
@@ -254,7 +261,7 @@ function SubscriptionAuditBreakdown({ breakdown, loading }) {
       category: "Cancelled Test Accounts",
       plan: "₹1 Test",
       count: breakdown.cancelled1.count,
-      amount: breakdown.cancelled1.amount,
+      amount: breakdown.cancelled1.count * 1,
       tone: "#64748b",
       bgTone: "rgba(100, 116, 139, 0.12)",
       statusText: "Test"
@@ -263,12 +270,23 @@ function SubscriptionAuditBreakdown({ breakdown, loading }) {
       category: "Expired Test Accounts",
       plan: "₹1 Test",
       count: breakdown.expired1.count,
-      amount: breakdown.expired1.amount,
+      amount: breakdown.expired1.count * 1,
       tone: "#64748b",
       bgTone: "rgba(100, 116, 139, 0.12)",
       statusText: "Test"
     }
   ];
+
+  const totalCount = rows.reduce((sum, r) => sum + (r.count || 0), 0);
+  const totalAmount = rows.reduce((sum, r) => sum + (r.amount || 0), 0) || 1;
+
+  // Cumulative totals for month-by-month split
+  const cumSignupsCount = monthWiseSplit.reduce((s, m) => s + (m.signupsCount || 0), 0);
+  const cumSignupsAmount = monthWiseSplit.reduce((s, m) => s + (m.signupsAmount || 0), 0);
+  const cumRenewalsCount = monthWiseSplit.reduce((s, m) => s + (m.renewalsCount || 0), 0);
+  const cumRenewalsAmount = monthWiseSplit.reduce((s, m) => s + (m.renewalsAmount || 0), 0);
+  const cumTotalCount = monthWiseSplit.reduce((s, m) => s + (m.totalCount || 0), 0);
+  const cumTotalAmount = monthWiseSplit.reduce((s, m) => s + (m.totalAmount || 0), 0);
 
   return (
     <div
@@ -281,6 +299,7 @@ function SubscriptionAuditBreakdown({ breakdown, loading }) {
         boxShadow: "0 2px 10px -2px rgba(0, 0, 0, 0.04), inset 0 0 0 1px var(--hair, #e8e8e8)"
       }}
     >
+      {/* CARD HEADER */}
       <div
         style={{
           display: "flex",
@@ -325,175 +344,465 @@ function SubscriptionAuditBreakdown({ breakdown, loading }) {
                 fontWeight: 500
               }}
             >
-              Verified database records · Exact calculation reconciling to ₹50,419
+              Reconciled database records · Compare Monthly Run-Rate vs Actual Collections Split
             </span>
           </div>
         </div>
 
-        <a
-          href="/Wealthoria_Subscription_and_Revenue_Audit_Report.pdf"
-          download="Wealthoria_Subscription_and_Revenue_Audit_Report.pdf"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--ink, #0f172a)",
-            background: "var(--canvas-soft, #f1f5f9)",
-            border: "1px solid var(--hair, #e2e8f0)",
-            padding: "7px 14px",
-            borderRadius: "20px",
-            textDecoration: "none",
-            transition: "all 0.15s ease"
-          }}
-        >
-          <span>📄</span>
-          <span>Download Audit PDF</span>
-        </a>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {/* TAB SWITCHER */}
+          <div
+            style={{
+              display: "inline-flex",
+              background: "var(--canvas-soft, #f1f5f9)",
+              padding: 3,
+              borderRadius: 10,
+              border: "1px solid var(--hair, #e2e8f0)"
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setActiveTab("month_split")}
+              style={{
+                border: "none",
+                background: activeTab === "month_split" ? "var(--canvas, #ffffff)" : "transparent",
+                color: activeTab === "month_split" ? "var(--ink, #0f172a)" : "var(--mute, #64748b)",
+                fontWeight: activeTab === "month_split" ? 700 : 500,
+                padding: "6px 14px",
+                borderRadius: 8,
+                fontSize: 12,
+                cursor: "pointer",
+                boxShadow: activeTab === "month_split" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                transition: "all 0.15s ease"
+              }}
+            >
+              💰 Month-Wise Collections Split
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("runrate")}
+              style={{
+                border: "none",
+                background: activeTab === "runrate" ? "var(--canvas, #ffffff)" : "transparent",
+                color: activeTab === "runrate" ? "var(--ink, #0f172a)" : "var(--mute, #64748b)",
+                fontWeight: activeTab === "runrate" ? 700 : 500,
+                padding: "6px 14px",
+                borderRadius: 8,
+                fontSize: 12,
+                cursor: "pointer",
+                boxShadow: activeTab === "runrate" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                transition: "all 0.15s ease"
+              }}
+            >
+              📊 Monthly Run-Rate (MRR)
+            </button>
+          </div>
+
+          <a
+            href="/Wealthoria_Subscription_and_Revenue_Audit_Report.pdf"
+            download="Wealthoria_Subscription_and_Revenue_Audit_Report.pdf"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 12,
+              fontWeight: 700,
+              color: "var(--ink, #0f172a)",
+              background: "var(--canvas-soft, #f1f5f9)",
+              border: "1px solid var(--hair, #e2e8f0)",
+              padding: "7px 14px",
+              borderRadius: "20px",
+              textDecoration: "none",
+              transition: "all 0.15s ease"
+            }}
+          >
+            <span>📄</span>
+            <span>Download Audit PDF</span>
+          </a>
+        </div>
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "separate",
-            borderSpacing: "0 6px",
-            minWidth: 540,
-            fontSize: 13
-          }}
-        >
-          <thead>
-            <tr style={{ color: "var(--mute, #64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              <th style={{ textAlign: "left", padding: "8px 14px" }}>Category / Membership</th>
-              <th style={{ textAlign: "left", padding: "8px 14px" }}>Plan</th>
-              <th style={{ textAlign: "right", padding: "8px 14px" }}>Members</th>
-              <th style={{ textAlign: "right", padding: "8px 14px" }}>Total Revenue</th>
-              <th style={{ textAlign: "right", padding: "8px 14px", width: 140 }}>Share</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const pct = ((row.amount / totalAmount) * 100).toFixed(1);
-              return (
+      {/* TAB 1: MONTH-WISE COLLECTIONS SPLIT */}
+      {activeTab === "month_split" ? (
+        <div>
+          <div
+            style={{
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: "rgba(37, 99, 235, 0.05)",
+              border: "1px solid rgba(37, 99, 235, 0.12)",
+              marginBottom: 12,
+              fontSize: 12,
+              color: "#334155",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap"
+            }}
+          >
+            <span style={{ fontWeight: 700, color: "#2563eb" }}>💡 Collections Split Guide:</span>
+            <span>
+              <b>Initial Signups (Cycle 1)</b> = ₹99 upfront registration fee when member joined.
+            </span>
+            <span>·</span>
+            <span>
+              <b>Auto-Debits (Cycle 2+)</b> = ₹99 recurring monthly debits automatically charged via Razorpay mandate.
+            </span>
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "separate",
+                borderSpacing: "0 6px",
+                minWidth: 640,
+                fontSize: 13
+              }}
+            >
+              <thead>
+                <tr style={{ color: "var(--mute, #64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  <th style={{ textAlign: "left", padding: "8px 14px" }}>Month</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Initial Signups (Cycle 1)</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Auto-Debits (Cycle 2+)</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Total Cash Collected</th>
+                  <th style={{ textAlign: "center", padding: "8px 14px", width: 130 }}>Dashboard Filter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthWiseSplit.map((m) => {
+                  const isSelected = selectedMonthKey === m.key;
+                  return (
+                    <tr
+                      key={m.key}
+                      style={{
+                        background: isSelected ? "rgba(37, 99, 235, 0.08)" : "var(--canvas-soft, #f8fafc)",
+                        borderRadius: 10,
+                        border: isSelected ? "1px solid rgba(37, 99, 235, 0.3)" : "none",
+                        transition: "background 0.15s"
+                      }}
+                    >
+                      <td style={{ padding: "12px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: isSelected ? "#2563eb" : "#10b981",
+                              display: "inline-block"
+                            }}
+                          />
+                          <span style={{ fontWeight: 800, color: "var(--ink, #0f172a)" }}>
+                            {m.label}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: "right", padding: "12px 14px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                          <span style={{ fontWeight: 700, color: "#16a34a" }}>
+                            {fmtINR0(m.signupsAmount)}
+                          </span>
+                          <span style={{ fontSize: 11, color: "var(--mute, #64748b)" }}>
+                            {m.signupsCount.toLocaleString("en-IN")} upfront signups
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: "right", padding: "12px 14px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                          <span style={{ fontWeight: 700, color: "#2563eb" }}>
+                            {fmtINR0(m.renewalsAmount)}
+                          </span>
+                          <span style={{ fontSize: 11, color: "var(--mute, #64748b)" }}>
+                            {m.renewalsCount.toLocaleString("en-IN")} mandate renewals
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: "right", padding: "12px 14px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                          <span style={{ fontWeight: 800, fontSize: 14, color: "var(--ink, #0f172a)" }}>
+                            {fmtINR0(m.totalAmount)}
+                          </span>
+                          <span style={{ fontSize: 11, color: "var(--mute, #64748b)" }}>
+                            {m.totalCount.toLocaleString("en-IN")} total payments
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: "center", padding: "12px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+                        {isSelected ? (
+                          <button
+                            type="button"
+                            onClick={() => onSelectMonth("")}
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: "5px 10px",
+                              borderRadius: 6,
+                              background: "#2563eb",
+                              color: "#ffffff",
+                              border: "none",
+                              cursor: "pointer"
+                            }}
+                          >
+                            ✓ Active Filter
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onSelectMonth(m.key)}
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "5px 10px",
+                              borderRadius: 6,
+                              background: "var(--canvas, #ffffff)",
+                              color: "var(--ink, #0f172a)",
+                              border: "1px solid var(--hair, #cbd5e1)",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Filter Month
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {/* TOTAL CUMULATIVE FOOTER ROW */}
                 <tr
-                  key={row.category}
                   style={{
-                    background: "var(--canvas-soft, #f8fafc)",
-                    borderRadius: 10,
-                    transition: "background 0.15s"
+                    background: "var(--ink, #0f172a)",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                    borderRadius: 10
                   }}
                 >
-                  <td style={{ padding: "11px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                  <td style={{ padding: "13px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                       <span
                         style={{
                           width: 8,
                           height: 8,
                           borderRadius: "50%",
-                          background: row.tone,
-                          display: "inline-block",
-                          flexShrink: 0
+                          background: "#22c55e",
+                          display: "inline-block"
                         }}
                       />
-                      <span style={{ fontWeight: 700, color: "var(--ink, #0f172a)" }}>
-                        {row.category}
-                      </span>
+                      <span style={{ letterSpacing: "0.5px" }}>ALL-TIME CUMULATIVE</span>
                     </div>
                   </td>
-
-                  <td style={{ padding: "11px 14px" }}>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: "2px 8px",
-                        borderRadius: 12,
-                        background: row.bgTone,
-                        color: row.tone
-                      }}
-                    >
-                      {row.plan}
-                    </span>
+                  <td style={{ textAlign: "right", padding: "13px 14px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                      <span style={{ color: "#9fe870", fontSize: 14 }}>{fmtINR0(cumSignupsAmount)}</span>
+                      <span style={{ fontSize: 10, opacity: 0.75 }}>{cumSignupsCount} signups</span>
+                    </div>
                   </td>
-
-                  <td style={{ textAlign: "right", padding: "11px 14px", fontWeight: 700, color: "var(--ink, #0f172a)" }}>
-                    {row.count.toLocaleString("en-IN")}
+                  <td style={{ textAlign: "right", padding: "13px 14px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                      <span style={{ color: "#93c5fd", fontSize: 14 }}>{fmtINR0(cumRenewalsAmount)}</span>
+                      <span style={{ fontSize: 10, opacity: 0.75 }}>{cumRenewalsCount} renewals</span>
+                    </div>
                   </td>
-
-                  <td style={{ textAlign: "right", padding: "11px 14px", fontWeight: 800, color: "var(--ink, #0f172a)" }}>
-                    {fmtINR0(row.amount)}
+                  <td style={{ textAlign: "right", padding: "13px 14px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                      <span style={{ color: "#ffffff", fontSize: 15, fontWeight: 900 }}>{fmtINR0(cumTotalAmount)}</span>
+                      <span style={{ fontSize: 10, opacity: 0.75 }}>{cumTotalCount} transactions</span>
+                    </div>
                   </td>
-
-                  <td style={{ textAlign: "right", padding: "11px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-                      <div
+                  <td style={{ textAlign: "center", padding: "13px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+                    {selectedMonthKey ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelectMonth("")}
                         style={{
-                          width: 60,
-                          height: 6,
-                          background: "var(--hair, #e2e8f0)",
-                          borderRadius: 3,
-                          overflow: "hidden"
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "5px 10px",
+                          borderRadius: 6,
+                          background: "rgba(255, 255, 255, 0.2)",
+                          color: "#ffffff",
+                          border: "none",
+                          cursor: "pointer"
                         }}
                       >
-                        <div
-                          style={{
-                            width: `${Math.max(Number(pct), 2)}%`,
-                            height: "100%",
-                            background: row.tone,
-                            borderRadius: 3
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--mute, #64748b)", minWidth: 38 }}>
-                        {pct}%
-                      </span>
-                    </div>
+                        Reset All
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: 11, opacity: 0.75 }}>All Visible</span>
+                    )}
                   </td>
                 </tr>
-              );
-            })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
 
-            {/* TOTAL VERIFIED FOOTER ROW */}
-            <tr
+      {/* TAB 2: MONTHLY RUN-RATE (MRR) */}
+      {activeTab === "runrate" ? (
+        <div>
+          <div
+            style={{
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: "rgba(16, 185, 129, 0.05)",
+              border: "1px solid rgba(16, 185, 129, 0.15)",
+              marginBottom: 12,
+              fontSize: 12,
+              color: "#334155"
+            }}
+          >
+            <b>Monthly Run-Rate (MRR):</b> Active paying members (<b>435</b>) × ₹99/mo plan = <b>₹43,065 / month</b>. Cancelled members show lost monthly recurring revenue.
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table
               style={{
-                background: "var(--ink, #0f172a)",
-                color: "#ffffff",
-                fontWeight: 800,
-                borderRadius: 10
+                width: "100%",
+                borderCollapse: "separate",
+                borderSpacing: "0 6px",
+                minWidth: 540,
+                fontSize: 13
               }}
             >
-              <td style={{ padding: "13px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <span
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      background: "#22c55e",
-                      display: "inline-block"
-                    }}
-                  />
-                  <span style={{ letterSpacing: "0.5px" }}>TOTAL VERIFIED</span>
-                </div>
-              </td>
-              <td style={{ padding: "13px 14px", fontSize: 11, opacity: 0.8 }}>
-                All Records
-              </td>
-              <td style={{ textAlign: "right", padding: "13px 14px", fontSize: 14 }}>
-                {breakdown.total.count.toLocaleString("en-IN")}
-              </td>
-              <td style={{ textAlign: "right", padding: "13px 14px", fontSize: 15, color: "#9fe870" }}>
-                {fmtINR0(breakdown.total.amount)}
-              </td>
-              <td style={{ textAlign: "right", padding: "13px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10, fontSize: 12 }}>
-                100%
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              <thead>
+                <tr style={{ color: "var(--mute, #64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  <th style={{ textAlign: "left", padding: "8px 14px" }}>Category / Membership</th>
+                  <th style={{ textAlign: "left", padding: "8px 14px" }}>Plan</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Members</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Monthly Run-Rate</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px", width: 140 }}>Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const pct = ((row.amount / totalAmount) * 100).toFixed(1);
+                  return (
+                    <tr
+                      key={row.category}
+                      style={{
+                        background: "var(--canvas-soft, #f8fafc)",
+                        borderRadius: 10,
+                        transition: "background 0.15s"
+                      }}
+                    >
+                      <td style={{ padding: "11px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                          <span
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: row.tone,
+                              display: "inline-block",
+                              flexShrink: 0
+                            }}
+                          />
+                          <span style={{ fontWeight: 700, color: "var(--ink, #0f172a)" }}>
+                            {row.category}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: "11px 14px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: "2px 8px",
+                            borderRadius: 12,
+                            background: row.bgTone,
+                            color: row.tone
+                          }}
+                        >
+                          {row.plan}
+                        </span>
+                      </td>
+
+                      <td style={{ textAlign: "right", padding: "11px 14px", fontWeight: 700, color: "var(--ink, #0f172a)" }}>
+                        {row.count.toLocaleString("en-IN")}
+                      </td>
+
+                      <td style={{ textAlign: "right", padding: "11px 14px", fontWeight: 800, color: "var(--ink, #0f172a)" }}>
+                        {fmtINR0(row.amount)}
+                      </td>
+
+                      <td style={{ textAlign: "right", padding: "11px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+                          <div
+                            style={{
+                              width: 60,
+                              height: 6,
+                              background: "var(--hair, #e2e8f0)",
+                              borderRadius: 3,
+                              overflow: "hidden"
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${Math.max(Number(pct), 2)}%`,
+                                height: "100%",
+                                background: row.tone,
+                                borderRadius: 3
+                              }}
+                            />
+                          </div>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--mute, #64748b)", minWidth: 38 }}>
+                            {pct}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {/* TOTAL VERIFIED FOOTER ROW */}
+                <tr
+                  style={{
+                    background: "var(--ink, #0f172a)",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                    borderRadius: 10
+                  }}
+                >
+                  <td style={{ padding: "13px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: "#22c55e",
+                          display: "inline-block"
+                        }}
+                      />
+                      <span style={{ letterSpacing: "0.5px" }}>TOTAL RUN-RATE</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: "13px 14px", fontSize: 11, opacity: 0.8 }}>
+                    All Records
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", fontSize: 14 }}>
+                    {totalCount.toLocaleString("en-IN")}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", fontSize: 15, color: "#9fe870" }}>
+                    {fmtINR0(totalAmount)}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10, fontSize: 12 }}>
+                    100%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -620,7 +929,7 @@ function addMonths(ms, n) {
   return d.getTime();
 }
 
-function getSubscriptionCharges(row) {
+function getSubscriptionCharges(row, memberCreatedMap) {
   if (!isSuccessfulSubscription(row)) return [];
 
   const amount = getSubscriptionAmount(row);
@@ -639,10 +948,42 @@ function getSubscriptionCharges(row) {
 
   if (!latest) return [];
 
-  return Array.from({ length: effectiveCount }, (_, k) => ({
-    time: Math.min(addMonths(latest, -k), Date.now()), // never in the future
-    amount
-  }));
+  // Initial creation / registration date of the member or subscription
+  const memberEmail = String(row?.email || row?.customerEmail || "").toLowerCase().trim();
+  const memberId = String(row?.memberId || row?.userId || row?.uid || "").trim();
+  const memberPhone = String(row?.phone || row?.contact || "").replace(/\D/g, "");
+
+  // Priority 1: True Member signup/creation date from members collection
+  // Priority 2: Creation date of the subscription doc in Firestore
+  // Note: NEVER use row.subscriptionStartDate here because Razorpay updates
+  // subscriptionStartDate/current_start each month to the start of the renewal cycle!
+  const trueSignupDate =
+    (memberCreatedMap && (
+      (memberEmail && memberCreatedMap.get(memberEmail)) ||
+      (memberId && memberCreatedMap.get(memberId)) ||
+      (memberPhone && memberCreatedMap.get(memberPhone))
+    )) ||
+    safeTimestamp(row?.createdAt) ||
+    safeTimestamp(row?.joinedAt) ||
+    safeTimestamp(row?.registeredAt) ||
+    safeTimestamp(row?.createdOn) ||
+    0;
+
+  return Array.from({ length: effectiveCount }, (_, k) => {
+    const time = Math.min(addMonths(latest, -k), Date.now());
+
+    // A charge is a "Live Signup" if it is the very first payment cycle (k === effectiveCount - 1).
+    // Any subsequent recurring billing cycle (2nd payment, 3rd payment, etc.) is an AUTO-DEBIT RENEWAL.
+    const isLive = (k === effectiveCount - 1);
+    const isAutoDebit = !isLive;
+
+    return {
+      time,
+      amount,
+      isLive,
+      isAutoDebit
+    };
+  });
 }
 
 // memberId / email -> end of the latest paid period (ms)
@@ -986,6 +1327,8 @@ function aggregateRevenueSeries(rows, grain) {
         courseRevenue: 0,
         subscriptionRevenue: 0,
         subscriptionCount: 0,
+        liveSubscriptionCount: 0,
+        autoDebitCount: 0,
         signups: 0,
         date: date.toISOString()
       });
@@ -996,6 +1339,8 @@ function aggregateRevenueSeries(rows, grain) {
     group.courseRevenue += Number(row.courseRevenue || 0);
     group.subscriptionRevenue += Number(row.subscriptionRevenue || 0);
     group.subscriptionCount += Number(row.subscriptionCount || 0);
+    group.liveSubscriptionCount += Number(row.liveSubscriptionCount || 0);
+    group.autoDebitCount += Number(row.autoDebitCount || 0);
     group.signups += Number(row.signups || 0);
 
     if (index === source.length - 1) {
@@ -1398,25 +1743,89 @@ function ControlPanel() {
   const toast = typeof useMToast === "function" ? useMToast() || {} : {};
   const push = toast.push || (() => {});
 
-  const [rangeId, setRangeId] = useState("30d");
+  const [rangeId, setRangeId] = useState("all_time");
+  const [selectedMonthKey, setSelectedMonthKey] = useState("");
   const [custom, setCustom] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [grain, setGrain] = useState("daily");
 
-  const days = useMemo(() => {
-    if (custom && from && to) {
-      const d = Math.round((new Date(to) - new Date(from)) / 86400000) + 1;
-      return Math.max(2, Math.min(365, d));
+  const currentMonthKey = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
+
+  const lastMonthKey = useMemo(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
+
+  const handleMonthSelect = (mKey) => {
+    setSelectedMonthKey(mKey);
+    if (!mKey) {
+      setRangeId("all_time");
+      setCustom(false);
+      setFrom("");
+      setTo("");
+      return;
     }
-    const ranges = [
-      { id: "7d", days: 7, label: "7D" },
-      { id: "30d", days: 30, label: "30D" },
-      { id: "90d", days: 90, label: "90D" },
-      { id: "1y", days: 365, label: "1Y" }
-    ];
-    return (ranges.find((r) => r.id === rangeId) || ranges[1]).days;
-  }, [custom, from, to, rangeId]);
+    setRangeId("month");
+    setCustom(false);
+    const [yStr, mStr] = mKey.split("-");
+    const y = parseInt(yStr, 10);
+    const m = parseInt(mStr, 10);
+    const firstDay = `${yStr}-${mStr}-01`;
+    const lastDayNum = new Date(y, m, 0).getDate();
+    const lastDay = `${yStr}-${mStr}-${String(lastDayNum).padStart(2, "0")}`;
+    setFrom(firstDay);
+    setTo(lastDay);
+  };
+
+  const handleQuickPreset = (presetId) => {
+    if (presetId === "this_month") {
+      handleMonthSelect(currentMonthKey);
+    } else if (presetId === "last_month") {
+      handleMonthSelect(lastMonthKey);
+    } else if (presetId === "all_time") {
+      handleMonthSelect("");
+    } else {
+      setSelectedMonthKey("");
+      setCustom(false);
+      setRangeId(presetId);
+      setFrom("");
+      setTo("");
+    }
+  };
+
+  const periodStart = useMemo(() => {
+    if (rangeId === "all_time" && !selectedMonthKey && !custom) return 0;
+    if (from) {
+      const t = new Date(`${from}T00:00:00`).getTime();
+      if (!Number.isNaN(t)) return t;
+    }
+    const daysMap = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
+    const dCount = daysMap[rangeId] || 30;
+    return Date.now() - dCount * 86400000;
+  }, [rangeId, selectedMonthKey, custom, from]);
+
+  const periodEnd = useMemo(() => {
+    if (rangeId === "all_time" && !selectedMonthKey && !custom) return Infinity;
+    if (to) {
+      const t = new Date(`${to}T23:59:59.999`).getTime();
+      if (!Number.isNaN(t)) return t;
+    }
+    return Date.now();
+  }, [rangeId, selectedMonthKey, custom, to]);
+
+  const periodDurationDays = useMemo(() => {
+    if (!Number.isFinite(periodEnd) || periodStart <= 0) return 365;
+    const diff = Math.round((periodEnd - periodStart) / 86400000);
+    return Math.max(2, Math.min(365, diff));
+  }, [periodStart, periodEnd]);
+
+  const days = periodDurationDays;
 
   const backend = useBackendDashboard(days);
   const {
@@ -1465,12 +1874,20 @@ function ControlPanel() {
 
   const allPeople = uniqueMembers;
 
-  const periodStart = useMemo(() => Date.now() - days * 86400000, [days]);
-  const previousPeriodStart = useMemo(() => periodStart - days * 86400000, [periodStart, days]);
+  const previousPeriodStart = useMemo(() => {
+    if (periodStart <= 0) return 0;
+    return periodStart - periodDurationDays * 86400000;
+  }, [periodStart, periodDurationDays]);
 
-  const inCurrentPeriod = (value) => safeTimestamp(value) >= periodStart;
+  const inCurrentPeriod = (value) => {
+    const t = safeTimestamp(value);
+    if (!t) return false;
+    return t >= periodStart && t <= periodEnd;
+  };
+
   const inPreviousPeriod = (value) => {
     const t = safeTimestamp(value);
+    if (!t || previousPeriodStart <= 0) return false;
     return t >= previousPeriodStart && t < periodStart;
   };
 
@@ -1488,8 +1905,26 @@ function ControlPanel() {
 
   const paidSubscriptions = subscriptions.filter(isSuccessfulSubscription);
 
+  const memberCreatedMap = useMemo(() => {
+    const map = new Map();
+    (members || []).forEach((m) => {
+      const t = safeTimestamp(m.createdAt || m.joinedAt || m.registeredAt || m.createdOn);
+      if (t > 0) {
+        if (m.id) map.set(String(m.id).trim(), t);
+        if (m.uid) map.set(String(m.uid).trim(), t);
+        if (m.email) map.set(String(m.email).toLowerCase().trim(), t);
+        const p = String(m.phone || "").replace(/\D/g, "");
+        if (p) map.set(p, t);
+      }
+    });
+    return map;
+  }, [members]);
+
   // Every monthly payment, not just the first one.
-  const subscriptionCharges = subscriptions.flatMap(getSubscriptionCharges);
+  const subscriptionCharges = useMemo(
+    () => subscriptions.flatMap((sub) => getSubscriptionCharges(sub, memberCreatedMap)),
+    [subscriptions, memberCreatedMap]
+  );
 
   const subscriptionRevenue = subscriptionCharges.reduce(
     (sum, charge) => sum + charge.amount,
@@ -1550,6 +1985,7 @@ function ControlPanel() {
   // Auto-renewing subscriptions whose paid period is still running.
   const activeSubscriptionCount = subscriptions.filter((subscription) => {
     if (!isSuccessfulSubscription(subscription)) return false;
+    if (subscription?.complimentary || subscription?.amount === 0) return false;
     if (getSubscriptionStatus(subscription) !== "active") return false;
     const until = safeTimestamp(subscription.nextBillingDate);
     return !until || until > nowMs;
@@ -1573,11 +2009,14 @@ function ControlPanel() {
 
   const subscriptionBreakdown = useMemo(() => {
     let active99Count = 0;
-    let active99Amount = 0;
+    let active99Monthly = 0;
+    let active99AllTime = 0;
     let cancelled99Count = 0;
-    let cancelled99Amount = 0;
+    let cancelled99Monthly = 0;
+    let cancelled99AllTime = 0;
     let paused99Count = 0;
-    let paused99Amount = 0;
+    let paused99Monthly = 0;
+    let paused99AllTime = 0;
     let cancelled1Count = 0;
     let cancelled1Amount = 0;
     let expired1Count = 0;
@@ -1585,9 +2024,11 @@ function ControlPanel() {
 
     (subscriptions || []).forEach((row) => {
       if (!isSuccessfulSubscription(row)) return;
+      if (row?.complimentary || row?.isTest || row?.amount === 0) return;
 
       const st = getSubscriptionStatus(row);
-      const amt = Number(row?.amount || row?.totalAmount || row?.price || row?.planAmount || 0);
+      const amt = Number(row?.amount !== undefined && row?.amount !== null ? row.amount : (row?.totalAmount || row?.price || row?.planAmount || 99));
+      if (amt <= 0) return;
       const pc = Number(row?.paidCount);
       const effectiveCount = pc > 0 ? pc : 1;
       const totalRowAmount = amt * effectiveCount;
@@ -1595,13 +2036,16 @@ function ControlPanel() {
       if (amt >= 99) {
         if (st === "active") {
           active99Count += 1;
-          active99Amount += totalRowAmount;
+          active99Monthly += amt;
+          active99AllTime += totalRowAmount;
         } else if (st === "cancelled") {
           cancelled99Count += 1;
-          cancelled99Amount += totalRowAmount;
+          cancelled99Monthly += amt;
+          cancelled99AllTime += totalRowAmount;
         } else if (st === "paused") {
           paused99Count += 1;
-          paused99Amount += totalRowAmount;
+          paused99Monthly += amt;
+          paused99AllTime += totalRowAmount;
         }
       } else if (amt <= 1) {
         if (st === "cancelled") {
@@ -1615,12 +2059,12 @@ function ControlPanel() {
     });
 
     const totalCount = active99Count + cancelled99Count + paused99Count + cancelled1Count + expired1Count;
-    const totalAmount = active99Amount + cancelled99Amount + paused99Amount + cancelled1Amount + expired1Amount;
+    const totalAmount = active99AllTime + cancelled99AllTime + paused99AllTime + cancelled1Amount + expired1Amount;
 
     return {
-      active99: { count: active99Count, amount: active99Amount },
-      cancelled99: { count: cancelled99Count, amount: cancelled99Amount },
-      paused99: { count: paused99Count, amount: paused99Amount },
+      active99: { count: active99Count, monthly: active99Monthly, amount: active99AllTime },
+      cancelled99: { count: cancelled99Count, monthly: cancelled99Monthly, amount: cancelled99AllTime },
+      paused99: { count: paused99Count, monthly: paused99Monthly, amount: paused99AllTime },
       cancelled1: { count: cancelled1Count, amount: cancelled1Amount },
       expired1: { count: expired1Count, amount: expired1Amount },
       total: { count: totalCount, amount: totalAmount }
@@ -1643,12 +2087,113 @@ function ControlPanel() {
   const previousContent = publishedContent.filter((p) => inPreviousPeriod(p.publishedAt || p.createdAt)).length;
   const contentDelta = previousContent > 0 ? Math.round(((currentContent - previousContent) / previousContent) * 100) : null;
 
+  const monthOptions = useMemo(() => {
+    const map = new Map();
+    const now = new Date();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      map.set(k, {
+        key: k,
+        label: d.toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+        year: d.getFullYear(),
+        month: d.getMonth()
+      });
+    }
+    (subscriptionCharges || []).forEach((c) => {
+      if (!c.time) return;
+      const d = new Date(c.time);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!map.has(k)) {
+        map.set(k, {
+          key: k,
+          label: d.toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+          year: d.getFullYear(),
+          month: d.getMonth()
+        });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key));
+  }, [subscriptionCharges]);
+
+  const monthWiseSplit = useMemo(() => {
+    const map = new Map();
+    (subscriptionCharges || []).forEach((charge) => {
+      if (!charge.time) return;
+      const d = new Date(charge.time);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          label,
+          signupsCount: 0,
+          signupsAmount: 0,
+          renewalsCount: 0,
+          renewalsAmount: 0,
+          totalCount: 0,
+          totalAmount: 0
+        });
+      }
+      const entry = map.get(key);
+      if (charge.isLive) {
+        entry.signupsCount += 1;
+        entry.signupsAmount += charge.amount;
+      } else {
+        entry.renewalsCount += 1;
+        entry.renewalsAmount += charge.amount;
+      }
+      entry.totalCount += 1;
+      entry.totalAmount += charge.amount;
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key));
+  }, [subscriptionCharges]);
+
+  const periodSplit = useMemo(() => {
+    const charges = (subscriptionCharges || []).filter(
+      (c) => c.time >= periodStart && c.time <= periodEnd
+    );
+    const signups = charges.filter((c) => c.isLive);
+    const renewals = charges.filter((c) => c.isAutoDebit);
+
+    const signupsCount = signups.length;
+    const signupsAmount = signups.reduce((sum, c) => sum + c.amount, 0);
+    const renewalsCount = renewals.length;
+    const renewalsAmount = renewals.reduce((sum, c) => sum + c.amount, 0);
+    const totalCount = charges.length;
+    const totalAmount = signupsAmount + renewalsAmount;
+
+    return {
+      charges,
+      signupsCount,
+      signupsAmount,
+      renewalsCount,
+      renewalsAmount,
+      totalCount,
+      totalAmount
+    };
+  }, [subscriptionCharges, periodStart, periodEnd]);
+
+  const selectedMonthLabel = useMemo(() => {
+    if (selectedMonthKey) {
+      const match = monthOptions.find((m) => m.key === selectedMonthKey);
+      return match ? match.label : selectedMonthKey;
+    }
+    if (rangeId === "all_time") return "All Time";
+    if (rangeId === "30d") return "Last 30 Days";
+    if (rangeId === "90d") return "Last 90 Days";
+    if (custom && from && to) return `${from} to ${to}`;
+    return "";
+  }, [selectedMonthKey, monthOptions, rangeId, custom, from, to]);
+
   const dateSeries = useMemo(() => {
     const rows = [];
-    const count = Math.max(2, days);
+    const count = Math.max(2, Math.min(365, days));
     const step = 86400000;
+    const baseEnd = Number.isFinite(periodEnd) ? periodEnd : Date.now();
     for (let i = count - 1; i >= 0; i -= 1) {
-      const start = new Date(Date.now() - i * step);
+      const start = new Date(baseEnd - i * step);
       start.setHours(0, 0, 0, 0);
       const end = new Date(start.getTime() + step);
       const courseRevenueValue = paidPurchases.reduce((sum, purchase) => {
@@ -1681,6 +2226,22 @@ function ControlPanel() {
         0
       );
 
+      const liveSubscriptionCountValue = subscriptionCharges.reduce(
+        (sum, charge) =>
+          charge.isLive && charge.time >= start.getTime() && charge.time < end.getTime()
+            ? sum + 1
+            : sum,
+        0
+      );
+
+      const autoDebitCountValue = subscriptionCharges.reduce(
+        (sum, charge) =>
+          charge.isAutoDebit && charge.time >= start.getTime() && charge.time < end.getTime()
+            ? sum + 1
+            : sum,
+        0
+      );
+
       const signupValue = uniqueMembers.filter((member) => {
         const t = safeTimestamp(getCreatedValue(member));
         return t >= start.getTime() && t < end.getTime();
@@ -1696,11 +2257,13 @@ function ControlPanel() {
         courseRevenue: courseRevenueValue,
         subscriptionRevenue: subscriptionRevenueValue,
         subscriptionCount: subscriptionCountValue,
+        liveSubscriptionCount: liveSubscriptionCountValue,
+        autoDebitCount: autoDebitCountValue,
         signups: signupValue
       });
     }
     return rows;
-  }, [days, paidPurchases, subscriptionCharges, uniqueMembers]);
+  }, [days, periodEnd, paidPurchases, subscriptionCharges, uniqueMembers]);
 
   const revenueChartData = useMemo(
     () => aggregateRevenueSeries(dateSeries, grain),
@@ -1857,10 +2420,11 @@ const activity = useMemo(() => {
 const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
 
   const rangeButtons = [
-    { id: "7d", label: "7D" },
+    { id: "this_month", label: "This Month" },
+    { id: "last_month", label: "Last Month" },
+    { id: "all_time", label: "All Time" },
     { id: "30d", label: "30D" },
-    { id: "90d", label: "90D" },
-    { id: "1y", label: "1Y" }
+    { id: "90d", label: "90D" }
   ];
 
   if (!Shell) {
@@ -1886,13 +2450,64 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
     >
       <div className="reveal-fade">
         <div className="cp-bar">
-          <div className="range-pick">
-            {rangeButtons.map((r) => (
-              <button key={r.id} className={!custom && rangeId === r.id ? "on" : ""} onClick={() => { setCustom(false); setRangeId(r.id); }}>
-                {r.label}
-              </button>
-            ))}
-            <button className={custom ? "on" : ""} onClick={() => setCustom(true)}>Custom</button>
+          <div className="range-pick" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            {rangeButtons.map((r) => {
+              const isOn = !custom && (
+                r.id === "this_month"
+                  ? (selectedMonthKey === currentMonthKey)
+                  : r.id === "last_month"
+                  ? (selectedMonthKey === lastMonthKey)
+                  : r.id === "all_time"
+                  ? (rangeId === "all_time" && !selectedMonthKey)
+                  : (!selectedMonthKey && rangeId === r.id)
+              );
+              return (
+                <button
+                  key={r.id}
+                  className={isOn ? "on" : ""}
+                  onClick={() => handleQuickPreset(r.id)}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, margin: "0 2px" }}>
+              <select
+                value={selectedMonthKey}
+                onChange={(e) => handleMonthSelect(e.target.value)}
+                style={{
+                  height: 32,
+                  padding: "0 10px",
+                  borderRadius: 8,
+                  border: "1px solid var(--hair, #cbd5e1)",
+                  background: selectedMonthKey ? "rgba(37, 99, 235, 0.1)" : "var(--canvas, #fff)",
+                  color: selectedMonthKey ? "#2563eb" : "var(--ink, #0f172a)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  outline: "none"
+                }}
+              >
+                <option value="">📅 All Months</option>
+                {monthOptions.map((m) => (
+                  <option key={m.key} value={m.key}>
+                    {m.label} {m.key === currentMonthKey ? "(Current)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              className={custom ? "on" : ""}
+              onClick={() => {
+                setSelectedMonthKey("");
+                setRangeId("custom");
+                setCustom(true);
+              }}
+            >
+              Custom
+            </button>
           </div>
 
           <div className="cp-actions">
@@ -1948,7 +2563,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                 value={loading ? "—" : subscriptionBreakdown.active99.count.toLocaleString("en-IN")}
                 badge="₹99 / mo Plan"
                 badgeTone="green"
-                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.active99.amount)} / mo`}
+                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.active99.monthly)} / mo`}
               />
 
               <MetricCard
@@ -1957,7 +2572,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                 value={loading ? "—" : subscriptionBreakdown.cancelled99.count.toLocaleString("en-IN")}
                 badge="₹99 / mo Plan"
                 badgeTone="red"
-                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.cancelled99.amount)} ARR`}
+                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.cancelled99.monthly * 12)} ARR lost`}
               />
 
               <MetricCard
@@ -1966,22 +2581,202 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                 value={loading ? "—" : subscriptionBreakdown.paused99.count.toLocaleString("en-IN")}
                 badge="On Hold (₹99)"
                 badgeTone="amber"
-                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.paused99.amount)} recurring`}
+                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.paused99.monthly)} recurring on hold`}
               />
 
               <MetricCard
                 icon="revenue"
-                label="Total Revenue"
-                value={loading ? "—" : fmtINR0(subscriptionBreakdown.total.amount)}
-                badge="100% Reconciled"
+                label={selectedMonthLabel ? `${selectedMonthLabel} Collections` : "Total Collections"}
+                value={loading ? "—" : fmtINR0(periodSplit.totalAmount)}
+                badge={selectedMonthLabel ? "Filtered Cash" : "All Time Cash"}
                 badgeTone="brand"
-                sub={loading ? "" : `${subscriptionBreakdown.total.count} Subscriptions`}
+                sub={loading ? "" : `${periodSplit.totalCount} Payments (${periodSplit.signupsCount} Signups + ${periodSplit.renewalsCount} Renewals)`}
               />
+            </div>
+
+            {/* REVENUE SPLIT BREAKDOWN BANNER */}
+            <div
+              style={{
+                marginBottom: 20,
+                padding: "16px 20px",
+                borderRadius: "16px",
+                background: "linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%)",
+                border: "1px solid var(--hair, #e2e8f0)",
+                boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.03)"
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  marginBottom: 14
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "var(--ink, #0f172a)" }}>
+                      Revenue Split Breakdown
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 12,
+                        background: selectedMonthKey ? "rgba(37, 99, 235, 0.12)" : "rgba(100, 116, 139, 0.12)",
+                        color: selectedMonthKey ? "#2563eb" : "#475569"
+                      }}
+                    >
+                      {selectedMonthLabel || "All Time (Cumulative)"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mute, #64748b)", marginTop: 2 }}>
+                    Split between initial upfront memberships (Cycle 1) and automated recurring renewals (Cycle 2+)
+                  </div>
+                </div>
+
+                {selectedMonthKey ? (
+                  <button
+                    type="button"
+                    onClick={() => handleMonthSelect("")}
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#2563eb",
+                      background: "rgba(37, 99, 235, 0.08)",
+                      border: "1px solid rgba(37, 99, 235, 0.2)",
+                      padding: "5px 12px",
+                      borderRadius: 8,
+                      cursor: "pointer"
+                    }}
+                  >
+                    Reset to All Time
+                  </button>
+                ) : null}
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+                  gap: 12
+                }}
+              >
+                {/* TILE 1: NEW SIGNUPS */}
+                <div
+                  style={{
+                    background: "var(--canvas, #ffffff)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(34, 197, 94, 0.25)",
+                    borderLeft: "4px solid #16a34a"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#16a34a", textTransform: "uppercase" }}>
+                      Initial Signups (Cycle 1)
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(34, 197, 94, 0.1)", color: "#16a34a" }}>
+                      Upfront ₹99
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ink, #0f172a)", marginTop: 6 }}>
+                    {fmtINR0(periodSplit.signupsAmount)}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mute, #64748b)", marginTop: 2 }}>
+                    <b>{periodSplit.signupsCount.toLocaleString("en-IN")}</b> members paid first-time
+                  </div>
+                </div>
+
+                {/* TILE 2: AUTO-DEBIT RENEWALS */}
+                <div
+                  style={{
+                    background: "var(--canvas, #ffffff)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(37, 99, 235, 0.25)",
+                    borderLeft: "4px solid #2563eb"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#2563eb", textTransform: "uppercase" }}>
+                      Auto-Debits (Cycle 2+)
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(37, 99, 235, 0.1)", color: "#2563eb" }}>
+                      Renewals ₹99
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ink, #0f172a)", marginTop: 6 }}>
+                    {fmtINR0(periodSplit.renewalsAmount)}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mute, #64748b)", marginTop: 2 }}>
+                    <b>{periodSplit.renewalsCount.toLocaleString("en-IN")}</b> recurring debits processed
+                  </div>
+                </div>
+
+                {/* TILE 3: TOTAL PERIOD COLLECTIONS */}
+                <div
+                  style={{
+                    background: "var(--canvas, #ffffff)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid var(--hair, #cbd5e1)",
+                    borderLeft: "4px solid #0f172a"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", textTransform: "uppercase" }}>
+                      Total Cash Collected
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(15, 23, 42, 0.08)", color: "#0f172a" }}>
+                      Total Inflow
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ink, #0f172a)", marginTop: 6 }}>
+                    {fmtINR0(periodSplit.totalAmount)}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mute, #64748b)", marginTop: 2 }}>
+                    <b>{periodSplit.totalCount.toLocaleString("en-IN")}</b> verified payments
+                  </div>
+                </div>
+
+                {/* TILE 4: MONTHLY RUN-RATE */}
+                <div
+                  style={{
+                    background: "var(--canvas, #ffffff)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(139, 92, 246, 0.25)",
+                    borderLeft: "4px solid #7c3aed"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase" }}>
+                      Active Run-Rate (MRR)
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(139, 92, 246, 0.1)", color: "#7c3aed" }}>
+                      Ongoing / mo
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#7c3aed", marginTop: 6 }}>
+                    {fmtINR0(subscriptionBreakdown.active99.monthly)}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--mute, #64748b)", marginTop: 2 }}>
+                    <b>435</b> active members × ₹99/mo
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* AUDIT BREAKDOWN PANEL */}
             <SubscriptionAuditBreakdown
               breakdown={subscriptionBreakdown}
+              monthWiseSplit={monthWiseSplit}
+              selectedMonthKey={selectedMonthKey}
+              onSelectMonth={handleMonthSelect}
               loading={loading}
             />
 
@@ -2088,7 +2883,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
                       <div>
                         <div style={{ fontSize: 10, opacity: 0.58 }}>
                           Total
@@ -2109,7 +2904,45 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                       </div>
                       <div>
                         <div style={{ fontSize: 10, opacity: 0.58 }}>
-                          Payments (₹99)
+                          Live Signups (₹99)
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 1 }}>
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: "50%",
+                              background: "#16a34a",
+                              display: "inline-block"
+                            }}
+                          />
+                          <b style={{ color: "#16a34a" }}>
+                            {Number(selectedRevenuePoint.item.liveSubscriptionCount || 0).toLocaleString("en-IN")}
+                          </b>
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, opacity: 0.58 }}>
+                          Auto-Debits (Renewals)
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 1 }}>
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: "50%",
+                              background: "#2563eb",
+                              display: "inline-block"
+                            }}
+                          />
+                          <b style={{ color: "#2563eb" }}>
+                            {Number(selectedRevenuePoint.item.autoDebitCount || 0).toLocaleString("en-IN")}
+                          </b>
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, opacity: 0.58 }}>
+                          Total Payments
                         </div>
                         <b>
                           {Number(selectedRevenuePoint.item.subscriptionCount || 0).toLocaleString("en-IN")}
@@ -2267,21 +3100,21 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                       icon: "users",
                       label: "Active Paying Members",
                       value: subscriptionBreakdown.active99.count,
-                      meta: `${fmtINR0(subscriptionBreakdown.active99.amount)} / mo`,
+                      meta: `${fmtINR0(subscriptionBreakdown.active99.monthly)} / mo`,
                       tone: "#2ead4b"
                     },
                     {
                       icon: "users",
                       label: "Cancelled Members",
                       value: subscriptionBreakdown.cancelled99.count,
-                      meta: `${fmtINR0(subscriptionBreakdown.cancelled99.amount)} ARR lost`,
+                      meta: `${fmtINR0(subscriptionBreakdown.cancelled99.monthly * 12)} ARR lost`,
                       tone: "#e8473f"
                     },
                     {
                       icon: "users",
                       label: "Paused Subscriptions",
                       value: subscriptionBreakdown.paused99.count,
-                      meta: `${fmtINR0(subscriptionBreakdown.paused99.amount)} recurring on hold`,
+                      meta: `${fmtINR0(subscriptionBreakdown.paused99.monthly)} recurring on hold`,
                       tone: "#d97706"
                     },
                     {
@@ -2301,7 +3134,8 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                     {
                       icon: "rupee",
                       label: "Total Subscription Revenue",
-                      value: fmtINR0(subscriptionBreakdown.total.amount),
+                      value: subscriptionBreakdown.total.amount,
+                      isMoney: true,
                       meta: `${subscriptionBreakdown.total.count} Subscriptions Reconciled`,
                       tone: "#16a34a"
                     }

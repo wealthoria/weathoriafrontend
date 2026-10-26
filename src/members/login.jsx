@@ -1294,25 +1294,38 @@ const expiryTime =
 const accessActive =
   Number.isFinite(expiryTime) &&
   expiryTime > Date.now();
-if (loginStatus === "inactive") {
+const effectiveStatus = String(
+  updatedSession?.status ||
+  updatedSession?.subscription?.status ||
+  loginStatus ||
+  ""
+).trim().toLowerCase();
+
+if (effectiveStatus === "inactive") {
   setSubscriptionInactive(true);
   setLoading(false);
   return;
 }
 
 if (
-  loginStatus === "cancelled" ||
-  loginStatus === "canceled"
+  effectiveStatus === "cancelled" ||
+  effectiveStatus === "canceled"
 ) {
   if (accessActive) {
-    // Cancelled but membership is still valid
+    // Cancelled but membership paid period is still valid
     window.location.replace(
       "/members/dashboard"
     );
     return;
   }
 
-  // Cancelled and access period has ended
+  // Cancelled and access period has ended / renewal unpaid
+  setSubscriptionInactive(true);
+  setLoading(false);
+  return;
+}
+
+if (!accessActive && effectiveStatus !== "active") {
   setSubscriptionInactive(true);
   setLoading(false);
   return;

@@ -59,6 +59,36 @@ function loadRazorpayScript() {
   });
 }
 
+function getAdAttributedSource() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = (params.get("utm_source") || "").toLowerCase();
+    const sourceParam = (params.get("source") || "").toLowerCase();
+    const fbclid = params.get("fbclid");
+    const ref = (document.referrer || "").toLowerCase();
+
+    if (utmSource.includes("insta") || sourceParam.includes("insta") || ref.includes("instagram.com")) {
+      sessionStorage.setItem("wealthoria_ad_source", "Instagram Ad");
+      return "Instagram Ad";
+    }
+    if (utmSource.includes("fb") || utmSource.includes("facebook") || sourceParam.includes("facebook") || ref.includes("facebook.com")) {
+      sessionStorage.setItem("wealthoria_ad_source", "Facebook Ad");
+      return "Facebook Ad";
+    }
+    if (fbclid) {
+      sessionStorage.setItem("wealthoria_ad_source", "Meta Ad (Instagram / FB)");
+      return "Meta Ad (Instagram / FB)";
+    }
+    if (utmSource) {
+      sessionStorage.setItem("wealthoria_ad_source", utmSource);
+      return utmSource;
+    }
+    const saved = sessionStorage.getItem("wealthoria_ad_source");
+    if (saved) return saved;
+  } catch (e) {}
+  return "website";
+}
+
 function validate(form) {
   const errors = {};
 
@@ -318,7 +348,7 @@ export default function PrebookForm() {
 
         notes: {
           product: "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ",
-          source: "website",
+          source: getAdAttributedSource(),
         },
 
         theme: {
@@ -351,7 +381,7 @@ export default function PrebookForm() {
 
                 shippingAddress,
                 billingAddress,
-                source: "website",
+                source: getAdAttributedSource(),
               }),
             });
 

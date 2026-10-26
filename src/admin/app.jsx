@@ -409,6 +409,19 @@ function resolve(path) {
     };
   }
 
+
+  if (
+    path === "/admin/customemail" ||
+    path === "/admin/Customemail" ||
+    path === "/admin/custom-email"
+  ) {
+    return {
+      name: "customemail"
+    };
+  }
+
+
+
   if (
     path === "/admin/unsubscribed-members" ||
     path === "/admin/unsubscribed"
@@ -1050,6 +1063,48 @@ function ProtectedRoute({
 
       return (
         <AdminShell title="Unsubscribed Members">
+          <div className="psplash2">
+            <div className="spinner2" />
+          </div>
+        </AdminShell>
+      );
+    }
+
+    /* ---------------------------------------------------------------------
+       CUSTOM EMAIL
+       --------------------------------------------------------------------- */
+
+    case "customemail":
+    case "Customemail": {
+      const CustomEmailScreen =
+        getAdmin("AdminCustomEmail") ||
+        getAdmin("Customemail");
+
+      if (!isAdmin) {
+        const AccessDenied = getAdmin("AccessDenied");
+        return (
+          <AdminShell title="Access Denied">
+            {AccessDenied ? (
+              <AccessDenied />
+            ) : (
+              <div className="page">
+                <h1>Access Denied</h1>
+              </div>
+            )}
+          </AdminShell>
+        );
+      }
+
+      if (CustomEmailScreen) {
+        return (
+          <AdminShell title="Custom Email">
+            <CustomEmailScreen />
+          </AdminShell>
+        );
+      }
+
+      return (
+        <AdminShell title="Custom Email">
           <div className="psplash2">
             <div className="spinner2" />
           </div>

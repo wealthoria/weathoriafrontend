@@ -229,7 +229,11 @@ const NAV = [
     label: "Unsubscribed Members",
     icon: "users"
   },
-
+  {
+    to: "/admin/customemail",
+    label: "Custom Email",
+    icon: "send"
+  },
 
 
 ];

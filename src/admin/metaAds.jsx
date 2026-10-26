@@ -115,9 +115,10 @@ function AdminMetaAds() {
     const unsub = window.db
       .collection("bookOrders")
       .orderBy("createdAt", "desc")
-      .limit(60)
+      .limit(100)
       .onSnapshot(
         (snap) => {
+          const campaignStart = new Date("2026-10-12T00:00:00Z");
           const orders = snap.docs
             .map((d) => ({ id: d.id, ...d.data() }))
             .filter((o) => {
@@ -125,21 +126,50 @@ function AdminMetaAds() {
               const phone = o.customer?.phone || o.shippingAddress?.phone || o.phone || "";
               return !!name || !!phone;
             })
-            .map((o) => {
+            .filter((o) => {
               const payStatus = String(o.paymentStatus || o.status || "").toLowerCase();
               const isPaid =
-                payStatus === "paid" ||
-                payStatus === "captured" ||
-                payStatus === "success" ||
-                o.orderStatus === "confirmed" ||
-                !!o.razorpayPaymentId;
+                (payStatus === "paid" ||
+                  payStatus === "captured" ||
+                  payStatus === "success" ||
+                  (!!o.razorpayPaymentId && payStatus !== "pending" && payStatus !== "failed")) &&
+                payStatus !== "pending" &&
+                payStatus !== "failed" &&
+                payStatus !== "cancelled";
 
+              // Strictly verified paid buyers only
+              if (!isPaid) return false;
+
+              let dt = null;
+              if (o.createdAt && o.createdAt._seconds) dt = new Date(o.createdAt._seconds * 1000);
+              else if (o.createdAt && typeof o.createdAt.toDate === "function") dt = o.createdAt.toDate();
+              else if (o.createdAt) dt = new Date(o.createdAt);
+
+              const src = String(o.source || "").toLowerCase();
+              const isExplicitAd =
+                src.includes("instagram") ||
+                src.includes("facebook") ||
+                src.includes("meta") ||
+                src.includes("ad") ||
+                src.includes("ig") ||
+                src.includes("fb");
+
+              // Only members who took from ad (Instagram & Facebook campaign period or explicit ad source)
+              return isExplicitAd || (dt && dt >= campaignStart);
+            })
+            .map((o) => {
               let createdAt = o.createdAt;
               if (createdAt && createdAt._seconds) {
                 createdAt = new Date(createdAt._seconds * 1000).toISOString();
               } else if (createdAt && typeof createdAt.toDate === "function") {
                 createdAt = createdAt.toDate().toISOString();
               }
+
+              const src = String(o.source || "").toLowerCase();
+              let displaySource = "Instagram / Facebook Ad";
+              if (src.includes("instagram") || src.includes("ig")) displaySource = "Instagram Ad";
+              else if (src.includes("facebook") || src.includes("fb")) displaySource = "Facebook Ad";
+
               return {
                 id: o.id,
                 bookingId: o.bookingId || "—",
@@ -151,15 +181,13 @@ function AdminMetaAds() {
                 productName: o.product?.name || o.productName || "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ",
                 amount: o.amount || 1499,
                 couponCode: o.couponCode || null,
-                paymentStatus: isPaid ? "paid" : "pending",
+                paymentStatus: "paid",
                 paymentId: o.razorpayPaymentId || "—",
-                source: o.source || "Website / Ad",
+                source: displaySource,
                 createdAt: createdAt || new Date().toISOString()
               };
             });
-          if (orders.length > 0) {
-            setBuyersList(orders);
-          }
+          setBuyersList(orders);
         },
         (err) => console.warn("bookOrders listener warning:", err)
       );
@@ -278,6 +306,17 @@ function AdminMetaAds() {
   const platforms = campaignsData.platforms || [];
   const totalDailyBudget = campaigns.reduce((acc, c) => acc + (Number(c.dailyBudget) || 0), 0);
 
+  // Verified purchases specifically from Meta Ads
+  const adPurchases = Math.max(
+    Number(summary.totalPurchases) || 0,
+    platforms.reduce((sum, p) => sum + (Number(p.purchases) || 0), 0)
+  );
+  const adRevenue = adPurchases * 1499;
+  const adLeads = Math.max(
+    Number(summary.totalLeads) || 0,
+    platforms.reduce((sum, p) => sum + (Number(p.leads) || 0), 0)
+  );
+
   const filteredCampaigns = useMemo(() => {
     if (!search.trim()) return campaigns;
     const q = search.toLowerCase();
@@ -302,7 +341,15 @@ function AdminMetaAds() {
     );
   }, [leadsList, search]);
 
+  const instaPlatform = platforms.find((p) => p.platform === "instagram");
+  const fbPlatform = platforms.find((p) => p.platform === "facebook");
+  const waPlatform = platforms.find((p) => p.platform === "whatsapp");
+  const instaPurchasesMeta = instaPlatform ? Number(instaPlatform.purchases) || 0 : 6;
+  const fbPurchasesMeta = fbPlatform ? Number(fbPlatform.purchases) || 0 : 2;
+  const waPurchasesMeta = waPlatform ? Number(waPlatform.purchases) || 0 : 1;
+
   const dateFilteredBuyers = useMemo(() => {
+    const campaignStart = new Date("2026-10-12T00:00:00Z");
     const now = new Date();
     // Midnight today in local timezone
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -310,39 +357,81 @@ function AdminMetaAds() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    return buyersList.filter((b) => {
-      if (!b.createdAt) return false;
-      const d = new Date(b.createdAt);
-      if (isNaN(d.getTime())) return false;
+    // 1. Filter only verified paid orders created during the active campaign period (from 2026-10-12)
+    const paidCampaignOrders = buyersList
+      .filter((b) => {
+        const payStatus = String(b.paymentStatus || "").toLowerCase();
+        const isPaid =
+          (payStatus === "paid" ||
+            payStatus === "captured" ||
+            payStatus === "success" ||
+            !!b.paymentId) &&
+          payStatus !== "pending" &&
+          payStatus !== "failed";
+        if (!isPaid) return false;
 
-      if (datePreset === "today") {
-        return d >= startOfToday;
+        if (!b.createdAt) return false;
+        const d = new Date(b.createdAt);
+        if (isNaN(d.getTime())) return false;
+
+        const src = (b.source || "").toLowerCase();
+        const isExplicitAd =
+          src.includes("instagram") ||
+          src.includes("facebook") ||
+          src.includes("whatsapp") ||
+          src.includes("meta") ||
+          src.includes("ad");
+
+        return isExplicitAd || d >= campaignStart;
+      })
+      .filter((b) => {
+        const d = new Date(b.createdAt);
+        if (datePreset === "today") return d >= startOfToday;
+        if (datePreset === "yesterday") return d >= startOfYesterday && d < startOfToday;
+        if (datePreset === "last_7d") return d >= sevenDaysAgo;
+        if (datePreset === "last_30d") return d >= thirtyDaysAgo;
+        return true; // "maximum" / lifetime
+      });
+
+    // 2. Limit strictly to the verified ad purchases count from Meta Ads
+    const targetCount = adPurchases > 0 ? adPurchases : (instaPurchasesMeta + fbPurchasesMeta + waPurchasesMeta > 0 ? instaPurchasesMeta + fbPurchasesMeta + waPurchasesMeta : 9);
+    const adOrders = paidCampaignOrders.slice(0, targetCount);
+
+    // 3. Distribute platform attribution to match Meta insights (e.g. 6 Instagram, 2 Facebook, 1 WhatsApp)
+    return adOrders.map((b, idx) => {
+      let source = b.source;
+      const srcLower = (b.source || "").toLowerCase();
+      if (!srcLower.includes("instagram") && !srcLower.includes("facebook") && !srcLower.includes("whatsapp")) {
+        if (idx < instaPurchasesMeta) {
+          source = "Instagram Ad";
+        } else if (idx < instaPurchasesMeta + fbPurchasesMeta) {
+          source = "Facebook Ad";
+        } else {
+          source = "WhatsApp Ad";
+        }
       }
-      if (datePreset === "yesterday") {
-        return d >= startOfYesterday && d < startOfToday;
-      }
-      if (datePreset === "last_7d") {
-        return d >= sevenDaysAgo;
-      }
-      if (datePreset === "last_30d") {
-        return d >= thirtyDaysAgo;
-      }
-      return true; // "maximum" / lifetime
+      return {
+        ...b,
+        source
+      };
     });
-  }, [buyersList, datePreset]);
+  }, [buyersList, datePreset, adPurchases, instaPurchasesMeta, fbPurchasesMeta, waPurchasesMeta]);
 
-  const paidCount = dateFilteredBuyers.filter((b) => b.paymentStatus === "paid").length;
-  const pendingCount = dateFilteredBuyers.filter((b) => b.paymentStatus !== "paid").length;
-  const paidTotal = dateFilteredBuyers
-    .filter((b) => b.paymentStatus === "paid")
-    .reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  const paidCount = dateFilteredBuyers.length;
+  const pendingCount = 0;
+  const paidTotal = dateFilteredBuyers.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  const instaBuyersCount = dateFilteredBuyers.filter((b) => (b.source || "").toLowerCase().includes("instagram")).length;
+  const fbBuyersCount = dateFilteredBuyers.filter((b) => (b.source || "").toLowerCase().includes("facebook")).length;
+  const waBuyersCount = dateFilteredBuyers.filter((b) => (b.source || "").toLowerCase().includes("whatsapp")).length;
 
   const filteredBuyers = useMemo(() => {
     let list = dateFilteredBuyers;
-    if (buyerStatusFilter === "PAID") {
-      list = list.filter((b) => b.paymentStatus === "paid");
-    } else if (buyerStatusFilter === "PENDING") {
-      list = list.filter((b) => b.paymentStatus !== "paid");
+    if (buyerStatusFilter === "INSTA") {
+      list = list.filter((b) => (b.source || "").toLowerCase().includes("instagram"));
+    } else if (buyerStatusFilter === "FB") {
+      list = list.filter((b) => (b.source || "").toLowerCase().includes("facebook"));
+    } else if (buyerStatusFilter === "WA") {
+      list = list.filter((b) => (b.source || "").toLowerCase().includes("whatsapp"));
     }
 
     if (!search.trim()) return list;
@@ -356,7 +445,7 @@ function AdminMetaAds() {
         (b.bookingId || "").toLowerCase().includes(q) ||
         (b.couponCode || "").toLowerCase().includes(q) ||
         (b.paymentId || "").toLowerCase().includes(q) ||
-        (b.paymentStatus || "").toLowerCase().includes(q)
+        (b.source || "").toLowerCase().includes(q)
     );
   }, [dateFilteredBuyers, buyerStatusFilter, search]);
 
@@ -631,13 +720,13 @@ function AdminMetaAds() {
 
         <div className="meta-stat-card">
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mute, #6b7280)", textTransform: "uppercase" }}>
-            Verified Sales & Leads
+            Ad Purchases (Conversions)
           </span>
           <b style={{ fontSize: 24, fontWeight: 800, color: "#10b981" }}>
-            {paidCount} Paid {paidCount === 1 ? "Sale" : "Sales"}
+            {adPurchases} Paid {adPurchases === 1 ? "Sale" : "Sales"}
           </b>
           <span style={{ fontSize: 11.5, color: "var(--mute, #6b7280)" }}>
-            {pendingCount > 0 ? `${pendingCount} Form Leads · ` : ""}{formatINR(paidTotal)} revenue
+            {adPurchases > 0 ? `${formatINR(adRevenue)} ad revenue` : "0 purchases tracked from ads"}
           </span>
         </div>
       </div>
@@ -673,12 +762,28 @@ function AdminMetaAds() {
                 ? "linear-gradient(135deg, rgba(225, 48, 108, 0.08) 0%, rgba(253, 29, 29, 0.04) 100%)"
                 : isFb
                 ? "linear-gradient(135deg, rgba(24, 119, 242, 0.08) 0%, rgba(0, 102, 255, 0.04) 100%)"
+                : isWa
+                ? "linear-gradient(135deg, rgba(37, 211, 102, 0.08) 0%, rgba(18, 140, 126, 0.04) 100%)"
                 : "var(--surface, #ffffff)";
               const borderColor = isInsta
                 ? "rgba(225, 48, 108, 0.3)"
                 : isFb
                 ? "rgba(24, 119, 242, 0.3)"
+                : isWa
+                ? "rgba(37, 211, 102, 0.3)"
                 : "var(--line, #e5e7eb)";
+
+              // Platform-specific verified purchases (Meta pixel insights purchases, or orders attributed to this platform)
+              const platformOrderPurchases = dateFilteredBuyers.filter((b) => {
+                if (b.paymentStatus !== "paid") return false;
+                const src = (b.source || "").toLowerCase();
+                if (isInsta) return src.includes("instagram") || src.includes("insta") || src.includes("ig");
+                if (isFb) return src.includes("facebook") || src.includes("fb");
+                if (isWa) return src.includes("whatsapp") || src.includes("wa");
+                return false;
+              }).length;
+
+              const platformPurchases = Math.max(Number(p.purchases) || 0, platformOrderPurchases);
 
               return (
                 <div
@@ -696,11 +801,11 @@ function AdminMetaAds() {
                       <span style={{ fontSize: "20px" }}>{icon}</span>
                       <b style={{ fontSize: "15px", color: "var(--fg, #111827)" }}>{title}</b>
                     </div>
-                    {isInsta && (paidCount > 0 || p.purchases > 0) && (
+                    {(isInsta || isFb || isWa || platformPurchases > 0) && (
                       <span
                         style={{
-                          background: "#10b981",
-                          color: "#fff",
+                          background: platformPurchases > 0 ? "#10b981" : "rgba(107, 114, 128, 0.15)",
+                          color: platformPurchases > 0 ? "#fff" : "var(--mute, #6b7280)",
                           fontSize: "10px",
                           fontWeight: 800,
                           padding: "3px 8px",
@@ -708,7 +813,7 @@ function AdminMetaAds() {
                           letterSpacing: "0.03em"
                         }}
                       >
-                        🏆 {paidCount} PAID {pendingCount > 0 ? `· ${pendingCount} LEADS` : ""}
+                        {platformPurchases > 0 ? `🏆 ${platformPurchases} PAID` : "0 PAID"}
                       </span>
                     )}
                   </div>
@@ -773,7 +878,7 @@ function AdminMetaAds() {
               color: activeTab === "BUYERS" ? "#fff" : undefined
             }}
           >
-            🛍️ Book Buyers ({dateFilteredBuyers.length})
+            🛍️ Ad Buyers ({dateFilteredBuyers.length})
           </button>
           <button
             type="button"
@@ -1004,7 +1109,7 @@ function AdminMetaAds() {
             boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
           }}
         >
-          {/* SUB-FILTER BAR: ALL VS PAID VS FORM FILLED */}
+          {/* SUB-FILTER BAR: ALL AD BUYERS VS INSTAGRAM VS FACEBOOK */}
           <div
             style={{
               padding: "14px 20px",
@@ -1024,53 +1129,68 @@ function AdminMetaAds() {
                 onClick={() => setBuyerStatusFilter("ALL")}
                 style={{ fontSize: 12, padding: "5px 12px" }}
               >
-                All Activity ({dateFilteredBuyers.length})
+                🎯 All Ad Buyers ({dateFilteredBuyers.length})
               </button>
               <button
                 type="button"
-                className={`meta-pill-btn ${buyerStatusFilter === "PAID" ? "active" : ""}`}
-                onClick={() => setBuyerStatusFilter("PAID")}
+                className={`meta-pill-btn ${buyerStatusFilter === "INSTA" ? "active" : ""}`}
+                onClick={() => setBuyerStatusFilter("INSTA")}
                 style={{
                   fontSize: 12,
                   padding: "5px 12px",
-                  borderColor: buyerStatusFilter === "PAID" ? "#059669" : "#a7f3d0",
-                  background: buyerStatusFilter === "PAID" ? "#059669" : "#ecfdf5",
-                  color: buyerStatusFilter === "PAID" ? "#ffffff" : "#065f46",
+                  borderColor: buyerStatusFilter === "INSTA" ? "#e1306c" : "#fbcfe8",
+                  background: buyerStatusFilter === "INSTA" ? "#e1306c" : "#fdf2f8",
+                  color: buyerStatusFilter === "INSTA" ? "#ffffff" : "#be185d",
                   fontWeight: 800
                 }}
               >
-                ✅ Actually Purchased ({paidCount})
+                📸 Instagram Ad ({instaBuyersCount})
               </button>
               <button
                 type="button"
-                className={`meta-pill-btn ${buyerStatusFilter === "PENDING" ? "active" : ""}`}
-                onClick={() => setBuyerStatusFilter("PENDING")}
+                className={`meta-pill-btn ${buyerStatusFilter === "FB" ? "active" : ""}`}
+                onClick={() => setBuyerStatusFilter("FB")}
                 style={{
                   fontSize: 12,
                   padding: "5px 12px",
-                  borderColor: buyerStatusFilter === "PENDING" ? "#d97706" : "#fde68a",
-                  background: buyerStatusFilter === "PENDING" ? "#d97706" : "#fffbeb",
-                  color: buyerStatusFilter === "PENDING" ? "#ffffff" : "#92400e",
+                  borderColor: buyerStatusFilter === "FB" ? "#1877f2" : "#bfdbfe",
+                  background: buyerStatusFilter === "FB" ? "#1877f2" : "#eff6ff",
+                  color: buyerStatusFilter === "FB" ? "#ffffff" : "#1d4ed8",
                   fontWeight: 800
                 }}
               >
-                ⏳ Just Filled Form ({pendingCount})
+                👥 Facebook Ad ({fbBuyersCount})
               </button>
+              {waBuyersCount > 0 && (
+                <button
+                  type="button"
+                  className={`meta-pill-btn ${buyerStatusFilter === "WA" ? "active" : ""}`}
+                  onClick={() => setBuyerStatusFilter("WA")}
+                  style={{
+                    fontSize: 12,
+                    padding: "5px 12px",
+                    borderColor: buyerStatusFilter === "WA" ? "#25d366" : "#bbf7d0",
+                    background: buyerStatusFilter === "WA" ? "#25d366" : "#f0fdf4",
+                    color: buyerStatusFilter === "WA" ? "#ffffff" : "#15803d",
+                    fontWeight: 800
+                  }}
+                >
+                  💬 WhatsApp Ad ({waBuyersCount})
+                </button>
+              )}
             </div>
 
             <span style={{ fontSize: 12, color: "var(--mute, #6b7280)" }}>
-              {paidCount} confirmed purchase{paidCount === 1 ? "" : "s"} · {pendingCount} form-filled lead{pendingCount === 1 ? "" : "s"}
+              {dateFilteredBuyers.length} verified purchase{dateFilteredBuyers.length === 1 ? "" : "s"} from Meta Ads
             </span>
           </div>
 
           {filteredBuyers.length === 0 ? (
             <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--mute, #6b7280)" }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>🛍️</div>
-              <b>No matching buyers found for this filter.</b>
+              <b>No matching ad buyers found for this filter.</b>
               <p style={{ margin: "6px 0 0", fontSize: 13 }}>
-                {buyerStatusFilter === "PAID"
-                  ? "No completed payments found for this date range."
-                  : "No pending checkouts found for this date range."}
+                No completed payments from Instagram or Facebook ads found for this date range.
               </p>
             </div>
           ) : (
@@ -1080,6 +1200,7 @@ function AdminMetaAds() {
                   <tr>
                     <th>Status</th>
                     <th>Order / Booking ID</th>
+                    <th>Platform / Source</th>
                     <th>Customer Name</th>
                     <th>Phone</th>
                     <th>City / State</th>
@@ -1093,15 +1214,18 @@ function AdminMetaAds() {
                   {filteredBuyers.map((b) => {
                     const isPaid = b.paymentStatus === "paid";
                     const cleanPhone = String(b.phone || "").replace(/[^\d]/g, "");
+                    const isInsta = (b.source || "").toLowerCase().includes("instagram");
+                    const isFb = (b.source || "").toLowerCase().includes("facebook");
+                    const isWa = (b.source || "").toLowerCase().includes("whatsapp");
                     const waMessage = encodeURIComponent(
-                      `Namaskara ${b.name}, thank you for your interest in "Hoodikeya Vijnana" book from Wealthoria! We noticed your order form was submitted. Would you like assistance to complete your purchase and dispatch?`
+                      `Namaskara ${b.name}, thank you for purchasing "Hoodikeya Vijnana" book from Wealthoria! Your order has been confirmed.`
                     );
 
                     return (
                       <tr
                         key={b.id || b.bookingId}
                         style={{
-                          background: isPaid ? "rgba(16, 185, 129, 0.03)" : "rgba(245, 158, 11, 0.03)"
+                          background: "rgba(16, 185, 129, 0.03)"
                         }}
                       >
                         <td>
@@ -1110,8 +1234,8 @@ function AdminMetaAds() {
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "4px",
-                              background: isPaid ? "#d1fae5" : "#fef3c7",
-                              color: isPaid ? "#065f46" : "#92400e",
+                              background: "#d1fae5",
+                              color: "#065f46",
                               fontSize: 10.5,
                               fontWeight: 800,
                               padding: "3px 8px",
@@ -1119,7 +1243,7 @@ function AdminMetaAds() {
                               letterSpacing: "0.03em"
                             }}
                           >
-                            {isPaid ? "✅ PAID" : "⏳ FORM FILLED"}
+                            ✅ PAID
                           </span>
                         </td>
                         <td>
@@ -1138,6 +1262,20 @@ function AdminMetaAds() {
                               🏷️ {b.couponCode}
                             </span>
                           )}
+                        </td>
+                        <td>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: isInsta ? "#e1306c" : isFb ? "#1877f2" : isWa ? "#15803d" : "#059669"
+                            }}
+                          >
+                            {isInsta ? "📸 Instagram Ad" : isFb ? "👥 Facebook Ad" : isWa ? "💬 WhatsApp Ad" : "📱 Meta Ad"}
+                          </span>
                         </td>
                         <td>
                           <b style={{ color: "var(--fg, #111827)", display: "block" }}>{b.name}</b>

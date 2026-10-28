@@ -1971,6 +1971,10 @@ function UsersScreen() {
       } else if (recurringStatusFilter === "active") {
         const subStatus = normalizeValue(m.subscriptionStatusPrimary || "");
         if (subStatus !== "active" && subStatus !== "authenticated") return false;
+      } else if (recurringStatusFilter === "cancelled_2nd_payment") {
+        const isCancelled = ["cancelled", "halted", "expired"].includes(normalizeValue(m.subscriptionStatusPrimary || ""));
+        const paidCount = Number(m.paidCount || 1);
+        if ((!isCancelled && !m.isRenewalFailed) || paidCount > 1) return false;
       } else if (recurringStatusFilter === "cancelled") {
         const subStatus = normalizeValue(m.subscriptionStatusPrimary || "");
         if (subStatus !== "cancelled") return false;
@@ -2005,6 +2009,14 @@ function UsersScreen() {
 
   const recurringFailedCount = useMemo(() => {
     return recurringMembersList.filter((m) => m.isRenewalFailed).length;
+  }, [recurringMembersList]);
+
+  const recurringCancelled2ndPaymentCount = useMemo(() => {
+    return recurringMembersList.filter((m) => {
+      const isCancelled = ["cancelled", "halted", "expired"].includes(normalizeValue(m.subscriptionStatusPrimary || ""));
+      const paidCount = Number(m.paidCount || 1);
+      return (isCancelled || m.isRenewalFailed) && paidCount <= 1;
+    }).length;
   }, [recurringMembersList]);
 
   const recurringCancelledCount = useMemo(() => {
@@ -4396,11 +4408,16 @@ function UsersScreen() {
                               {["cancelled", "halted", "expired", "completed"].includes(member.subscriptionStatusPrimary) ? (
                                 <div>
                                   <div style={{ fontWeight: 650, color: "#374151" }}>
-                                    {formatMemberDate(member.lastPaymentDate || member.subscriptionStartDate || member.joinedAt)}
+                                    {formatMemberDate(getMemberPaymentTime(member) || member.subscriptionStartDate || member.joinedAt)}
                                     {isMemberAccessActive(member) ? (
-                                      <span style={{ fontSize: 11, color: "#15803d", fontWeight: 700, marginLeft: 4 }}>
-                                        (Paid until {formatMemberDate(safeTimestamp(member.lastPaymentDate) + 30 * 86400000)})
-                                      </span>
+                                      (() => {
+                                        const paymentTime = getMemberPaymentTime(member);
+                                        return paymentTime ? (
+                                          <span style={{ fontSize: 11, color: "#15803d", fontWeight: 700, marginLeft: 4 }}>
+                                            (Paid until {formatMemberDate(paymentTime + 30 * 86400000)})
+                                          </span>
+                                        ) : null;
+                                      })()
                                     ) : (
                                       <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 500, marginLeft: 4 }}>
                                         (Ended)
@@ -4933,7 +4950,57 @@ function UsersScreen() {
                 </div>
               </div>
 
-              {/* CARD 4: CANCELLED MANDATES */}
+              {/* CARD 4: CANCELLED 2ND PAYMENT */}
+              <div
+                onClick={() => {
+                  setRecurringStatusFilter((prev) => (prev === "cancelled_2nd_payment" ? "all" : "cancelled_2nd_payment"));
+                  setRecurringDatePreset("all");
+                  setRecurringStartDate("");
+                  setRecurringEndDate("");
+                }}
+                role="button"
+                tabIndex={0}
+                style={{
+                  cursor: "pointer",
+                  padding: "14px 16px",
+                  background: recurringStatusFilter === "cancelled_2nd_payment" ? "#fff1f2" : "#ffffff",
+                  border: recurringStatusFilter === "cancelled_2nd_payment" ? "2px solid #be123c" : "1px solid #fecdd3",
+                  borderRadius: 12,
+                  boxShadow: recurringStatusFilter === "cancelled_2nd_payment" ? "0 4px 14px rgba(190, 18, 60, 0.15)" : "0 1px 3px rgba(0,0,0,0.03)",
+                  transition: "all 0.18s ease"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <span style={{ fontSize: 16 }}>🛑</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#be123c" }}>
+                      Cancelled 2nd Payment
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: "1px 6px",
+                      borderRadius: 4,
+                      background: "#ffe4e6",
+                      color: "#be123c"
+                    }}
+                  >
+                    Follow-up
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: 24, fontWeight: 800, color: "#be123c", lineHeight: 1 }}>
+                    {recurringCancelled2ndPaymentCount}
+                  </span>
+                  <span style={{ fontSize: 11, color: "#9f1239" }}>
+                    paid 1 cycle · 2nd cancelled/unpaid
+                  </span>
+                </div>
+              </div>
+
+              {/* CARD 5: CANCELLED MANDATES */}
               <div
                 onClick={() => {
                   setRecurringStatusFilter((prev) => (prev === "cancelled" ? "all" : "cancelled"));
@@ -4957,7 +5024,7 @@ function UsersScreen() {
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     <span style={{ fontSize: 16 }}>🛑</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>
-                      Cancelled Mandates
+                      All Cancelled
                     </span>
                   </div>
                 </div>
@@ -4971,7 +5038,7 @@ function UsersScreen() {
                 </div>
               </div>
 
-              {/* CARD 5: ACCESS BLOCKED / INACTIVE */}
+              {/* CARD 6: ACCESS BLOCKED / INACTIVE */}
               <div
                 onClick={() => {
                   setRecurringStatusFilter((prev) => (prev === "blocked" ? "all" : "blocked"));
@@ -5100,7 +5167,8 @@ function UsersScreen() {
                     <option value="all">All Mandates & Subscriptions</option>
                     <option value="debited_today">🟢 Debited Today ({recurringDebitedCount})</option>
                     <option value="active">⚡ Active Mandates ({recurringActiveCount})</option>
-                    <option value="cancelled">🛑 Cancelled Mandates ({recurringCancelledCount})</option>
+                    <option value="cancelled_2nd_payment">🛑 Cancelled 2nd Payment ({recurringCancelled2ndPaymentCount})</option>
+                    <option value="cancelled">🛑 All Cancelled Mandates ({recurringCancelledCount})</option>
                     <option value="failed">⚠️ Pending Retry ({recurringFailedCount})</option>
                     <option value="blocked">🔒 Dashboard Access Blocked ({recurringBlockedCount})</option>
                   </select>

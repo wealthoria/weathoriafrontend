@@ -269,11 +269,33 @@ function UnsubscribedMembers() {
 
       const hasPaid = memberSubs.some((s) => {
         if (s.razorpayPaymentId) return true;
-        const paidCount = Number(s.paidCount);
+        const paidCount = Number(s.paidCount ?? s.paid_count);
         if (Number.isFinite(paidCount) && paidCount > 0) return true;
         const st = normalize(s.status);
         return ["active", "cancelled", "halted", "paused", "inactive"].includes(st);
       });
+
+      // Calculate paid cycles completed
+      const subPaidCount = memberSubs.reduce((max, s) => {
+        const c = Number(s.paidCount ?? s.paid_count);
+        return Number.isFinite(c) && c > max ? c : max;
+      }, 0);
+      const effectivePaidCount = subPaidCount > 0 ? subPaidCount : (hasPaid ? 1 : 0);
+
+      // Check if auto-debit charge failed / pending retry
+      const isRenewalFailed = memberSubs.some((s) => {
+        const rz = normalize(s.razorpayStatus);
+        const src = String(s.lastSyncSource || "");
+        return rz === "pending" || src.includes("subscription.pending");
+      });
+
+      // Cancelled 2nd Payment:
+      // Members who completed initial month 1 payment, but cancelled, halted, expired,
+      // or failed auto-renewal before/at their 2nd debit, making their account inactive.
+      const isCancelled2ndPayment =
+        !hasActiveSub &&
+        hasPaid &&
+        (effectivePaidCount <= 1 || isRenewalFailed);
 
       let category = "unpaid";
       let statusLabel = "Unpaid Signup";
@@ -283,9 +305,13 @@ function UnsubscribedMembers() {
         category = "active";
         statusLabel = "Active";
         statusTheme = { color: "#15803d", bg: "#dcfce7", border: "#bbf7d0" };
+      } else if (isCancelled2ndPayment) {
+        category = "cancelled_2nd_payment";
+        statusLabel = isRenewalFailed ? "2nd Debit Failed" : "Cancelled 2nd Payment";
+        statusTheme = { color: "#be123c", bg: "#fff1f2", border: "#fecdd3" };
       } else if (hasCancelledSub) {
         category = "cancelled";
-        statusLabel = "Cancelled";
+        statusLabel = effectivePaidCount > 1 ? `Cancelled (${effectivePaidCount} Cycles)` : "Cancelled";
         statusTheme = { color: "#b91c1c", bg: "#fee2e2", border: "#fecaca" };
       } else if (hasExpiredSub) {
         category = "expired";
@@ -312,6 +338,9 @@ function UnsubscribedMembers() {
         ...member,
         category,
         isUnsubscribed: !hasActiveSub,
+        isCancelled2ndPayment,
+        isRenewalFailed,
+        effectivePaidCount,
         statusLabel,
         statusTheme,
         hasPaid,
@@ -333,13 +362,15 @@ function UnsubscribedMembers() {
     let total = classifiedMembers.length;
     let unsubscribed = 0;
     let cancelled = 0;
+    let cancelled2ndPayment = 0;
     let unpaid = 0;
     let active = 0;
     let contacted = 0;
 
     classifiedMembers.forEach((m) => {
       if (m.isUnsubscribed) unsubscribed++;
-      if (m.category === "cancelled") cancelled++;
+      if (m.isCancelled2ndPayment) cancelled2ndPayment++;
+      if (m.category === "cancelled" || m.isCancelled2ndPayment) cancelled++;
       if (m.category === "unpaid") unpaid++;
       if (m.category === "active") active++;
       if (["contacted", "interested", "follow_up_later", "converted"].includes(m.followupStatus)) {
@@ -347,7 +378,7 @@ function UnsubscribedMembers() {
       }
     });
 
-    return { total, unsubscribed, cancelled, unpaid, active, contacted };
+    return { total, unsubscribed, cancelled, cancelled2ndPayment, unpaid, active, contacted };
   }, [classifiedMembers]);
 
   /* -------------------------------------------------------------
@@ -358,7 +389,8 @@ function UnsubscribedMembers() {
 
     const result = classifiedMembers.filter((m) => {
       if (tabFilter === "unsubscribed" && !m.isUnsubscribed) return false;
-      if (tabFilter === "cancelled" && m.category !== "cancelled") return false;
+      if (tabFilter === "cancelled_2nd_payment" && !m.isCancelled2ndPayment) return false;
+      if (tabFilter === "cancelled" && m.category !== "cancelled" && !m.isCancelled2ndPayment) return false;
       if (tabFilter === "unpaid" && m.category !== "unpaid") return false;
 
       if (followupFilter !== "all" && m.followupStatus !== followupFilter) return false;
@@ -491,6 +523,8 @@ function UnsubscribedMembers() {
         "City": m.city || "—",
         "State": m.state || "—",
         "Membership Status": m.statusLabel,
+        "Cancelled 2nd Payment": m.isCancelled2ndPayment ? "Yes (2nd debit cancelled/unpaid)" : "No",
+        "Completed Cycles": m.effectivePaidCount || 0,
         "Last Plan": m.planName,
         "Plan Rate": m.planAmount ? `₹${m.planAmount}` : "—",
         "Registered On": formatDate(m.createdAt || m.joinedAt),
@@ -507,7 +541,9 @@ function UnsubscribedMembers() {
         { wch: 28 },
         { wch: 18 },
         { wch: 16 },
-        { wch: 18 },
+        { wch: 22 },
+        { wch: 22 },
+        { wch: 16 },
         { wch: 18 },
         { wch: 14 },
         { wch: 16 },
@@ -536,7 +572,9 @@ function UnsubscribedMembers() {
     const name = member.name || "Member";
 
     let text = "";
-    if (template === "discount") {
+    if (template === "2nd_payment" || (template === "standard" && member.isCancelled2ndPayment)) {
+      text = `Hello ${name}, this is from Wealthoria Education. We noticed your 2nd month subscription renewal was not completed and your premium access is currently inactive. Would you like to reactivate your access with an exclusive renewal offer? https://wealthoria.in/members/subscription`;
+    } else if (template === "discount") {
       text = `Hello ${name}, this is from Wealthoria Education. We have an exclusive renewal offer on our premium subscription for you. Would you like to reactivate your plan? https://wealthoria.in/members/subscription`;
     } else if (template === "checkin") {
       text = `Hi ${name}, this is Wealthoria support team. We noticed your subscription has ended. Do you need any assistance with renewing your access? https://wealthoria.in/members/subscription`;
@@ -627,7 +665,7 @@ function UnsubscribedMembers() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
           gap: 14,
           marginBottom: 20
         }}
@@ -655,6 +693,44 @@ function UnsubscribedMembers() {
           </div>
         </div>
 
+        {/* Cancelled 2nd Payment (NEW!) */}
+        <div
+          onClick={() => setTabFilter("cancelled_2nd_payment")}
+          style={{
+            background: tabFilter === "cancelled_2nd_payment" ? "#fff1f2" : "#ffffff",
+            border: tabFilter === "cancelled_2nd_payment" ? "2px solid #be123c" : "1px solid #fecdd3",
+            borderRadius: 12,
+            padding: "16px 18px",
+            cursor: "pointer",
+            boxShadow: tabFilter === "cancelled_2nd_payment" ? "0 4px 14px rgba(190, 18, 60, 0.12)" : "none",
+            transition: "all 0.15s"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#be123c" }}>
+              Cancelled 2nd Payment
+            </div>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                padding: "2px 6px",
+                borderRadius: 4,
+                background: "#ffe4e6",
+                color: "#be123c"
+              }}
+            >
+              Priority
+            </span>
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#be123c", margin: "4px 0 2px" }}>
+            {counts.cancelled2ndPayment}
+          </div>
+          <div style={{ fontSize: 11, color: "#9f1239", fontWeight: 600 }}>
+            Paid month 1 · 2nd renewal cancelled
+          </div>
+        </div>
+
         {/* Cancelled Subscriptions */}
         <div
           onClick={() => setTabFilter("cancelled")}
@@ -668,7 +744,7 @@ function UnsubscribedMembers() {
           }}
         >
           <div style={{ fontSize: 12, fontWeight: 650, color: "#6b7280" }}>
-            Cancelled Members
+            All Cancelled Members
           </div>
           <div style={{ fontSize: 26, fontWeight: 750, color: "#111827", margin: "4px 0 2px" }}>
             {counts.cancelled}
@@ -754,12 +830,14 @@ function UnsubscribedMembers() {
               background: "#f3f4f6",
               padding: 3,
               borderRadius: 8,
-              gap: 2
+              gap: 2,
+              flexWrap: "wrap"
             }}
           >
             {[
-              { id: "unsubscribed", label: `Unsubscribed (${counts.unsubscribed})` },
-              { id: "cancelled", label: `Cancelled (${counts.cancelled})` },
+              { id: "unsubscribed", label: `All Unsubscribed (${counts.unsubscribed})` },
+              { id: "cancelled_2nd_payment", label: `🛑 Cancelled 2nd Payment (${counts.cancelled2ndPayment})`, highlight: true },
+              { id: "cancelled", label: `All Cancelled (${counts.cancelled})` },
               { id: "unpaid", label: `Unpaid (${counts.unpaid})` },
               { id: "all", label: `All in DB (${counts.total})` }
             ].map((tab) => {
@@ -773,13 +851,13 @@ function UnsubscribedMembers() {
                     height: 30,
                     padding: "0 12px",
                     borderRadius: 6,
-                    border: "none",
-                    background: isActive ? "#ffffff" : "transparent",
-                    color: isActive ? "#111827" : "#4b5563",
+                    border: tab.highlight && !isActive ? "1px solid #fecdd3" : "none",
+                    background: isActive ? (tab.highlight ? "#be123c" : "#ffffff") : (tab.highlight ? "#fff1f2" : "transparent"),
+                    color: isActive ? "#ffffff" : (tab.highlight ? "#be123c" : "#4b5563"),
                     fontSize: 12,
-                    fontWeight: isActive ? 700 : 550,
+                    fontWeight: isActive ? 750 : (tab.highlight ? 700 : 550),
                     cursor: "pointer",
-                    boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                    boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                     transition: "all 0.15s"
                   }}
                 >
@@ -1266,6 +1344,11 @@ function UnsubscribedMembers() {
                           />
                           {member.statusLabel}
                         </span>
+                        {member.isCancelled2ndPayment && (
+                          <div style={{ fontSize: 10, color: "#be123c", fontWeight: 700, marginTop: 4 }}>
+                            ⚡ Inactive · 2nd Renewal Cancelled
+                          </div>
+                        )}
                       </td>
 
                       {/* PLAN HISTORY */}
@@ -1276,6 +1359,11 @@ function UnsubscribedMembers() {
                         <div style={{ fontSize: 11, color: "#6b7280" }}>
                           {member.planName}
                         </div>
+                        {member.effectivePaidCount > 0 && (
+                          <div style={{ fontSize: 10, color: member.isCancelled2ndPayment ? "#be123c" : "#6b7280", fontWeight: 650, marginTop: 2 }}>
+                            {member.effectivePaidCount} {member.effectivePaidCount === 1 ? "cycle" : "cycles"} paid
+                          </div>
+                        )}
                       </td>
 
                       {/* REGISTERED DATE */}
@@ -1498,6 +1586,26 @@ function UnsubscribedMembers() {
 
             {/* Drawer Body */}
             <div style={{ padding: "20px 24px", flex: 1 }}>
+              {/* Alert Banner for Cancelled 2nd Payment */}
+              {activeDrawerMember.isCancelled2ndPayment && (
+                <div
+                  style={{
+                    background: "#fff1f2",
+                    border: "1px solid #fecdd3",
+                    borderRadius: 10,
+                    padding: "12px 14px",
+                    marginBottom: 18
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 750, color: "#be123c", fontSize: 13 }}>
+                    <span>🎯</span> Cancelled 2nd Payment Follow-up
+                  </div>
+                  <div style={{ fontSize: 12, color: "#4c0519", marginTop: 4, lineHeight: 1.45 }}>
+                    This member completed <strong>Month 1 ({activeDrawerMember.effectivePaidCount || 1} cycle)</strong> and their 2nd payment renewal was cancelled/unpaid. Call or message them now to offer a renewal incentive and reactivate their account!
+                  </div>
+                </div>
+              )}
+
               {/* Member Summary Card */}
               <div
                 style={{
@@ -1603,6 +1711,25 @@ function UnsubscribedMembers() {
                   Quick WhatsApp Templates:
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {activeDrawerMember.isCancelled2ndPayment && (
+                    <a
+                      href={getWhatsAppLink(activeDrawerMember, "2nd_payment")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        border: "1px solid #fecdd3",
+                        background: "#fff1f2",
+                        fontSize: 12,
+                        color: "#9f1239",
+                        textDecoration: "none",
+                        fontWeight: 700
+                      }}
+                    >
+                      <strong>Template (Recommended):</strong> 2nd Month Renewal Recovery Offer →
+                    </a>
+                  )}
                   <a
                     href={getWhatsAppLink(activeDrawerMember, "discount")}
                     target="_blank"

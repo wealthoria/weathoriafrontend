@@ -647,11 +647,8 @@ function MemberVideo() {
     loadVideoLikes();
 
     const loadVideoComments = async () => {
-      if (!isAdmin) return;
       try {
         const token = getMemberToken();
-        if (!token) return;
-
         const videoIds = videos.map((video) => video.id);
         if (videoIds.length === 0) return;
 
@@ -660,7 +657,7 @@ function MemberVideo() {
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${token}`,
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
           }
         );
@@ -678,20 +675,11 @@ function MemberVideo() {
       }
     };
 
-    if (isAdmin) {
-      loadVideoComments();
-    } else {
-      setVideoComments({});
-    }
+    loadVideoComments();
   }, [videos, isAdmin]);
 
-  // Real-time listener for video comments grouped by videoId (Admin only)
+  // Real-time listener for video comments grouped by videoId
   useEffect(() => {
-    if (!isAdmin) {
-      setVideoComments({});
-      return;
-    }
-
     let unsubscribe = null;
     let timer = null;
 
@@ -755,6 +743,57 @@ function MemberVideo() {
       if (typeof unsubscribe === "function") unsubscribe();
     };
   }, [isAdmin]);
+
+  // Helper: Filters video comments for privacy.
+  // - Admin can view ALL comments from every member.
+  // - A member can ONLY view their own comment threads and the Admin's replies to them.
+  const getVisibleCommentsForVideo = (videoId) => {
+    const all = videoComments[videoId] || [];
+    if (isAdmin) {
+      return all;
+    }
+
+    const memberInfo = getCurrentMemberInfo() || {};
+    const myUid = String(window.auth?.currentUser?.uid || memberInfo?.uid || memberInfo?.id || "").trim();
+    const myEmail = String(window.auth?.currentUser?.email || memberInfo?.email || "").trim().toLowerCase();
+    const myName = String(window.auth?.currentUser?.displayName || memberInfo?.name || "").trim().toLowerCase();
+
+    const myParentCommentIds = new Set();
+    const visible = [];
+
+    // 1. Gather all parent comments posted by this member
+    all.forEach((item) => {
+      if (!item.parentId) {
+        const itemUid = String(item.userId || "").trim();
+        const itemEmail = String(item.userEmail || "").trim().toLowerCase();
+        const itemName = String(item.userName || "").trim().toLowerCase();
+
+        const isMine = !item.isAdminReply && (
+          (myUid && itemUid && itemUid === myUid) ||
+          (myEmail && (itemUid.toLowerCase() === myEmail || itemEmail === myEmail)) ||
+          (myName && itemName && itemName === myName)
+        );
+
+        if (isMine) {
+          myParentCommentIds.add(item.id);
+          visible.push(item);
+        }
+      }
+    });
+
+    // 2. Gather all Admin replies attached to this member's comment threads
+    all.forEach((item) => {
+      if (item.parentId) {
+        if (myParentCommentIds.has(item.parentId)) {
+          visible.push(item);
+        } else if (item.isAdminReply && item.replyToUserId && myUid && item.replyToUserId === myUid) {
+          visible.push(item);
+        }
+      }
+    });
+
+    return visible;
+  };
 
   /* =======================================================
      SEARCH
@@ -1009,8 +1048,8 @@ function MemberVideo() {
     setCommentSaving(true);
 
     const memberInfo = getCurrentMemberInfo() || {};
-    const authorName = isAdmin ? (adminUser?.name || "Wealthoria Admin") : (memberInfo?.name || "Member");
-    const authorUid = isAdmin ? (adminUser?.uid || "admin") : (memberInfo?.uid || "");
+    const authorName = isAdmin ? (adminUser?.name || "Wealthoria Admin") : (memberInfo?.name || window.auth?.currentUser?.displayName || "Member");
+    const authorUid = isAdmin ? (adminUser?.uid || "admin") : (window.auth?.currentUser?.uid || memberInfo?.uid || memberInfo?.id || memberInfo?.email || "");
 
     const newComment = {
       id: `temp-${Date.now()}`,
@@ -1025,16 +1064,16 @@ function MemberVideo() {
 
     setCommentText("");
 
-    // Optimistically update and open comments for Admin only
-    if (isAdmin) {
-      setVideoComments((previous) => ({
-        ...previous,
-        [videoId]: [newComment, ...(previous[videoId] || [])]
-      }));
+    // Optimistically update and open comments for both Admin and Member
+    setVideoComments((previous) => ({
+      ...previous,
+      [videoId]: [newComment, ...(previous[videoId] || [])]
+    }));
 
-      // Ensure comments section is opened
-      setOpenCommentsVideoId(videoId);
-    } else {
+    // Ensure comments section is opened so member sees their posted question
+    setOpenCommentsVideoId(videoId);
+
+    if (!isAdmin) {
       setCommentSuccessVideoId(videoId);
       setTimeout(() => {
         setCommentSuccessVideoId((prev) => (prev === videoId ? "" : prev));
@@ -1582,9 +1621,12 @@ function MemberVideo() {
                                     <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 1 1 16.1-3.8Z" />
                                   </svg>
 
-                                  {isAdmin && (videoComments[video.id]?.length || 0) > 0 && (
-                                    <span>{videoComments[video.id].length}</span>
-                                  )}
+                                  {(() => {
+                                    const count = isAdmin
+                                      ? (videoComments[video.id]?.length || 0)
+                                      : getVisibleCommentsForVideo(video.id).length;
+                                    return count > 0 ? <span>{count}</span> : null;
+                                  })()}
                                 </button>
 
                                 {/* Watch Video button */}
@@ -1647,11 +1689,20 @@ function MemberVideo() {
                                 )}
                               </div>
 
-                              {/* View Comments button & YouTube style comments list (Admin only) */}
-                              {isAdmin &&
-                                ((videoComments[video.id]?.length || 0) > 0 ||
-                                  commentOpenVideoId === video.id ||
-                                  openCommentsVideoId === video.id) && (
+                              {/* View Comments button & YouTube style comments list (Filtered for Member privacy) */}
+                              {(() => {
+                                const visibleComments = getVisibleCommentsForVideo(video.id);
+                                const shouldShowComments = isAdmin
+                                  ? ((videoComments[video.id]?.length || 0) > 0 ||
+                                      commentOpenVideoId === video.id ||
+                                      openCommentsVideoId === video.id)
+                                  : (visibleComments.length > 0 ||
+                                      openCommentsVideoId === video.id ||
+                                      commentOpenVideoId === video.id);
+
+                                if (!shouldShowComments) return null;
+
+                                return (
                                   <div className="member-video-comments-wrap">
                                     <button
                                       type="button"
@@ -1666,9 +1717,13 @@ function MemberVideo() {
                                       <span>
                                         {openCommentsVideoId === video.id
                                           ? "Hide Comments"
-                                          : (videoComments[video.id]?.length || 0) > 0
-                                            ? `View Comments (${videoComments[video.id].length})`
-                                            : "Comments (0)"}
+                                          : isAdmin
+                                            ? (videoComments[video.id]?.length || 0) > 0
+                                              ? `View Comments (${videoComments[video.id].length})`
+                                              : "Comments (0)"
+                                            : visibleComments.length > 0
+                                              ? `My Comments & Replies (${visibleComments.length})`
+                                              : "View My Comments"}
                                       </span>
                                       <span className="member-video-view-comments-arrow">
                                         {openCommentsVideoId === video.id ? "▲" : "▼"}
@@ -1676,7 +1731,7 @@ function MemberVideo() {
                                     </button>
 
                                     {openCommentsVideoId === video.id && (() => {
-                                      const allComments = videoComments[video.id] || [];
+                                      const allComments = visibleComments;
                                       const topComments = allComments.filter((item) => !item.parentId);
                                       const repliesByParent = {};
                                       allComments.forEach((item) => {
@@ -1699,10 +1754,29 @@ function MemberVideo() {
 
                                       return (
                                         <div className="member-video-comments-list">
-                                          {isAdmin && (
+                                          {isAdmin ? (
                                             <div className="member-video-admin-badge-notice">
                                               <span className="member-video-admin-badge">Admin 🛡️</span>
                                               <span>Logged in as Admin. You can reply directly to any member comment.</span>
+                                            </div>
+                                          ) : (
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 8,
+                                                padding: "8px 12px",
+                                                marginBottom: "12px",
+                                                background: "#f0fdf4",
+                                                border: "1px solid #bbf7d0",
+                                                borderRadius: "8px",
+                                                fontSize: "11.5px",
+                                                color: "#166534",
+                                                fontWeight: 600
+                                              }}
+                                            >
+                                              <span style={{ fontSize: "14px" }}>🔒</span>
+                                              <span>Private Discussion: Only you and Wealthoria Admin can view your questions and replies.</span>
                                             </div>
                                           )}
 
@@ -1720,7 +1794,7 @@ function MemberVideo() {
                                                   <div className="member-video-comment-body">
                                                     <div className="member-video-comment-header">
                                                       <span className="member-video-comment-author">
-                                                        {c.userName || "Member"}
+                                                        {c.userName || "Member"}{!c.isAdminReply && !isAdmin && " (You)"}
                                                       </span>
                                                       {c.isAdminReply && (
                                                         <span className="member-video-admin-badge">Admin</span>
@@ -1843,7 +1917,8 @@ function MemberVideo() {
                                       );
                                     })()}
                                   </div>
-                                )}
+                                );
+                              })()}
 
                             </div>
                           </article>

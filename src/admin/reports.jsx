@@ -147,15 +147,19 @@ const getSubscriptionCharges = (row) => {
   const paidCount = Math.floor(Number(row?.paidCount) || 0);
   const effectiveCount = paidCount > 0 ? paidCount : 1;
   const periodEnd = toMillis(row?.nextBillingDate);
-  const latest =
+  const trueSignupDate =
+    toMillis(row?.createdAt) ||
+    toMillis(row?.joinedAt) ||
+    toMillis(row?.registeredAt) ||
+    (effectiveCount > 1 && periodEnd ? addMonths(periodEnd, -effectiveCount) : 0) ||
     toMillis(row?.paidAt) ||
     toMillis(row?.subscriptionStartDate) ||
-    (periodEnd ? addMonths(periodEnd, -1) : 0) ||
-    toMillis(getSubscriptionDate(row));
+    toMillis(getSubscriptionDate(row)) ||
+    0;
 
-  if (!latest) return [];
-  return Array.from({ length: effectiveCount }, (_, k) => ({
-    time: Math.min(addMonths(latest, -k), Date.now()),
+  if (!trueSignupDate) return [];
+  return Array.from({ length: effectiveCount }, (_, cycleIdx) => ({
+    time: Math.min(addMonths(trueSignupDate, cycleIdx), Date.now()),
     amount
   }));
 };

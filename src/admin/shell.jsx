@@ -39,18 +39,19 @@ function AdminGuard({ children }) {
     getAdminRouter();
 
   React.useEffect(() => {
-
     if (
       !auth.loading &&
       !auth.isAuthenticated
     ) {
+      try {
+        const cached = localStorage.getItem("wealthoria-admin-session");
+        if (cached) return;
+      } catch (e) {}
 
       navigate(
         "/members/login"
       );
-
     }
-
   }, [
     auth.loading,
     auth.isAuthenticated,

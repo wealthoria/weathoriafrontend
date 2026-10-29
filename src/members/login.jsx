@@ -876,7 +876,7 @@ try {
           try {
             const tokenResult =
               await currentUser.getIdTokenResult(
-                true
+                false
               );
 
             const claims =
@@ -885,6 +885,20 @@ try {
             if (claims.admin === true) {
               if (!cancelled) {
                 setCheckingSession(false);
+                try {
+                  localStorage.setItem(
+                    "wealthoria-admin-session",
+                    JSON.stringify({
+                      uid: currentUser.uid,
+                      id: currentUser.uid,
+                      name: currentUser.displayName || "Admin",
+                      email: currentUser.email || "",
+                      role: "admin",
+                      status: "active",
+                      isAdmin: true
+                    })
+                  );
+                } catch (e) {}
 
                 window.location.replace(
                   "/admin/dashboard"
@@ -1040,6 +1054,20 @@ if (adminUser) {
     tokenResult?.claims || {};
 
   if (claims.admin === true) {
+    try {
+      localStorage.setItem(
+        "wealthoria-admin-session",
+        JSON.stringify({
+          uid: adminUser.uid,
+          id: adminUser.uid,
+          name: adminUser.displayName || "Admin",
+          email: adminUser.email || cleanEmail,
+          role: "admin",
+          status: "active",
+          isAdmin: true
+        })
+      );
+    } catch (e) {}
     window.location.replace("/admin/dashboard");
     return;
   }

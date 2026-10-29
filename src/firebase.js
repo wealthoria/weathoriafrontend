@@ -37,6 +37,13 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+// Ensure authentication session persists permanently across browser restarts and tab closes
+try {
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
+    console.warn("Firebase Auth setPersistence error:", err);
+  });
+} catch (e) {}
+
 /* =========================================================
    EXPOSE GLOBALS
    ---------------------------------------------------------

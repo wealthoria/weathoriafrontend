@@ -939,15 +939,6 @@ function getSubscriptionCharges(row, memberCreatedMap) {
   const effectiveCount = paidCount > 0 ? paidCount : 1;
   const periodEnd = safeTimestamp(row?.nextBillingDate);
 
-  // Date of the most recent payment
-  const latest =
-    safeTimestamp(row?.paidAt) ||
-    safeTimestamp(row?.subscriptionStartDate) ||
-    (periodEnd ? addMonths(periodEnd, -1) : 0) ||
-    safeTimestamp(getSubscriptionRevenueDate(row));
-
-  if (!latest) return [];
-
   // Initial creation / registration date of the member or subscription
   const memberEmail = String(row?.email || row?.customerEmail || "").toLowerCase().trim();
   const memberId = String(row?.memberId || row?.userId || row?.uid || "").trim();
@@ -955,8 +946,8 @@ function getSubscriptionCharges(row, memberCreatedMap) {
 
   // Priority 1: True Member signup/creation date from members collection
   // Priority 2: Creation date of the subscription doc in Firestore
-  // Note: NEVER use row.subscriptionStartDate here because Razorpay updates
-  // subscriptionStartDate/current_start each month to the start of the renewal cycle!
+  // Priority 3: Derived from nextBillingDate minus paid cycles
+  // Priority 4: paidAt / subscriptionStartDate fallback
   const trueSignupDate =
     (memberCreatedMap && (
       (memberEmail && memberCreatedMap.get(memberEmail)) ||
@@ -967,15 +958,22 @@ function getSubscriptionCharges(row, memberCreatedMap) {
     safeTimestamp(row?.joinedAt) ||
     safeTimestamp(row?.registeredAt) ||
     safeTimestamp(row?.createdOn) ||
+    (effectiveCount > 1 && periodEnd ? addMonths(periodEnd, -effectiveCount) : 0) ||
+    safeTimestamp(row?.paidAt) ||
+    safeTimestamp(row?.subscriptionStartDate) ||
+    safeTimestamp(getSubscriptionRevenueDate(row)) ||
     0;
 
-  return Array.from({ length: effectiveCount }, (_, k) => {
-    const time = Math.min(addMonths(latest, -k), Date.now());
+  if (!trueSignupDate) return [];
 
-    // A charge is a "Live Signup" if it is the very first payment cycle (k === effectiveCount - 1).
-    // Any subsequent recurring billing cycle (2nd payment, 3rd payment, etc.) is an AUTO-DEBIT RENEWAL.
-    const isLive = (k === effectiveCount - 1);
+  // Generate charges FORWARD from the true signup date:
+  // Cycle 1 (Upfront Signup): trueSignupDate (e.g. September) -> isLive = true
+  // Cycle 2 (Auto-Debit Renewal): addMonths(trueSignupDate, 1) (e.g. October) -> isAutoDebit = true
+  // Cycle 3 (Auto-Debit Renewal): addMonths(trueSignupDate, 2) -> isAutoDebit = true
+  return Array.from({ length: effectiveCount }, (_, cycleIdx) => {
+    const isLive = (cycleIdx === 0);
     const isAutoDebit = !isLive;
+    const time = Math.min(addMonths(trueSignupDate, cycleIdx), Date.now());
 
     return {
       time,
@@ -1801,23 +1799,33 @@ function ControlPanel() {
 
   const periodStart = useMemo(() => {
     if (rangeId === "all_time" && !selectedMonthKey && !custom) return 0;
-    if (from) {
+    if (from && to) {
+      const fromT = new Date(`${from}T00:00:00`).getTime();
+      const toT = new Date(`${to}T00:00:00`).getTime();
+      const minT = Math.min(fromT, toT);
+      if (!Number.isNaN(minT)) return minT;
+    } else if (from) {
       const t = new Date(`${from}T00:00:00`).getTime();
       if (!Number.isNaN(t)) return t;
     }
     const daysMap = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
     const dCount = daysMap[rangeId] || 30;
     return Date.now() - dCount * 86400000;
-  }, [rangeId, selectedMonthKey, custom, from]);
+  }, [rangeId, selectedMonthKey, custom, from, to]);
 
   const periodEnd = useMemo(() => {
     if (rangeId === "all_time" && !selectedMonthKey && !custom) return Infinity;
-    if (to) {
+    if (from && to) {
+      const fromT = new Date(`${from}T23:59:59.999`).getTime();
+      const toT = new Date(`${to}T23:59:59.999`).getTime();
+      const maxT = Math.max(fromT, toT);
+      if (!Number.isNaN(maxT)) return maxT;
+    } else if (to) {
       const t = new Date(`${to}T23:59:59.999`).getTime();
       if (!Number.isNaN(t)) return t;
     }
     return Date.now();
-  }, [rangeId, selectedMonthKey, custom, to]);
+  }, [rangeId, selectedMonthKey, custom, from, to]);
 
   const periodDurationDays = useMemo(() => {
     if (!Number.isFinite(periodEnd) || periodStart <= 0) return 365;
@@ -2183,7 +2191,10 @@ function ControlPanel() {
     if (rangeId === "all_time") return "All Time";
     if (rangeId === "30d") return "Last 30 Days";
     if (rangeId === "90d") return "Last 90 Days";
-    if (custom && from && to) return `${from} to ${to}`;
+    if (custom && from && to) {
+      const [start, end] = from <= to ? [from, to] : [to, from];
+      return `${start} to ${end}`;
+    }
     return "";
   }, [selectedMonthKey, monthOptions, rangeId, custom, from, to]);
 

@@ -114,11 +114,11 @@ function addressToLines(address) {
   return [
     address.name,
     address.phone,
-    address.address,
-    address.landmark,
+    address.address || address.line1 || address.street,
+    address.landmark || address.line2,
     address.city,
     address.state,
-    address.pincode,
+    address.pincode || address.postalCode || address.zip,
     address.country
   ].filter(Boolean);
 }
@@ -329,7 +329,7 @@ function DetailField({ label, children }) {
    ADDRESS BOX
 ========================================================= */
 
-function AddressBox({ title, address }) {
+function AddressBox({ title, address, onEdit }) {
   const lines = addressToLines(address);
 
   return (
@@ -343,13 +343,42 @@ function AddressBox({ title, address }) {
     >
       <div
         style={{
-          fontSize: 13,
-          fontWeight: 750,
-          marginBottom: 10,
-          color: "var(--ink, #17191c)"
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 10
         }}
       >
-        {title}
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 750,
+            color: "var(--ink, #17191c)"
+          }}
+        >
+          {title}
+        </div>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{
+              padding: "4px 10px",
+              borderRadius: 6,
+              border: "1px solid #b2ddff",
+              background: "#eff8ff",
+              color: "#175cd3",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4
+            }}
+          >
+            ✏️ Edit {title.includes("Delivery") ? "Delivery" : "Billing"}
+          </button>
+        )}
       </div>
 
       {lines.length ? (
@@ -403,11 +432,23 @@ function PrebookOrders() {
     name: "",
     email: "",
     phone: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    pincode: "",
+    deliveryName: "",
+    deliveryPhone: "",
+    deliveryAddress: "",
+    deliveryLandmark: "",
+    deliveryCity: "",
+    deliveryState: "",
+    deliveryPincode: "",
+    deliveryCountry: "India",
+    billingSameAsDelivery: true,
+    billingName: "",
+    billingPhone: "",
+    billingAddress: "",
+    billingLandmark: "",
+    billingCity: "",
+    billingState: "",
+    billingPincode: "",
+    billingCountry: "India",
     shippingStatus: "pending",
     paymentStatus: "paid",
     trackingId: "",
@@ -418,19 +459,50 @@ function PrebookOrders() {
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
 
-  const openEditModal = (order) => {
+  const openEditModal = (order, targetSection = "all") => {
     setEditingOrder(order);
     const cust = order.customer || {};
     const ship = order.shippingAddress || {};
+    const bill = order.billingAddress || {};
+
+    const shipAddress = ship.address || ship.line1 || ship.street || "";
+    const billAddress = bill.address || bill.line1 || bill.street || "";
+
+    const isSameAsDelivery =
+      bill.sameAsDelivery !== false &&
+      (bill.sameAsDelivery === true ||
+        !billAddress ||
+        (billAddress === shipAddress &&
+          String(bill.pincode || bill.postalCode || "").trim() ===
+            String(ship.pincode || ship.postalCode || "").trim()));
+
     setEditForm({
-      name: cust.name || "",
+      name: cust.name || ship.name || "",
       email: cust.email || "",
-      phone: cust.phone || "",
-      addressLine1: ship.line1 || ship.address || ship.street || "",
-      addressLine2: ship.line2 || "",
-      city: ship.city || "",
-      state: ship.state || "",
-      pincode: ship.postalCode || ship.pincode || ship.zip || "",
+      phone: cust.phone || ship.phone || "",
+
+      // Delivery Address
+      deliveryName: ship.name || cust.name || "",
+      deliveryPhone: ship.phone || cust.phone || "",
+      deliveryAddress: shipAddress,
+      deliveryLandmark: ship.landmark || ship.line2 || "",
+      deliveryCity: ship.city || "",
+      deliveryState: ship.state || "",
+      deliveryPincode: ship.pincode || ship.postalCode || ship.zip || "",
+      deliveryCountry: ship.country || "India",
+
+      // Billing Address
+      billingSameAsDelivery: targetSection === "billing" ? false : isSameAsDelivery,
+      billingName: bill.name || ship.name || cust.name || "",
+      billingPhone: bill.phone || ship.phone || cust.phone || "",
+      billingAddress: billAddress || shipAddress,
+      billingLandmark: bill.landmark || bill.line2 || ship.landmark || ship.line2 || "",
+      billingCity: bill.city || ship.city || "",
+      billingState: bill.state || ship.state || "",
+      billingPincode: bill.pincode || bill.postalCode || bill.zip || ship.pincode || ship.postalCode || "",
+      billingCountry: bill.country || "India",
+
+      // Status & Logistics
       shippingStatus: order.shippingStatus || "pending",
       paymentStatus: order.paymentStatus || order.status || "paid",
       trackingId: order.trackingId || order.trackingNumber || "",
@@ -442,7 +514,33 @@ function PrebookOrders() {
   };
 
   const handleEditChange = (field, value) => {
-    setEditForm((prev) => ({ ...prev, [field]: value }));
+    setEditForm((prev) => {
+      const next = { ...prev, [field]: value };
+
+      if (field === "billingSameAsDelivery" && value === true) {
+        next.billingName = prev.deliveryName;
+        next.billingPhone = prev.deliveryPhone;
+        next.billingAddress = prev.deliveryAddress;
+        next.billingLandmark = prev.deliveryLandmark;
+        next.billingCity = prev.deliveryCity;
+        next.billingState = prev.deliveryState;
+        next.billingPincode = prev.deliveryPincode;
+        next.billingCountry = prev.deliveryCountry || "India";
+      }
+
+      if (next.billingSameAsDelivery) {
+        if (field === "deliveryName") next.billingName = value;
+        if (field === "deliveryPhone") next.billingPhone = value;
+        if (field === "deliveryAddress") next.billingAddress = value;
+        if (field === "deliveryLandmark") next.billingLandmark = value;
+        if (field === "deliveryCity") next.billingCity = value;
+        if (field === "deliveryState") next.billingState = value;
+        if (field === "deliveryPincode") next.billingPincode = value;
+        if (field === "deliveryCountry") next.billingCountry = value;
+      }
+
+      return next;
+    });
   };
 
   const saveOrderEdit = async (e) => {
@@ -456,31 +554,55 @@ function PrebookOrders() {
     try {
       const updatedCustomer = {
         ...(editingOrder.customer || {}),
-        name: editForm.name.trim(),
+        name: editForm.name.trim() || editForm.deliveryName.trim(),
         email: editForm.email.trim(),
-        phone: editForm.phone.trim()
+        phone: editForm.phone.trim() || editForm.deliveryPhone.trim()
       };
 
       const updatedShippingAddress = {
         ...(editingOrder.shippingAddress || {}),
-        line1: editForm.addressLine1.trim(),
-        address: editForm.addressLine1.trim(),
-        street: editForm.addressLine1.trim(),
-        line2: editForm.addressLine2.trim(),
-        city: editForm.city.trim(),
-        state: editForm.state.trim(),
-        postalCode: editForm.pincode.trim(),
-        pincode: editForm.pincode.trim(),
-        zip: editForm.pincode.trim()
+        name: editForm.deliveryName.trim() || editForm.name.trim(),
+        phone: editForm.deliveryPhone.trim() || editForm.phone.trim(),
+        address: editForm.deliveryAddress.trim(),
+        line1: editForm.deliveryAddress.trim(),
+        street: editForm.deliveryAddress.trim(),
+        landmark: editForm.deliveryLandmark.trim(),
+        line2: editForm.deliveryLandmark.trim(),
+        city: editForm.deliveryCity.trim(),
+        state: editForm.deliveryState.trim(),
+        pincode: editForm.deliveryPincode.trim(),
+        postalCode: editForm.deliveryPincode.trim(),
+        zip: editForm.deliveryPincode.trim(),
+        country: editForm.deliveryCountry.trim() || "India"
       };
+
+      const updatedBillingAddress = editForm.billingSameAsDelivery
+        ? {
+            ...updatedShippingAddress,
+            sameAsDelivery: true
+          }
+        : {
+            ...(editingOrder.billingAddress || {}),
+            name: editForm.billingName.trim() || updatedShippingAddress.name,
+            phone: editForm.billingPhone.trim() || updatedShippingAddress.phone,
+            address: editForm.billingAddress.trim(),
+            line1: editForm.billingAddress.trim(),
+            street: editForm.billingAddress.trim(),
+            landmark: editForm.billingLandmark.trim(),
+            line2: editForm.billingLandmark.trim(),
+            city: editForm.billingCity.trim(),
+            state: editForm.billingState.trim(),
+            pincode: editForm.billingPincode.trim(),
+            postalCode: editForm.billingPincode.trim(),
+            zip: editForm.billingPincode.trim(),
+            country: editForm.billingCountry.trim() || "India",
+            sameAsDelivery: false
+          };
 
       const updatePayload = {
         customer: updatedCustomer,
         shippingAddress: updatedShippingAddress,
-        billingAddress: {
-          ...(editingOrder.billingAddress || {}),
-          ...updatedShippingAddress
-        },
+        billingAddress: updatedBillingAddress,
         shippingStatus: editForm.shippingStatus,
         paymentStatus: editForm.paymentStatus,
         trackingId: editForm.trackingId.trim(),
@@ -498,7 +620,7 @@ function PrebookOrders() {
       // Also update currently viewed order if open
       setSelected((prev) => (prev && prev.id === editingOrder.id ? { ...prev, ...updatePayload } : prev));
 
-      setEditSuccess("Order and address updated successfully!");
+      setEditSuccess("Delivery and Billing addresses updated successfully!");
       setTimeout(() => {
         setEditingOrder(null);
         setEditSuccess("");
@@ -3307,8 +3429,16 @@ function PrebookOrders() {
                   marginBottom: 20
                 }}
               >
-                <AddressBox title="Delivery Address" address={selected.shippingAddress} />
-                <AddressBox title="Billing Address" address={selected.billingAddress} />
+                <AddressBox
+                  title="Delivery Address"
+                  address={selected.shippingAddress}
+                  onEdit={() => openEditModal(selected, "delivery")}
+                />
+                <AddressBox
+                  title="Billing Address"
+                  address={selected.billingAddress}
+                  onEdit={() => openEditModal(selected, "billing")}
+                />
               </div>
 
               {/* PAYMENT */}
@@ -3655,30 +3785,80 @@ function PrebookOrders() {
               </div>
 
               {/* SECTION 2: DELIVERY ADDRESS */}
-              <div style={{ marginBottom: 20 }}>
+              <div
+                style={{
+                  marginBottom: 22,
+                  padding: "16px",
+                  background: "#fcfcfd",
+                  border: "1px solid #eaecf0",
+                  borderRadius: 12
+                }}
+              >
                 <h3
                   style={{
                     fontSize: 14,
                     fontWeight: 750,
-                    color: "#344054",
-                    margin: "0 0 12px",
+                    color: "#1d2939",
+                    margin: "0 0 14px",
                     display: "flex",
                     alignItems: "center",
                     gap: 6
                   }}
                 >
-                  📍 Delivery Address
+                  🚚 Delivery Address (Shipping)
                 </h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div style={{ gridColumn: "span 2" }}>
+                  <div>
                     <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
-                      Address / Street (Line 1)
+                      Recipient Full Name
                     </label>
                     <input
                       type="text"
                       required
-                      value={editForm.addressLine1}
-                      onChange={(e) => handleEditChange("addressLine1", e.target.value)}
+                      value={editForm.deliveryName}
+                      onChange={(e) => handleEditChange("deliveryName", e.target.value)}
+                      placeholder="Receiver name"
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Recipient Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={editForm.deliveryPhone}
+                      onChange={(e) => handleEditChange("deliveryPhone", e.target.value)}
+                      placeholder="10-digit mobile number"
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Delivery Address / Street (Line 1)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.deliveryAddress}
+                      onChange={(e) => handleEditChange("deliveryAddress", e.target.value)}
                       placeholder="House / Flat / Street / Area"
                       style={{
                         width: "100%",
@@ -3697,8 +3877,8 @@ function PrebookOrders() {
                     </label>
                     <input
                       type="text"
-                      value={editForm.addressLine2}
-                      onChange={(e) => handleEditChange("addressLine2", e.target.value)}
+                      value={editForm.deliveryLandmark}
+                      onChange={(e) => handleEditChange("deliveryLandmark", e.target.value)}
                       placeholder="Near landmark, apartment name..."
                       style={{
                         width: "100%",
@@ -3718,8 +3898,8 @@ function PrebookOrders() {
                     <input
                       type="text"
                       required
-                      value={editForm.city}
-                      onChange={(e) => handleEditChange("city", e.target.value)}
+                      value={editForm.deliveryCity}
+                      onChange={(e) => handleEditChange("deliveryCity", e.target.value)}
                       style={{
                         width: "100%",
                         height: 38,
@@ -3738,8 +3918,8 @@ function PrebookOrders() {
                     <input
                       type="text"
                       required
-                      value={editForm.state}
-                      onChange={(e) => handleEditChange("state", e.target.value)}
+                      value={editForm.deliveryState}
+                      onChange={(e) => handleEditChange("deliveryState", e.target.value)}
                       style={{
                         width: "100%",
                         height: 38,
@@ -3758,8 +3938,27 @@ function PrebookOrders() {
                     <input
                       type="text"
                       required
-                      value={editForm.pincode}
-                      onChange={(e) => handleEditChange("pincode", e.target.value)}
+                      value={editForm.deliveryPincode}
+                      onChange={(e) => handleEditChange("deliveryPincode", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.deliveryCountry}
+                      onChange={(e) => handleEditChange("deliveryCountry", e.target.value)}
                       style={{
                         width: "100%",
                         height: 38,
@@ -3774,7 +3973,243 @@ function PrebookOrders() {
                 </div>
               </div>
 
-              {/* SECTION 3: ORDER & SHIPPING STATUS */}
+              {/* SECTION 3: BILLING ADDRESS */}
+              <div
+                style={{
+                  marginBottom: 22,
+                  padding: "16px",
+                  background: "#fcfcfd",
+                  border: "1px solid #eaecf0",
+                  borderRadius: 12
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 750,
+                      color: "#1d2939",
+                      margin: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6
+                    }}
+                  >
+                    💳 Billing Address
+                  </h3>
+
+                  <label
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 12,
+                      fontWeight: 650,
+                      color: "#344054",
+                      cursor: "pointer",
+                      userSelect: "none"
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={editForm.billingSameAsDelivery}
+                      onChange={(e) => handleEditChange("billingSameAsDelivery", e.target.checked)}
+                      style={{ cursor: "pointer", width: 16, height: 16 }}
+                    />
+                    Same as delivery address
+                  </label>
+                </div>
+
+                {!editForm.billingSameAsDelivery ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.billingName}
+                        onChange={(e) => handleEditChange("billingName", e.target.value)}
+                        placeholder="Billing name"
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing Phone
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={editForm.billingPhone}
+                        onChange={(e) => handleEditChange("billingPhone", e.target.value)}
+                        placeholder="Billing phone number"
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div style={{ gridColumn: "span 2" }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing Address / Street (Line 1)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.billingAddress}
+                        onChange={(e) => handleEditChange("billingAddress", e.target.value)}
+                        placeholder="Billing house / street / area"
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div style={{ gridColumn: "span 2" }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing Landmark / Line 2 (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.billingLandmark}
+                        onChange={(e) => handleEditChange("billingLandmark", e.target.value)}
+                        placeholder="Landmark or additional address info"
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing City
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.billingCity}
+                        onChange={(e) => handleEditChange("billingCity", e.target.value)}
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing State
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.billingState}
+                        onChange={(e) => handleEditChange("billingState", e.target.value)}
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing Pincode
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.billingPincode}
+                        onChange={(e) => handleEditChange("billingPincode", e.target.value)}
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                        Billing Country
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.billingCountry}
+                        onChange={(e) => handleEditChange("billingCountry", e.target.value)}
+                        style={{
+                          width: "100%",
+                          height: 38,
+                          borderRadius: 8,
+                          border: "1px solid #d0d5dd",
+                          padding: "0 12px",
+                          fontSize: 13,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      background: "#f0f9ff",
+                      border: "1px solid #b9e6fe",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: "#026aa2",
+                      fontWeight: 600
+                    }}
+                  >
+                    ℹ️ Billing address is synced automatically with the delivery address above. Uncheck the box to provide a distinct billing address.
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 4: ORDER & SHIPPING STATUS */}
               <div style={{ marginBottom: 20 }}>
                 <h3
                   style={{
@@ -3787,7 +4222,7 @@ function PrebookOrders() {
                     gap: 6
                   }}
                 >
-                  🚚 Shipping & Payment Status
+                  📦 Logistics & Order Status
                 </h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>

@@ -2661,7 +2661,18 @@ function UsersScreen() {
       return false;
     }
     const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
-    if (subStatus === "cancelled" || normStatus === "cancelled" || member.isRenewalFailed) {
+    const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
+
+    // CRITICAL: When renewal charge has failed (in retry mode), the member has NOT paid for
+    // the new cycle. Access is strictly limited to 30 days from their last successful payment!
+    if (isFailedRetry) {
+      const paymentTime = getMemberPaymentTime(member);
+      if (!paymentTime) return false;
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      return (paymentTime + thirtyDaysMs) > Date.now();
+    }
+
+    if (subStatus === "cancelled" || normStatus === "cancelled") {
       if (member.nextBillingDate && safeTimestamp(member.nextBillingDate) > Date.now()) {
         return true;
       }
@@ -5352,6 +5363,15 @@ function UsersScreen() {
                                     None (Cancelled)
                                   </div>
                                 </div>
+                              ) : member.isRenewalFailed ? (
+                                <div>
+                                  <div style={{ fontWeight: 650, color: "#b91c1c" }}>
+                                    Payment Overdue
+                                  </div>
+                                  <div style={{ fontSize: 10, color: "#dc2626", marginTop: 2, fontWeight: 500 }}>
+                                    Auto-debit failed
+                                  </div>
+                                </div>
                               ) : member.nextBillingDate ? (
                                 <div>
                                   <div style={{ fontWeight: 600, color: "#374151" }}>
@@ -6460,6 +6480,15 @@ function UsersScreen() {
                               <span style={{ fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>
                                 Mandate Cancelled
                               </span>
+                            ) : m.isRenewalFailed ? (
+                              <div>
+                                <div style={{ fontWeight: 700, color: "#b91c1c", fontSize: 12 }}>
+                                  Payment Overdue
+                                </div>
+                                <div style={{ fontSize: 10, color: "#dc2626", marginTop: 2, fontWeight: 600 }}>
+                                  Auto-Debit Failed (Retrying)
+                                </div>
+                              </div>
                             ) : m.nextBillingDate ? (
                               <div>
                                 <div style={{ fontWeight: 600, color: "#0f172a", fontSize: 12 }}>

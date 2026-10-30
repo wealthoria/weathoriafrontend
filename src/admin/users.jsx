@@ -794,6 +794,932 @@ function exportRecurringExcel(members) {
 }
 
 /* =========================================================================
+   MONTHLY COHORT SUMMARY & EXPORT HELPERS
+   Groups subscriptions by join month (Sept, Oct, etc.), categorizing:
+   - Total Joined
+   - Active Mandates
+   - Cancelled / Inactive
+   - Renewed (2nd Month+) [paidCount >= 2]
+   - Paid Only 1 Month [paidCount === 1 & cancelled/halted/expired/failed]
+   - 1st Month Active [paidCount === 1 & active mandate]
+   ========================================================================= */
+
+function getMemberJoinDate(m) {
+  const ts =
+    safeTimestamp(m.subscriptionStartDate) ||
+    safeTimestamp(m.joinedAt) ||
+    safeTimestamp(m.startDate) ||
+    safeTimestamp(m.createdAt) ||
+    safeTimestamp(m.lastPaymentDate) ||
+    0;
+
+  if (!ts) return null;
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function getMonthlyCohortData(recurringList, isMemberAccessActiveFn) {
+  const groups = new Map();
+
+  (recurringList || []).forEach((m) => {
+    const d = getMemberJoinDate(m);
+    let monthKey = "unknown";
+    let monthLabel = "Prior / Unknown";
+    let sortKey = 0;
+
+    if (d) {
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      monthKey = `${year}-${String(month).padStart(2, "0")}`;
+      monthLabel = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      sortKey = year * 100 + month;
+    }
+
+    if (!groups.has(monthKey)) {
+      groups.set(monthKey, {
+        monthKey,
+        monthLabel,
+        sortKey,
+        totalJoined: 0,
+        activeMandates: 0,
+        activeAccess: 0,
+        cancelled: 0,
+        renewed2ndMonth: 0,
+        paidOnlyOneMonth: 0,
+        firstMonthActive: 0,
+        failedRetry: 0,
+        totalRevenue: 0,
+        members: []
+      });
+    }
+
+    const cohort = groups.get(monthKey);
+    cohort.totalJoined += 1;
+
+    const subStatus = normalizeValue(m.subscriptionStatusPrimary || m.status || "");
+    const isCancelled = ["cancelled", "halted", "expired"].includes(subStatus);
+    const paidCount = Math.max(1, Number(m.paidCount || 1));
+    const accessActive = typeof isMemberAccessActiveFn === "function" ? isMemberAccessActiveFn(m) : false;
+    const isMandateActive = subStatus === "active" || subStatus === "authenticated";
+    const amount = Number(m.subscriptionAmount) || 99;
+    const rev = paidCount * amount;
+    cohort.totalRevenue += rev;
+
+    if (isMandateActive) {
+      cohort.activeMandates += 1;
+    }
+    if (accessActive) {
+      cohort.activeAccess += 1;
+    }
+    if (isCancelled || subStatus === "cancelled") {
+      cohort.cancelled += 1;
+    }
+
+    let cohortCategory = "";
+    if (paidCount >= 2) {
+      cohort.renewed2ndMonth += 1;
+      cohortCategory = isMandateActive
+        ? "Renewed (2nd Month+ Active)"
+        : "Renewed (2nd Month+ Cancelled)";
+    } else if (isCancelled || m.isRenewalFailed || !accessActive) {
+      cohort.paidOnlyOneMonth += 1;
+      cohortCategory = m.isRenewalFailed
+        ? "Payment Failed (Cycle 2 Retry)"
+        : "Paid Only 1 Month (Cancelled / Churned)";
+    } else {
+      cohort.firstMonthActive += 1;
+      cohortCategory = "1st Month (Active - Pending Cycle 2)";
+    }
+
+    if (m.isRenewalFailed) {
+      cohort.failedRetry += 1;
+    }
+
+    cohort.members.push({
+      ...m,
+      cohortCategory,
+      cohortMonth: monthLabel,
+      cohortJoinDate: d,
+      calculatedRevenue: rev,
+      isAccessActive: accessActive
+    });
+  });
+
+  const sortedCohorts = Array.from(groups.values()).sort((a, b) => b.sortKey - a.sortKey);
+
+  const totals = {
+    monthLabel: "All Cohorts (Total)",
+    totalJoined: 0,
+    activeMandates: 0,
+    activeAccess: 0,
+    cancelled: 0,
+    renewed2ndMonth: 0,
+    paidOnlyOneMonth: 0,
+    firstMonthActive: 0,
+    failedRetry: 0,
+    totalRevenue: 0
+  };
+
+  sortedCohorts.forEach((c) => {
+    totals.totalJoined += c.totalJoined;
+    totals.activeMandates += c.activeMandates;
+    totals.activeAccess += c.activeAccess;
+    totals.cancelled += c.cancelled;
+    totals.renewed2ndMonth += c.renewed2ndMonth;
+    totals.paidOnlyOneMonth += c.paidOnlyOneMonth;
+    totals.firstMonthActive += c.firstMonthActive;
+    totals.failedRetry += c.failedRetry;
+    totals.totalRevenue += c.totalRevenue;
+  });
+
+  return { cohorts: sortedCohorts, totals };
+}
+
+function exportMonthlyCohortSummaryCSV(cohorts, totals) {
+  const headers = [
+    "Cohort Month",
+    "Total Joined",
+    "Active Mandates",
+    "Active Platform Access",
+    "Cancelled / Churned",
+    "Renewed (Month 2+)",
+    "Paid Only 1 Month (Churned)",
+    "1st Month Active (In Progress)",
+    "Failed / Retrying",
+    "Renewal Rate (%)",
+    "Total Revenue Collected"
+  ];
+
+  const rows = (cohorts || []).map((c) => {
+    const rate = c.totalJoined > 0
+      ? ((c.renewed2ndMonth / (c.renewed2ndMonth + c.paidOnlyOneMonth || 1)) * 100).toFixed(1)
+      : "0.0";
+    return [
+      c.monthLabel,
+      c.totalJoined,
+      c.activeMandates,
+      c.activeAccess,
+      c.cancelled,
+      c.renewed2ndMonth,
+      c.paidOnlyOneMonth,
+      c.firstMonthActive,
+      c.failedRetry,
+      `${rate}%`,
+      `₹${c.totalRevenue.toLocaleString("en-IN")}`
+    ];
+  });
+
+  if (totals) {
+    const totalRate = totals.totalJoined > 0
+      ? ((totals.renewed2ndMonth / (totals.renewed2ndMonth + totals.paidOnlyOneMonth || 1)) * 100).toFixed(1)
+      : "0.0";
+    rows.push([
+      totals.monthLabel,
+      totals.totalJoined,
+      totals.activeMandates,
+      totals.activeAccess,
+      totals.cancelled,
+      totals.renewed2ndMonth,
+      totals.paidOnlyOneMonth,
+      totals.firstMonthActive,
+      totals.failedRetry,
+      `${totalRate}%`,
+      `₹${totals.totalRevenue.toLocaleString("en-IN")}`
+    ]);
+  }
+
+  const csv = [
+    headers.map(csvCell).join(","),
+    ...rows.map((row) => row.map(csvCell).join(","))
+  ].join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(blob, `wealthoria-monthly-cohort-summary-${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
+function exportMonthlyCohortSummaryExcel(cohorts, totals) {
+  const headers = [
+    "Cohort Month",
+    "Total Joined",
+    "Active Mandates",
+    "Active Platform Access",
+    "Cancelled / Churned",
+    "Renewed (Month 2+)",
+    "Paid Only 1 Month (Churned)",
+    "1st Month Active (In Progress)",
+    "Failed / Retrying",
+    "Renewal Rate (%)",
+    "Total Revenue Collected"
+  ];
+
+  const escapeHtml = (val) =>
+    String(val === null || val === undefined ? "" : val)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const rows = (cohorts || []).map((c) => {
+    const rate = c.totalJoined > 0
+      ? ((c.renewed2ndMonth / (c.renewed2ndMonth + c.paidOnlyOneMonth || 1)) * 100).toFixed(1)
+      : "0.0";
+    return [
+      c.monthLabel,
+      c.totalJoined,
+      c.activeMandates,
+      c.activeAccess,
+      c.cancelled,
+      c.renewed2ndMonth,
+      c.paidOnlyOneMonth,
+      c.firstMonthActive,
+      c.failedRetry,
+      `${rate}%`,
+      `₹${c.totalRevenue.toLocaleString("en-IN")}`
+    ];
+  });
+
+  let totalRowHtml = "";
+  if (totals) {
+    const totalRate = totals.totalJoined > 0
+      ? ((totals.renewed2ndMonth / (totals.renewed2ndMonth + totals.paidOnlyOneMonth || 1)) * 100).toFixed(1)
+      : "0.0";
+    const totalCells = [
+      totals.monthLabel,
+      totals.totalJoined,
+      totals.activeMandates,
+      totals.activeAccess,
+      totals.cancelled,
+      totals.renewed2ndMonth,
+      totals.paidOnlyOneMonth,
+      totals.firstMonthActive,
+      totals.failedRetry,
+      `${totalRate}%`,
+      `₹${totals.totalRevenue.toLocaleString("en-IN")}`
+    ];
+    totalRowHtml = `<tr style="font-weight: bold; background: #f1f5f9;">${totalCells.map(c => `<td>${escapeHtml(c)}</td>`).join("")}</tr>`;
+  }
+
+  const headerHtml = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
+  const bodyHtml = rows.map((r) => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join("")}</tr>`).join("") + totalRowHtml;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background: #7c3aed; color: #ffffff; font-weight: bold; border: 1px solid #d9d9d9; padding: 10px; text-align: left; }
+  td { border: 1px solid #d9d9d9; padding: 8px; vertical-align: top; }
+</style>
+</head>
+<body>
+<h2>Wealthoria Month-Wise Cohort Summary</h2>
+<table>
+<thead><tr>${headerHtml}</tr></thead>
+<tbody>${bodyHtml}</tbody>
+</table>
+</body>
+</html>`;
+
+  const blob = new Blob(["\uFEFF", html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  downloadBlob(blob, `wealthoria-monthly-cohort-summary-${new Date().toISOString().slice(0, 10)}.xls`);
+}
+
+function exportMonthlyCohortCompleteMembersCSV(cohorts) {
+  const headers = [
+    "Customer Name",
+    "Email",
+    "Phone Number",
+    "Member ID",
+    "Razorpay Subscription ID",
+    "Cohort Month",
+    "Joined Date & Time",
+    "Cycles Paid",
+    "Cohort Category",
+    "Mandate Status",
+    "Platform Login Access",
+    "Total Paid Amount",
+    "Plan",
+    "Last Debited Date & Time",
+    "Last Payment ID",
+    "Next Auto-Debit Date",
+    "Cancelled Date"
+  ];
+
+  const allMembers = [];
+  (cohorts || []).forEach((c) => {
+    (c.members || []).forEach((m) => {
+      allMembers.push(m);
+    });
+  });
+
+  allMembers.sort((a, b) => (getMemberPaymentTime(b) || 0) - (getMemberPaymentTime(a) || 0));
+
+  const rows = allMembers.map((m) => {
+    const isCancelled = ["cancelled", "halted", "expired"].includes(m.subscriptionStatusPrimary);
+    const paidCount = Math.max(1, Number(m.paidCount || 1));
+    const accessText = m.isAccessActive ? "Active (Login Allowed)" : "Blocked / Inactive (Unpaid)";
+
+    return [
+      m.name,
+      m.email,
+      m.phone,
+      m.uid,
+      m.razorpaySubscriptionId,
+      m.cohortMonth || "",
+      formatMemberDateTime(m.joinedAt),
+      `${paidCount} cycle(s)`,
+      m.cohortCategory || "",
+      m.isRenewalFailed ? "Debit Failed (Retrying)" : m.subscriptionStatusDisplay,
+      accessText,
+      `₹${paidCount * (m.subscriptionAmount || 99)}`,
+      m.subscriptionPlanDisplay,
+      formatMemberDateTime(m.lastPaymentDate),
+      m.razorpayPaymentId || "",
+      isCancelled ? "None (Cancelled)" : formatMemberDate(m.nextBillingDate),
+      m.cancelledAt ? formatMemberDateTime(m.cancelledAt) : ""
+    ];
+  });
+
+  const csv = [
+    headers.map(csvCell).join(","),
+    ...rows.map((row) => row.map(csvCell).join(","))
+  ].join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(blob, `wealthoria-cohort-complete-members-${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
+function exportMonthlyCohortCompleteMembersExcel(cohorts) {
+  const headers = [
+    "Customer Name",
+    "Email",
+    "Phone Number",
+    "Member ID",
+    "Razorpay Subscription ID",
+    "Cohort Month",
+    "Joined Date & Time",
+    "Cycles Paid",
+    "Cohort Category",
+    "Mandate Status",
+    "Platform Login Access",
+    "Total Paid Amount",
+    "Plan",
+    "Last Debited Date & Time",
+    "Last Payment ID",
+    "Next Auto-Debit Date",
+    "Cancelled Date"
+  ];
+
+  const escapeHtml = (val) =>
+    String(val === null || val === undefined ? "" : val)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const allMembers = [];
+  (cohorts || []).forEach((c) => {
+    (c.members || []).forEach((m) => {
+      allMembers.push(m);
+    });
+  });
+
+  allMembers.sort((a, b) => (getMemberPaymentTime(b) || 0) - (getMemberPaymentTime(a) || 0));
+
+  const rows = allMembers.map((m) => {
+    const isCancelled = ["cancelled", "halted", "expired"].includes(m.subscriptionStatusPrimary);
+    const paidCount = Math.max(1, Number(m.paidCount || 1));
+    const accessText = m.isAccessActive ? "Active (Login Allowed)" : "Blocked / Inactive (Unpaid)";
+
+    return [
+      m.name,
+      m.email,
+      m.phone,
+      m.uid,
+      m.razorpaySubscriptionId,
+      m.cohortMonth || "",
+      formatMemberDateTime(m.joinedAt),
+      `${paidCount} cycle(s)`,
+      m.cohortCategory || "",
+      m.isRenewalFailed ? "Debit Failed (Retrying)" : m.subscriptionStatusDisplay,
+      accessText,
+      `₹${paidCount * (m.subscriptionAmount || 99)}`,
+      m.subscriptionPlanDisplay,
+      formatMemberDateTime(m.lastPaymentDate),
+      m.razorpayPaymentId || "",
+      isCancelled ? "None (Cancelled)" : formatMemberDate(m.nextBillingDate),
+      m.cancelledAt ? formatMemberDateTime(m.cancelledAt) : ""
+    ];
+  });
+
+  const headerHtml = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
+  const bodyHtml = rows.map((r) => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join("")}</tr>`).join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background: #4338ca; color: #ffffff; font-weight: bold; border: 1px solid #d9d9d9; padding: 8px; text-align: left; }
+  td { border: 1px solid #d9d9d9; padding: 8px; vertical-align: top; }
+</style>
+</head>
+<body>
+<h2>Wealthoria Monthly Cohort Complete Member Breakdown</h2>
+<table>
+<thead><tr>${headerHtml}</tr></thead>
+<tbody>${bodyHtml}</tbody>
+</table>
+</body>
+</html>`;
+
+  const blob = new Blob(["\uFEFF", html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  downloadBlob(blob, `wealthoria-cohort-complete-members-${new Date().toISOString().slice(0, 10)}.xls`);
+}
+
+function MonthlyCohortSummaryModal({
+  isOpen,
+  onClose,
+  cohortData
+}) {
+  if (!isOpen) return null;
+
+  const { cohorts = [], totals = {} } = cohortData || {};
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(15, 23, 42, 0.72)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        padding: "20px 16px",
+        boxSizing: "border-box"
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 1100,
+          maxHeight: "92vh",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 16,
+          overflow: "hidden",
+          background: "#ffffff",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+          border: "1px solid #e2e8f0"
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            padding: "20px 24px",
+            background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%)",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)"
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: "rgba(255, 255, 255, 0.15)",
+                  color: "#ffffff"
+                }}
+              >
+                <MIcon name="insights" size={20} />
+              </span>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>
+                Month-Wise Subscription Cohort Summary & Data Export
+              </h2>
+            </div>
+            <p style={{ margin: "6px 0 0 46px", fontSize: 13, color: "rgba(255, 255, 255, 0.8)" }}>
+              Cohort tracking for joiners by month (Sept, Oct, etc.), showing active mandates, cancellations, 2nd month renewals, and 1-month churn.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: "rgba(255, 255, 255, 0.15)",
+              border: "none",
+              borderRadius: 8,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff",
+              cursor: "pointer",
+              transition: "background 0.15s ease"
+            }}
+          >
+            <MIcon name="close" size={20} />
+          </button>
+        </div>
+
+        {/* MODAL BODY (SCROLLABLE) */}
+        <div
+          style={{
+            padding: 24,
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+            background: "#f8fafc"
+          }}
+        >
+          {/* TOP KPI CARDS */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 12
+            }}
+          >
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Total Joined</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#1e293b", marginTop: 4 }}>{totals.totalJoined || 0}</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>Across all cohorts</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #bbf7d0" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#16a34a", textTransform: "uppercase" }}>Active Mandates</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#15803d", marginTop: 4 }}>{totals.activeMandates || 0}</div>
+              <div style={{ fontSize: 11, color: "#16a34a", marginTop: 2 }}>{totals.activeAccess || 0} login active</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #c7d2fe" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", textTransform: "uppercase" }}>Renewed (Month 2+)</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#4338ca", marginTop: 4 }}>{totals.renewed2ndMonth || 0}</div>
+              <div style={{ fontSize: 11, color: "#6366f1", marginTop: 2 }}>Paid 2 or more cycles</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #fecaca" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", textTransform: "uppercase" }}>Paid Only 1 Month</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#b91c1c", marginTop: 4 }}>{totals.paidOnlyOneMonth || 0}</div>
+              <div style={{ fontSize: 11, color: "#ef4444", marginTop: 2 }}>Churned after 1st cycle</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #fed7aa" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#ea580c", textTransform: "uppercase" }}>Total Revenue</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#c2410c", marginTop: 4 }}>₹{(totals.totalRevenue || 0).toLocaleString("en-IN")}</div>
+              <div style={{ fontSize: 11, color: "#f97316", marginTop: 2 }}>Collected so far</div>
+            </div>
+          </div>
+
+          {/* MONTH-WISE TABLE */}
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 14,
+              border: "1px solid #e2e8f0",
+              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "#f8fafc"
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#1e293b" }}>
+                Monthly Cohort Performance Breakdown
+              </h3>
+              <span style={{ fontSize: 12, color: "#64748b" }}>
+                {cohorts.length} month(s) tracked
+              </span>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+                <thead>
+                  <tr style={{ background: "#f1f5f9", color: "#475569", borderBottom: "1px solid #e2e8f0" }}>
+                    <th style={{ padding: "12px 14px", fontWeight: 700 }}>Join Month</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center" }}>Total Joined</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center" }}>Active Mandates</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center" }}>Active Access</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center" }}>Cancelled</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center", color: "#4338ca" }}>Renewed (2nd Month+)</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center", color: "#b91c1c" }}>Paid 1 Month Only</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center" }}>1st Month Active</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "center" }}>Renewal Rate</th>
+                    <th style={{ padding: "12px 14px", fontWeight: 700, textAlign: "right" }}>Total Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cohorts.map((c, idx) => {
+                    const renewalRate = c.totalJoined > 0
+                      ? ((c.renewed2ndMonth / (c.renewed2ndMonth + c.paidOnlyOneMonth || 1)) * 100).toFixed(1)
+                      : "0.0";
+                    return (
+                      <tr
+                        key={c.monthKey || idx}
+                        style={{
+                          borderBottom: "1px solid #f1f5f9",
+                          background: idx % 2 === 0 ? "#ffffff" : "#fcfdfe"
+                        }}
+                      >
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1e293b" }}>
+                          📅 {c.monthLabel}
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center", fontWeight: 700 }}>
+                          {c.totalJoined}
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                          <span style={{ padding: "2px 8px", borderRadius: 999, background: "#dcfce7", color: "#15803d", fontWeight: 700 }}>
+                            {c.activeMandates}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                          <span style={{ padding: "2px 8px", borderRadius: 999, background: "#e0f2fe", color: "#0369a1", fontWeight: 700 }}>
+                            {c.activeAccess}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                          <span style={{ padding: "2px 8px", borderRadius: 999, background: "#fee2e2", color: "#b91c1c", fontWeight: 700 }}>
+                            {c.cancelled}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center", fontWeight: 800, color: "#4338ca" }}>
+                          {c.renewed2ndMonth}
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center", fontWeight: 700, color: "#dc2626" }}>
+                          {c.paidOnlyOneMonth}
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center", color: "#64748b" }}>
+                          {c.firstMonthActive}
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "center", fontWeight: 700, color: Number(renewalRate) >= 50 ? "#15803d" : "#d97706" }}>
+                          {renewalRate}%
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: 700, color: "#0f172a" }}>
+                          ₹{c.totalRevenue.toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "#e2e8f0", fontWeight: 800, color: "#0f172a" }}>
+                    <td style={{ padding: "14px" }}>Total / All Months</td>
+                    <td style={{ padding: "14px", textAlign: "center" }}>{totals.totalJoined || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center" }}>{totals.activeMandates || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center" }}>{totals.activeAccess || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center" }}>{totals.cancelled || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center", color: "#4338ca" }}>{totals.renewed2ndMonth || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center", color: "#b91c1c" }}>{totals.paidOnlyOneMonth || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center" }}>{totals.firstMonthActive || 0}</td>
+                    <td style={{ padding: "14px", textAlign: "center" }}>
+                      {totals.totalJoined > 0
+                        ? `${((totals.renewed2ndMonth / (totals.renewed2ndMonth + totals.paidOnlyOneMonth || 1)) * 100).toFixed(1)}%`
+                        : "0.0%"}
+                    </td>
+                    <td style={{ padding: "14px", textAlign: "right" }}>
+                      ₹{(totals.totalRevenue || 0).toLocaleString("en-IN")}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* EXPORT OPTIONS BOX */}
+          <div
+            style={{
+              background: "#ffffff",
+              padding: 20,
+              borderRadius: 14,
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <MIcon name="file_download" size={20} />
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#1e293b" }}>
+                Export Options (Summary & Complete Member Data)
+              </h4>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 14
+              }}
+            >
+              {/* SUMMARY EXPORT */}
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  border: "1px solid #e0e7ff",
+                  background: "#f5f3ff",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "#4338ca", display: "flex", alignItems: "center", gap: 6 }}>
+                    <MIcon name="table_chart" size={18} />
+                    Monthly Summary Report
+                  </div>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: "6px 0 14px 0" }}>
+                    Export aggregated month-wise totals (Joined, Active, Cancelled, 2nd Month Renewed, 1-Month Churned, Revenue).
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => exportMonthlyCohortSummaryCSV(cohorts, totals)}
+                    style={{
+                      flex: 1,
+                      height: 38,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      background: "#6d28d9",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer"
+                    }}
+                  >
+                    <MIcon name="download" size={16} />
+                    Summary CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => exportMonthlyCohortSummaryExcel(cohorts, totals)}
+                    style={{
+                      flex: 1,
+                      height: 38,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      background: "#15803d",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer"
+                    }}
+                  >
+                    <MIcon name="download" size={16} />
+                    Summary Excel
+                  </button>
+                </div>
+              </div>
+
+              {/* COMPLETE MEMBER DATA EXPORT */}
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  border: "1px solid #cbd5e1",
+                  background: "#f8fafc",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "#1e293b", display: "flex", alignItems: "center", gap: 6 }}>
+                    <MIcon name="view_list" size={18} />
+                    Complete Member-Level Data
+                  </div>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: "6px 0 14px 0" }}>
+                    Export every single subscriber with their Join Month, Join Date, Cohort Category, Cycles Paid, Status, Access, and Billing info.
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => exportMonthlyCohortCompleteMembersCSV(cohorts)}
+                    style={{
+                      flex: 1,
+                      height: 38,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      background: "#2563eb",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer"
+                    }}
+                  >
+                    <MIcon name="download" size={16} />
+                    Complete CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => exportMonthlyCohortCompleteMembersExcel(cohorts)}
+                    style={{
+                      flex: 1,
+                      height: 38,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      background: "#0f766e",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer"
+                    }}
+                  >
+                    <MIcon name="download" size={16} />
+                    Complete Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MODAL FOOTER */}
+        <div
+          style={{
+            padding: "16px 24px",
+            background: "#ffffff",
+            borderTop: "1px solid #e2e8f0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}
+        >
+          <span style={{ fontSize: 12, color: "#64748b" }}>
+            Data is calculated directly from current Firestore subscriptions & auto-debit cycles.
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: "9px 20px",
+              background: "#e2e8f0",
+              color: "#334155",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer"
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
    MEMBERS SCREEN
    ========================================================================= */
 
@@ -860,6 +1786,9 @@ function UsersScreen() {
 
   const [recurringStatusFilter, setRecurringStatusFilter] =
     useState("all");
+
+  const [showCohortSummaryModal, setShowCohortSummaryModal] =
+    useState(false);
 
   const [subscriptions, setSubscriptions] =
     useState([]);
@@ -1821,6 +2750,10 @@ function UsersScreen() {
     return list;
   }, [members, subscriptions]);
 
+  const monthlyCohortSummary = useMemo(() => {
+    return getMonthlyCohortData(recurringMembersList, isMemberAccessActive);
+  }, [recurringMembersList, isMemberAccessActive]);
+
   const filteredRecurringMembers = useMemo(() => {
     const query = recurringSearch.trim().toLowerCase();
 
@@ -2380,6 +3313,33 @@ function UsersScreen() {
                 "wrap"
             }}
           >
+
+            <button
+              type="button"
+              onClick={() => setShowCohortSummaryModal(true)}
+              disabled={loading || recurringMembersList.length === 0}
+              style={{
+                height: 42,
+                padding: "0 16px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                border: "1px solid #7c3aed",
+                borderRadius: 10,
+                background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                color: "#ffffff",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: loading || recurringMembersList.length === 0 ? "not-allowed" : "pointer",
+                opacity: loading || recurringMembersList.length === 0 ? 0.6 : 1,
+                boxShadow: "0 2px 6px rgba(109, 40, 217, 0.25)",
+                transition: "all 0.15s ease"
+              }}
+              title="View month-wise cohort summary (Sept, Oct...) with active, cancelled, renewed 2nd month, paid 1 month only, and export options"
+            >
+              <MIcon name="insights" size={16} />
+              Month-wise Summary & Cohort Export
+            </button>
 
             <button
               type="button"
@@ -4973,6 +5933,111 @@ function UsersScreen() {
               </div>
             </div>
 
+            {/* MONTH-WISE COHORT SUMMARY BANNER */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
+                border: "1px solid #ddd6fe",
+                borderRadius: 12,
+                marginBottom: 16,
+                flexWrap: "wrap",
+                gap: 12
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    background: "#7c3aed",
+                    color: "#ffffff"
+                  }}
+                >
+                  <MIcon name="insights" size={22} />
+                </span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#4c1d95" }}>
+                    Month-Wise Subscription Retention & Churn Summary
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6d28d9", marginTop: 2 }}>
+                    Detailed breakdown: September, October & monthly joiners with 2nd-month renewal vs 1-month churn metrics.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCohortSummaryModal(true)}
+                  style={{
+                    padding: "8px 16px",
+                    background: "#7c3aed",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    boxShadow: "0 2px 4px rgba(124, 58, 237, 0.2)"
+                  }}
+                >
+                  <MIcon name="visibility" size={16} />
+                  View Monthly Breakdown
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportMonthlyCohortSummaryCSV(monthlyCohortSummary.cohorts, monthlyCohortSummary.totals)}
+                  style={{
+                    padding: "8px 14px",
+                    background: "#ffffff",
+                    color: "#6d28d9",
+                    border: "1px solid #c4b5fd",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  <MIcon name="download" size={15} />
+                  Summary CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportMonthlyCohortCompleteMembersCSV(monthlyCohortSummary.cohorts)}
+                  style={{
+                    padding: "8px 14px",
+                    background: "#ffffff",
+                    color: "#2563eb",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  <MIcon name="download" size={15} />
+                  Complete Members CSV
+                </button>
+              </div>
+            </div>
+
             {/* RECURRING TOOLBAR (SEARCH + DATE PRESETS + CUSTOM DATES + STATUS FILTER) */}
             <div
               style={{
@@ -5605,6 +6670,13 @@ function UsersScreen() {
             )}
           </div>
         )}
+
+        {/* MONTHLY COHORT SUMMARY MODAL */}
+        <MonthlyCohortSummaryModal
+          isOpen={showCohortSummaryModal}
+          onClose={() => setShowCohortSummaryModal(false)}
+          cohortData={monthlyCohortSummary}
+        />
 
       </div>
 

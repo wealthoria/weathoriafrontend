@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -102,104 +102,96 @@ function AdminYouTube() {
       console.error(
         "Firestore is not available"
       );
-
       return;
     }
 
-    const unsubscribe = window.db
-      .collection("youtube_videos")
-      .onSnapshot(
-        (snapshot) => {
-          const data = snapshot.docs.map(
-            (doc) => ({
-              id: doc.id,
-              ...doc.data()
-            })
-          );
+    let unsubscribe = null;
+    let unsubAuth = null;
+    let isSubscribed = false;
 
-          /* ---------------------------------------------
-             SORT BY DISPLAY ORDER
-          --------------------------------------------- */
+    const startListener = () => {
+      if (isSubscribed) return;
+      isSubscribed = true;
 
-          data.sort((a, b) => {
-            const aOrder =
-              Number(a.displayOrder);
+      unsubscribe = window.db
+        .collection("youtube_videos")
+        .onSnapshot(
+          (snapshot) => {
+            const data = snapshot.docs.map(
+              (doc) => ({
+                id: doc.id,
+                ...doc.data()
+              })
+            );
 
-            const bOrder =
-              Number(b.displayOrder);
+            /* ---------------------------------------------
+               SORT BY DISPLAY ORDER
+            --------------------------------------------- */
+            data.sort((a, b) => {
+              const aOrder = Number(a.displayOrder);
+              const bOrder = Number(b.displayOrder);
+              const aHasOrder = Number.isFinite(aOrder) && aOrder > 0;
+              const bHasOrder = Number.isFinite(bOrder) && bOrder > 0;
 
-            const aHasOrder =
-              Number.isFinite(aOrder) &&
-              aOrder > 0;
+              if (aHasOrder && bHasOrder) {
+                return aOrder - bOrder;
+              }
+              if (aHasOrder) {
+                return -1;
+              }
+              if (bHasOrder) {
+                return 1;
+              }
 
-            const bHasOrder =
-              Number.isFinite(bOrder) &&
-              bOrder > 0;
+              const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+              const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+              return bTime - aTime;
+            });
 
-            if (
-              aHasOrder &&
-              bHasOrder
-            ) {
-              return aOrder - bOrder;
-            }
+            /* ---------------------------------------------
+               NORMALIZE ORDER
+            --------------------------------------------- */
+            const normalized = data.map(
+              (video, index) => ({
+                ...video,
+                displayOrder:
+                  Number.isFinite(Number(video.displayOrder)) && Number(video.displayOrder) > 0
+                    ? Number(video.displayOrder)
+                    : index + 1
+              })
+            );
 
-            if (aHasOrder) {
-              return -1;
-            }
+            setVideos(normalized);
+          },
+          (error) => {
+            console.error(
+              "Error loading YouTube videos:",
+              error
+            );
+            setMessage(
+              "Unable to load YouTube videos."
+            );
+          }
+        );
+    };
 
-            if (bHasOrder) {
-              return 1;
-            }
-
-            const aTime =
-              a.createdAt?.toDate
-                ? a.createdAt
-                    .toDate()
-                    .getTime()
-                : 0;
-
-            const bTime =
-              b.createdAt?.toDate
-                ? b.createdAt
-                    .toDate()
-                    .getTime()
-                : 0;
-
-            return bTime - aTime;
-          });
-
-          /* ---------------------------------------------
-             NORMALIZE ORDER
-          --------------------------------------------- */
-
-          const normalized = data.map(
-            (video, index) => ({
-              ...video,
-              displayOrder:
-                Number.isFinite(
-                  Number(video.displayOrder)
-                ) &&
-                Number(video.displayOrder) > 0
-                  ? Number(video.displayOrder)
-                  : index + 1
-            })
-          );
-
-          setVideos(normalized);
-        },
-        (error) => {
-          console.error(
-            "Error loading YouTube videos:",
-            error
-          );
-
-          setMessage(
-            "Unable to load YouTube videos."
-          );
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        startListener();
+      }
+      unsubAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          startListener();
         }
-      );
+      });
+    } else {
+      startListener();
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubAuth === "function") unsubAuth();
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
 
   /* =========================================================

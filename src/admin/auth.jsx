@@ -76,17 +76,18 @@ async function getAdminProfile(user, forceRefresh = false) {
       Read Firebase ID token. Avoid forced refresh on routine checks
       so transient network hiccups do not log the admin out.
     */
-    const tokenResult = await user.getIdTokenResult(forceRefresh).catch(async () => {
+    const tokenResult = await user.getIdTokenResult(forceRefresh).catch(async (err) => {
+      console.warn("getIdTokenResult failed:", err?.message || err);
       if (forceRefresh) {
         return await user.getIdTokenResult(false).catch(() => null);
       }
       return null;
     });
 
-    // If tokenResult couldn't be fetched (e.g. offline/network glitch), fall back to cached session
+    // If tokenResult couldn't be fetched (e.g. offline, tab asleep, network glitch), fall back to cached session
     if (!tokenResult) {
       const cached = readCachedAdmin();
-      if (cached && (cached.uid === user.uid || cached.email === user.email)) {
+      if (cached && (cached.uid === user.uid || cached.email === user.email || !user.email)) {
         return cached;
       }
       return null;
@@ -118,7 +119,7 @@ async function getAdminProfile(user, forceRefresh = false) {
   } catch (error) {
     console.warn("Unable to read Firebase Admin claim:", error);
     const cached = readCachedAdmin();
-    if (cached && (cached.uid === user.uid || cached.email === user.email)) {
+    if (cached && (cached.uid === user.uid || cached.email === user.email || !user.email)) {
       return cached;
     }
     return null;
@@ -194,6 +195,20 @@ function AdminAuthProvider({
              NOT LOGGED IN IN FIREBASE
           ------------------------------------------------ */
           if (!user) {
+            // Check if we have a valid cached admin first.
+            // On tab wake or hot-reload, Firebase auth may take a moment to restore from IndexedDB.
+            const cached = readCachedAdmin();
+            if (cached) {
+              setState({
+                loading: false,
+                isAuthenticated: true,
+                isAdmin: true,
+                user: cached,
+                admin: cached,
+                error: null
+              });
+              return;
+            }
             saveCachedAdmin(null);
             setState({
               ...adminAuthInitial,
@@ -207,14 +222,15 @@ function AdminAuthProvider({
           ------------------------------------------------ */
           try {
             let admin = await getAdminProfile(user, false);
-            if (!admin) {
-              // Claims might have been added on server; force-refresh token from Firebase
-              admin = await getAdminProfile(user, true);
+            if (!admin && admin !== false) {
+              // Network might have momentarily glitched; try refresh
+              admin = await getAdminProfile(user, true).catch(() => null);
             }
             if (!mounted) return;
 
-            if (admin === false || !admin) {
-              // Confirmed: NOT an admin account
+            // ONLY sign out if Firebase explicitly verified that this user is NOT an admin (admin === false)
+            // NEVER sign out on null (which means offline, tab wake, network reconnecting)
+            if (admin === false) {
               console.warn("Firebase user does not have admin access.");
               saveCachedAdmin(null);
               try {
@@ -230,6 +246,14 @@ function AdminAuthProvider({
               return;
             }
 
+            // If admin is null (network glitch / wake from sleep), restore from cache!
+            if (!admin) {
+              const cached = readCachedAdmin();
+              if (cached && (cached.uid === user.uid || cached.email === user.email || !user.email)) {
+                admin = cached;
+              }
+            }
+
             if (admin) {
               saveCachedAdmin(admin);
               setState({
@@ -242,6 +266,15 @@ function AdminAuthProvider({
                 },
                 admin,
                 error: null
+              });
+            } else {
+              setState({
+                loading: false,
+                isAuthenticated: false,
+                isAdmin: false,
+                user,
+                admin: null,
+                error: "Reconnecting to admin session..."
               });
             }
           } catch (error) {

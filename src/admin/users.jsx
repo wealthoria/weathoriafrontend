@@ -129,15 +129,15 @@ function getMemberTime(member) {
 
 function getMemberPaymentTime(member) {
   if (!member) return 0;
-  return (
-    safeTimestamp(member.lastPaymentDate) ||
-    safeTimestamp(member.paidAt) ||
-    safeTimestamp(member.lastPaymentAt) ||
-    safeTimestamp(member.lastChargedAt) ||
-    safeTimestamp(member.subscriptionStartDate) ||
-    safeTimestamp(member.startDate) ||
-    safeTimestamp(member.joinedAt) ||
-    safeTimestamp(member.createdAt) ||
+  return Math.max(
+    safeTimestamp(member.lastPaymentDate),
+    safeTimestamp(member.paidAt),
+    safeTimestamp(member.lastPaymentAt),
+    safeTimestamp(member.lastChargedAt),
+    safeTimestamp(member.subscriptionStartDate),
+    safeTimestamp(member.startDate),
+    safeTimestamp(member.joinedAt),
+    safeTimestamp(member.createdAt),
     0
   );
 }
@@ -1733,6 +1733,12 @@ function UsersScreen() {
     }
     const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
     if (subStatus === "cancelled" || normStatus === "cancelled" || member.isRenewalFailed) {
+      if (member.nextBillingDate && safeTimestamp(member.nextBillingDate) > Date.now()) {
+        return true;
+      }
+      if (member.paidUntil && safeTimestamp(member.paidUntil) > Date.now()) {
+        return true;
+      }
       const paymentTime = getMemberPaymentTime(member);
       if (!paymentTime) return false;
       const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
@@ -4296,9 +4302,15 @@ function UsersScreen() {
                                     {isMemberAccessActive(member) ? (
                                       (() => {
                                         const paymentTime = getMemberPaymentTime(member);
-                                        return paymentTime ? (
+                                        const cycleEndMs =
+                                          member.nextBillingDate && safeTimestamp(member.nextBillingDate) > (paymentTime || 0)
+                                            ? safeTimestamp(member.nextBillingDate)
+                                            : member.paidUntil && safeTimestamp(member.paidUntil) > (paymentTime || 0)
+                                              ? safeTimestamp(member.paidUntil)
+                                              : (paymentTime ? paymentTime + 30 * 86400000 : 0);
+                                        return cycleEndMs ? (
                                           <span style={{ fontSize: 11, color: "#15803d", fontWeight: 700, marginLeft: 4 }}>
-                                            (Paid until {formatMemberDate(paymentTime + 30 * 86400000)})
+                                            (Paid until {formatMemberDate(cycleEndMs)})
                                           </span>
                                         ) : null;
                                       })()

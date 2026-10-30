@@ -397,6 +397,120 @@ function PrebookOrders() {
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [selectedLabelOrders, setSelectedLabelOrders] = useState([]);
 
+  /* --- EDIT ORDER STATE --- */
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    shippingStatus: "pending",
+    paymentStatus: "paid",
+    trackingId: "",
+    courierName: "",
+    notes: ""
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+
+  const openEditModal = (order) => {
+    setEditingOrder(order);
+    const cust = order.customer || {};
+    const ship = order.shippingAddress || {};
+    setEditForm({
+      name: cust.name || "",
+      email: cust.email || "",
+      phone: cust.phone || "",
+      addressLine1: ship.line1 || ship.address || ship.street || "",
+      addressLine2: ship.line2 || "",
+      city: ship.city || "",
+      state: ship.state || "",
+      pincode: ship.postalCode || ship.pincode || ship.zip || "",
+      shippingStatus: order.shippingStatus || "pending",
+      paymentStatus: order.paymentStatus || order.status || "paid",
+      trackingId: order.trackingId || order.trackingNumber || "",
+      courierName: order.courierName || order.courier || "",
+      notes: order.adminNotes || order.notes || ""
+    });
+    setEditError("");
+    setEditSuccess("");
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const saveOrderEdit = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingOrder?.id) return;
+
+    setSavingEdit(true);
+    setEditError("");
+    setEditSuccess("");
+
+    try {
+      const updatedCustomer = {
+        ...(editingOrder.customer || {}),
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        phone: editForm.phone.trim()
+      };
+
+      const updatedShippingAddress = {
+        ...(editingOrder.shippingAddress || {}),
+        line1: editForm.addressLine1.trim(),
+        address: editForm.addressLine1.trim(),
+        street: editForm.addressLine1.trim(),
+        line2: editForm.addressLine2.trim(),
+        city: editForm.city.trim(),
+        state: editForm.state.trim(),
+        postalCode: editForm.pincode.trim(),
+        pincode: editForm.pincode.trim(),
+        zip: editForm.pincode.trim()
+      };
+
+      const updatePayload = {
+        customer: updatedCustomer,
+        shippingAddress: updatedShippingAddress,
+        billingAddress: {
+          ...(editingOrder.billingAddress || {}),
+          ...updatedShippingAddress
+        },
+        shippingStatus: editForm.shippingStatus,
+        paymentStatus: editForm.paymentStatus,
+        trackingId: editForm.trackingId.trim(),
+        courierName: editForm.courierName.trim(),
+        adminNotes: editForm.notes.trim()
+      };
+
+      await window.db.collection("bookOrders").doc(editingOrder.id).update(updatePayload);
+
+      // Optimistically update table row
+      setOrders((prev) =>
+        prev.map((ord) => (ord.id === editingOrder.id ? { ...ord, ...updatePayload } : ord))
+      );
+
+      // Also update currently viewed order if open
+      setSelected((prev) => (prev && prev.id === editingOrder.id ? { ...prev, ...updatePayload } : prev));
+
+      setEditSuccess("Order and address updated successfully!");
+      setTimeout(() => {
+        setEditingOrder(null);
+        setEditSuccess("");
+      }, 1200);
+    } catch (err) {
+      console.error("Failed to update order:", err);
+      setEditError(err.message || "Failed to update order details.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const ORDERS_PER_PAGE = 50;
 
   /* =======================================================
@@ -412,89 +526,114 @@ function PrebookOrders() {
 
     setLoading(true);
 
-    const unsubscribe = window.db.collection("bookOrders").onSnapshot(
-      (snapshot) => {
-        const rows = snapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-          .filter((order) => {
-            const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
-            const source = String(order.source || "").trim().toLowerCase();
+    let unsubscribe = null;
+    let unsubAuth = null;
+    let isSubscribed = false;
 
-            // Allow direct customer details form orders (source: customer-details-page, COD / payment pending, or confirmed book orders)
-            const isDirectBookOrder =
-              source === "customer-details-page" ||
-              order.orderStatus === "confirmed" ||
-              (Boolean(order.bookingId) && !order.razorpayOrderId);
+    const startListener = () => {
+      if (isSubscribed) return;
+      isSubscribed = true;
 
-            if (isDirectBookOrder) {
-              return (
-                payStatus !== "failed" &&
-                payStatus !== "cancelled" &&
-                payStatus !== "canceled"
-              );
-            }
+      unsubscribe = window.db.collection("bookOrders").onSnapshot(
+        (snapshot) => {
+          const rows = snapshot.docs
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data()
+            }))
+            .filter((order) => {
+              const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
+              const source = String(order.source || "").trim().toLowerCase();
 
-            // Strictly exclude failed, unpaid, cancelled, or pending attempts
-            if (
-              payStatus === "failed" ||
-              payStatus === "cancelled" ||
-              payStatus === "canceled" ||
-              payStatus === "unpaid" ||
-              payStatus === "pending" ||
-              payStatus === "draft"
-            ) {
-              return false;
-            }
+              // Allow direct customer details form orders (source: customer-details-page, COD / payment pending, or confirmed book orders)
+              const isDirectBookOrder =
+                source === "customer-details-page" ||
+                order.orderStatus === "confirmed" ||
+                (Boolean(order.bookingId) && !order.razorpayOrderId);
 
-            // Check for genuine Razorpay payment ID (must not be 'null', 'undefined', empty, etc.)
-            const rawPaymentId =
-              order.razorpayPaymentId ||
-              order.paymentId ||
-              order.payment_id ||
-              (order.payment && typeof order.payment === "object" ? order.payment.id : order.payment);
+              if (isDirectBookOrder) {
+                return (
+                  payStatus !== "failed" &&
+                  payStatus !== "cancelled" &&
+                  payStatus !== "canceled"
+                );
+              }
 
-            const cleanPaymentId = String(rawPaymentId || "").trim().toLowerCase();
-            const hasValidPaymentId =
-              cleanPaymentId !== "" &&
-              cleanPaymentId !== "null" &&
-              cleanPaymentId !== "undefined" &&
-              cleanPaymentId !== "n/a" &&
-              cleanPaymentId !== "none" &&
-              cleanPaymentId !== "-";
+              // Strictly exclude failed, unpaid, cancelled, or pending attempts
+              if (
+                payStatus === "failed" ||
+                payStatus === "cancelled" ||
+                payStatus === "canceled" ||
+                payStatus === "unpaid" ||
+                payStatus === "pending" ||
+                payStatus === "draft"
+              ) {
+                return false;
+              }
 
-            const isPaidStatus =
-              payStatus === "paid" ||
-              payStatus === "captured" ||
-              payStatus === "success";
+              // Check for genuine Razorpay payment ID (must not be 'null', 'undefined', empty, etc.)
+              const rawPaymentId =
+                order.razorpayPaymentId ||
+                order.paymentId ||
+                order.payment_id ||
+                (order.payment && typeof order.payment === "object" ? order.payment.id : order.payment);
 
-            return isPaidStatus || hasValidPaymentId;
+              const cleanPaymentId = String(rawPaymentId || "").trim().toLowerCase();
+              const hasValidPaymentId =
+                cleanPaymentId !== "" &&
+                cleanPaymentId !== "null" &&
+                cleanPaymentId !== "undefined" &&
+                cleanPaymentId !== "n/a" &&
+                cleanPaymentId !== "none" &&
+                cleanPaymentId !== "-";
+
+              const isPaidStatus =
+                payStatus === "paid" ||
+                payStatus === "captured" ||
+                payStatus === "success";
+
+              return isPaidStatus || hasValidPaymentId;
+            });
+
+          // Strict descending order: newest orders first
+          rows.sort((a, b) => {
+            const timeDiff = getOrderTime(b) - getOrderTime(a);
+            if (timeDiff !== 0) return timeDiff;
+            const numA = parseInt(String(a.bookingId || "").replace(/\D/g, ""), 10) || 0;
+            const numB = parseInt(String(b.bookingId || "").replace(/\D/g, ""), 10) || 0;
+            if (numA !== numB) return numB - numA;
+            return String(b.id || "").localeCompare(String(a.id || ""));
           });
 
-        // Strict descending order: newest orders first
-        rows.sort((a, b) => {
-          const timeDiff = getOrderTime(b) - getOrderTime(a);
-          if (timeDiff !== 0) return timeDiff;
-          const numA = parseInt(String(a.bookingId || "").replace(/\D/g, ""), 10) || 0;
-          const numB = parseInt(String(b.bookingId || "").replace(/\D/g, ""), 10) || 0;
-          if (numA !== numB) return numB - numA;
-          return String(b.id || "").localeCompare(String(a.id || ""));
-        });
+          setOrders(rows);
+          setError("");
+          setLoading(false);
+        },
+        (err) => {
+          console.error("Pre-book orders listener failed:", err);
+          setError("Unable to load pre-book orders.");
+          setLoading(false);
+        }
+      );
+    };
 
-        setOrders(rows);
-        setError("");
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Pre-book orders listener failed:", err);
-        setError("Unable to load pre-book orders.");
-        setLoading(false);
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        startListener();
       }
-    );
+      unsubAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          startListener();
+        }
+      });
+    } else {
+      startListener();
+    }
 
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubAuth === "function") unsubAuth();
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
 
   /* =======================================================
@@ -2239,6 +2378,7 @@ function PrebookOrders() {
                   "Delivery Status",
                   "Label",
                   "View",
+                  "Edit",
                   "Send Email",
                   "Delete"
                 ].map((heading, index) => (
@@ -2588,6 +2728,36 @@ function PrebookOrders() {
                           }}
                         >
                           View
+                        </button>
+                      </td>
+
+                      {/* EDIT */}
+                      <td style={{ padding: "14px" }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(order)}
+                          title="Edit customer details & address"
+                          style={{
+                            height: 34,
+                            padding: "0 12px",
+                            border: "1px solid #b2ddff",
+                            borderRadius: 8,
+                            background: "#eff8ff",
+                            color: "#175cd3",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5
+                          }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                          Edit
                         </button>
                       </td>
 
@@ -3011,23 +3181,50 @@ function PrebookOrders() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                style={{
-                  width: 36,
-                  height: 36,
-                  border: "1px solid #dfe3e8",
-                  borderRadius: 9,
-                  background: "#fff",
-                  cursor: "pointer",
-                  fontSize: 18,
-                  color: "#475467"
-                }}
-                aria-label="Close"
-              >
-                ×
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => openEditModal(selected)}
+                  style={{
+                    height: 36,
+                    padding: "0 14px",
+                    background: "#eff8ff",
+                    border: "1px solid #b2ddff",
+                    color: "#175cd3",
+                    borderRadius: 9,
+                    fontSize: 12,
+                    fontWeight: 750,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit Order Details
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    border: "1px solid #dfe3e8",
+                    borderRadius: 9,
+                    background: "#fff",
+                    cursor: "pointer",
+                    fontSize: 18,
+                    color: "#475467"
+                  }}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
             </div>
 
             {/* MODAL BODY */}
@@ -3234,6 +3431,528 @@ function PrebookOrders() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          EDIT ORDER MODAL
+      ========================================================= */}
+      {editingOrder && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1050,
+            padding: 16
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !savingEdit) {
+              setEditingOrder(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: "var(--card, #fff)",
+              color: "var(--ink, #17191c)",
+              borderRadius: 16,
+              width: "100%",
+              maxWidth: 720,
+              maxHeight: "92vh",
+              overflowY: "auto",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              border: "1px solid #e8ebef"
+            }}
+          >
+            {/* MODAL HEADER */}
+            <div
+              style={{
+                padding: "18px 24px",
+                borderBottom: "1px solid #e8ebef",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                position: "sticky",
+                top: 0,
+                background: "var(--card, #fff)",
+                zIndex: 2
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 9,
+                      background: "#eff8ff",
+                      color: "#175cd3",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
+                      Edit Order Details
+                    </h2>
+                    <div style={{ fontSize: 12, color: "#667085", marginTop: 2 }}>
+                      Booking ID: <b>{editingOrder.bookingId || editingOrder.id}</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !savingEdit && setEditingOrder(null)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: "none",
+                  background: "#f2f4f7",
+                  borderRadius: "50%",
+                  fontSize: 16,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#475467"
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* FORM BODY */}
+            <form onSubmit={saveOrderEdit} style={{ padding: "20px 24px" }}>
+              {editError && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fef3f2",
+                    border: "1px solid #fee4e2",
+                    borderRadius: 10,
+                    color: "#b42318",
+                    fontSize: 13,
+                    fontWeight: 650,
+                    marginBottom: 18
+                  }}
+                >
+                  ⚠️ {editError}
+                </div>
+              )}
+
+              {editSuccess && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#ecfdf3",
+                    border: "1px solid #d1fadf",
+                    borderRadius: 10,
+                    color: "#027a48",
+                    fontSize: 13,
+                    fontWeight: 650,
+                    marginBottom: 18
+                  }}
+                >
+                  ✓ {editSuccess}
+                </div>
+              )}
+
+              {/* SECTION 1: CUSTOMER INFORMATION */}
+              <div style={{ marginBottom: 20 }}>
+                <h3
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 750,
+                    color: "#344054",
+                    margin: "0 0 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  👤 Customer Information
+                </h3>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 12
+                  }}
+                >
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.name}
+                      onChange={(e) => handleEditChange("name", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={editForm.phone}
+                      onChange={(e) => handleEditChange("phone", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => handleEditChange("email", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: DELIVERY ADDRESS */}
+              <div style={{ marginBottom: 20 }}>
+                <h3
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 750,
+                    color: "#344054",
+                    margin: "0 0 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  📍 Delivery Address
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Address / Street (Line 1)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.addressLine1}
+                      onChange={(e) => handleEditChange("addressLine1", e.target.value)}
+                      placeholder="House / Flat / Street / Area"
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Landmark / Line 2 (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.addressLine2}
+                      onChange={(e) => handleEditChange("addressLine2", e.target.value)}
+                      placeholder="Near landmark, apartment name..."
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.city}
+                      onChange={(e) => handleEditChange("city", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.state}
+                      onChange={(e) => handleEditChange("state", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Pincode
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.pincode}
+                      onChange={(e) => handleEditChange("pincode", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: ORDER & SHIPPING STATUS */}
+              <div style={{ marginBottom: 20 }}>
+                <h3
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 750,
+                    color: "#344054",
+                    margin: "0 0 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  🚚 Shipping & Payment Status
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Delivery / Shipping Status
+                    </label>
+                    <select
+                      value={editForm.shippingStatus}
+                      onChange={(e) => handleEditChange("shippingStatus", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 10px",
+                        fontSize: 13,
+                        background: "#fff",
+                        boxSizing: "border-box"
+                      }}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="in_transit">In Transit</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Payment Status
+                    </label>
+                    <select
+                      value={editForm.paymentStatus}
+                      onChange={(e) => handleEditChange("paymentStatus", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 10px",
+                        fontSize: 13,
+                        background: "#fff",
+                        boxSizing: "border-box"
+                      }}
+                    >
+                      <option value="paid">Paid</option>
+                      <option value="pending">Pending</option>
+                      <option value="failed">Failed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Courier Partner (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. India Post / DTDC / BlueDart"
+                      value={editForm.courierName}
+                      onChange={(e) => handleEditChange("courierName", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Tracking Number / Consignment No.
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Tracking code"
+                      value={editForm.trackingId}
+                      onChange={(e) => handleEditChange("trackingId", e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 38,
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "0 12px",
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 5 }}>
+                      Admin Notes / Remarks
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Add any internal shipping or customer remarks..."
+                      value={editForm.notes}
+                      onChange={(e) => handleEditChange("notes", e.target.value)}
+                      style={{
+                        width: "100%",
+                        borderRadius: 8,
+                        border: "1px solid #d0d5dd",
+                        padding: "8px 12px",
+                        fontSize: 13,
+                        fontFamily: "inherit",
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* MODAL FOOTER ACTIONS */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  marginTop: 24,
+                  paddingTop: 16,
+                  borderTop: "1px solid #e8ebef"
+                }}
+              >
+                <button
+                  type="button"
+                  disabled={savingEdit}
+                  onClick={() => setEditingOrder(null)}
+                  style={{
+                    height: 40,
+                    padding: "0 18px",
+                    border: "1px solid #d0d5dd",
+                    borderRadius: 8,
+                    background: "#fff",
+                    color: "#344054",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: savingEdit ? "not-allowed" : "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  style={{
+                    height: 40,
+                    padding: "0 22px",
+                    border: "none",
+                    borderRadius: 8,
+                    background: "#175cd3",
+                    color: "#fff",
+                    fontSize: 13,
+                    fontWeight: 750,
+                    cursor: savingEdit ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)"
+                  }}
+                >
+                  {savingEdit ? "Saving Changes..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

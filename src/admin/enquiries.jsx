@@ -54,24 +54,49 @@ function Enquiries() {
 
     setLoading(true);
 
-    const unsubscribe = window.db
-      .collection("enquiries")
-      .onSnapshot(
-        (snapshot) => {
-          const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-          rows.sort((a, b) => safeTimestamp(b.createdAt) - safeTimestamp(a.createdAt));
-          setEnquiries(rows);
-          setError("");
-          setLoading(false);
-        },
-        (err) => {
-          console.error("Enquiries listener failed:", err);
-          setError("Unable to load enquiries.");
-          setLoading(false);
-        }
-      );
+    let unsubscribe = null;
+    let unsubAuth = null;
+    let isSubscribed = false;
 
-    return () => unsubscribe();
+    const startListener = () => {
+      if (isSubscribed) return;
+      isSubscribed = true;
+
+      unsubscribe = window.db
+        .collection("enquiries")
+        .onSnapshot(
+          (snapshot) => {
+            const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            rows.sort((a, b) => safeTimestamp(b.createdAt) - safeTimestamp(a.createdAt));
+            setEnquiries(rows);
+            setError("");
+            setLoading(false);
+          },
+          (err) => {
+            console.error("Enquiries listener failed:", err);
+            setError("Unable to load enquiries.");
+            setLoading(false);
+          }
+        );
+    };
+
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        startListener();
+      }
+      unsubAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          startListener();
+        }
+      });
+    } else {
+      startListener();
+    }
+
+    return () => {
+      if (typeof unsubAuth === "function") unsubAuth();
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
 
   const filteredEnquiries = useMemo(() => {

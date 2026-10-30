@@ -194,14 +194,11 @@ function AdminAuthProvider({
              NOT LOGGED IN IN FIREBASE
           ------------------------------------------------ */
           if (!user) {
-            // Check if cached admin exists. If not, mark logged out.
-            const cached = readCachedAdmin();
-            if (!cached) {
-              setState({
-                ...adminAuthInitial,
-                loading: false
-              });
-            }
+            saveCachedAdmin(null);
+            setState({
+              ...adminAuthInitial,
+              loading: false
+            });
             return;
           }
 
@@ -209,10 +206,14 @@ function AdminAuthProvider({
              CHECK FIREBASE ADMIN CLAIM
           ------------------------------------------------ */
           try {
-            const admin = await getAdminProfile(user, false);
+            let admin = await getAdminProfile(user, false);
+            if (!admin) {
+              // Claims might have been added on server; force-refresh token from Firebase
+              admin = await getAdminProfile(user, true);
+            }
             if (!mounted) return;
 
-            if (admin === false) {
+            if (admin === false || !admin) {
               // Confirmed: NOT an admin account
               console.warn("Firebase user does not have admin access.");
               saveCachedAdmin(null);

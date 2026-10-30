@@ -166,8 +166,7 @@ function UnsubscribedMembers() {
   const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
 
   /* -------------------------------------------------------------
-     REAL-TIME LISTENERS
-     ------------------------------------------------------------- */
+     REAL-TIME LISTENER      ------------------------------------------------------------- */
   useEffect(() => {
     if (!window.db) {
       setError("Firestore database is not available.");
@@ -177,53 +176,78 @@ function UnsubscribedMembers() {
 
     setLoading(true);
 
-    const unsubMembers = window.db.collection("members").onSnapshot(
-      (snapshot) => {
-        const list = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          uid: doc.id,
-          ...(doc.data() || {})
-        }));
-        setMembers(list);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Members error:", err);
-        setError("Unable to load members: " + (err.message || "Permission error"));
-        setLoading(false);
-      }
-    );
+    let unsubMembers = null;
+    let unsubSubs = null;
+    let unsubFollowups = null;
+    let unsubAuth = null;
+    let isSubscribed = false;
 
-    const unsubSubs = window.db.collection("subscriptions").onSnapshot(
-      (snapshot) => {
-        const list = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() || {})
-        }));
-        setSubscriptions(list);
-      },
-      (err) => {
-        console.warn("Subscriptions error:", err);
-      }
-    );
+    const startListeners = () => {
+      if (isSubscribed) return;
+      isSubscribed = true;
 
-    const unsubFollowups = window.db.collection("member_followups").onSnapshot(
-      (snapshot) => {
-        const map = {};
-        snapshot.docs.forEach((doc) => {
-          map[doc.id] = doc.data();
-        });
-        setFollowups(map);
-      },
-      (err) => {
-        console.warn("Followups error:", err);
+      unsubMembers = window.db.collection("members").onSnapshot(
+        (snapshot) => {
+          const list = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            uid: doc.id,
+            ...(doc.data() || {})
+          }));
+          setMembers(list);
+          setLoading(false);
+        },
+        (err) => {
+          console.error("Members error:", err);
+          setError("Unable to load members: " + (err.message || "Permission error"));
+          setLoading(false);
+        }
+      );
+
+      unsubSubs = window.db.collection("subscriptions").onSnapshot(
+        (snapshot) => {
+          const list = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...(doc.data() || {})
+          }));
+          setSubscriptions(list);
+        },
+        (err) => {
+          console.warn("Subscriptions error:", err);
+        }
+      );
+
+      unsubFollowups = window.db.collection("member_followups").onSnapshot(
+        (snapshot) => {
+          const map = {};
+          snapshot.docs.forEach((doc) => {
+            map[doc.id] = doc.data();
+          });
+          setFollowups(map);
+        },
+        (err) => {
+          console.warn("Followups error:", err);
+        }
+      );
+    };
+
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        startListeners();
       }
-    );
+      unsubAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          startListeners();
+        }
+      });
+    } else {
+      startListeners();
+    }
 
     return () => {
-      unsubMembers();
-      unsubSubs();
-      unsubFollowups();
+      if (typeof unsubAuth === "function") unsubAuth();
+      if (typeof unsubMembers === "function") unsubMembers();
+      if (typeof unsubSubs === "function") unsubSubs();
+      if (typeof unsubFollowups === "function") unsubFollowups();
     };
   }, []);
 

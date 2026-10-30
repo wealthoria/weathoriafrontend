@@ -3,17 +3,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Published content can be viewed publicly
+    // Published content can be viewed publicly, admins can read all
     match /content/{document} {
-      allow read: if resource.data.status == "published";
+      allow read: if resource.data.status == "published"
+        || (request.auth != null && request.auth.token.admin == true);
       allow write: if request.auth != null
         && request.auth.token.admin == true;
     }
 
-    // Members can read only their own course purchases
+    // Members can read only their own course purchases, admins can read all
     match /coursePurchases/{document} {
       allow read: if request.auth != null
-        && resource.data.userId == request.auth.uid;
+        && (resource.data.userId == request.auth.uid || request.auth.token.admin == true);
 
       allow write: if request.auth != null
         && request.auth.token.admin == true;
@@ -32,7 +33,7 @@ service cloud.firestore {
     // Members
     match /members/{userId} {
       allow read: if request.auth != null
-        && request.auth.uid == userId;
+        && (request.auth.uid == userId || request.auth.token.admin == true);
 
       allow write: if request.auth != null
         && request.auth.token.admin == true;
@@ -41,7 +42,7 @@ service cloud.firestore {
     // Subscriptions
     match /subscriptions/{document} {
       allow read: if request.auth != null
-        && resource.data.memberId == request.auth.uid;
+        && (resource.data.memberId == request.auth.uid || request.auth.token.admin == true);
 
       allow write: if request.auth != null
         && request.auth.token.admin == true;
@@ -75,6 +76,22 @@ service cloud.firestore {
 
     match /video_likes/{likeId} {
       allow read, write: if true;
+    }
+
+    // Courses, students, and notifications
+    match /courses/{document} {
+      allow read, write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    match /students/{document} {
+      allow read, write: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    match /notifications/{document} {
+      allow read, write: if request.auth != null
+        && request.auth.token.admin == true;
     }
 
     // Admins can access all other documents

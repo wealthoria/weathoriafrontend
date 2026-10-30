@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 
@@ -163,9 +163,22 @@ const loadContent = useCallback(async () => {
   ======================================================= */
 
   useEffect(() => {
-
-    loadData();
-
+    let unsubAuth = null;
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        loadData();
+      }
+      unsubAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          loadData();
+        }
+      });
+    } else {
+      loadData();
+    }
+    return () => {
+      if (typeof unsubAuth === "function") unsubAuth();
+    };
   }, [loadData]);
 
 

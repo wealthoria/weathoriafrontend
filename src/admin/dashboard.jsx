@@ -1717,7 +1717,22 @@ function useBackendDashboard(days) {
   }, []);
 
   useEffect(() => {
-    load();
+    let unsubAuth = null;
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        load();
+      }
+      unsubAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          load();
+        }
+      });
+    } else {
+      load();
+    }
+    return () => {
+      if (typeof unsubAuth === "function") unsubAuth();
+    };
   }, [load, days]);
 
   return { ...state, reload: load };

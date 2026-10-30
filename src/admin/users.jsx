@@ -958,270 +958,154 @@ function UsersScreen() {
   ======================================================= */
 
   useEffect(() => {
-
     if (!window.db) {
-
-      setError(
-        "Firebase Firestore is not available."
-      );
-
+      setError("Firebase Firestore is not available.");
       setLoading(false);
-
       return;
     }
 
     let unsubscribeMembers = null;
     let unsubscribeSubscriptions = null;
     let unsubscribeUsage = null;
+    let unsubscribeAuth = null;
+    let isSubscribed = false;
 
-    try {
+    const startListeners = (currentUser) => {
+      if (isSubscribed) return;
+      isSubscribed = true;
 
-      unsubscribeMembers =
-        window.db
-          .collection("members")
-          .onSnapshot(
+      try {
+        unsubscribeMembers =
+          window.db
+            .collection("members")
+            .onSnapshot(
+              (snapshot) => {
+                const rows =
+                  snapshot.docs.map(
+                    (doc) => {
+                      const data =
+                        doc.data() || {};
 
-            (snapshot) => {
+                      return {
+                        id: doc.id,
+                        uid: data.uid || data.userId || doc.id,
+                        name: data.name || data.fullName || data.displayName || data.username || "—",
+                        email: data.email || data.emailAddress || "—",
+                        phone: data.phone || data.phoneNumber || data.mobile || data.mobileNumber || "—",
+                        role: data.role || "member",
+                        status: data.status || (data.active === false ? "inactive" : "active"),
+                        joinedAt: data.createdAt || data.joinedAt || data.registeredAt || data.createdOn || null,
+                        city: data.city || "",
+                        state: data.state || "",
+                        country: data.country || "",
+                        occupation: data.occupation || data.job || "",
+                        company: data.company || "",
+                        gender: data.gender || "",
+                        dateOfBirth: data.dateOfBirth || data.dob || "",
+                        complimentary: Boolean(data.complimentary || data.isLifetime),
+                        notificationEnabled: Boolean(data.fcmToken)
+                      };
+                    }
+                  );
 
-              const rows =
-                snapshot.docs.map(
-                  (doc) => {
+                rows.sort((a, b) => String(a.name).toLowerCase().localeCompare(String(b.name).toLowerCase()));
+                setMembers(rows);
+                setLoading(false);
+                setError("");
+              },
+              (firebaseError) => {
+                console.error("Members Firestore error:", firebaseError);
+                const userEmail = window.auth?.currentUser?.email || currentUser?.email || "unknown";
+                const msg = firebaseError?.code === "permission-denied"
+                  ? `Missing or insufficient permissions for ${userEmail}. Ensure this account has admin claims in Firebase.`
+                  : (firebaseError?.message || "Unable to load members.");
+                setError(msg);
+                setLoading(false);
+              }
+            );
 
-                    const data =
-                      doc.data() || {};
+        /*
+         * Load the complete subscriptions collection and join it
+         * with members in the browser. This allows cancelled,
+         * halted, paused, active and historical subscription records
+         * to remain visible without changing the subscription data.
+         */
+        unsubscribeSubscriptions =
+          window.db
+            .collection("subscriptions")
+            .onSnapshot(
+              (snapshot) => {
+                const subscriptionRows =
+                  snapshot.docs.map(
+                    (doc) => ({
+                      id: doc.id,
+                      ...(doc.data() || {})
+                    })
+                  );
 
-                    return {
+                setSubscriptions(subscriptionRows);
+              },
+              (firebaseError) => {
+                console.error("Subscriptions Firestore error:", firebaseError);
+                setSubscriptions([]);
+                const userEmail = window.auth?.currentUser?.email || currentUser?.email || "unknown";
+                const msg = firebaseError?.code === "permission-denied"
+                  ? `Missing or insufficient permissions for ${userEmail}. Ensure this account has admin claims in Firebase.`
+                  : (firebaseError?.message || "Unable to load subscriptions.");
+                setError(msg);
+              }
+            );
 
-                      id:
-                        doc.id,
+        unsubscribeUsage =
+          window.db
+            .collection("member_usage_summary")
+            .onSnapshot(
+              (snapshot) => {
+                const map = {};
+                snapshot.forEach((doc) => {
+                  map[doc.id] = doc.data();
+                });
+                setMemberUsageMap(map);
+              },
+              (err) => {
+                console.warn("member_usage_summary error:", err);
+              }
+            );
 
-                      uid:
-                        data.uid ||
-                        data.userId ||
-                        doc.id,
+      } catch (error) {
+        console.error("Members initialization error:", error);
+        setError(error?.message || "Unable to load members.");
+        setLoading(false);
+      }
+    };
 
-                      name:
-                        data.name ||
-                        data.fullName ||
-                        data.displayName ||
-                        data.username ||
-                        "—",
-
-                      email:
-                        data.email ||
-                        data.emailAddress ||
-                        "—",
-
-                      phone:
-                        data.phone ||
-                        data.phoneNumber ||
-                        data.mobile ||
-                        data.mobileNumber ||
-                        "—",
-
-                      role:
-                        data.role ||
-                        "member",
-
-                      status:
-                        data.status ||
-                        (
-                          data.active === false
-                            ? "inactive"
-                            : "active"
-                        ),
-
-                      joinedAt:
-                        data.createdAt ||
-                        data.joinedAt ||
-                        data.registeredAt ||
-                        data.createdOn ||
-                        null,
-
-                      city:
-                        data.city ||
-                        "",
-
-                      state:
-                        data.state ||
-                        "",
-
-                      country:
-                        data.country ||
-                        "",
-
-                      occupation:
-                        data.occupation ||
-                        data.job ||
-                        "",
-
-                      company:
-                        data.company ||
-                        "",
-
-                      gender:
-                        data.gender ||
-                        "",
-
-                      dateOfBirth:
-                        data.dateOfBirth ||
-                        data.dob ||
-                        "",
-
-                      complimentary:
-                        Boolean(
-                          data.complimentary ||
-                          data.isLifetime
-                        ),
-
-                      notificationEnabled:
-                        Boolean(
-                          data.fcmToken
-                        )
-
-                    };
-
-                  }
-                );
-
-              rows.sort(
-                (a, b) => {
-
-                  return String(a.name)
-                    .toLowerCase()
-                    .localeCompare(
-                      String(b.name).toLowerCase()
-                    );
-
-                }
-              );
-
-              setMembers(rows);
-              setLoading(false);
-              setError("");
-
-            },
-
-            (firebaseError) => {
-
-              console.error(
-                "Members Firestore error:",
-                firebaseError
-              );
-
-              setError(
-                firebaseError?.message ||
-                "Unable to load members."
-              );
-
-              setLoading(false);
-
-            }
-
-          );
-
-      /*
-       * Load the complete subscriptions collection and join it
-       * with members in the browser. This allows cancelled,
-       * halted, paused, active and historical subscription records
-       * to remain visible without changing the subscription data.
-       */
-      unsubscribeSubscriptions =
-        window.db
-          .collection("subscriptions")
-          .onSnapshot(
-
-            (snapshot) => {
-
-              const subscriptionRows =
-                snapshot.docs.map(
-                  (doc) => ({
-                    id: doc.id,
-                    ...(doc.data() || {})
-                  })
-                );
-
-              setSubscriptions(
-                subscriptionRows
-              );
-
-            },
-
-            (firebaseError) => {
-
-              console.error(
-                "Subscriptions Firestore error:",
-                firebaseError
-              );
-
-              setSubscriptions([]);
-
-              setError(
-                firebaseError?.message ||
-                "Unable to load subscriptions."
-              );
-
-            }
-
-          );
-
-      unsubscribeUsage =
-        window.db
-          .collection("member_usage_summary")
-          .onSnapshot(
-            (snapshot) => {
-              const map = {};
-              snapshot.forEach((doc) => {
-                map[doc.id] = doc.data();
-              });
-              setMemberUsageMap(map);
-            },
-            (err) => {
-              console.warn("member_usage_summary error:", err);
-            }
-          );
-
-    } catch (error) {
-
-      console.error(
-        "Members initialization error:",
-        error
-      );
-
-      setError(
-        error?.message ||
-        "Unable to load members."
-      );
-
-      setLoading(false);
-
+    if (window.auth) {
+      if (window.auth.currentUser) {
+        startListeners(window.auth.currentUser);
+      }
+      unsubscribeAuth = window.auth.onAuthStateChanged((user) => {
+        if (user) {
+          startListeners(user);
+        }
+      });
+    } else {
+      startListeners(null);
     }
 
     return () => {
-
-      if (
-        typeof unsubscribeMembers ===
-        "function"
-      ) {
+      if (typeof unsubscribeAuth === "function") {
+        unsubscribeAuth();
+      }
+      if (typeof unsubscribeMembers === "function") {
         unsubscribeMembers();
       }
-
-      if (
-        typeof unsubscribeSubscriptions ===
-        "function"
-      ) {
+      if (typeof unsubscribeSubscriptions === "function") {
         unsubscribeSubscriptions();
       }
-
-      if (
-        typeof unsubscribeUsage ===
-        "function"
-      ) {
+      if (typeof unsubscribeUsage === "function") {
         unsubscribeUsage();
       }
-
     };
-
   }, []);
 
 

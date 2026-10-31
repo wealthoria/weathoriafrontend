@@ -41,6 +41,10 @@
       "destination": "/prebook.html"
     },
     {
+      "source": "/kannada-book",
+      "destination": "/kannada-book.html"
+    },
+    {
       "source": "/",
       "destination": "/index.html"
     },

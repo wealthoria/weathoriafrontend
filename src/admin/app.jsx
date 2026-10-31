@@ -265,7 +265,8 @@ function useMRouter() {
 function resolve(path) {
 
   if (
-    path === "/members/login"
+    path === "/members/login" ||
+    path === "/admin/login"
   ) {
     return {
       name: "login"

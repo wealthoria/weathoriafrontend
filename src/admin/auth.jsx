@@ -195,24 +195,14 @@ function AdminAuthProvider({
              NOT LOGGED IN IN FIREBASE
           ------------------------------------------------ */
           if (!user) {
-            // Check if we have a valid cached admin first.
-            // On tab wake or hot-reload, Firebase auth may take a moment to restore from IndexedDB.
-            const cached = readCachedAdmin();
-            if (cached) {
-              setState({
-                loading: false,
-                isAuthenticated: true,
-                isAdmin: true,
-                user: cached,
-                admin: cached,
-                error: null
-              });
-              return;
-            }
             saveCachedAdmin(null);
             setState({
               ...adminAuthInitial,
-              loading: false
+              loading: false,
+              isAuthenticated: false,
+              isAdmin: false,
+              user: null,
+              admin: null
             });
             return;
           }
@@ -301,8 +291,29 @@ function AdminAuthProvider({
         }
       );
 
+    // Keep Firebase token fresh proactively every 25 minutes
+    const tokenRefreshInterval = setInterval(async () => {
+      if (window.auth?.currentUser) {
+        try {
+          await window.auth.currentUser.getIdToken(true);
+        } catch (_) {}
+      }
+    }, 25 * 60 * 1000);
+
+    // Refresh token immediately when admin returns to tab after sleep / idle
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible" && window.auth?.currentUser) {
+        try {
+          await window.auth.currentUser.getIdToken(true);
+        } catch (_) {}
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       mounted = false;
+      clearInterval(tokenRefreshInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (typeof unsubscribe === "function") {
         unsubscribe();
       }
@@ -662,16 +673,47 @@ function AdminGuard({
     !auth?.isAuthenticated ||
     !auth?.isAdmin
   ) {
-    const cached = readCachedAdmin();
-    if (cached) {
-      return children;
+    if (window.AdminLogin) {
+      const AdminLogin = window.AdminLogin;
+      return <AdminLogin />;
     }
 
-    window.location.replace(
-      "/members/login"
+    return (
+      <div
+        className="mportal"
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center"
+        }}
+      >
+        <div style={{ textAlign: "center", padding: 24 }}>
+          <h2>Admin Session Required</h2>
+          <p style={{ color: "#6b7280", margin: "10px 0 20px" }}>
+            Please log in with your admin credentials to access the admin portal.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              saveCachedAdmin(null);
+              window.location.replace("/admin/login");
+            }}
+            style={{
+              padding: "10px 24px",
+              background: "#b42318",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer"
+            }}
+          >
+            Go to Admin Login
+          </button>
+        </div>
+      </div>
     );
-
-    return null;
   }
 
 

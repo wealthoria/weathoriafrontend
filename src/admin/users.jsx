@@ -1899,9 +1899,21 @@ function UsersScreen() {
     let unsubscribeAuth = null;
     let isSubscribed = false;
 
-    const startListeners = (currentUser) => {
+    // Failsafe: never leave the screen stuck on "Loading members..." forever
+    const failsafeTimer = setTimeout(() => {
+      setLoading(false);
+    }, 7000);
+
+    const startListeners = async (currentUser) => {
       if (isSubscribed) return;
       isSubscribed = true;
+
+      // Proactively refresh ID token so expired tokens don't cause permission-denied
+      if (currentUser && typeof currentUser.getIdToken === "function") {
+        try {
+          await currentUser.getIdToken(true);
+        } catch (_) {}
+      }
 
       try {
         unsubscribeMembers =
@@ -1909,6 +1921,7 @@ function UsersScreen() {
             .collection("members")
             .onSnapshot(
               (snapshot) => {
+                clearTimeout(failsafeTimer);
                 const rows =
                   snapshot.docs.map(
                     (doc) => {
@@ -1943,6 +1956,7 @@ function UsersScreen() {
                 setError("");
               },
               (firebaseError) => {
+                clearTimeout(failsafeTimer);
                 console.error("Members Firestore error:", firebaseError);
                 const userEmail = window.auth?.currentUser?.email || currentUser?.email || "unknown";
                 const msg = firebaseError?.code === "permission-denied"
@@ -2002,6 +2016,7 @@ function UsersScreen() {
             );
 
       } catch (error) {
+        clearTimeout(failsafeTimer);
         console.error("Members initialization error:", error);
         setError(error?.message || "Unable to load members.");
         setLoading(false);
@@ -2015,6 +2030,11 @@ function UsersScreen() {
       unsubscribeAuth = window.auth.onAuthStateChanged((user) => {
         if (user) {
           startListeners(user);
+        } else {
+          // If no auth user after waiting, release loader so it doesn't freeze
+          setTimeout(() => {
+            setLoading(false);
+          }, 2000);
         }
       });
     } else {
@@ -2022,6 +2042,7 @@ function UsersScreen() {
     }
 
     return () => {
+      clearTimeout(failsafeTimer);
       if (typeof unsubscribeAuth === "function") {
         unsubscribeAuth();
       }
@@ -4502,10 +4523,11 @@ function UsersScreen() {
                         15,
 
                       marginBottom:
-                        5
+                        5,
+                      color: error ? "#b42318" : "inherit"
                     }}
                   >
-                    No members found
+                    {error ? "Unable to load members" : "No members found"}
                   </strong>
 
 
@@ -4515,12 +4537,32 @@ function UsersScreen() {
                         13,
 
                       color:
-                        "var(--muted, #6b7280)"
+                        "var(--muted, #6b7280)",
+                      marginBottom: 12
                     }}
                   >
-                    Try another name, email,
-                    phone number or member ID.
+                    {error || (search ? "Try another name, email, phone number or member ID." : "No registered members found.")}
                   </span>
+
+                  {(error || (members.length === 0 && !loading)) && (
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      style={{
+                        padding: "7px 16px",
+                        background: "#b42318",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        marginTop: 4
+                      }}
+                    >
+                      Refresh Session & Reconnect
+                    </button>
+                  )}
 
                 </div>
 

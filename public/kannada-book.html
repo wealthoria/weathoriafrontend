@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="kn">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wealthoria - ಕನ್ನಡದಲ್ಲಿ ಕಲಿಕೆ</title>
+  <meta name="description" content="Books and video lessons in Kannada for beginners." />
+
+  <!-- Open Graph / Meta / Facebook -->
+  <meta property="og:title" content="Wealthoria - Learning Resources in Kannada" />
+  <meta property="og:description"
+    content="Books and video lessons in Kannada for beginners. Learn concepts simply, in your own language." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://wealthoria.in/kannada-book.html" />
+  <meta property="og:image" content="https://wealthoria.in/hoodikeya-vijnana-cover.jpg" />
+  <meta property="og:site_name" content="Wealthoria" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Wealthoria - Learning Resources in Kannada" />
+  <meta name="twitter:description"
+    content="Books and video lessons in Kannada for beginners. Learn concepts simply, in your own language." />
+  <meta name="twitter:image" content="https://wealthoria.in/hoodikeya-vijnana-cover.jpg" />
+
+  <!-- Meta Domain Verification -->
+  <meta name="facebook-domain-verification" content="h3m20j2qgbxkj94pa7nn1lspaq3n9u" />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9955KR0G6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-Q9955KR0G6');
+  </script>
+
+  <!-- Meta Pixel Code -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '969336462877276');
+    fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+      content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ ಕನ್ನಡ ಪುಸ್ತಕ',
+      content_category: 'Kannada Learning Resources'
+    });
+  </script>
+  <noscript>
+    <img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=969336462877276&ev=PageView&noscript=1" alt="" />
+  </noscript>
+  <!-- End Meta Pixel Code -->
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Noto+Serif+Kannada:wght@500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #c9402e;
+      --primary-hover: #b03222;
+      --primary-soft: #fdf2f0;
+      --dark: #121826;
+      --dark-card: #1c2436;
+      --text-main: #1e293b;
+      --text-muted: #52617a;
+      --bg-cream: #faf7f2;
+      --surface: #ffffff;
+      --border: #e8e2d8;
+      --green: #108a55;
+      --green-soft: #ebf9f2;
+      --font-kn: 'Noto Sans Kannada', sans-serif;
+      --font-serif: 'Noto Serif Kannada', serif;
+      --font-en: 'Plus Jakarta Sans', sans-serif;
+      --shadow-sm: 0 2px 8px rgba(18, 24, 38, 0.05);
+      --shadow-md: 0 12px 32px rgba(18, 24, 38, 0.08);
+      --shadow-lg: 0 20px 48px rgba(18, 24, 38, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-kn);
+      background-color: var(--bg-cream);
+      color: var(--text-main);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Top Banner */
+    .top-banner {
+      background: var(--dark);
+      color: #f1f5f9;
+      padding: 10px 16px;
+      font-size: 14px;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    .top-banner b {
+      color: #ff9980;
+    }
+
+    /* Header */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-en);
+      font-weight: 800;
+      font-size: 24px;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-tag {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(201, 64, 46, 0.2);
+    }
+
+    .nav-btn {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 60px 0 70px;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 56px;
+      align-items: center;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: 40px;
+      line-height: 1.3;
+      color: var(--dark);
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      line-height: 1.65;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 15px 32px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(201, 64, 46, 0.3);
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(201, 64, 46, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--dark);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 15px 28px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--dark);
+      background: #fdfdfd;
+    }
+
+    .trust-bullets {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .bullet-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14.5px;
+      color: var(--text-muted);
+    }
+
+    .bullet-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--green-soft);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Book Visual Card */
+    .book-card-wrap {
+      position: relative;
+    }
+
+    .book-card {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+    }
+
+    .book-cover {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+      margin: 0 auto 20px;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .book-cover:hover {
+      transform: scale(1.02);
+    }
+
+    .book-specs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      background: var(--bg-cream);
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .spec-item b {
+      display: block;
+      font-size: 18px;
+      color: var(--dark);
+      font-family: var(--font-en);
+    }
+
+    .spec-item span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Features Section */
+    .features-section {
+      background: var(--surface);
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 50px;
+    }
+
+    .section-title h2 {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      color: var(--dark);
+      margin-bottom: 14px;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 28px;
+    }
+
+    .feature-card {
+      background: var(--bg-cream);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: all 0.25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: #d8cebf;
+    }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    .feature-card h3 {
+      font-size: 19px;
+      color: var(--dark);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .feature-card p {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Bottom CTA Card */
+    .cta-banner {
+      padding: 70px 0;
+    }
+
+    .banner-box {
+      background: linear-gradient(135deg, var(--dark) 0%, #1a253a 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .banner-text h3 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .banner-text p {
+      color: #cbd5e1;
+      font-size: 16px;
+      max-width: 580px;
+    }
+
+    /* Footer */
+    footer {
+      background: #0b101b;
+      color: #94a3b8;
+      padding: 48px 0 32px;
+      font-size: 13.5px;
+      line-height: 1.8;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .footer-links a {
+      color: #cbd5e1;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+    }
+
+    .disclaimer {
+      border-top: 1px solid #1e293b;
+      padding-top: 20px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .banner-box {
+        flex-direction: column;
+        text-align: center;
+        padding: 36px 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-banner">
+    📚 <b>ಕನ್ನಡದಲ್ಲಿ ಹಣಕಾಸು ಮತ್ತು ಹೂಡಿಕೆ ಕಲಿಕೆ</b> — ಆರಂಭಿಕರಿಗಾಗಿ ಸರಳ ಹಾಗೂ ಸಮಗ್ರ ಸಂಪನ್ಮೂಲಗಳು
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="container header-inner">
+      <a href="/" class="brand">
+        WEALTHORIA
+        <span class="brand-tag">ಕನ್ನಡ ಸಂಪನ್ಮೂಲಗಳು</span>
+      </a>
+      <a href="/prebook" class="nav-btn">
+        <span>ಪುಸ್ತಕ ಖರೀದಿಸಿ</span>
+        <span>→</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="badge-pill">
+            <span>✨</span>
+            <span>ಕನ್ನಡ ಕಲಿಕಾ ಸಂಪನ್ಮೂಲಗಳು | Learning in Kannada</span>
+          </div>
+          <h1>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ — ನಿಮ್ಮದೇ ಭಾಷೆಯಲ್ಲಿ ಸರಳವಾಗಿ ಕಲಿಯಿರಿ</h1>
+          <p class="hero-subtitle">
+            Books and video lessons in Kannada for beginners. Learn concepts simply, in your own language.
+            ಷೇರು ಮಾರುಕಟ್ಟೆ, ಮ್ಯೂಚುವಲ್ ಫಂಡ್‌ಗಳು ಹಾಗೂ ದೀರ್ಘಾವಧಿ ಸಂಪತ್ತು ನಿರ್ಮಾಣದ ರಹಸ್ಯಗಳನ್ನು ಕನ್ನಡದಲ್ಲಿ ಕಲಿಯಿರಿ.
+          </p>
+
+          <div class="cta-group">
+            <a href="/prebook" class="btn-primary">
+              ಪುಸ್ತಕ ಮುಂಗಡ ಕಾಯ್ದಿರಿಸಿ (Pre-Book)
+            </a>
+            <a href="/" class="btn-secondary">
+              ಮುಖ್ಯ ವೆಬ್‌ಸೈಟ್‌ಗೆ ಭೇಟಿ ನೀಡಿ
+            </a>
+          </div>
+
+          <div class="trust-bullets">
+            <div class="bullet-item">
+              <div class="bullet-icon">✓</div>
+              <span>ಸಂಕೀರ್ಣ ಆಂಗ್ಲ ಪದಗಳ ಬದಲಿಗೆ ಸುಲಭ ಕನ್ನಡ ವಿವರಣೆ</span>
+            </div>
+            <div class="bullet-item">
+              <div class="bullet-icon">✓</div>
+              <span>ಹೊಸಬರಿಗೆ ಶೂನ್ಯದಿಂದ ಆರಂಭಿಸಲು ಸೂಕ್ತವಾದ ಮಾರ್ಗದರ್ಶಿ</span>
+            </div>
+            <div class="bullet-item">
+              <div class="bullet-icon">✓</div>
+              <span>ವೇಗದ ಮನೆ ವಿತರಣೆ (Home Delivery across Karnataka & India)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-card-wrap">
+          <div class="book-card">
+            <img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ - Wealthoria Kannada Book" class="book-cover" />
+            <div class="book-specs">
+              <div class="spec-item">
+                <b>42</b>
+                <span>ಅಧ್ಯಾಯಗಳು</span>
+              </div>
+              <div class="spec-item">
+                <b>565</b>
+                <span>ಪುಟಗಳು</span>
+              </div>
+              <div class="spec-item">
+                <b>ಕನ್ನಡ</b>
+                <span>ಸರಳ ಭಾಷೆ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <div class="container">
+        <div class="section-title">
+          <h2>ಕನ್ನಡದಲ್ಲಿ ಏಕೆ ಕಲಿಯಬೇಕು?</h2>
+          <p>ತಪ್ಪು ತಿಳುವಳಿಕೆಗಳನ್ನು ತೊಡೆದುಹಾಕಿ, ವಿಶ್ವಾಸದಿಂದ ಹೂಡಿಕೆ ನಿರ್ಧಾರಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳಲು ನಿಮ್ಮದೇ ಭಾಷೆಯ ಕಲಿಕೆ ಅಗತ್ಯ.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">📖</div>
+            <h3>ಮೂಲದಿಂದ ಪರಿಪೂರ್ಣತೆ</h3>
+            <p>ಯಾವುದೇ ಪೂರ್ವ ಅನುಭವವಿಲ್ಲದಿದ್ದರೂ ಅರ್ಥವಾಗುವಂತೆ ಹಣಕಾಸಿನ ಮೂಲ ತತ್ವಗಳನ್ನು ವ್ಯವಸ್ಥಿತವಾಗಿ ವಿವರಿಸಲಾಗಿದೆ.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>ನಿಜ ಜೀವನದ ಉದಾಹರಣೆಗಳು</h3>
+            <p>ಕೇವಲ ಸಿದ್ಧಾಂತವಲ್ಲದೆ, ಭಾರತೀಯ ಮಾರುಕಟ್ಟೆಯ ನೈಜ ಸನ್ನಿವೇಶಗಳು ಮತ್ತು ಕೇಸ್ ಸ್ಟಡಿಗಳೊಂದಿಗೆ ಅಧ್ಯಯನ.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>ರಿಸ್ಕ್ ಮ್ಯಾನೇಜ್‌ಮೆಂಟ್</h3>
+            <p>ಹಣವನ್ನು ಹೇಗೆ ಕಳೆದುಕೊಳ್ಳಬಾರದು ಮತ್ತು ಅಪಾಯವನ್ನು ಹೇಗೆ ನಿಯಂತ್ರಣದಲ್ಲಿಡಬೇಕು ಎಂಬುದಕ್ಕೆ ಹೆಚ್ಚಿನ ಒತ್ತು.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🚀</div>
+            <h3>ವೆಲ್ತೋರಿಯಾ ಸಮುದಾಯ</h3>
+            <p>ಪುಸ್ತಕದ ಜೊತೆಗೆ Wealthoria ಡಿಜಿಟಲ್ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ ಮತ್ತು ಕಲಿಯುವವರ ಸಮುದಾಯದ ಮಾರ್ಗದರ್ಶನ ಲಭ್ಯ.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom CTA Banner -->
+    <section class="cta-banner">
+      <div class="container">
+        <div class="banner-box">
+          <div class="banner-text">
+            <h3>ಇಂದೇ ನಿಮ್ಮ ಕಲಿಕೆಯನ್ನು ಪ್ರಾರಂಭಿಸಿ</h3>
+            <p>ನಿಮ್ಮ ಪ್ರತಿಯನ್ನು ಮುಂಗಡವಾಗಿ ಕಾಯ್ದಿರಿಸಿ, ಹಣಕಾಸು ಸ್ವಾವಲಂಬನೆಯ ಹಾದಿಯಲ್ಲಿ ಮೊದಲ ಹೆಜ್ಜೆ ಇಡಿ.</p>
+          </div>
+          <a href="/prebook" class="btn-primary" style="white-space: nowrap;">
+            ಈಗಲೇ ಕಾಯ್ದಿರಿಸಿ →
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/">ಮುಖಪುಟ (Home)</a>
+        <a href="/prebook">ಪುಸ್ತಕ ಕಾಯ್ದಿರಿಸಿ</a>
+        <a href="/wealthoria-disclosure.html">SEBI & Disclosure</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms & Conditions</a>
+        <a href="/refund-policy.html">Refund Policy</a>
+        <a href="/contact.html">Contact Us</a>
+      </div>
+      <div class="disclaimer">
+        <p>© 2026 Wealthoria Education Pvt. Ltd. All rights reserved.</p>
+        <p>ಗಮನಿಸಿ: ಇಲ್ಲಿ ಒದಗಿಸಲಾದ ಎಲ್ಲಾ ಮಾಹಿತಿ ಮತ್ತು ಸಾಮಗ್ರಿಗಳು ಕೇವಲ ಶೈಕ್ಷಣಿಕ ಉದ್ದೇಶಕ್ಕಾಗಿ ಮಾತ್ರ. ಷೇರು ಮಾರುಕಟ್ಟೆ ಹೂಡಿಕೆಗಳು ಮಾರುಕಟ್ಟೆಯ ಅಪಾಯಗಳಿಗೆ ಒಳಪಟ್ಟಿರುತ್ತವೆ.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>

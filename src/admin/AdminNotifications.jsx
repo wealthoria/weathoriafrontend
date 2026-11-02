@@ -63,22 +63,50 @@ const [selectedCategory, setSelectedCategory] = useState("");
   ========================================================= */
 
   useEffect(() => {
+    const firebaseAuth = (typeof window !== "undefined" && window.auth) || auth;
+    if (!firebaseAuth) {
+      loadMembers(null);
+      return;
+    }
 
-    loadMembers();
+    let isMounted = true;
 
+    // 1. If auth user is already available synchronously
+    if (firebaseAuth.currentUser) {
+      loadMembers(firebaseAuth.currentUser);
+    }
+
+    // 2. Listen for auth state resolution (handles page refresh / async auth initialization)
+    const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+      if (!isMounted) return;
+      if (user) {
+        loadMembers(user);
+      } else if (!firebaseAuth.currentUser) {
+        setLoadingMembers(false);
+        setError("Admin authentication required. Please log in.");
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
   }, []);
-const loadMembers = async () => {
+
+const loadMembers = async (authUser) => {
   try {
     setLoadingMembers(true);
     setError("");
 
-    const user = auth.currentUser;
+    const firebaseAuth = (typeof window !== "undefined" && window.auth) || auth;
+    const user = authUser || firebaseAuth?.currentUser;
 
     if (!user) {
-      throw new Error("Admin authentication required.");
+      // Auth still initializing; onAuthStateChanged will trigger when ready
+      return;
     }
 
-    const token = await user.getIdToken(true);
+    const token = await user.getIdToken();
 
     const response = await fetch(
       `${API_BASE_URL}/api/admin/notifications/members`,
@@ -287,10 +315,11 @@ useEffect(() => {
 
       try {
 
-     const user = auth.currentUser;
+     const firebaseAuth = (typeof window !== "undefined" && window.auth) || auth;
+     const user = firebaseAuth?.currentUser;
 
 if (!user) {
-  throw new Error("Admin authentication required.");
+  throw new Error("Admin authentication required. Please ensure you are logged into your admin account.");
 }
 
 // Large sends are split by the server into rounds of ~100 seconds.
@@ -450,13 +479,31 @@ setTimeout(() => {
 
 
         {error && (
-
           <div
             className="admin-notifications-error"
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}
           >
-            {error}
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => {
+                const firebaseAuth = (typeof window !== "undefined" && window.auth) || auth;
+                loadMembers(firebaseAuth?.currentUser);
+              }}
+              style={{
+                padding: "4px 12px",
+                fontSize: 12,
+                borderRadius: 6,
+                border: "1px solid #f87171",
+                background: "#ffffff",
+                color: "#b91c1c",
+                cursor: "pointer",
+                fontWeight: 700
+              }}
+            >
+              🔄 Retry
+            </button>
           </div>
-
         )}
 
 

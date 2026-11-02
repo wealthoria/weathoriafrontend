@@ -233,8 +233,8 @@ function SubscriptionAuditBreakdown({
     {
       category: "Active Members",
       plan: "₹99 / month",
-      count: breakdown.active99.count,
-      amount: breakdown.active99.monthly || (breakdown.active99.count * 99),
+      count: breakdown.active99?.count || 0,
+      amount: breakdown.active99?.monthly || (breakdown.active99?.count * 99) || 0,
       tone: "#16a34a",
       bgTone: "rgba(46, 173, 75, 0.12)",
       statusText: "Active"
@@ -242,8 +242,8 @@ function SubscriptionAuditBreakdown({
     {
       category: "Cancelled Members",
       plan: "₹99 / month",
-      count: breakdown.cancelled99.count,
-      amount: breakdown.cancelled99.monthly || (breakdown.cancelled99.count * 99),
+      count: breakdown.cancelled99?.count || 0,
+      amount: breakdown.cancelled99?.monthly || (breakdown.cancelled99?.count * 99) || 0,
       tone: "#e8473f",
       bgTone: "rgba(232, 71, 63, 0.12)",
       statusText: "Cancelled"
@@ -251,29 +251,38 @@ function SubscriptionAuditBreakdown({
     {
       category: "Paused Members",
       plan: "₹99 / month",
-      count: breakdown.paused99.count,
-      amount: breakdown.paused99.monthly || (breakdown.paused99.count * 99),
+      count: breakdown.paused99?.count || 0,
+      amount: breakdown.paused99?.monthly || (breakdown.paused99?.count * 99) || 0,
       tone: "#d97706",
       bgTone: "rgba(245, 158, 11, 0.12)",
       statusText: "Paused"
     },
     {
-      category: "Cancelled Test Accounts",
-      plan: "₹1 Test",
-      count: breakdown.cancelled1.count,
-      amount: breakdown.cancelled1.count * 1,
-      tone: "#64748b",
-      bgTone: "rgba(100, 116, 139, 0.12)",
-      statusText: "Test"
+      category: "Bank Halted Mandates",
+      plan: "₹99 / month",
+      count: breakdown.halted99?.count || 0,
+      amount: breakdown.halted99?.monthly || (breakdown.halted99?.count * 99) || 0,
+      tone: "#dc2626",
+      bgTone: "rgba(220, 38, 38, 0.12)",
+      statusText: "Halted"
     },
     {
-      category: "Expired Test Accounts",
-      plan: "₹1 Test",
-      count: breakdown.expired1.count,
-      amount: breakdown.expired1.count * 1,
+      category: "Expired Mandates",
+      plan: "₹99 / month",
+      count: breakdown.expired99?.count || 0,
+      amount: breakdown.expired99?.monthly || (breakdown.expired99?.count * 99) || 0,
       tone: "#64748b",
       bgTone: "rgba(100, 116, 139, 0.12)",
-      statusText: "Test"
+      statusText: "Expired"
+    },
+    {
+      category: "Pending Verification / Retrying",
+      plan: "₹99 / month",
+      count: breakdown.pending99?.count || 0,
+      amount: breakdown.pending99?.monthly || (breakdown.pending99?.count * 99) || 0,
+      tone: "#0284c7",
+      bgTone: "rgba(2, 132, 199, 0.12)",
+      statusText: "Retrying"
     }
   ];
 
@@ -394,7 +403,25 @@ function SubscriptionAuditBreakdown({
                 transition: "all 0.15s ease"
               }}
             >
-              📊 Monthly Run-Rate (MRR)
+              📊 Status Breakdown
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("cycles")}
+              style={{
+                border: "none",
+                background: activeTab === "cycles" ? "var(--canvas, #ffffff)" : "transparent",
+                color: activeTab === "cycles" ? "var(--ink, #0f172a)" : "var(--mute, #64748b)",
+                fontWeight: activeTab === "cycles" ? 700 : 500,
+                padding: "6px 14px",
+                borderRadius: 8,
+                fontSize: 12,
+                cursor: "pointer",
+                boxShadow: activeTab === "cycles" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                transition: "all 0.15s ease"
+              }}
+            >
+              🔄 1st vs 2nd Payments
             </button>
           </div>
 
@@ -657,7 +684,7 @@ function SubscriptionAuditBreakdown({
               color: "#334155"
             }}
           >
-            <b>Monthly Run-Rate (MRR):</b> Active paying members (<b>435</b>) × ₹99/mo plan = <b>₹43,065 / month</b>. Cancelled members show lost monthly recurring revenue.
+            <b>Monthly Run-Rate (MRR):</b> Active paying members (<b>{breakdown.active99?.count || 0}</b>) × ₹99/mo plan = <b>{fmtINR0(breakdown.active99?.monthly || 0)} / month</b>. Cancelled and lapsed members reflect uncaptured or lost recurring revenue.
           </div>
 
           <div style={{ overflowX: "auto" }}>
@@ -796,6 +823,125 @@ function SubscriptionAuditBreakdown({
                   </td>
                   <td style={{ textAlign: "right", padding: "13px 14px", borderTopRightRadius: 10, borderBottomRightRadius: 10, fontSize: 12 }}>
                     100%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      {/* TAB 3: 1ST VS 2ND PAYMENT CYCLES */}
+      {activeTab === "cycles" ? (
+        <div>
+          <div
+            style={{
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: "rgba(37, 99, 235, 0.05)",
+              border: "1px solid rgba(37, 99, 235, 0.15)",
+              marginBottom: 12,
+              fontSize: 12,
+              color: "#1e293b"
+            }}
+          >
+            <b>Renewal Cycle Analysis:</b> Compares members who have paid only their 1st month vs members whose 2nd month recurring auto-debit renewal was successfully collected.
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "separate",
+                borderSpacing: "0 6px",
+                minWidth: 540,
+                fontSize: 13
+              }}
+            >
+              <thead>
+                <tr style={{ color: "var(--mute, #64748b)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  <th style={{ textAlign: "left", padding: "8px 14px" }}>Payment Cycle</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Total Members</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Still Active</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Cancelled</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Lapsed / Halted</th>
+                  <th style={{ textAlign: "right", padding: "8px 14px" }}>Total Charges</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ background: "var(--canvas-soft, #f8fafc)", borderRadius: 10 }}>
+                  <td style={{ padding: "12px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
+                      <div>
+                        <b>1st Payment Only</b>
+                        <div style={{ fontSize: 11, color: "var(--mute, #64748b)" }}>Initial monthly signup (not yet renewed)</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", fontWeight: 700 }}>
+                    {breakdown.firstCycle?.total?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", color: "#16a34a", fontWeight: 700 }}>
+                    {breakdown.firstCycle?.active?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", color: "#e8473f", fontWeight: 700 }}>
+                    {breakdown.firstCycle?.cancelled?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", color: "var(--mute, #64748b)" }}>
+                    {breakdown.firstCycle?.other?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", fontWeight: 800, borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+                    {breakdown.firstCycle?.total?.toLocaleString("en-IN") || 0} charges ({fmtINR0((breakdown.firstCycle?.total || 0) * 99)})
+                  </td>
+                </tr>
+
+                <tr style={{ background: "var(--canvas-soft, #f8fafc)", borderRadius: 10 }}>
+                  <td style={{ padding: "12px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2563eb", display: "inline-block" }} />
+                      <div>
+                        <b>2nd Payment Reached</b>
+                        <div style={{ fontSize: 11, color: "var(--mute, #64748b)" }}>Successfully charged 2nd renewal debit</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", fontWeight: 700 }}>
+                    {breakdown.secondCycle?.total?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", color: "#16a34a", fontWeight: 700 }}>
+                    {breakdown.secondCycle?.active?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", color: "#e8473f", fontWeight: 700 }}>
+                    {breakdown.secondCycle?.cancelled?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", color: "var(--mute, #64748b)" }}>
+                    {breakdown.secondCycle?.other?.toLocaleString("en-IN") || 0}
+                  </td>
+                  <td style={{ textAlign: "right", padding: "12px 14px", fontWeight: 800, borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+                    {((breakdown.secondCycle?.total || 0) * 2).toLocaleString("en-IN")} charges ({fmtINR0((breakdown.secondCycle?.total || 0) * 2 * 99)})
+                  </td>
+                </tr>
+
+                {/* SUMMARY FOOTER */}
+                <tr style={{ background: "var(--ink, #0f172a)", color: "#ffffff", fontWeight: 800, borderRadius: 10 }}>
+                  <td style={{ padding: "13px 14px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10 }}>
+                    TOTAL RECONCILED BASE
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", fontSize: 14 }}>
+                    {((breakdown.firstCycle?.total || 0) + (breakdown.secondCycle?.total || 0)).toLocaleString("en-IN")} members
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", color: "#9fe870" }}>
+                    {((breakdown.firstCycle?.active || 0) + (breakdown.secondCycle?.active || 0)).toLocaleString("en-IN")} active
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", color: "#fca5a5" }}>
+                    {((breakdown.firstCycle?.cancelled || 0) + (breakdown.secondCycle?.cancelled || 0)).toLocaleString("en-IN")} cancelled
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", opacity: 0.8 }}>
+                    {((breakdown.firstCycle?.other || 0) + (breakdown.secondCycle?.other || 0)).toLocaleString("en-IN")} other
+                  </td>
+                  <td style={{ textAlign: "right", padding: "13px 14px", color: "#ffffff", borderTopRightRadius: 10, borderBottomRightRadius: 10 }}>
+                    {((breakdown.firstCycle?.total || 0) + (breakdown.secondCycle?.total || 0) * 2).toLocaleString("en-IN")} payments ({fmtINR0(((breakdown.firstCycle?.total || 0) + (breakdown.secondCycle?.total || 0) * 2) * 99)})
                   </td>
                 </tr>
               </tbody>
@@ -2053,69 +2199,117 @@ function ControlPanel() {
 
   // Active and Cancelled member counts strictly match paying subscriptions
   const activeMemberCount = activeSubscriptionCount;
-  const cancelledMemberCount = cancelledSubscriptionCount;
-
   const subscriptionBreakdown = useMemo(() => {
-    let active99Count = 0;
-    let active99Monthly = 0;
-    let active99AllTime = 0;
-    let cancelled99Count = 0;
-    let cancelled99Monthly = 0;
-    let cancelled99AllTime = 0;
-    let paused99Count = 0;
-    let paused99Monthly = 0;
-    let paused99AllTime = 0;
-    let cancelled1Count = 0;
-    let cancelled1Amount = 0;
-    let expired1Count = 0;
-    let expired1Amount = 0;
+    let activeCount = 0;
+    let activeMonthly = 0;
+    let activeAllTime = 0;
+
+    let cancelledCount = 0;
+    let cancelledMonthly = 0;
+    let cancelledAllTime = 0;
+
+    let pausedCount = 0;
+    let pausedMonthly = 0;
+    let pausedAllTime = 0;
+
+    let haltedCount = 0;
+    let haltedMonthly = 0;
+    let haltedAllTime = 0;
+
+    let expiredCount = 0;
+    let expiredMonthly = 0;
+    let expiredAllTime = 0;
+
+    let pendingCount = 0;
+    let pendingMonthly = 0;
+    let pendingAllTime = 0;
+
+    // Cycle breakdown
+    let firstCycleCount = 0;
+    let firstCycleActive = 0;
+    let firstCycleCancelled = 0;
+    let firstCycleOther = 0;
+
+    let secondCycleCount = 0;
+    let secondCycleActive = 0;
+    let secondCycleCancelled = 0;
+    let secondCycleOther = 0;
 
     (subscriptions || []).forEach((row) => {
       if (!isSuccessfulSubscription(row)) return;
       if (row?.complimentary || row?.isTest || row?.amount === 0) return;
 
-      const st = getSubscriptionStatus(row);
       const amt = Number(row?.amount !== undefined && row?.amount !== null ? row.amount : (row?.totalAmount || row?.price || row?.planAmount || 99));
       if (amt <= 0) return;
-      const pc = Number(row?.paidCount);
+      const pc = Number(row?.paidCount || 1);
       const effectiveCount = pc > 0 ? pc : 1;
       const totalRowAmount = amt * effectiveCount;
 
-      if (amt >= 99) {
-        if (st === "active") {
-          active99Count += 1;
-          active99Monthly += amt;
-          active99AllTime += totalRowAmount;
-        } else if (st === "cancelled") {
-          cancelled99Count += 1;
-          cancelled99Monthly += amt;
-          cancelled99AllTime += totalRowAmount;
-        } else if (st === "paused") {
-          paused99Count += 1;
-          paused99Monthly += amt;
-          paused99AllTime += totalRowAmount;
-        }
-      } else if (amt <= 1) {
-        if (st === "cancelled") {
-          cancelled1Count += 1;
-          cancelled1Amount += totalRowAmount;
-        } else if (st === "expired") {
-          expired1Count += 1;
-          expired1Amount += totalRowAmount;
-        }
+      const rawStatus = String(row?.status || row?.razorpayStatus || "").toLowerCase().trim();
+      const isActive = rawStatus === "active" || rawStatus === "authenticated";
+      const isCancelled = rawStatus === "cancelled";
+      const isPaused = rawStatus === "paused";
+      const isHalted = rawStatus === "halted";
+      const isExpired = rawStatus === "expired";
+
+      if (isActive) {
+        activeCount += 1;
+        activeMonthly += amt;
+        activeAllTime += totalRowAmount;
+      } else if (isCancelled) {
+        cancelledCount += 1;
+        cancelledMonthly += amt;
+        cancelledAllTime += totalRowAmount;
+      } else if (isPaused) {
+        pausedCount += 1;
+        pausedMonthly += amt;
+        pausedAllTime += totalRowAmount;
+      } else if (isHalted) {
+        haltedCount += 1;
+        haltedMonthly += amt;
+        haltedAllTime += totalRowAmount;
+      } else if (isExpired) {
+        expiredCount += 1;
+        expiredMonthly += amt;
+        expiredAllTime += totalRowAmount;
+      } else {
+        pendingCount += 1;
+        pendingMonthly += amt;
+        pendingAllTime += totalRowAmount;
+      }
+
+      if (effectiveCount <= 1) {
+        firstCycleCount += 1;
+        if (isActive) firstCycleActive += 1;
+        else if (isCancelled) firstCycleCancelled += 1;
+        else firstCycleOther += 1;
+      } else {
+        secondCycleCount += 1;
+        if (isActive) secondCycleActive += 1;
+        else if (isCancelled) secondCycleCancelled += 1;
+        else secondCycleOther += 1;
       }
     });
 
-    const totalCount = active99Count + cancelled99Count + paused99Count + cancelled1Count + expired1Count;
-    const totalAmount = active99AllTime + cancelled99AllTime + paused99AllTime + cancelled1Amount + expired1Amount;
+    const otherCount = haltedCount + expiredCount + pendingCount;
+    const otherMonthly = haltedMonthly + expiredMonthly + pendingMonthly;
+    const otherAllTime = haltedAllTime + expiredAllTime + pendingAllTime;
+
+    const totalMembers = activeCount + cancelledCount + pausedCount + otherCount;
+    const totalPayments = firstCycleCount + (secondCycleCount * 2);
+    const totalAmount = activeAllTime + cancelledAllTime + pausedAllTime + otherAllTime;
 
     return {
-      active99: { count: active99Count, monthly: active99Monthly, amount: active99AllTime },
-      cancelled99: { count: cancelled99Count, monthly: cancelled99Monthly, amount: cancelled99AllTime },
-      paused99: { count: paused99Count, monthly: paused99Monthly, amount: paused99AllTime },
-      cancelled1: { count: cancelled1Count, amount: cancelled1Amount },
-      expired1: { count: expired1Count, amount: expired1Amount },
-      total: { count: totalCount, amount: totalAmount }
+      active99: { count: activeCount, monthly: activeMonthly, amount: activeAllTime },
+      cancelled99: { count: cancelledCount, monthly: cancelledMonthly, amount: cancelledAllTime },
+      paused99: { count: pausedCount, monthly: pausedMonthly, amount: pausedAllTime },
+      halted99: { count: haltedCount, monthly: haltedMonthly, amount: haltedAllTime },
+      expired99: { count: expiredCount, monthly: expiredMonthly, amount: expiredAllTime },
+      pending99: { count: pendingCount, monthly: pendingMonthly, amount: pendingAllTime },
+      other99: { count: otherCount, monthly: otherMonthly, amount: otherAllTime },
+      firstCycle: { total: firstCycleCount, active: firstCycleActive, cancelled: firstCycleCancelled, other: firstCycleOther },
+      secondCycle: { total: secondCycleCount, active: secondCycleActive, cancelled: secondCycleCancelled, other: secondCycleOther },
+      total: { members: totalMembers, count: totalMembers, payments: totalPayments, amount: totalAmount }
     };
   }, [subscriptions]);
 
@@ -2630,7 +2824,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                 value={loading ? "—" : subscriptionBreakdown.active99.count.toLocaleString("en-IN")}
                 badge="₹99 / mo Plan"
                 badgeTone="green"
-                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.active99.monthly)} / mo`}
+                sub={loading ? "" : `${fmtINR0(subscriptionBreakdown.active99.monthly)} / mo MRR`}
               />
 
               <MetricCard
@@ -2652,8 +2846,17 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
               />
 
               <MetricCard
+                icon="users"
+                label="Expired & Halted"
+                value={loading ? "—" : (subscriptionBreakdown.other99?.count || 0).toLocaleString("en-IN")}
+                badge="Lapsed (₹99)"
+                badgeTone="slate"
+                sub={loading ? "" : `${subscriptionBreakdown.expired99?.count || 0} expired · ${subscriptionBreakdown.halted99?.count || 0} halted · ${subscriptionBreakdown.pending99?.count || 0} retry`}
+              />
+
+              <MetricCard
                 icon="revenue"
-                label={selectedMonthLabel ? `${selectedMonthLabel} Collections` : "Total Collections"}
+                label={selectedMonthLabel ? `${selectedMonthLabel} Collections` : "All Time Collections"}
                 value={loading ? "—" : fmtINR0(periodSplit.totalAmount)}
                 badge={selectedMonthLabel ? "Filtered Cash" : "All Time Cash"}
                 badgeTone="brand"
@@ -2832,7 +3035,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                     {fmtINR0(subscriptionBreakdown.active99.monthly)}
                   </div>
                   <div style={{ fontSize: 12, color: "var(--mute, #64748b)", marginTop: 2 }}>
-                    <b>435</b> active members × ₹99/mo
+                    <b>{subscriptionBreakdown.active99.count.toLocaleString("en-IN")}</b> active members × ₹99/mo
                   </div>
                 </div>
               </div>

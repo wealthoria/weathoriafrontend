@@ -867,23 +867,28 @@ function isSuccessfulSubscription(row) {
 
   const status = getSubscriptionStatus(row);
 
-  // Exclude uncaptured / pending / failed attempts
-  if (["pending", "created", "failed", "attempted", "initiated", ""].includes(status)) {
-    return false;
-  }
-
+  // If paidCount > 0, it was a paid subscription regardless of status label
   const paidCount = Number(row?.paidCount);
   if (
     row?.paidCount !== undefined &&
     row?.paidCount !== null &&
-    Number.isFinite(paidCount)
+    Number.isFinite(paidCount) &&
+    paidCount > 0
   ) {
-    return paidCount > 0;
+    return true;
   }
 
-  // If paidCount is not explicitly present, verify a captured payment ID or verified payment indicator exists
+  // If a razorpay payment ID exists and it was not an explicit failed attempt
+  const normStatus = String(row?.status || row?.razorpayStatus || status || "").toLowerCase().trim();
   if (row?.razorpayPaymentId || row?.paymentId) {
-    return true;
+    if (!["failed", "attempted", "refunded"].includes(normStatus)) {
+      return true;
+    }
+  }
+
+  // Exclude uncaptured / pending / failed attempts
+  if (["pending", "created", "failed", "attempted", "initiated", ""].includes(status)) {
+    return false;
   }
 
   const isPaidStatus = [
@@ -904,7 +909,8 @@ function getSubscriptionAmount(row) {
     row?.amount,
     row?.totalAmount,
     row?.price,
-    row?.planAmount
+    row?.planAmount,
+    99
   );
 }
 
@@ -929,7 +935,7 @@ function addMonths(ms, n) {
   return d.getTime();
 }
 
-function getSubscriptionCharges(row, memberCreatedMap) {
+function getSubscriptionCharges(row) {
   if (!isSuccessfulSubscription(row)) return [];
 
   const amount = getSubscriptionAmount(row);
@@ -937,43 +943,49 @@ function getSubscriptionCharges(row, memberCreatedMap) {
 
   const paidCount = Math.floor(Number(row?.paidCount) || 0);
   const effectiveCount = paidCount > 0 ? paidCount : 1;
-  const periodEnd = safeTimestamp(row?.nextBillingDate);
 
-  // Initial creation / registration date of the member or subscription
-  const memberEmail = String(row?.email || row?.customerEmail || "").toLowerCase().trim();
-  const memberId = String(row?.memberId || row?.userId || row?.uid || "").trim();
-  const memberPhone = String(row?.phone || row?.contact || "").replace(/\D/g, "");
-
-  // Priority 1: True Member signup/creation date from members collection
-  // Priority 2: Creation date of the subscription doc in Firestore
-  // Priority 3: Derived from nextBillingDate minus paid cycles
-  // Priority 4: paidAt / subscriptionStartDate fallback
-  const trueSignupDate =
-    (memberCreatedMap && (
-      (memberEmail && memberCreatedMap.get(memberEmail)) ||
-      (memberId && memberCreatedMap.get(memberId)) ||
-      (memberPhone && memberCreatedMap.get(memberPhone))
-    )) ||
+  // True payment / subscription creation timestamp:
+  // Must prioritize the actual subscription creation/payment timestamp so transactions appear
+  // on the exact date money was paid on Razorpay (matching the PDF & bank audit).
+  const initialPaymentDate =
     safeTimestamp(row?.createdAt) ||
-    safeTimestamp(row?.joinedAt) ||
-    safeTimestamp(row?.registeredAt) ||
-    safeTimestamp(row?.createdOn) ||
-    (effectiveCount > 1 && periodEnd ? addMonths(periodEnd, -effectiveCount) : 0) ||
     safeTimestamp(row?.paidAt) ||
     safeTimestamp(row?.subscriptionStartDate) ||
-    safeTimestamp(getSubscriptionRevenueDate(row)) ||
+    safeTimestamp(row?.createdOn) ||
+    safeTimestamp(row?.joinedAt) ||
+    safeTimestamp(row?.registeredAt) ||
     0;
 
-  if (!trueSignupDate) return [];
+  if (!initialPaymentDate) return [];
 
-  // Generate charges FORWARD from the true signup date:
-  // Cycle 1 (Upfront Signup): trueSignupDate (e.g. September) -> isLive = true
-  // Cycle 2 (Auto-Debit Renewal): addMonths(trueSignupDate, 1) (e.g. October) -> isAutoDebit = true
-  // Cycle 3 (Auto-Debit Renewal): addMonths(trueSignupDate, 2) -> isAutoDebit = true
+  if (effectiveCount === 1) {
+    return [{
+      time: initialPaymentDate,
+      amount,
+      isLive: true,
+      isAutoDebit: false
+    }];
+  }
+
+  // Multi-cycle (auto-debit renewals)
+  const latestPaymentDate =
+    safeTimestamp(row?.lastChargedAt) ||
+    safeTimestamp(row?.lastPaymentAt) ||
+    safeTimestamp(row?.paidAt) ||
+    addMonths(initialPaymentDate, effectiveCount - 1);
+
   return Array.from({ length: effectiveCount }, (_, cycleIdx) => {
     const isLive = (cycleIdx === 0);
     const isAutoDebit = !isLive;
-    const time = Math.min(addMonths(trueSignupDate, cycleIdx), Date.now());
+    let time;
+    if (cycleIdx === 0) {
+      time = initialPaymentDate;
+    } else if (cycleIdx === effectiveCount - 1) {
+      time = (latestPaymentDate > initialPaymentDate) ? latestPaymentDate : addMonths(initialPaymentDate, cycleIdx);
+    } else {
+      time = addMonths(initialPaymentDate, cycleIdx);
+    }
+    time = Math.min(time, Date.now());
 
     return {
       time,
@@ -1675,7 +1687,8 @@ function useBackendDashboard(days) {
     members: [],
     purchases: [],
     subscriptions: [],
-    notifications: []
+    notifications: [],
+    bookOrders: []
   });
 
   const load = useCallback(async () => {
@@ -1692,7 +1705,8 @@ function useBackendDashboard(days) {
       members,
       purchases,
       subscriptions,
-      notifications
+      notifications,
+      bookOrders
     ] = await Promise.all([
       getCollectionRows("content"),
       getCollectionRows("courses"),
@@ -1700,7 +1714,8 @@ function useBackendDashboard(days) {
       getCollectionRows("members"),
       getCollectionRows("coursePurchases"),
       getCollectionRows("subscriptions"),
-      getCollectionRows("notifications")
+      getCollectionRows("notifications"),
+      getCollectionRows("bookOrders")
     ]);
 
     setState({
@@ -1712,7 +1727,8 @@ function useBackendDashboard(days) {
       members,
       purchases,
       subscriptions,
-      notifications
+      notifications,
+      bookOrders
     });
   }, []);
 
@@ -1859,6 +1875,7 @@ function ControlPanel() {
     purchases,
     subscriptions,
     notifications,
+    bookOrders = [],
     loading
   } = backend;
 
@@ -1883,6 +1900,14 @@ function ControlPanel() {
   const paidPurchases = useMemo(
     () => purchases.filter((p) => String(p.status || "paid").toLowerCase() === "paid"),
     [purchases]
+  );
+
+  const paidBookOrders = useMemo(
+    () => (bookOrders || []).filter((order) => {
+      const status = String(order.paymentStatus || order.status || order.orderStatus || "").toLowerCase();
+      return status === "paid" || status === "captured" || status === "confirmed" || Boolean(order.razorpayPaymentId);
+    }),
+    [bookOrders]
   );
 
   /*
@@ -1945,8 +1970,8 @@ function ControlPanel() {
 
   // Every monthly payment, not just the first one.
   const subscriptionCharges = useMemo(
-    () => subscriptions.flatMap((sub) => getSubscriptionCharges(sub, memberCreatedMap)),
-    [subscriptions, memberCreatedMap]
+    () => subscriptions.flatMap((sub) => getSubscriptionCharges(sub)),
+    [subscriptions]
   );
 
   const subscriptionRevenue = subscriptionCharges.reduce(
@@ -2236,6 +2261,20 @@ function ControlPanel() {
           : sum;
       }, 0);
 
+      const bookRevenueValue = (paidBookOrders || []).reduce((sum, order) => {
+        const t = safeTimestamp(order.paidAt || order.createdAt);
+        return t >= start.getTime() && t < end.getTime()
+          ? sum + (Number(order.amount) || Number(order.totalAmount) || 999)
+          : sum;
+      }, 0);
+
+      const bookCountValue = (paidBookOrders || []).reduce((sum, order) => {
+        const t = safeTimestamp(order.paidAt || order.createdAt);
+        return t >= start.getTime() && t < end.getTime()
+          ? sum + 1
+          : sum;
+      }, 0);
+
       const subscriptionRevenueValue = subscriptionCharges.reduce(
         (sum, charge) =>
           charge.time >= start.getTime() && charge.time < end.getTime()
@@ -2279,8 +2318,10 @@ function ControlPanel() {
           month: "short"
         }),
         date: start.toISOString(),
-        revenue: courseRevenueValue + subscriptionRevenueValue,
+        revenue: courseRevenueValue + subscriptionRevenueValue + bookRevenueValue,
         courseRevenue: courseRevenueValue,
+        bookRevenue: bookRevenueValue,
+        bookCount: bookCountValue,
         subscriptionRevenue: subscriptionRevenueValue,
         subscriptionCount: subscriptionCountValue,
         liveSubscriptionCount: liveSubscriptionCountValue,
@@ -2289,7 +2330,7 @@ function ControlPanel() {
       });
     }
     return rows;
-  }, [days, periodEnd, paidPurchases, subscriptionCharges, uniqueMembers]);
+  }, [days, periodEnd, paidPurchases, paidBookOrders, subscriptionCharges, uniqueMembers]);
 
   const revenueChartData = useMemo(
     () => aggregateRevenueSeries(dateSeries, grain),
@@ -2928,6 +2969,27 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                         </div>
                         <b>{fmtINR0(selectedRevenuePoint.item.subscriptionRevenue)}</b>
                       </div>
+                      {Number(selectedRevenuePoint.item.bookRevenue || 0) > 0 ? (
+                        <div>
+                          <div style={{ fontSize: 10, opacity: 0.58 }}>
+                            Pre-Book (Books)
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 1 }}>
+                            <span
+                              style={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: "50%",
+                                background: "#8b5cf6",
+                                display: "inline-block"
+                              }}
+                            />
+                            <b style={{ color: "#8b5cf6" }}>
+                              {Number(selectedRevenuePoint.item.bookCount || 0).toLocaleString("en-IN")} ({fmtINR0(selectedRevenuePoint.item.bookRevenue)})
+                            </b>
+                          </div>
+                        </div>
+                      ) : null}
                       <div>
                         <div style={{ fontSize: 10, opacity: 0.58 }}>
                           Live Signups (₹99)
@@ -2971,7 +3033,7 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
                           Total Payments
                         </div>
                         <b>
-                          {Number(selectedRevenuePoint.item.subscriptionCount || 0).toLocaleString("en-IN")}
+                          {Number((selectedRevenuePoint.item.subscriptionCount || 0) + (selectedRevenuePoint.item.bookCount || 0)).toLocaleString("en-IN")}
                         </b>
                       </div>
                     </div>

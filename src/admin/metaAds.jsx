@@ -459,7 +459,13 @@ function AdminMetaAds() {
 
   const summary = campaignsData.summary || {};
   const campaigns = campaignsData.campaigns || [];
-  const platforms = campaignsData.platforms || [];
+  const rawPlatforms = campaignsData.platforms || [];
+  const platforms = useMemo(() => {
+    return [...rawPlatforms].sort((a, b) => {
+      const order = { instagram: 1, facebook: 2, whatsapp: 3 };
+      return (order[a.platform] || 99) - (order[b.platform] || 99);
+    });
+  }, [rawPlatforms]);
   const totalDailyBudget = campaigns.reduce((acc, c) => acc + (Number(c.dailyBudget) || 0), 0);
 
   const adLeads = Math.max(
@@ -936,9 +942,41 @@ function AdminMetaAds() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "20px" }}>{icon}</span>
                       <b style={{ fontSize: "15px", color: "var(--fg, #111827)" }}>{title}</b>
+                      {isInsta && (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 800,
+                            background: "linear-gradient(135deg, #e1306c, #fd1d1d)",
+                            color: "#fff",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px"
+                          }}
+                        >
+                          ⭐ Primary Focus
+                        </span>
+                      )}
+                      {isFb && (
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            background: "rgba(24, 119, 242, 0.12)",
+                            color: "#1877f2",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px"
+                          }}
+                        >
+                          Secondary
+                        </span>
+                      )}
                     </div>
                     {platformPurchases > 0 ? (
                       <span
@@ -1348,7 +1386,7 @@ function AdminMetaAds() {
                   fontWeight: 800
                 }}
               >
-                📸 Instagram Ad ({instaBuyersCount})
+                📸 Instagram Ad (Primary) ({instaBuyersCount})
               </button>
               <button
                 type="button"
@@ -1363,7 +1401,7 @@ function AdminMetaAds() {
                   fontWeight: 800
                 }}
               >
-                👥 Facebook Ad ({fbBuyersCount})
+                👥 Facebook Ad (Secondary) ({fbBuyersCount})
               </button>
               {unpaidCount > 0 && (
                 <button

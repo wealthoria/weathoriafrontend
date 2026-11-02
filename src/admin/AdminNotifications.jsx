@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { auth } from "../firebase";
 /* global React, window */
 
@@ -29,8 +29,10 @@ function AdminNotifications() {
 
   const [members, setMembers] = useState([]);
   const [excludedCount, setExcludedCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [pushReadyCount, setPushReadyCount] = useState(0);
 
-  const [sendMode, setSendMode] = useState("single");
+  const [sendMode, setSendMode] = useState("all");
 
   const [selectedMember, setSelectedMember] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -96,8 +98,14 @@ const loadMembers = async () => {
       );
     }
 
-    setMembers(data.members || []);
+    const memberList = data.members || [];
+    setMembers(memberList);
     setExcludedCount(Number(data.excludedCount) || 0);
+    setActiveCount(Number(data.activeCount) || memberList.length);
+    setPushReadyCount(
+      Number(data.pushReadyCount) ||
+      memberList.filter((m) => m.hasNotificationToken).length
+    );
   } catch (error) {
     console.error("Load members error:", error);
 
@@ -222,7 +230,7 @@ useEffect(() => {
       }
 
 
-      /* ALL */
+      /* ALL ACTIVE */
 
       if (sendMode === "all") {
 
@@ -239,7 +247,32 @@ useEffect(() => {
         ) {
 
           setError(
-            "No members are available."
+            "No active members are available."
+          );
+
+          return;
+
+        }
+
+      }
+
+
+      /* PUSH ONLY ACTIVE */
+
+      if (sendMode === "push_only") {
+
+        userIds =
+          members
+            .filter((m) => m.hasNotificationToken)
+            .map((m) => m.uid)
+            .filter(Boolean);
+
+        if (
+          userIds.length === 0
+        ) {
+
+          setError(
+            "No active members with push notification devices found."
           );
 
           return;
@@ -401,16 +434,13 @@ setTimeout(() => {
             </h2>
 
             <p>
-               Send a push notification and email
-  to your members.
-
+              Send a push notification and email to your active subscribers.
             </p>
 
-            <p style={{ fontSize: 13, opacity: 0.75, marginTop: 6 }}>
-              Only members with an active membership are listed
-              (including cancelled members until their paid period ends).
+            <p style={{ fontSize: 13, opacity: 0.85, marginTop: 6, color: "#166534" }}>
+              🟢 <strong>Active Member Segregation Enabled:</strong> Only verified active paying members receive content alerts.
               {excludedCount > 0
-                ? ` ${excludedCount} member(s) without an active membership are hidden.`
+                ? ` (${excludedCount} unpaid, cancelled, or inactive accounts excluded).`
                 : ""}
             </p>
 
@@ -476,16 +506,20 @@ setTimeout(() => {
               }
             >
 
-              <option value="single">
-                One Member
+              <option value="all">
+                🟢 All Active Subscribers ({members.length})
+              </option>
+
+              <option value="push_only">
+                🔔 Push-Device Active Members Only ({pushReadyCount || members.filter(m => m.hasNotificationToken).length})
               </option>
 
               <option value="selected">
-                Selected Members
+                Selected Members ({selectedMembers.length} selected)
               </option>
 
-              <option value="all">
-                All Members
+              <option value="single">
+                One Member
               </option>
 
             </select>
@@ -651,28 +685,48 @@ setTimeout(() => {
           )}
 
 
-          {/* ALL */}
+          {/* ALL OR PUSH-ONLY ACTIVE MEMBERS */}
 
-          {sendMode === "all" && (
-
+          {(sendMode === "all" || sendMode === "push_only") && (
             <div
               className="admin-notification-all-info"
+              style={{
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px"
+              }}
             >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "18px" }}>🟢</span>
+                <strong style={{ fontSize: "14px", color: "#166534" }}>
+                  {sendMode === "push_only"
+                    ? "Targeting Push-Enabled Active Subscribers"
+                    : "Targeting Verified Active Paying Members Only"}
+                </strong>
+                <span style={{ fontSize: "10.5px", fontWeight: "800", background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "12px", textTransform: "uppercase" }}>
+                  Active Only
+                </span>
+              </div>
 
-              <strong>
-                All Members
-              </strong>
+              <p style={{ margin: "4px 0", fontSize: "13px", color: "#15803d" }}>
+                {sendMode === "push_only"
+                  ? `Push notification will be delivered directly to ${pushReadyCount || members.filter(m => m.hasNotificationToken).length} active subscriber devices.`
+                  : `This notification will be dispatched to all ${members.length} verified active paying subscribers.`}
+              </p>
 
-              <span>
-                This notification will be
-                sent to{" "}
-                {members.length}
-                {" "}
-                member(s).
-              </span>
+              <div style={{ display: "flex", gap: "16px", marginTop: "10px", fontSize: "12px", color: "#166534", flexWrap: "wrap" }}>
+                <span>📱 <strong>{pushReadyCount || members.filter(m => m.hasNotificationToken).length}</strong> with Device Push Notifications Active</span>
+                <span>📧 <strong>{members.length}</strong> receive Email & In-App Alert</span>
+              </div>
 
+              {excludedCount > 0 && (
+                <div style={{ marginTop: "10px", fontSize: "11.5px", color: "#64748b", borderTop: "1px dashed #cbd5e1", paddingTop: "8px" }}>
+                  🔒 <strong>{excludedCount} inactive, unpaid, or cancelled accounts</strong> are automatically segregated and excluded from receiving this message.
+                </div>
+              )}
             </div>
-
           )}
 
 

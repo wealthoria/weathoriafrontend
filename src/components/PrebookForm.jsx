@@ -67,17 +67,20 @@ function getAdAttributedSource() {
     const fbclid = params.get("fbclid");
     const ref = (document.referrer || "").toLowerCase();
 
+    // 1. Explicit Instagram attribution or Instagram referrer
     if (utmSource.includes("insta") || sourceParam.includes("insta") || ref.includes("instagram.com")) {
       sessionStorage.setItem("wealthoria_ad_source", "Instagram Ad");
       return "Instagram Ad";
     }
+    // 2. Explicit Facebook attribution or Facebook referrer
     if (utmSource.includes("fb") || utmSource.includes("facebook") || sourceParam.includes("facebook") || ref.includes("facebook.com")) {
       sessionStorage.setItem("wealthoria_ad_source", "Facebook Ad");
       return "Facebook Ad";
     }
-    if (fbclid) {
-      sessionStorage.setItem("wealthoria_ad_source", "Meta Ad (Instagram / FB)");
-      return "Meta Ad (Instagram / FB)";
+    // 3. Meta Ad default (Instagram is Primary focus for all Meta Ad traffic)
+    if (fbclid || utmSource.includes("meta")) {
+      sessionStorage.setItem("wealthoria_ad_source", "Instagram Ad");
+      return "Instagram Ad";
     }
     if (utmSource) {
       sessionStorage.setItem("wealthoria_ad_source", utmSource);

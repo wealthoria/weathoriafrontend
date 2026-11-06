@@ -63,7 +63,7 @@ const CATEGORIES = [
   "Newsletter",
   "Weekly Roundup",
   "Articles & Reports",
-  "Vedios",
+  "Videos",
   "Ratio Analysis"
 ];
 
@@ -436,7 +436,7 @@ function VideoModal({
   const [
     category,
     setCategory
-  ] = useState("Vedios");
+  ] = useState("Videos");
 
   const [
     tagsStr,

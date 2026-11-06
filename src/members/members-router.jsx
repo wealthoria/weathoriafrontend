@@ -162,7 +162,7 @@ function hasPaidAccessLeft(session) {
 
   if (subscription.accessActive === false) return false;
 
-  const value = subscription.accessUntil || subscription.nextBillingDate;
+  const value = subscription.paidUntil || subscription.accessUntil || subscription.nextBillingDate;
   let millis = 0;
 
   if (value && typeof value === "object") {
@@ -170,6 +170,24 @@ function hasPaidAccessLeft(session) {
     if (typeof seconds === "number") millis = seconds * 1000;
   } else if (value) {
     millis = new Date(value).getTime();
+  }
+
+  // Cap cancelled / unpaid cycles by paidCount so advance-issued invoices do not grant free access
+  const paidCount = Number(subscription.paidCount || 1);
+  const startVal = subscription.subscriptionStartDate || subscription.createdAt || session?.createdAt;
+  let startMs = 0;
+  if (startVal && typeof startVal === "object") {
+    const s = startVal.seconds ?? startVal._seconds;
+    if (typeof s === "number") startMs = s * 1000;
+  } else if (startVal) {
+    startMs = new Date(startVal).getTime();
+  }
+
+  if (startMs > 0) {
+    const maxPaidMs = startMs + (Math.max(1, paidCount) * 32 * 24 * 60 * 60 * 1000);
+    if (millis > maxPaidMs) {
+      millis = startMs + (Math.max(1, paidCount) * 30 * 24 * 60 * 60 * 1000);
+    }
   }
 
   return Number.isFinite(millis) && millis > Date.now();

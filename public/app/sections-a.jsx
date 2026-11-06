@@ -9,51 +9,51 @@ const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
 function NavBar({ onNav }) {
   const { t, lang, setLang, theme, toggleTheme } = useApp();
   const [open, setOpen] = useState(false);
-  const go = (id) => {setOpen(false);onNav(id);};
+  const go = (id) => { setOpen(false); onNav(id); };
 
   return (
     <React.Fragment>
       <header className="nav">
         <div className="wrap nav-inner">
-          <BrandLockup markHeight={32} onClick={(e) => {e.preventDefault();go("top");}} />
-       <nav className="nav-links">
-  {t.nav.links.map((l) =>
-    <a
-      key={l.id}
-      onClick={() => {
-        if (l.id === "Disclosure") {
-          window.location.href = "/wealthoria-disclosure.html";
-        } else {
-          go(l.id);
-        }
-      }}
-    >
-      {l.label}
-    </a>
-  )}
+          <BrandLockup markHeight={32} onClick={(e) => { e.preventDefault(); go("top"); }} />
+          <nav className="nav-links">
+            {t.nav.links.map((l) =>
+              <a
+                key={l.id}
+                onClick={() => {
+                  if (l.id === "Disclosure") {
+                    window.location.href = "/wealthoria-disclosure.html";
+                  } else {
+                    go(l.id);
+                  }
+                }}
+              >
+                {l.label}
+              </a>
+            )}
 
-  {/* PRODUCTS */}
-  <div className="products-nav">
-    <button
-      type="button"
-      className="products-nav-btn"
-      aria-haspopup="true"
-    >
-      {lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products"}
-      <span className="products-arrow">⌄</span>
-    </button>
+            {/* PRODUCTS */}
+            <div className="products-nav">
+              <button
+                type="button"
+                className="products-nav-btn"
+                aria-haspopup="true"
+              >
+                {lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products"}
+                <span className="products-arrow">⌄</span>
+              </button>
 
-    <div className="products-dropdown">
-      <a href="/hoodikeya-vijnana.html">
-        <span className="product-icon">📖</span>
-        <span>
-          <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
-          <small>₹999 · Pre-book now</small>
-        </span>
-      </a>
-    </div>
-  </div>
-</nav>
+              <div className="products-dropdown">
+                <a href="/hoodikeya-vijnana.html">
+                  <span className="product-icon">📖</span>
+                  <span>
+                    <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
+                    <small>₹999 · Pre-book now</small>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">
               <span className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</span>
@@ -62,25 +62,25 @@ function NavBar({ onNav }) {
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
-        
-        
-   <a
-  className="btn btn-green member-login-button"
-  href="/members/login"
-  aria-label="Member Login"
->
-  <Icon name="user" size={17} />
-  <span >Member</span>
-</a>
- <a
-  className="nav-login"
-  href="/Student%20Portal.html#/student/register"
-  aria-label="Student Register"
->
-  <Icon name="user" size={17} />
-  <span className="nav-login-txt">Student</span>
-</a>
-          {/*
+
+
+            <a
+              className="btn btn-green member-login-button"
+              href="/members/login"
+              aria-label="Member Login"
+            >
+              <Icon name="user" size={17} />
+              <span >Member</span>
+            </a>
+            <a
+              className="nav-login"
+              href="/Student%20Portal.html#/student/register"
+              aria-label="Student Register"
+            >
+              <Icon name="user" size={17} />
+              <span className="nav-login-txt">Student</span>
+            </a>
+            {/*
           {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open} aria-controls="mobile-navigation"><Icon name="menu" size={20} /></button>
           </div>
@@ -90,36 +90,36 @@ function NavBar({ onNav }) {
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
       <aside id="mobile-navigation" className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
-          <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
+          <BrandLockup markHeight={30} onClick={(e) => { e.preventDefault(); go("top"); }} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
-      {t.nav.links.map((l) => (
-  <a
-    key={l.id}
-    onClick={() => {
-      if (l.id === "Disclosure") {
-        setOpen(false);
-        window.location.href = "/wealthoria-disclosure.html";
-      } else {
-        go(l.id);
-      }
-    }}
-  >
-    {l.label}
-  </a>
-))}
+        {t.nav.links.map((l) => (
+          <a
+            key={l.id}
+            onClick={() => {
+              if (l.id === "Disclosure") {
+                setOpen(false);
+                window.location.href = "/wealthoria-disclosure.html";
+              } else {
+                go(l.id);
+              }
+            }}
+          >
+            {l.label}
+          </a>
+        ))}
 
-<a
-  href="/hoodikeya-vijnana.html"
-  onClick={() => setOpen(false)}
->
-  📖 {lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ · ₹999"}
-</a>
-       
+        <a
+          href="/hoodikeya-vijnana.html"
+          onClick={() => setOpen(false)}
+        >
+          📖 {lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ · ₹999"}
+        </a>
+
         <div className="drawer-foot">
           <a className="btn btn-outline btn-block" href="/students/login"><Icon name="user" size={17} />Student login</a>
           <a className="btn btn-outline btn-block" href="/members/login"><Icon name="lock" size={16} />Member login</a>
-        {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
+          {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
         </div>
       </aside>
     </React.Fragment>);
@@ -140,7 +140,7 @@ function Hero({ onNav }) {
     if (!v || !hero || !("IntersectionObserver" in window)) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const io = new IntersectionObserver((es) => {
-      es.forEach((e) => {if (e.isIntersecting) {v.play().catch(() => {});} else {v.pause();}});
+      es.forEach((e) => { if (e.isIntersecting) { v.play().catch(() => { }); } else { v.pause(); } });
     }, { threshold: 0.05 });
     io.observe(hero);
     return () => io.disconnect();
@@ -148,29 +148,29 @@ function Hero({ onNav }) {
   return (
     <section className="hero" id="top">
       <div className="hero-video" aria-hidden="true">
-      
-      <video
-  autoPlay
-  loop
-  muted
-  playsInline
-  preload="metadata"
-  poster="/assets/hero-bg.png"
-  ref={(el) => {
-    if (
-      el &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      el.removeAttribute("autoplay");
-      el.pause();
-    }
-  }}
->
-  <source
-    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4"
-    type="video/mp4"
-  />
-</video>
+
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          poster="/assets/hero-bg.png"
+          ref={(el) => {
+            if (
+              el &&
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ) {
+              el.removeAttribute("autoplay");
+              el.pause();
+            }
+          }}
+        >
+          <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4"
+            type="video/mp4"
+          />
+        </video>
       </div>
       <div className="hero-blob" aria-hidden="true"></div>
       <div className="wrap hero-grid">
@@ -179,25 +179,25 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} ></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-           <button
-  className="btn btn-green"
-  onClick={() => {
-    if (window.membersNavigate) {
-      window.membersNavigate("/members/subscription");
-    } else {
-      window.location.href = "/members/subscription";
-    }
-  }}
->
-  {h.ctaPrimary}
-  <Icon name="arrow" size={18} />
-</button>
+            <button
+              className="btn btn-green"
+              onClick={() => {
+                if (window.membersNavigate) {
+                  window.membersNavigate("/members/subscription");
+                } else {
+                  window.location.href = "/members/subscription";
+                }
+              }}
+            >
+              {h.ctaPrimary}
+              <Icon name="arrow" size={18} />
+            </button>
 
-{h.ctaSecondary && (
-  <button className="btn btn-outline" onClick={() => window.open("courses-coming-soon.html", "_self")}>
-    {h.ctaSecondary}
-  </button>
-)}
+            {h.ctaSecondary && (
+              <button className="btn btn-outline" onClick={() => window.open("courses-coming-soon.html", "_self")}>
+                {h.ctaSecondary}
+              </button>
+            )}
           </div>
           <div className="trustline">
             <span className="avatars"><i /><i /><i /><i /></span>
@@ -215,7 +215,7 @@ function Hero({ onNav }) {
             <div className="pbar-l">{h.card.progress}</div>
             <div style={{ marginTop: 8 }}>
               {h.card.modules.map((m, i) =>
-              <div key={i} className={`mod ${m.s === "lock" ? "locked" : ""}`}>
+                <div key={i} className={`mod ${m.s === "lock" ? "locked" : ""}`}>
                   <div className={`dot ${m.s}`}>
                     {m.s === "done" ? <Icon name="check" size={14} stroke={3} /> : m.s === "now" ? <Icon name="play" size={11} /> : ""}
                   </div>
@@ -281,7 +281,7 @@ function Metrics() {
       <div className="wrap">
         <div className="statband">
           {t.metrics.map((m, i) =>
-          <Reveal key={i} className="statb" delay={i * 80}>
+            <Reveal key={i} className="statb" delay={i * 80}>
               <div className="sl"><i></i>{m.l}</div>
               <div className="sn">{m.n}</div>
               {m.c && <div className="sc">{m.c}</div>}
@@ -305,7 +305,7 @@ function Why() {
         <SectionHead eyebrow={t.why.eyebrow} title={t.why.title} sub={t.why.sub} />
         <div className="feat-grid">
           {t.why.items.map((it, i) =>
-          <Reveal key={i} className={`feat ${WHY_SURFACES[i % WHY_SURFACES.length]}`} delay={i % 3 * 90}>
+            <Reveal key={i} className={`feat ${WHY_SURFACES[i % WHY_SURFACES.length]}`} delay={i % 3 * 90}>
               <span className="idx">{String(i + 1).padStart(2, "0")}</span>
               <div className="iconwrap"><Icon name={it.ic} size={24} /></div>
               <h3>{it.t}</h3>

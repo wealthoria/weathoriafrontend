@@ -1,31 +1,42 @@
 /* =========================================================================
-   Wealthoria — Premium theme overlay (v2, retargeted to REAL page classes)
-   Minimalist skeuomorphism + glassmorphism, restrained and elegant:
-   - Glass: translucent surfaces + backdrop blur + light "glass edge"
-   - Soft skeuo: dual-light shadows, embossed icon chips, tactile presses
-   Loads AFTER site.css and only refines existing components.
+   Wealthoria — Premium theme overlay (v3, NEUMORPHIC)
+   Clean, premium light-neumorphic soft-UI:
+   - Raised surfaces: dual-tone shadow pairs (light source top-left) simulate
+     material lifted off the same base tone — no blur, no translucency.
+   - Sunken surfaces: the same shadow pair inverted (inset) for fields/grooves.
+   - Pressed states: fully inset, tactile "pushed into the material" feel.
+   Loads AFTER site.css and only refines existing components — no new
+   selectors, no structural/layout changes, no token edits in shared files.
    Real surfaces: .pathcard .feat(.s-*) .prog .sem .formcard .lib .tst
                   .faq-item .founder-card .metric — chips: .iconwrap .step .num
    ========================================================================= */
 
 :root {
-  --glass-bg: rgba(255, 255, 255, .62);
-  --glass-bg-strong: rgba(255, 255, 255, .78);
-  --glass-edge: rgba(255, 255, 255, .85);
-  --glass-shadow: 0 18px 44px rgba(20, 21, 15, .10), 0 2px 8px rgba(20, 21, 15, .05);
-  --emboss-hi: rgba(255, 255, 255, .9);
-  --emboss-lo: rgba(20, 21, 15, .10);
-}
-[data-theme="dark"] {
-  --glass-bg: rgba(26, 28, 22, .55);
-  --glass-bg-strong: rgba(26, 28, 22, .74);
-  --glass-edge: rgba(255, 255, 255, .10);
-  --glass-shadow: 0 18px 44px rgba(0, 0, 0, .42), 0 2px 8px rgba(0, 0, 0, .3);
-  --emboss-hi: rgba(255, 255, 255, .06);
-  --emboss-lo: rgba(0, 0, 0, .5);
+  /* light-mode neumorphic shadow pair — tinted to the sage/canvas base so
+     the "material" reads as one continuous surface, not a gray overlay */
+  --neu-light: rgba(255, 255, 255, .85);
+  --neu-light-soft: rgba(255, 255, 255, .6);
+  --neu-dark: rgba(163, 171, 156, .40);
+  --neu-dark-strong: rgba(150, 158, 144, .55);
+
+  /* local dark "ink" surface for polarity-flip bands — warm charcoal instead
+     of the shared teal --surface-ink token (kept local so members/admin,
+     which also read --surface-ink, are unaffected) */
+  --neu-ink: #1c1815;
+  --neu-ink-soft: #241f1b;
 }
 
-/* ---------- glass surfaces (white/neutral cards) ---------- */
+[data-theme="dark"] {
+  --neu-light: rgba(255, 255, 255, .05);
+  --neu-light-soft: rgba(255, 255, 255, .03);
+  --neu-dark: rgba(0, 0, 0, .55);
+  --neu-dark-strong: rgba(0, 0, 0, .7);
+
+  --neu-ink: #0e0c0a;
+  --neu-ink-soft: #151210;
+}
+
+/* ---------- raised neumorphic surfaces (white/neutral cards) ---------- */
 .pathcard,
 .feat.s-white,
 .prog,
@@ -34,130 +45,231 @@
 .lib,
 .tst,
 .faq-item,
-.founder-card,
 .card {
-  background: var(--glass-bg) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  backdrop-filter: blur(18px) saturate(150%);
+  background: var(--canvas) !important;
   box-shadow:
-    inset 0 1px 0 var(--glass-edge),
-    inset 0 0 0 1px var(--hair),
-    var(--glass-shadow) !important;
+    8px 8px 18px var(--neu-dark),
+    -8px -8px 18px var(--neu-light),
+    inset 0 0 0 1px var(--hair) !important;
 }
 
-/* tinted feature variants keep their hue as translucent glass */
+/* founder cards live on the dark ink band (.band-ink) — keep them a
+   translucent dark chip (matches site.css base), just add a soft
+   raised edge instead of the old blur so text stays legible */
+.founder-card {
+  background: rgba(255, 255, 255, .03) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    inset 0 0 0 1px rgba(255, 255, 255, .08),
+    0 16px 32px rgba(0, 0, 0, .28) !important;
+}
+
+/* tinted feature variants stay solid (no blur), same raised language */
 .feat.s-pale {
-  background: color-mix(in srgb, var(--primary-pale) 72%, transparent) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  backdrop-filter: blur(16px) saturate(150%);
-  box-shadow: inset 0 1px 0 var(--glass-edge), var(--glass-shadow);
+  background: var(--primary-pale) !important;
+  box-shadow:
+    7px 7px 16px var(--neu-dark),
+    -7px -7px 16px var(--neu-light) !important;
 }
+
 .feat.s-soft {
-  background: color-mix(in srgb, var(--canvas-soft) 62%, transparent) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: inset 0 1px 0 var(--glass-edge), var(--glass-shadow);
+  background: var(--canvas-soft) !important;
+  box-shadow:
+    7px 7px 16px var(--neu-dark),
+    -7px -7px 16px var(--neu-light) !important;
 }
-/* the dark "polarity flip" card becomes smoked glass */
+
+/* the dark "polarity flip" card: warm charcoal block, floated with a
+   conventional drop shadow (it isn't the same material as the page) */
 .feat.s-ink {
-  background: color-mix(in srgb, var(--surface-ink) 82%, transparent) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 20px 46px rgba(0, 0, 0, .28) !important;
+  background: var(--neu-ink) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .06),
+    0 22px 48px rgba(0, 0, 0, .30) !important;
 }
 
-/* metric band: glass strip */
+/* metric band: sunken groove running through the page */
 .metric {
-  background: var(--glass-bg) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
-  box-shadow: inset 0 1px 0 var(--glass-edge);
+  background: var(--canvas-soft) !important;
+  box-shadow:
+    inset 4px 4px 10px var(--neu-dark),
+    inset -4px -4px 10px var(--neu-light) !important;
 }
 
-/* nav + drawer: deeper frosted glass */
+/* nav + drawer: solid neumorphic surfaces, soft edge shadow instead of blur */
 .nav {
-  background: color-mix(in srgb, var(--canvas) 55%, transparent) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
-  box-shadow: inset 0 -1px 0 var(--hair), 0 4px 24px rgba(20, 21, 15, .04) !important;
-}
-.drawer {
-  background: var(--glass-bg-strong) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  backdrop-filter: blur(24px) saturate(160%);
+  background: var(--canvas) !important;
+  box-shadow:
+    inset 0 -1px 0 var(--hair),
+    0 10px 26px var(--neu-dark) !important;
 }
 
-/* ---------- minimalist skeuomorphism ---------- */
-/* icon chips: gently embossed, lit from above */
+.drawer {
+  background: var(--canvas) !important;
+  box-shadow: -14px 0 34px var(--neu-dark-strong) !important;
+}
+
+/* ---------- neumorphic chips ---------- */
+/* icon chips: raised discs, lit from top-left, faint top sheen for polish */
 .iconwrap,
 .step .num,
 .tst .who .av,
 .pathcard .pnum {
-  background-image: linear-gradient(165deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 55%);
+  background-image: linear-gradient(165deg, rgba(255, 255, 255, .35), rgba(255, 255, 255, 0) 60%);
   box-shadow:
-    inset 0 1px 0 var(--emboss-hi),
-    inset 0 -1px 2px var(--emboss-lo),
-    0 2px 5px rgba(20, 21, 15, .08);
-}
-[data-theme="dark"] .iconwrap, [data-theme="dark"] .step .num {
-  background-image: linear-gradient(165deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0) 55%);
+    4px 4px 9px var(--neu-dark),
+    -4px -4px 9px var(--neu-light),
+    inset 0 0 0 1px var(--hair);
 }
 
-/* primary buttons: top sheen + soft coral lift; pressed = sunken */
+[data-theme="dark"] .iconwrap,
+[data-theme="dark"] .step .num {
+  background-image: linear-gradient(165deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0) 60%);
+}
+
+/* primary buttons: raised coral material; pressed = sunken into the material */
 .btn-green {
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 46%), linear-gradient(120deg, var(--brand-coral, #e8473f), var(--brand-orange, #f4823c)) !important;
+  background-image: linear-gradient(120deg, var(--brand-coral, #e8473f), var(--brand-orange, #f4823c)) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .32),
-    0 8px 20px rgba(232, 71, 63, .26),
-    0 2px 5px rgba(232, 71, 63, .18) !important;
+    6px 6px 16px rgba(191, 57, 46, .32),
+    -4px -4px 12px rgba(255, 255, 255, .5),
+    inset 0 1px 0 rgba(255, 255, 255, .22) !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, .12);
 }
-.btn-green:hover { filter: brightness(1.05); }
+
+.btn-green:hover {
+  filter: brightness(1.05);
+}
+
 .btn-green:active {
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .22), 0 2px 6px rgba(232, 71, 63, .16) !important;
+  box-shadow:
+    inset 4px 4px 9px rgba(153, 45, 38, .45),
+    inset -3px -3px 7px rgba(255, 158, 130, .3) !important;
   transform: translateY(1px) scale(.985);
 }
 
-/* outline buttons: faint glass pills with a tactile press */
-.btn-outline, .btn-ghost {
-  background: color-mix(in srgb, var(--canvas) 40%, transparent) !important;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--hair-strong) !important;
-}
-.btn-outline:active, .btn-ghost:active { box-shadow: inset 0 2px 5px var(--emboss-lo) !important; transform: translateY(1px); }
-
-/* inputs: softly carved-in fields */
-.input, .textarea, .select, .field input, .field textarea, .field select {
-  background: color-mix(in srgb, var(--canvas-soft) 55%, var(--canvas)) !important;
+/* outline/ghost buttons: flat neumorphic pills with a tactile press */
+.btn-outline,
+.btn-ghost {
+  background: var(--canvas) !important;
   box-shadow:
-    inset 0 2px 4px rgba(20, 21, 15, .07),
+    3px 3px 8px var(--neu-dark),
+    -3px -3px 8px var(--neu-light),
     inset 0 0 0 1px var(--hair-strong) !important;
 }
-.input:focus, .textarea:focus, .select:focus, .field input:focus, .field textarea:focus {
-  box-shadow: inset 0 2px 4px rgba(20, 21, 15, .05), inset 0 0 0 2px var(--brand-coral, #e8473f) !important;
-}
 
-/* nav pills read as tactile glass toggles */
-.theme-toggle, .lang-toggle, .nav-login, .slider-ctl .arrow {
-  background: var(--glass-bg) !important;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--hair) !important;
-}
-.theme-toggle:active, .slider-ctl .arrow:active { box-shadow: inset 0 2px 5px var(--emboss-lo) !important; }
-
-/* card hover: slightly more lift, still calm */
-.feat:hover, .prog:hover, .lib:hover {
+.btn-outline:active,
+.btn-ghost:active {
   box-shadow:
-    inset 0 1px 0 var(--glass-edge),
-    inset 0 0 0 1px var(--hair-strong),
-    0 26px 56px rgba(20, 21, 15, .14), 0 4px 12px rgba(20, 21, 15, .06) !important;
+    inset 3px 3px 7px var(--neu-dark),
+    inset -2px -2px 6px var(--neu-light) !important;
+  transform: translateY(1px);
 }
-.feat.s-ink:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 26px 56px rgba(0, 0, 0, .34) !important; }
+
+/* inputs: carved-in grooves, coral inset ring on focus */
+.input,
+.textarea,
+.select,
+.field input,
+.field textarea,
+.field select {
+  background: var(--canvas-soft) !important;
+  box-shadow:
+    inset 4px 4px 8px var(--neu-dark),
+    inset -4px -4px 8px var(--neu-light),
+    inset 0 0 0 1px var(--hair-strong) !important;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus,
+.field input:focus,
+.field textarea:focus {
+  box-shadow:
+    inset 3px 3px 7px var(--neu-dark),
+    inset -3px -3px 7px var(--neu-light),
+    inset 0 0 0 2px var(--brand-coral, #e8473f) !important;
+}
+
+/* nav pills: raised toggles, pressed on activation */
+.theme-toggle,
+.lang-toggle,
+.nav-login,
+.slider-ctl .arrow {
+  background: var(--canvas) !important;
+  box-shadow:
+    3px 3px 7px var(--neu-dark),
+    -3px -3px 7px var(--neu-light),
+    inset 0 0 0 1px var(--hair) !important;
+}
+
+.theme-toggle:active,
+.slider-ctl .arrow:active {
+  box-shadow:
+    inset 3px 3px 6px var(--neu-dark),
+    inset -2px -2px 5px var(--neu-light) !important;
+}
+
+/* card hover: lift further off the material, still calm */
+.feat:hover,
+.prog:hover,
+.lib:hover {
+  box-shadow:
+    11px 11px 24px var(--neu-dark-strong),
+    -11px -11px 24px var(--neu-light),
+    inset 0 0 0 1px var(--hair-strong) !important;
+  transform: translateY(-3px);
+}
+
+.feat.s-ink:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 26px 56px rgba(0, 0, 0, .38) !important;
+  transform: translateY(-3px);
+}
 
 @media (prefers-reduced-motion: no-preference) {
-  .pathcard, .feat, .prog, .lib, .tst { transition: transform .22s var(--ease, ease), box-shadow .22s var(--ease, ease); }
+
+  .pathcard,
+  .feat,
+  .prog,
+  .lib,
+  .tst {
+    transition: transform .22s var(--ease, ease), box-shadow .22s var(--ease, ease);
+  }
+}
+
+/* legacy-green fixes: keep these landing-page icon tints on-brand (coral)
+   now that the accent has moved from green to coral/orange */
+.feat .iconwrap,
+.consult .pt .iconwrap {
+  background: var(--primary-pale) !important;
+}
+
+.feat.s-ink .iconwrap {
+  background: rgba(244, 130, 60, .18) !important;
+}
+
+.band-ink .step .num {
+  box-shadow: 0 0 0 6px rgba(244, 130, 60, .18) !important;
+}
+
+/* ---------- kicker accents: soft raised capsule instead of a flat bar ---------- */
+.eyebrow::before {
+  width: 12px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--brand-grad, linear-gradient(120deg, #e8473f, #f4823c)) !important;
+  box-shadow:
+    1px 1px 3px rgba(0, 0, 0, .18),
+    -1px -1px 2px rgba(255, 255, 255, .5) !important;
+  position: relative;
+  top: 1px;
+}
+
+.band-ink .eyebrow::before,
+[data-theme="dark"] .eyebrow::before {
+  box-shadow:
+    1px 1px 3px rgba(0, 0, 0, .4),
+    0 0 8px rgba(232, 71, 63, .45) !important;
 }
 
 
@@ -167,38 +279,375 @@
    ========================================================================= */
 
 /* ---- #1 marquee ticker ---- */
-.ticker { overflow: hidden; background: var(--surface-ink); color: var(--on-ink); padding: 13px 0; position: relative; }
-.ticker-track { display: flex; width: max-content; animation: wl-tick 28s linear infinite; }
-.ticker:hover .ticker-track { animation-play-state: paused; }
-.ticker .ti { display: inline-flex; align-items: center; gap: 18px; padding: 0 18px; font: var(--body-sm-strong); letter-spacing: .04em; white-space: nowrap; color: rgba(244,243,236,.85); }
-.ticker .ti::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-orange, #f4823c); flex: 0 0 auto; }
-@keyframes wl-tick { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+.ticker {
+  overflow: hidden;
+  background: var(--neu-ink);
+  color: var(--on-ink);
+  padding: 13px 0;
+  position: relative;
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: wl-tick 28s linear infinite;
+}
+
+.ticker:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+.ticker .ti {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+  font: var(--body-sm-strong);
+  letter-spacing: .04em;
+  white-space: nowrap;
+  color: rgba(244, 243, 236, .85);
+}
+
+.ticker .ti::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-orange, #f4823c);
+  flex: 0 0 auto;
+}
+
+@keyframes wl-tick {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
 
 /* ---- #2 numbered sections ---- */
-.idx { font-family: var(--font-display); font-weight: 800; font-size: 13px; letter-spacing: .14em; color: var(--brand-coral, #e8473f); opacity: .85; display: inline-flex; align-items: center; gap: 8px; }
-.idx::after { content: ""; width: 26px; height: 1.5px; background: currentColor; opacity: .45; }
-.feat .idx { margin-bottom: 2px; }
-.feat.s-ink .idx { color: var(--brand-orange, #f4823c); }
-.faq-num { font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--brand-coral, #e8473f); margin-right: 14px; flex: 0 0 auto; }
+.idx {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .14em;
+  color: var(--brand-coral, #e8473f);
+  opacity: .85;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.idx::after {
+  content: "";
+  width: 10px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--brand-grad, linear-gradient(120deg, #e8473f, #f4823c));
+  opacity: 1;
+  position: relative;
+  top: 1px;
+}
+
+.feat .idx {
+  margin-bottom: 2px;
+}
+
+.feat.s-ink .idx {
+  color: var(--brand-orange, #f4823c);
+}
+
+.faq-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--brand-coral, #e8473f);
+  margin-right: 14px;
+  flex: 0 0 auto;
+}
 
 /* ---- #3 narrative band ---- */
-.narrative { background: var(--surface-ink); color: var(--on-ink); border-radius: var(--rounded-xl); padding: 64px 48px; position: relative; overflow: hidden; }
-@media (max-width: 640px) { .narrative { padding: 44px 28px; } }
-.narrative::after { content: ""; position: absolute; right: -120px; bottom: -140px; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(232,71,63,.22), transparent 68%); pointer-events: none; }
-.narrative .n-idx { color: var(--brand-orange, #f4823c); }
-.narrative h2 { font: var(--display-md); font-size: clamp(28px, 4.4vw, 46px); color: rgba(244,243,236,.55); margin: 20px 0 0; max-width: 22ch; line-height: 1.12; }
-.narrative h2 em { font-style: normal; color: #fff; }
-.narrative .resolve { margin-top: 28px; display: flex; align-items: center; gap: 14px; }
-.narrative .resolve .line { flex: 0 0 44px; height: 2px; background: var(--brand-coral, #e8473f); }
-.narrative .resolve b { font-family: var(--font-display); font-weight: 800; font-size: clamp(22px, 3vw, 32px); color: var(--brand-coral, #e8473f); letter-spacing: -.01em; }
-.narrative p.sub { font: var(--body-md); color: rgba(244,243,236,.66); margin: 18px 0 0; max-width: 52ch; position: relative; z-index: 1; }
+.narrative {
+  background: var(--neu-ink) !important;
+  color: var(--on-ink);
+  border-radius: var(--rounded-xl);
+  padding: 64px 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .narrative {
+    padding: 44px 28px;
+  }
+}
+
+.narrative::after {
+  content: "";
+  position: absolute;
+  right: -120px;
+  bottom: -140px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 71, 63, .22), transparent 68%);
+  pointer-events: none;
+}
+
+.narrative .n-idx {
+  color: var(--brand-orange, #f4823c);
+}
+
+.narrative h2 {
+  font: var(--display-md);
+  font-size: clamp(28px, 4.4vw, 46px);
+  color: rgba(244, 243, 236, .55);
+  margin: 20px 0 0;
+  max-width: 22ch;
+  line-height: 1.12;
+}
+
+.narrative h2 em {
+  font-style: normal;
+  color: #fff;
+}
+
+.narrative .resolve {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.narrative .resolve .line {
+  flex: 0 0 24px;
+  height: 4px;
+  align-self: center;
+  border-radius: 999px;
+  background: var(--brand-grad, linear-gradient(120deg, #e8473f, #f4823c));
+  box-shadow: 0 0 8px rgba(232, 71, 63, .4);
+}
+
+.narrative .resolve b {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 3vw, 32px);
+  color: var(--brand-coral, #e8473f);
+  letter-spacing: -.01em;
+}
+
+.narrative p.sub {
+  font: var(--body-md);
+  color: rgba(244, 243, 236, .66);
+  margin: 18px 0 0;
+  max-width: 52ch;
+  position: relative;
+  z-index: 1;
+}
 
 /* ---- #4 stat blocks ---- */
-.statband { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border-radius: var(--rounded-xl); overflow: hidden; margin:10px 0px}
-@media (min-width: 860px) { .statband { grid-template-columns: repeat(4, 1fr); } }
-.statb { background: var(--glass-bg, var(--canvas)); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); padding: 28px 26px; box-shadow: inset 0 1px 0 var(--glass-edge); }
-.statb .sl { font: var(--caption); font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--mute); display: flex; align-items: center; gap: 8px; }
-.statb .sl i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-coral, #e8473f); flex: 0 0 auto; }
-.statb .sn { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -.02em; color: var(--ink); line-height: 1.05; margin-top: 10px; }
-.statb .sc { font: var(--body-sm); color: var(--body); margin-top: 8px; }
+.statband {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--hair);
+  border-radius: var(--rounded-xl);
+  overflow: hidden;
+  margin: 10px 0px
+}
+
+@media (min-width: 860px) {
+  .statband {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.statb {
+  background: var(--canvas);
+  padding: 28px 26px;
+  box-shadow: inset 0 1px 0 var(--neu-light);
+}
+
+.statb .sl {
+  font: var(--caption);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statb .sl i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-coral, #e8473f);
+  flex: 0 0 auto;
+}
+
+.statb .sn {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(30px, 3.6vw, 44px);
+  letter-spacing: -.02em;
+  color: var(--ink);
+  line-height: 1.05;
+  margin-top: 10px;
+}
+
+.statb .sc {
+  font: var(--body-sm);
+  color: var(--body);
+  margin-top: 8px;
+}
+
+/* ---- #5 Nav Get App Pill Button ---- */
+.btn-get-app {
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+  box-shadow:
+    3px 3px 8px var(--neu-dark),
+    -3px -3px 8px var(--neu-light),
+    inset 0 0 0 1px var(--hair-strong) !important;
+  border-radius: 999px;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  height: 40px;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+  white-space: nowrap;
+}
+
+.btn-get-app:hover {
+  filter: brightness(0.97);
+  transform: translateY(-1px);
+}
+
+.btn-get-app:active {
+  box-shadow:
+    inset 3px 3px 6px var(--neu-dark),
+    inset -2px -2px 5px var(--neu-light) !important;
+  transform: translateY(1px);
+}
+
+[data-theme="dark"] .btn-get-app {
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+}
+
+/* ---- #6 Enquiry Form Card & Inputs (Image 2 design) ---- */
+.formcard {
+  border-radius: 24px !important;
+  padding: 38px 32px !important;
+}
+
+.formcard .field label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.formcard .field .req {
+  color: var(--brand-coral, #e8473f);
+  margin-left: 2px;
+}
+
+.formcard .input,
+.formcard .select,
+.formcard .textarea {
+  border-radius: 12px !important;
+  padding: 13px 16px !important;
+  font-size: 15px !important;
+}
+
+.formcard .btn-green.btn-block {
+  border-radius: 999px !important;
+  height: 50px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ---- #7 Mobile Header & Download Button ---- */
+@media (max-width: 979px) {
+
+  /* On mobile: keep ONLY the download icon button (remove text label) */
+  .btn-get-app {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 36px !important;
+  }
+
+  .btn-get-app span {
+    display: none !important;
+  }
+
+  .btn-get-app svg {
+    margin: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Make logo visible on mobile */
+  .mobile-logo-only {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .mobile-logo-only .brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+  }
+
+  .mobile-logo-only .brand-mark {
+    display: block !important;
+    height: 32px !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+
+
+  .mobile-logo-only .brand-word {
+    display: inline-block !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--ink) !important;
+    letter-spacing: .08em !important;
+    white-space: nowrap !important;
+  }
+
+  /* Hide the Member button in mobile top bar so it doesn't crowd out the logo */
+  .nav .nav-right .member-login-button {
+    display: none !important;
+  }
+}

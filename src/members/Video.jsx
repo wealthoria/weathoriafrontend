@@ -163,6 +163,13 @@ function formatRelativeTime(dateVal) {
   });
 }
 
+function formatCategory(value) {
+  if (!value) return "";
+  const raw = String(value).trim();
+  if (raw.toLowerCase() === "vedios") return "Videos";
+  return raw;
+}
+
 /* =========================================================
    VIDEO DESCRIPTION (EXPANDABLE)
 ========================================================= */
@@ -349,7 +356,7 @@ function MemberVideoPlayer({
 
           {video.category && (
             <span>
-              {video.category}
+              {formatCategory(video.category)}
             </span>
           )}
         </div>
@@ -1547,10 +1554,7 @@ function MemberVideo() {
 
                               <div className="member-video-meta">
 
-                                <span>
-                                  {video.category ||
-                                    "Video"}
-                                </span>
+                                <span>{formatCategory(video.category) || "Videos"}</span>
 
                                 <span>
                                   {getDate(

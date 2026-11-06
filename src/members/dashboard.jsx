@@ -889,11 +889,11 @@ function DashboardLatestContent({ onOpen, member }) {
         },
         {
           type: "Videos",
-          category: "Vedios",
+          category: "Videos",
           rows: Array.isArray(data.content)
             ? data.content.filter(
                 item =>
-                  item.category === "Vedios"
+                  item.category === "Videos" || item.category === "Vedios"
               )
             : []
         },
@@ -4075,7 +4075,7 @@ const showMembershipPanel =
                         );
 
                       } else if (
-                        category === "Vedios"
+                        (category === "Videos" || category === "Vedios")
                       ) {
 
                         openPage(

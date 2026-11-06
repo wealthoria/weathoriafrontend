@@ -162,6 +162,7 @@ async function runInstall() {
   // No native prompt available: show the manual steps.
   window.dispatchEvent(new Event("wl-install-steps"));
 }
+window.triggerPwaInstall = runInstall;
 
 /* Re-render whenever the install state changes. */
 function useInstallRefresh() {
@@ -195,24 +196,34 @@ const TEXT = {
       "Tap Install app (or Add to Home screen).",
       "Tap Install."
     ],
+    desktopSteps: [
+      "Click the Install icon (\u2913 or \u2295) in your browser address bar.",
+      "Or click the \u22EE menu in Chrome/Edge and select 'Install Wealthoria'.",
+      "Click 'Install' to add Wealthoria to your desktop."
+    ],
     done: "Got it"
   },
   kn: {
-    bar: "Wealthoria ಆ್ಯಪ್ ಪಡೆಯಿರಿ",
-    install: "ಇನ್‌ಸ್ಟಾಲ್ ಆ್ಯಪ್",
-    close: "ಮುಚ್ಚಿ",
-    stepsTitle: "Wealthoria ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ",
+    bar: "Wealthoria \u0c86\u0ccd\u0caf\u0caa\u0ccd \u0caa\u0ca1\u0cc6\u0caf\u0cbf\u0cb0\u0cbf",
+    install: "\u0c87\u0ca8\u0ccd\u200c\u0cb8\u0ccd\u0c9f\u0cbe\u0cb2\u0ccd \u0c86\u0ccd\u0caf\u0caa\u0ccd",
+    close: "\u0cae\u0cc1\u0c9a\u0ccd\u0c9a\u0cbf",
+    stepsTitle: "Wealthoria \u0c87\u0ca8\u0ccd\u200c\u0cb8\u0ccd\u0c9f\u0cbe\u0cb2\u0ccd \u0cae\u0cbe\u0ca1\u0cbf",
     iosSteps: [
-      "Safari ನಲ್ಲಿ Share ಬಟನ್ ಒತ್ತಿ.",
-      "ಕೆಳಗೆ ಸ್ಕ್ರಾಲ್ ಮಾಡಿ, Add to Home Screen ಒತ್ತಿ.",
-      "Add ಒತ್ತಿ."
+      "Safari \u0ca8\u0cb2\u0ccd\u0cb2\u0cbf Share \u0cac\u0c9f\u0ca8\u0ccd \u0c92\u0ca4\u0ccd\u0ca4\u0cbf.",
+      "\u0c95\u0cc6\u0cbb\u0c97\u0cc6 \u0cb8\u0ccd\u0c95\u0ccd\u0cb0\u0cbe\u0cb2\u0ccd \u0cae\u0cbe\u0ca1\u0cbf, Add to Home Screen \u0c92\u0ca4\u0ccd\u0ca4\u0cbf.",
+      "Add \u0c92\u0ca4\u0ccd\u0ca4\u0cbf."
     ],
     androidSteps: [
-      "Chrome ನ ಮೇಲ್ಭಾಗದ \u22EE ಮೆನು ಒತ್ತಿ.",
-      "Install app (ಅಥವಾ Add to Home screen) ಒತ್ತಿ.",
-      "Install ಒತ್ತಿ."
+      "Chrome \u0ca8 \u0cae\u0cc7\u0cb2\u0ccd\u0cad\u0cbe\u0c97\u0ca6 \u22EE \u0cae\u0cc6\u0ca8\u0cc1 \u0c92\u0ca4\u0ccd\u0ca4\u0cbf.",
+      "Install app (\u0c85\u0ca5\u0cb5\u0cbe Add to Home screen) \u0c92\u0ca4\u0ccd\u0ca4\u0cbf.",
+      "Install \u0c92\u0ca4\u0ccd\u0ca4\u0cbf."
     ],
-    done: "ಸರಿ"
+    desktopSteps: [
+      "\u0cac\u0ccd\u0cb0\u0ccc\u0cb8\u0cb0\u0ccd \u0c85\u0ca1\u0ccd\u0cb0\u0cc6\u0cb8\u0ccd \u0cac\u0cbe\u0cb0\u0ccd\u200c\u0ca8\u0cb2\u0ccd\u0cb2\u0cbf\u0cb0\u0cc1\u0cb5 \u0c87\u0ca8\u0ccd\u200c\u0cb8\u0ccd\u0c9f\u0cbe\u0cb2\u0ccd \u0c80\u0c95\u0cbe\u0ca8\u0ccd (\u2913) \u0c92\u0ca4\u0ccd\u0ca4\u0cbf.",
+      "\u0c85\u0ca5\u0cb5\u0cbe Chrome/Edge \u0cae\u0cc6\u0ca8\u0cc1\u0cb5\u0cbf\u0ca8\u0cb2\u0ccd\u0cb2\u0cbf 'Install Wealthoria' \u0c86\u0caf\u0ccd\u0c95\u0cc6\u0cae\u0cbe\u0ca1\u0cbf.",
+      "'Install' \u0c92\u0ca4\u0ccd\u0ca4\u0cbf \u0ca8\u0cbf\u0cae\u0ccd\u0cae \u0ca1\u0cc6\u0cb8\u0ccd\u0c95\u0ccd\u200c\u0c9f\u0cbe\u0caa\u0ccd\u200c\u0c97\u0cc6 \u0cb8\u0cc7\u0cb0\u0cbf\u0cb8\u0cbf."
+    ],
+    done: "\u0cb8\u0cb0\u0cbf"
   }
 };
 
@@ -306,7 +317,7 @@ function InstallPopup() {
         </div>
       )}
 
-      {sheet && canInstall && (
+      {sheet && (
         <div className="pwa-pop-scrim" onClick={closeSheet}>
           <div
             className="pwa-pop-card"
@@ -324,7 +335,7 @@ function InstallPopup() {
             />
             <h3 className="pwa-pop-title">{tx.stepsTitle}</h3>
             <ol className="pwa-pop-steps">
-              {(isIos() ? tx.iosSteps : tx.androidSteps).map((t, i) => (
+              {(isIos() ? tx.iosSteps : isPhone() ? tx.androidSteps : tx.desktopSteps).map((t, i) => (
                 <li key={i}>{t}</li>
               ))}
             </ol>

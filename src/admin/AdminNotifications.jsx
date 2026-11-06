@@ -13,7 +13,7 @@ const NOTIFICATION_CATEGORIES = [
   "Weekly Roundup",
   "Articles & Reports",
   "Ratio Analysis",
-  "Vedios"
+  "Videos"
 ];
 
 function AdminNotifications() {

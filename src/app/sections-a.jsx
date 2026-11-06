@@ -74,7 +74,7 @@ const isLegalPage =
     aria-haspopup="true"
     onClick={(e) => e.preventDefault()}
   >
-    Products
+    {t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products")}
   </a>
 
   <div className="products-dropdown">
@@ -97,42 +97,46 @@ const isLegalPage =
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
             </button>
-            <InstallIcon />
-        
 
-    {/*
-   <a
-  className="btn btn-green member-login-button"
-  href="/members/login"
-  aria-label="Member Login"
->
-  <Icon name="user" size={17} />
-  <span >Member</span>
-</a>
-*/}
+            <a
+              className="btn btn-green member-login-button"
+              href="/members/login"
+              aria-label="Member Login"
+            >
+              <Icon name="user" size={17} />
+              <span>{t.nav?.memberLogin || "Member"}</span>
+            </a>
 
- {/*<a
-  className="nav-login"
-  href="/Student%20Portal.html#/student/register"
-  aria-label="Student Register"
->
-  <Icon name="user" size={17} />
-  <span className="nav-login-txt">Student</span>
-</a>*/}
+            <button
+              type="button"
+              className="btn-get-app"
+              onClick={() => {
+                if (typeof window.triggerPwaInstall === "function") {
+                  window.triggerPwaInstall();
+                } else {
+                  window.dispatchEvent(new Event("wl-install-steps"));
+                }
+              }}
+              aria-label="Get App"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 3v13" />
+                <path d="m7 11 5 5 5-5" />
+                <path d="M5 21h14" />
+              </svg>
+              <span>{lang === "kn" ? "ಆ್ಯಪ್ ಪಡೆಯಿರಿ" : "Get App"}</span>
+            </button>
 
- <a
-  className="btn btn-green member-login-button"
- href="/members/login"
-  aria-label="Member Login"
->
-  <Icon name="user" size={17} />
-  <span >Member</span>
-</a>
-
-
-
-          {/*
-          {/*button className="btn btn-green btn-sm nav-cta-desktop" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" type="button"><Icon name="menu" size={20} /></button>
           </div>
         </div>
@@ -173,7 +177,7 @@ const isLegalPage =
     aria-haspopup="true"
     onClick={(e) => e.preventDefault()}
   >
-    Products
+    {t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products")}
   </a>
 
   <div className="products-dropdown">
@@ -190,8 +194,38 @@ const isLegalPage =
 </div>
 
         <div className="drawer-foot">
-          <a className="btn btn-outline btn-block drawer-member-login" href="/members/login"><Icon name="lock" size={16} />Member login</a>
-        {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
+          <button
+            type="button"
+            className="btn btn-outline btn-block"
+            style={{ marginBottom: "10px" }}
+            onClick={() => {
+              setOpen(false);
+              if (typeof window.triggerPwaInstall === "function") {
+                window.triggerPwaInstall();
+              } else {
+                window.dispatchEvent(new Event("wl-install-steps"));
+              }
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              style={{ marginRight: 6 }}
+            >
+              <path d="M12 3v13" />
+              <path d="m7 11 5 5 5-5" />
+              <path d="M5 21h14" />
+            </svg>
+            {lang === "kn" ? "ಆ್ಯಪ್ ಪಡೆಯಿರಿ" : "Get App"}
+          </button>
+          <a className="btn btn-green btn-block drawer-member-login" href="/members/login"><Icon name="lock" size={16} />Member login</a>
         </div>
       </aside>
     </React.Fragment>);

@@ -24,6 +24,7 @@ const CONTENT = {
 
       ],
       cta: "Book consultation",
+      products: "Products",
     },
     hero: {
       eyebrow: "Financial education · Karnataka",
@@ -253,6 +254,7 @@ const CONTENT = {
 
       ],
       cta: "ಸಮಾಲೋಚನೆ ಕಾಯ್ದಿರಿಸಿ",
+      products: "ಉತ್ಪನ್ನಗಳು",
     },
     hero: {
       eyebrow: "ಹಣಕಾಸು ಶಿಕ್ಷಣ · ಕರ್ನಾಟಕ",

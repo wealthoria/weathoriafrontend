@@ -129,17 +129,67 @@ function getMemberTime(member) {
 
 function getMemberPaymentTime(member) {
   if (!member) return 0;
+  const createdMs = safeTimestamp(member.createdAt) || safeTimestamp(member.joinedAt) || safeTimestamp(member.startDate) || 0;
+  // If subscriptionStartDate was rolled forward past creation by a renewal invoice, prefer last payment or creation
+  const subStartMs = safeTimestamp(member.subscriptionStartDate);
+  const validStartMs = (createdMs > 0 && subStartMs > createdMs + 35 * 86400000) ? createdMs : subStartMs;
+
   return Math.max(
     safeTimestamp(member.lastPaymentDate),
     safeTimestamp(member.paidAt),
     safeTimestamp(member.lastPaymentAt),
     safeTimestamp(member.lastChargedAt),
-    safeTimestamp(member.subscriptionStartDate),
+    validStartMs,
     safeTimestamp(member.startDate),
     safeTimestamp(member.joinedAt),
     safeTimestamp(member.createdAt),
     0
   );
+}
+
+function getMemberTruePaidUntil(member) {
+  if (!member) return 0;
+  const paidCount = Math.max(1, Number(member.paidCount || 1));
+  const createdMs =
+    safeTimestamp(member.createdAt) ||
+    safeTimestamp(member.joinedAt) ||
+    safeTimestamp(member.startDate) ||
+    0;
+
+  const subStartMs = safeTimestamp(member.subscriptionStartDate);
+  const initialStartMs =
+    (createdMs > 0 && subStartMs > createdMs + 35 * 86400000)
+      ? createdMs
+      : (subStartMs || createdMs);
+
+  const lastPayMs =
+    safeTimestamp(member.lastPaymentDate) ||
+    safeTimestamp(member.paidAt) ||
+    safeTimestamp(member.lastPaymentAt) ||
+    safeTimestamp(member.lastChargedAt) ||
+    0;
+
+  const baseMs = lastPayMs || initialStartMs;
+  const rawNextBilling =
+    safeTimestamp(member.paidUntil) ||
+    safeTimestamp(member.nextBillingDate) ||
+    0;
+
+  const subStatus = normalizeValue(member.subscriptionStatusPrimary || member.status || "");
+  const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
+  const isCancelled = ["cancelled", "halted", "expired", "completed"].includes(subStatus);
+
+  if (isCancelled || isFailedRetry) {
+    if (baseMs > 0) {
+      // 31 days max per paid cycle
+      const maxPaidCoveredMs = baseMs + (lastPayMs ? 31 * 86400000 : paidCount * 31 * 86400000);
+      if (rawNextBilling > maxPaidCoveredMs) {
+        return baseMs + (lastPayMs ? 30 * 86400000 : paidCount * 30 * 86400000);
+      }
+    }
+  }
+
+  return rawNextBilling || (baseMs ? baseMs + 30 * 86400000 : 0);
 }
 
 function toDateInputValue(date) {
@@ -231,9 +281,24 @@ function formatDebitSummary(value) {
 
 function checkSubRenewalFailed(sub) {
   if (!sub) return false;
-  const rzStatus = normalizeValue(sub.razorpayStatus);
+  const rzStatus = normalizeValue(sub.razorpayStatus || "");
+  const normStatus = normalizeValue(sub.status || "");
   const syncSource = String(sub.lastSyncSource || "");
-  return rzStatus === "pending" || syncSource.includes("subscription.pending");
+
+  if (rzStatus === "pending" || normStatus === "pending" || syncSource.includes("subscription.pending") || sub.isRenewalFailed === true) {
+    return true;
+  }
+
+  // Automatic overdue detection: If an active mandate has exceeded 32 days from last successful payment without renewal
+  if (normStatus === "active" || rzStatus === "active") {
+    const createdMs = safeTimestamp(sub.createdAt) || safeTimestamp(sub.joinedAt) || safeTimestamp(sub.subscriptionStartDate) || 0;
+    const lastPayMs = safeTimestamp(sub.paidAt) || safeTimestamp(sub.lastPaymentAt) || safeTimestamp(sub.lastChargedAt) || safeTimestamp(sub.lastPaymentDate) || createdMs;
+    if (lastPayMs > 0 && (lastPayMs + 32 * 24 * 60 * 60 * 1000) < Date.now()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function checkSubAutoRenewedToday(sub, member) {
@@ -1243,6 +1308,447 @@ function exportMonthlyCohortCompleteMembersExcel(cohorts) {
   downloadBlob(blob, `wealthoria-cohort-complete-members-${new Date().toISOString().slice(0, 10)}.xls`);
 }
 
+function exportDiscrepanciesExcel(discrepancies) {
+  const headers = [
+    "Customer Name",
+    "Email",
+    "Phone Number",
+    "Razorpay Subscription ID",
+    "Issue / Discrepancy Type",
+    "Issue Description",
+    "Signup Date",
+    "Cycles Paid",
+    "Last Payment Date",
+    "Reported Due Date",
+    "Corrected Valid Paid Until",
+    "Access Status (Now)",
+    "Mandate Status"
+  ];
+
+  const escapeHtml = (val) =>
+    String(val === null || val === undefined ? "" : val)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const rows = (discrepancies || []).map((m) => {
+    return [
+      m.name,
+      m.email,
+      m.phone,
+      m.razorpaySubscriptionId,
+      m.issueType,
+      m.issueDesc,
+      formatMemberDateTime(m.joinedAt || m.createdAt),
+      `${m.paidCount || 1} cycle(s)`,
+      formatMemberDateTime(m.lastPaymentDate),
+      formatMemberDate(m.nextBillingDate),
+      formatMemberDate(m.truePaidUntilMs),
+      m.isAccessActive ? "Active" : "Suspended / Blocked",
+      m.subscriptionStatusDisplay
+    ];
+  });
+
+  const headerHtml = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
+  const bodyHtml = rows.map((r) => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join("")}</tr>`).join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background: #dc2626; color: #ffffff; font-weight: bold; border: 1px solid #d9d9d9; padding: 8px; text-align: left; }
+  td { border: 1px solid #d9d9d9; padding: 8px; vertical-align: top; }
+</style>
+</head>
+<body>
+<h2>Wealthoria Subscription Discrepancies & Unpaid Free Access Audit</h2>
+<p>Generated: ${new Date().toLocaleString("en-IN")}</p>
+<table>
+<thead><tr>${headerHtml}</tr></thead>
+<tbody>${bodyHtml}</tbody>
+</table>
+</body>
+</html>`;
+
+  const blob = new Blob(["\uFEFF", html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  downloadBlob(blob, `wealthoria-unpaid-access-audit-${new Date().toISOString().slice(0, 10)}.xls`);
+}
+
+function UnpaidDiscrepanciesModal({
+  isOpen,
+  onClose,
+  discrepancies = [],
+  onSendEmail,
+  onEmailAll,
+  emailSendingMap = {},
+  batchEmailSending = false
+}) {
+  const [search, setSearch] = React.useState("");
+  const [filterType, setFilterType] = React.useState("ALL");
+
+  if (!isOpen) return null;
+
+  const filtered = discrepancies.filter((d) => {
+    if (filterType === "FAILED" && !d.isOverdue && !d.isFailedRetry) return false;
+    if (filterType === "CANCELLED" && !d.hasUnpaidFutureDate) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      String(d.name || "").toLowerCase().includes(q) ||
+      String(d.email || "").toLowerCase().includes(q) ||
+      String(d.phone || "").toLowerCase().includes(q) ||
+      String(d.razorpaySubscriptionId || "").toLowerCase().includes(q)
+    );
+  });
+
+  const failedCount = discrepancies.filter((d) => d.isOverdue || d.isFailedRetry).length;
+  const cancelledShiftCount = discrepancies.filter((d) => d.hasUnpaidFutureDate).length;
+  const accessRevokedCount = discrepancies.filter((d) => !d.isAccessActive).length;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(15, 23, 42, 0.75)",
+        backdropFilter: "blur(6px)",
+        padding: "20px 16px",
+        boxSizing: "border-box"
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 1150,
+          maxHeight: "92vh",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 16,
+          overflow: "hidden",
+          background: "#ffffff",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+          border: "1px solid #e2e8f0"
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "20px 24px",
+            background: "linear-gradient(135deg, #991b1b 0%, #b91c1c 60%, #dc2626 100%)",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)"
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 22 }}>🔍</span>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>
+                Audit: Unpaid Access & Date Discrepancies ({discrepancies.length})
+              </h2>
+            </div>
+            <p style={{ margin: "6px 0 0 32px", fontSize: 13, color: "rgba(255, 255, 255, 0.85)" }}>
+              Identifies members whose renewal failed, whose mandate cancelled while an advance invoice was issued, or whose cycle dates shifted into the next month without payment.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              borderRadius: 8,
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff",
+              cursor: "pointer"
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: 24, overflowY: "auto", display: "flex", flexDirection: "column", gap: 18, background: "#f8fafc" }}>
+          {/* Summary Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Total Discrepancies</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#1e293b", marginTop: 4 }}>{discrepancies.length}</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>Audited subscriptions</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #fecaca" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", textTransform: "uppercase" }}>Auto-Debit Failed / Overdue</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#b91c1c", marginTop: 4 }}>{failedCount}</div>
+              <div style={{ fontSize: 11, color: "#ef4444", marginTop: 2 }}>Past 32 days / Retried</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #fed7aa" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#ea580c", textTransform: "uppercase" }}>Cancelled with Date Shift</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#c2410c", marginTop: 4 }}>{cancelledShiftCount}</div>
+              <div style={{ fontSize: 11, color: "#f97316", marginTop: 2 }}>Only 1 month paid</div>
+            </div>
+
+            <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: 12, border: "1px solid #bbf7d0" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#16a34a", textTransform: "uppercase" }}>Access Blocked / Secured</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#15803d", marginTop: 4 }}>{accessRevokedCount}</div>
+              <div style={{ fontSize: 11, color: "#16a34a", marginTop: 2 }}>Protected from free access</div>
+            </div>
+          </div>
+
+          {/* Action & Filter Bar */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="Search by name, email, phone, sub ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: 280,
+                  height: 38,
+                  padding: "0 12px",
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 13,
+                  outline: "none"
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setFilterType("ALL")}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  border: filterType === "ALL" ? "2px solid #0f172a" : "1px solid #cbd5e1",
+                  background: filterType === "ALL" ? "#0f172a" : "#ffffff",
+                  color: filterType === "ALL" ? "#ffffff" : "#475569",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                All ({discrepancies.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType("FAILED")}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  border: filterType === "FAILED" ? "2px solid #dc2626" : "1px solid #fecaca",
+                  background: filterType === "FAILED" ? "#dc2626" : "#ffffff",
+                  color: filterType === "FAILED" ? "#ffffff" : "#b91c1c",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                Debit Failed ({failedCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType("CANCELLED")}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  border: filterType === "CANCELLED" ? "2px solid #ea580c" : "1px solid #fed7aa",
+                  background: filterType === "CANCELLED" ? "#ea580c" : "#ffffff",
+                  color: filterType === "CANCELLED" ? "#ffffff" : "#c2410c",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                Cancelled Shift ({cancelledShiftCount})
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => onEmailAll(filtered)}
+                disabled={batchEmailSending || filtered.length === 0}
+                style={{
+                  height: 38,
+                  padding: "0 16px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: batchEmailSending ? "#94a3b8" : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+                  color: "#ffffff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: batchEmailSending || filtered.length === 0 ? "not-allowed" : "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  boxShadow: "0 2px 4px rgba(2, 132, 199, 0.25)"
+                }}
+              >
+                <span>{batchEmailSending ? "Sending Batch Emails..." : `📧 Email All (${filtered.length})`}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => exportDiscrepanciesExcel(filtered)}
+                disabled={filtered.length === 0}
+                style={{
+                  height: 38,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  color: "#334155",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: filtered.length === 0 ? "not-allowed" : "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <span>📥 Export Excel</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Members Table */}
+          <div style={{ background: "#ffffff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ background: "#f1f5f9", borderBottom: "1px solid #cbd5e1" }}>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569" }}>Member</th>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569" }}>Subscription ID</th>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569" }}>Discrepancy / Issue</th>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569" }}>Signup / Cycles</th>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569" }}>Corrected Paid Until</th>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569" }}>Access</th>
+                  <th style={{ padding: "12px 14px", fontWeight: 700, color: "#475569", textAlign: "right" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: 36, textAlign: "center", color: "#64748b" }}>
+                      No members match the discrepancy criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((m, idx) => {
+                    const isSending = Boolean(emailSendingMap[m.uid || m.id]);
+                    return (
+                      <tr key={m.id || idx} style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#ffffff" : "#fafafa" }}>
+                        <td style={{ padding: "12px 14px" }}>
+                          <div style={{ fontWeight: 700, color: "#1e293b" }}>{m.name || "Member"}</div>
+                          <div style={{ fontSize: 11, color: "#64748b" }}>{m.email}</div>
+                          {m.phone && m.phone !== "—" && <div style={{ fontSize: 10, color: "#94a3b8" }}>{m.phone}</div>}
+                        </td>
+                        <td style={{ padding: "12px 14px", fontFamily: "monospace", fontSize: 11, color: "#475569" }}>
+                          {m.razorpaySubscriptionId || "—"}
+                        </td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "2px 7px",
+                              borderRadius: 4,
+                              fontSize: 10.5,
+                              fontWeight: 800,
+                              background: m.isOverdue || m.isFailedRetry ? "#fef2f2" : "#fff7ed",
+                              color: m.isOverdue || m.isFailedRetry ? "#b91c1c" : "#c2410c",
+                              border: m.isOverdue || m.isFailedRetry ? "1px solid #fecaca" : "1px solid #fed7aa"
+                            }}
+                          >
+                            {m.issueType}
+                          </span>
+                          <div style={{ fontSize: 10.5, color: "#64748b", marginTop: 3 }}>
+                            {m.issueDesc}
+                          </div>
+                        </td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <div>{formatMemberDate(m.joinedAt || m.createdAt)}</div>
+                          <div style={{ fontSize: 10.5, color: "#059669", fontWeight: 650, marginTop: 2 }}>
+                            {m.paidCount || 1} cycle paid
+                          </div>
+                        </td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <div style={{ fontWeight: 700, color: "#1e293b" }}>{formatMemberDate(m.truePaidUntilMs)}</div>
+                          {m.rawNextBillingMs > m.truePaidUntilMs && (
+                            <div style={{ fontSize: 10, color: "#dc2626", textDecoration: "line-through", marginTop: 2 }}>
+                              was {formatMemberDate(m.rawNextBillingMs)}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "2px 6px",
+                              borderRadius: 4,
+                              fontSize: 10.5,
+                              fontWeight: 750,
+                              background: m.isAccessActive ? "#ecfdf5" : "#fef2f2",
+                              color: m.isAccessActive ? "#047857" : "#b91c1c"
+                            }}
+                          >
+                            {m.isAccessActive ? "Active" : "Blocked / Inactive"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", textAlign: "right" }}>
+                          <button
+                            type="button"
+                            onClick={() => onSendEmail(m)}
+                            disabled={isSending || batchEmailSending || !m.email || m.email === "—"}
+                            style={{
+                              padding: "5px 11px",
+                              borderRadius: 6,
+                              border: "1px solid #0284c7",
+                              background: isSending ? "#94a3b8" : "#f0f9ff",
+                              color: isSending ? "#ffffff" : "#0284c7",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: isSending || batchEmailSending ? "not-allowed" : "pointer"
+                            }}
+                          >
+                            {isSending ? "Sending..." : "📧 Send Email"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MonthlyCohortSummaryModal({
   isOpen,
   onClose,
@@ -1788,6 +2294,12 @@ function UsersScreen() {
     useState("all");
 
   const [showCohortSummaryModal, setShowCohortSummaryModal] =
+    useState(false);
+  const [showAuditModal, setShowAuditModal] =
+    useState(false);
+  const [emailSendingMap, setEmailSendingMap] =
+    useState({});
+  const [batchEmailSending, setBatchEmailSending] =
     useState(false);
 
   const [subscriptions, setSubscriptions] =
@@ -2684,26 +3196,17 @@ function UsersScreen() {
     const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
     const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
 
-    // CRITICAL: When renewal charge has failed (in retry mode), the member has NOT paid for
-    // the new cycle. Access is strictly limited to 30 days from their last successful payment!
+    // When renewal charge has failed (in retry mode), allow only a strict 48-hour grace window from true paid end
     if (isFailedRetry) {
-      const paymentTime = getMemberPaymentTime(member);
-      if (!paymentTime) return false;
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-      return (paymentTime + thirtyDaysMs) > Date.now();
+      const truePaidUntil = getMemberTruePaidUntil(member);
+      if (!truePaidUntil) return false;
+      const GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
+      return (truePaidUntil + GRACE_PERIOD_MS) > Date.now();
     }
 
-    if (subStatus === "cancelled" || normStatus === "cancelled") {
-      if (member.nextBillingDate && safeTimestamp(member.nextBillingDate) > Date.now()) {
-        return true;
-      }
-      if (member.paidUntil && safeTimestamp(member.paidUntil) > Date.now()) {
-        return true;
-      }
-      const paymentTime = getMemberPaymentTime(member);
-      if (!paymentTime) return false;
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-      return (paymentTime + thirtyDaysMs) > Date.now();
+    if (subStatus === "cancelled" || normStatus === "cancelled" || subStatus === "halted" || subStatus === "expired") {
+      const truePaidUntil = getMemberTruePaidUntil(member);
+      return truePaidUntil > Date.now();
     }
     return Boolean(member.hasPaid);
   };
@@ -2749,7 +3252,9 @@ function UsersScreen() {
         phone: member?.phone || sub.phone || sub.phoneNumber || sub.customerPhone || sub.customer?.phone || "—",
         role: member?.role || "member",
         status: member ? normalizeValue(member.status || "active") : subStatus,
-        joinedAt: sub.subscriptionStartDate || sub.startDate || sub.createdAt || sub.paidAt || null,
+        joinedAt: (sub.createdAt && safeTimestamp(sub.subscriptionStartDate) > safeTimestamp(sub.createdAt) + 35 * 86400000)
+          ? sub.createdAt
+          : (member?.createdAt || sub.subscriptionStartDate || sub.startDate || sub.createdAt || sub.paidAt || null),
         complimentary: member?.complimentary || false,
         subscriptions: [sub],
         subscriptionStatuses: [subStatus],
@@ -2762,7 +3267,9 @@ function UsersScreen() {
         subscriptionPlanPrimary: normalizeValue(sub.plan || sub.planName || ""),
         subscriptionAmount: sub.amount ?? sub.price ?? 99,
         subscriptionCurrency: sub.currency || "INR",
-        subscriptionStartDate: sub.subscriptionStartDate || sub.startDate || sub.createdAt || null,
+        subscriptionStartDate: (sub.createdAt && safeTimestamp(sub.subscriptionStartDate) > safeTimestamp(sub.createdAt) + 35 * 86400000)
+          ? sub.createdAt
+          : (sub.subscriptionStartDate || sub.startDate || sub.createdAt || null),
         nextBillingDate: sub.nextBillingDate || null,
         razorpaySubscriptionId: sub.razorpaySubscriptionId || sub.id || "",
         razorpayPaymentId: sub.razorpayPaymentId || "",
@@ -2781,6 +3288,212 @@ function UsersScreen() {
 
     return list;
   }, [members, subscriptions]);
+
+  const discrepanciesList = useMemo(() => {
+    const list = [];
+    (recurringMembersList || []).forEach((m) => {
+      const subStatus = normalizeValue(m.subscriptionStatusPrimary || m.status || "");
+      const isCancelled = ["cancelled", "halted", "expired", "completed"].includes(subStatus);
+      const paidCount = Math.max(1, Number(m.paidCount || 1));
+      const isFailedRetry = Boolean(m.isRenewalFailed) || subStatus === "pending";
+      const isAccessActive = isMemberAccessActive(m);
+
+      const createdMs =
+        safeTimestamp(m.createdAt) ||
+        safeTimestamp(m.joinedAt) ||
+        safeTimestamp(m.startDate) ||
+        0;
+
+      const rawSubStartMs = safeTimestamp(m.subscriptionStartDate);
+      const hasDateShift = createdMs > 0 && rawSubStartMs > (createdMs + 35 * 86400000);
+
+      const rawNextBillingMs = safeTimestamp(m.nextBillingDate) || safeTimestamp(m.paidUntil) || 0;
+      const lastPayMs =
+        safeTimestamp(m.lastPaymentDate) ||
+        safeTimestamp(m.paidAt) ||
+        safeTimestamp(m.lastPaymentAt) ||
+        safeTimestamp(m.lastChargedAt) ||
+        createdMs;
+
+      // Unpaid future date: next billing date is > 35 days from last pay/start for 1-month payer
+      const hasUnpaidFutureDate =
+        paidCount <= 1 &&
+        lastPayMs > 0 &&
+        rawNextBillingMs > (lastPayMs + 35 * 86400000);
+
+      // Overdue payment without renewal: active mandate but > 32 days since last payment
+      const isOverdue =
+        !isCancelled &&
+        lastPayMs > 0 &&
+        (lastPayMs + 32 * 86400000) < Date.now() &&
+        paidCount <= 1;
+
+      if (hasDateShift || hasUnpaidFutureDate || isFailedRetry || isOverdue) {
+        let issueType = "";
+        let issueDesc = "";
+
+        if (isFailedRetry || isOverdue) {
+          issueType = "Auto-Debit Failed / Overdue";
+          issueDesc = "Renewal payment failed or overdue > 32 days. Access has been suspended.";
+        } else if (isCancelled && hasUnpaidFutureDate) {
+          issueType = "Cancelled with Date Shift";
+          issueDesc = "Paid only 1 cycle, but cycle date was rolled to next month. Corrected to end after 1 month.";
+        } else if (hasDateShift) {
+          issueType = "Subscription Date Shifted";
+          issueDesc = "Start date was overwritten by monthly cycle advance. Corrected to original signup date.";
+        } else {
+          issueType = "Payment Discrepancy";
+          issueDesc = "Recorded billing cycle exceeds captured payment history.";
+        }
+
+        const truePaidUntilMs = getMemberTruePaidUntil(m);
+
+        list.push({
+          ...m,
+          issueType,
+          issueDesc,
+          lastPayMs,
+          createdMs,
+          rawNextBillingMs,
+          truePaidUntilMs,
+          hasDateShift,
+          hasUnpaidFutureDate,
+          isOverdue,
+          isAccessActive
+        });
+      }
+    });
+
+    return list;
+  }, [recurringMembersList, isMemberAccessActive]);
+
+  const handleSendRenewalEmail = async (member) => {
+    const toEmail = String(member.email || "").trim();
+    if (!toEmail || toEmail === "—" || !toEmail.includes("@")) {
+      alert(`Cannot send email: invalid email address for ${member.name || "member"}`);
+      return;
+    }
+
+    try {
+      setEmailSendingMap((prev) => ({ ...prev, [member.uid || member.id]: true }));
+      const token = await getAdminToken();
+      const memberName = member.name || "Member";
+      const subject = "Action Required: Wealthoria Membership Renewal Update";
+      const message = `Dear ${memberName},
+
+We noticed that your monthly auto-debit renewal payment of ₹99 for Wealthoria Premium was not completed.
+
+Your access is currently paused until payment is updated.
+
+To restore uninterrupted access to your courses, daily market insights, and weekly research reports, please complete your renewal here:
+https://wealthoria.in/subscription
+
+If you have already paid or need assistance, please contact our support team:
+• WhatsApp / Phone: +91 90197 59001
+• Email: support@wealthoria.in
+
+Warm regards,
+Wealthoria Team`;
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/notifications/prebook-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: toEmail,
+          subject,
+          message
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.message || "Failed to send email");
+      }
+
+      alert(`✅ Renewal reminder email sent successfully to ${toEmail}!`);
+    } catch (err) {
+      console.error("Email send error:", err);
+      alert(`❌ Failed to send email to ${toEmail}: ${err.message}`);
+    } finally {
+      setEmailSendingMap((prev) => ({ ...prev, [member.uid || member.id]: false }));
+    }
+  };
+
+  const handleEmailAllDiscrepancies = async (targetList) => {
+    const listToEmail = (targetList || discrepanciesList).filter(
+      (m) => m.email && m.email !== "—" && m.email.includes("@")
+    );
+
+    if (listToEmail.length === 0) {
+      alert("No members with valid email addresses found in discrepancy list.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Send renewal reminder emails to all ${listToEmail.length} members with unpaid/overdue access?\n\nRecipients will receive a renewal payment link.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setBatchEmailSending(true);
+      const token = await getAdminToken();
+      let sentCount = 0;
+      let failCount = 0;
+
+      for (const member of listToEmail) {
+        try {
+          const memberName = member.name || "Member";
+          const subject = "Action Required: Wealthoria Membership Renewal Update";
+          const message = `Dear ${memberName},
+
+We noticed that your monthly auto-debit renewal payment of ₹99 for Wealthoria Premium was not completed.
+
+Your access is currently paused until payment is updated.
+
+To restore uninterrupted access to your courses, daily market insights, and weekly research reports, please complete your renewal here:
+https://wealthoria.in/subscription
+
+If you have already paid or need assistance, please contact our support team:
+• WhatsApp / Phone: +91 90197 59001
+• Email: support@wealthoria.in
+
+Warm regards,
+Wealthoria Team`;
+
+          const response = await fetch(`${API_BASE_URL}/api/admin/notifications/prebook-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              email: member.email,
+              subject,
+              message
+            })
+          });
+
+          if (response.ok) {
+            sentCount++;
+          } else {
+            failCount++;
+          }
+          await new Promise((r) => setTimeout(r, 350));
+        } catch (e) {
+          failCount++;
+        }
+      }
+
+      alert(`Batch email process complete!\n\n✅ Successfully sent: ${sentCount}\n${failCount > 0 ? `❌ Failed: ${failCount}\n` : ""}All emails delivered.`);
+    } catch (err) {
+      alert(`Batch email process error: ${err.message}`);
+    } finally {
+      setBatchEmailSending(false);
+    }
+  };
 
   const monthlyCohortSummary = useMemo(() => {
     return getMonthlyCohortData(recurringMembersList, isMemberAccessActive);
@@ -3345,6 +4058,32 @@ function UsersScreen() {
                 "wrap"
             }}
           >
+
+            <button
+              type="button"
+              onClick={() => setShowAuditModal(true)}
+              disabled={loading || recurringMembersList.length === 0}
+              style={{
+                height: 42,
+                padding: "0 16px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                border: discrepanciesList.length > 0 ? "1px solid #dc2626" : "1px solid #e2e8f0",
+                borderRadius: 10,
+                background: discrepanciesList.length > 0 ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)" : "#ffffff",
+                color: discrepanciesList.length > 0 ? "#ffffff" : "#475569",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: loading || recurringMembersList.length === 0 ? "not-allowed" : "pointer",
+                boxShadow: discrepanciesList.length > 0 ? "0 2px 6px rgba(220, 38, 38, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
+              title="Scan and audit all members who received free access or rolled-forward dates without paying"
+            >
+              <MIcon name="warning" size={16} />
+              <span>Audit Unpaid Access ({discrepanciesList.length})</span>
+            </button>
 
             <button
               type="button"
@@ -5311,16 +6050,14 @@ function UsersScreen() {
                               {["cancelled", "halted", "expired", "completed"].includes(member.subscriptionStatusPrimary) ? (
                                 <div>
                                   <div style={{ fontWeight: 650, color: "#374151" }}>
-                                    {formatMemberDate(getMemberPaymentTime(member) || member.subscriptionStartDate || member.joinedAt)}
+                                    {formatMemberDate(
+                                      (safeTimestamp(member.createdAt) && safeTimestamp(member.subscriptionStartDate) > safeTimestamp(member.createdAt) + 35 * 86400000)
+                                        ? member.createdAt
+                                        : (member.subscriptionStartDate || member.joinedAt || member.createdAt)
+                                    )}
                                     {isMemberAccessActive(member) ? (
                                       (() => {
-                                        const paymentTime = getMemberPaymentTime(member);
-                                        const cycleEndMs =
-                                          member.nextBillingDate && safeTimestamp(member.nextBillingDate) > (paymentTime || 0)
-                                            ? safeTimestamp(member.nextBillingDate)
-                                            : member.paidUntil && safeTimestamp(member.paidUntil) > (paymentTime || 0)
-                                              ? safeTimestamp(member.paidUntil)
-                                              : (paymentTime ? paymentTime + 30 * 86400000 : 0);
+                                        const cycleEndMs = getMemberTruePaidUntil(member);
                                         return cycleEndMs ? (
                                           <span style={{ fontSize: 11, color: "#15803d", fontWeight: 700, marginLeft: 4 }}>
                                             (Paid until {formatMemberDate(cycleEndMs)})
@@ -6314,6 +7051,73 @@ function UsersScreen() {
               </div>
             </div>
 
+            {/* DISCREPANCY AUDIT ALERT BANNER */}
+            {discrepanciesList && discrepanciesList.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: "linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)",
+                  border: "1px solid #fecaca",
+                  borderRadius: 10,
+                  padding: "14px 18px",
+                  marginBottom: 16,
+                  boxShadow: "0 1px 3px rgba(220, 38, 38, 0.08)",
+                  flexWrap: "wrap",
+                  gap: 12
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: "#fee2e2",
+                      color: "#dc2626",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 20,
+                      flexShrink: 0
+                    }}
+                  >
+                    ⚠️
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#991b1b" }}>
+                      {discrepanciesList.length} Member{discrepanciesList.length > 1 ? "s" : ""} Detected With Unpaid / Shifted Access Discrepancies
+                    </div>
+                    <div style={{ fontSize: 12, color: "#b91c1c", marginTop: 2 }}>
+                      Razorpay pre-debit notices or retry failures marked these accounts active or rolled their dates forward even though payment was not captured.
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <button
+                    onClick={() => setShowAuditModal(true)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: "#dc2626",
+                      color: "#ffffff",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      boxShadow: "0 2px 4px rgba(220, 38, 38, 0.25)"
+                    }}
+                  >
+                    <span>🛡️</span> View Audit & Send Renewal Emails ({discrepanciesList.length})
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* RECURRING TABLE */}
             <div
               style={{
@@ -6741,6 +7545,17 @@ function UsersScreen() {
             )}
           </div>
         )}
+
+        {/* UNPAID ACCESS & DISCREPANCY AUDIT MODAL */}
+        <UnpaidDiscrepanciesModal
+          isOpen={showAuditModal}
+          onClose={() => setShowAuditModal(false)}
+          discrepancies={discrepanciesList}
+          onSendEmail={handleSendRenewalEmail}
+          onEmailAll={handleEmailAllDiscrepancies}
+          emailSendingMap={emailSendingMap}
+          batchEmailSending={batchEmailSending}
+        />
 
         {/* MONTHLY COHORT SUMMARY MODAL */}
         <MonthlyCohortSummaryModal

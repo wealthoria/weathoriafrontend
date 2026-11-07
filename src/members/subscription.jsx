@@ -4,6 +4,10 @@ import React from "react";
 
 const { useState } = React;
 
+// TEMPORARY FALLBACK FLAG: Set to true while Razorpay fee-bearer / banking update is in progress.
+// Set to false as soon as Razorpay confirms Fee Bearer is reverted to Merchant.
+const BANK_MAINTENANCE_MODE = true;
+
 function MemberSubscription() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -11,7 +15,8 @@ function MemberSubscription() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const goToLogin = () => {
     if (typeof window.membersNavigate === "function") {
       window.membersNavigate("/members/login");
@@ -71,6 +76,55 @@ if (!cleanPhone) {
 if (!/^[0-9]{10}$/.test(cleanPhone)) {
   setErrors({ phone: "Please enter a valid 10 digit phone number." });
   return;
+}
+
+if (BANK_MAINTENANCE_MODE) {
+  try {
+    setLoading(true);
+
+    const waitlistDoc = {
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+      createdAt: window.firebase?.firestore?.FieldValue?.serverTimestamp() || new Date(),
+      createdDateStr: new Date().toISOString(),
+      source: "subscription_bank_maintenance",
+      status: "new",
+      notes: "Priority waitlist lead during bank maintenance (Nov 7 - 9, 2026)"
+    };
+
+    if (window.db) {
+      // 1. Save to enquiries collection (guaranteed allow create: if true in Firestore security rules)
+      await window.db.collection("enquiries").add({
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        type: "subscription_waitlist",
+        interest: "Membership Priority Waitlist (Bank Maintenance)",
+        message: "Customer requested priority membership activation when bank maintenance completes on Monday.",
+        source: "subscription_page_fallback",
+        status: "new",
+        createdAt: window.firebase?.firestore?.FieldValue?.serverTimestamp() || new Date(),
+        date: new Date().toLocaleDateString("en-IN")
+      });
+
+      // 2. Also try writing to dedicated subscription_waitlist without blocking on permissions
+      try {
+        await window.db.collection("subscription_waitlist").add(waitlistDoc);
+      } catch (subErr) {
+        console.warn("subscription_waitlist secondary write (safely stored in enquiries):", subErr);
+      }
+    }
+
+    setIsSubmitted(true);
+    setLoading(false);
+    return;
+  } catch (err) {
+    console.error("Waitlist submission error:", err);
+    alert("Unable to save your details right now. Please try again or WhatsApp our team directly.");
+    setLoading(false);
+    return;
+  }
 }
 
 if (!password) {
@@ -647,220 +701,219 @@ return;
             </div>
           </div>
 
-          <div className="form-header">
+          {isSubmitted ? (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginBottom: 10 }}>
+                Thank You, {name}!
+              </h2>
+              <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.6, maxWidth: 380, margin: "0 auto 20px" }}>
+                We have securely received your details. Our team will contact you directly on <strong>Monday</strong> to activate your membership with priority access.
+              </p>
+              <div style={{
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: 12,
+                padding: "14px 18px",
+                fontSize: 13,
+                color: "#334155",
+                textAlign: "left",
+                maxWidth: 320,
+                margin: "0 auto 24px"
+              }}>
+                <div style={{ marginBottom: 6 }}><strong>👤 Name:</strong> {name}</div>
+                <div style={{ marginBottom: 6 }}><strong>📞 Phone:</strong> {phone}</div>
+                <div><strong>📧 Email:</strong> {email}</div>
+              </div>
+              <button
+                type="button"
+                className="members-login-button"
+                onClick={() => window.location.href = "/"}
+                style={{ maxWidth: 220, margin: "0 auto" }}
+              >
+                Back to Home
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="form-header">
+                <span className="eyebrow">
+                  WEALTHORIA PREMIUM
+                </span>
 
-            <span className="eyebrow">
-              WEALTHORIA PREMIUM
-            </span>
+                <h1>
+                  {BANK_MAINTENANCE_MODE ? "Priority Membership Registration" : "Subscribe Now"}
+                </h1>
 
-            <h1>
-              Subscribe Now
-            </h1>
+                <p>
+                  Start your Wealthoria Premium membership and access premium investment learning resources.
+                </p>
 
-            <p>
-              Start your Wealthoria Premium membership
-              and access premium investment learning
-              resources.
-            </p>
+                {BANK_MAINTENANCE_MODE && (
+                  <div style={{
+                    background: "#fffbeb",
+                    border: "1px solid #fde68a",
+                    borderRadius: 14,
+                    padding: "16px 18px",
+                    marginTop: 18,
+                    textAlign: "left"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 20 }}>🏦</span>
+                      <strong style={{ color: "#92400e", fontSize: 14, fontWeight: 700 }}>
+                        Notice: Scheduled Banking Partner Maintenance
+                      </strong>
+                    </div>
+                    <p style={{ color: "#78350f", fontSize: 13, lineHeight: 1.55, margin: "0 0 10px 0" }}>
+                      We are currently experiencing a temporary banking partner maintenance with auto-debit recurring mandates. We kindly request you to wait until <strong>Monday</strong>.
+                    </p>
+                    <p style={{ color: "#92400e", fontSize: 12.5, lineHeight: 1.5, margin: 0, fontWeight: 600 }}>
+                      Please fill in your Name, Phone Number, and Email below. Once the update is completed on Monday, our team will personally contact you to activate your membership with priority access.
+                    </p>
+                  </div>
+                )}
+              </div>
 
-          </div>
+              <div className="members-field">
+                <label htmlFor="subscription-name">
+                  Full Name
+                </label>
+                <input
+                  id="subscription-name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  autoComplete="name"
+                  value={name}
+                  disabled={loading}
+                  onChange={(event) => setName(event.target.value)}
+                />
+                {errors.name && (
+                  <div className="members-field-error">
+                    {errors.name}
+                  </div>
+                )}
+              </div>
 
-         
- <div className="members-field">
+              <div className="members-field">
+                <label htmlFor="subscription-email">
+                  Email Address
+                </label>
+                <input
+                  id="subscription-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  autoComplete="email"
+                  value={email}
+                  disabled={loading}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+                {errors.email && (
+                  <div className="members-field-error">
+                    {errors.email}
+                  </div>
+                )}
+              </div>
 
+              <div className="members-field">
+                <label htmlFor="subscription-phone">
+                  Phone Number
+                </label>
+                <input
+                  id="subscription-phone"
+                  type="tel"
+                  placeholder="Enter your 10 digit phone number"
+                  autoComplete="tel"
+                  maxLength={10}
+                  value={phone}
+                  disabled={loading}
+                  onChange={(event) => setPhone(event.target.value.replace(/\D/g, ""))}
+                />
+                {errors.phone && (
+                  <div className="members-field-error">
+                    {errors.phone}
+                  </div>
+                )}
+              </div>
 
- 
-            <label htmlFor="subscription-name">
-              Full Name
-            </label>
-            
+              {!BANK_MAINTENANCE_MODE && (
+                <>
+                  <div className="members-field">
+                    <label htmlFor="subscription-password">
+                      Create Password
+                    </label>
+                    <input
+                      id="subscription-password"
+                      type="password"
+                      placeholder="Create your password"
+                      autoComplete="new-password"
+                      value={password}
+                      disabled={loading}
+                      onChange={(event) => setPassword(event.target.value)}
+                    />
+                    {errors.password && (
+                      <div className="members-field-error">
+                        {errors.password}
+                      </div>
+                    )}
+                  </div>
 
-            <input
-              id="subscription-name"
-              type="text"
-              placeholder="Enter your full name"
-              autoComplete="name"
-              value={name}
-              disabled={loading}
-              onChange={(event) =>
-                setName(
-                  event.target.value
-                )
-              }
-            />
-            {errors.name && (
-  <div className="members-field-error">
-    {errors.name}
-  </div>
-)}
+                  <div className="members-field">
+                    <label htmlFor="subscription-confirm-password">
+                      Confirm Password
+                    </label>
+                    <input
+                      id="subscription-confirm-password"
+                      type="password"
+                      placeholder="Confirm your password"
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      disabled={loading}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                    />
+                    {errors.confirmPassword && (
+                      <div className="members-field-error">
+                        {errors.confirmPassword}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
-        
-</div>
-        
-         <div className="members-field">
+              <button
+                className="members-login-button"
+                type="submit"
+                onClick={subscribeNow}
+                disabled={loading}
+              >
+                {loading
+                  ? "Submitting..."
+                  : BANK_MAINTENANCE_MODE
+                    ? "Register for Priority Activation"
+                    : "Subscribe Now"}
+              </button>
 
-            <label htmlFor="subscription-email">
-              Email Address
-            </label>
+              <div className="members-login-subscribe">
+                <span>Already a subscriber?{" "}</span>
+                <button
+                  type="button"
+                  className="members-link"
+                  onClick={goToLogin}
+                >
+                  Login here
+                </button>
+              </div>
 
-            <input
-              id="subscription-email"
-              type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              value={email}
-              disabled={loading}
-              onChange={(event) =>
-                setEmail(
-                  event.target.value
-                )
-              }
-            />
-            {errors.email && (
-  <div className="members-field-error">
-    {errors.email}
-  </div>
-)}
+              <div className="secure">
+                {BANK_MAINTENANCE_MODE ? "🔒 Your details are securely recorded" : "Secure payment powered by Razorpay"}
+              </div>
 
-        
-        </div>
-
-
- <div className="members-field">
-
-
-
- 
-
-            <label htmlFor="subscription-phone">
-              Phone Number
-            </label>
-
-            <input
-              id="subscription-phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              autoComplete="tel"
-              maxLength={10}
-              value={phone}
-              disabled={loading}
-              onChange={(event) =>
-                setPhone(
-                  event.target.value.replace(
-                    /\D/g,
-                    ""
-                  )
-                )
-              }
-            />
-{errors.phone && (
-  <div className="members-field-error">
-    {errors.phone}
-  </div>
-)}
-
-</div>
-
-
- <div className="members-field">
-
-
-            <label htmlFor="subscription-password">
-              Create Password
-            </label>
-
-            <input
-              id="subscription-password"
-              type="password"
-              placeholder="Create your password"
-              autoComplete="new-password"
-              value={password}
-              disabled={loading}
-              onChange={(event) =>
-                setPassword(
-                  event.target.value
-                )
-              }
-            />
-            {errors.password && (
-  <div className="members-field-error">
-    {errors.password}
-  </div>
-)}
-
-         
-</div>
-        
-
-         <div className="members-field">
-
-
-            <label htmlFor="subscription-confirm-password">
-              Confirm Password
-            </label>
-
-            <input
-              id="subscription-confirm-password"
-              type="password"
-              placeholder="Confirm your password"
-              autoComplete="new-password"
-              value={confirmPassword}
-              disabled={loading}
-              onChange={(event) =>
-                setConfirmPassword(
-                  event.target.value
-                )
-              }
-            />
-
-            {errors.confirmPassword && (
-  <div className="members-field-error">
-    {errors.confirmPassword}
-  </div>
-)}
-
-
-</div>
-         
-
-
-
-       
-
-          <button
-            className="members-login-button"
-            type="submit"
-            onClick={subscribeNow}
-            disabled={loading}
-          >
-            {loading
-              ? "Processing..."
-              : "Subscribe Now"}
-          </button>
-
-          <div className="members-login-subscribe">
-
-            
-            <span>Already a subscriber?{" "}</span>
-
-            <button
-            type="button"
-            className="members-link"
-   
-              onClick={goToLogin}
-            >
-              Login here
-            </button>
-
-          </div>
-
-          <div className="secure">
-           Secure payment powered by Razorpay
-          </div>
-
-          <div className="form-note">
-            Your payment information is securely processed.
-          </div>
+              <div className="form-note">
+                {BANK_MAINTENANCE_MODE
+                  ? "Our team will personally reach out to you on Monday."
+                  : "Your payment information is securely processed."}
+              </div>
+            </>
+          )}
 
         </div>
 

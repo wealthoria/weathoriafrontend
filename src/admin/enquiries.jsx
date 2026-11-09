@@ -1,8 +1,70 @@
 /* global React, window */
 
 import React, { useEffect, useMemo, useState } from "react";
+import { auth } from "../firebase";
 
 const { MIcon } = window;
+
+const API_BASE_URL =
+  typeof window !== "undefined" && window.WEALTHORIA_API_BASE !== undefined
+    ? window.WEALTHORIA_API_BASE
+    : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+
+async function getAdminToken() {
+  const currentUser = auth?.currentUser || window.auth?.currentUser;
+  if (!currentUser) {
+    throw new Error("Admin authentication required. Please login again.");
+  }
+  return currentUser.getIdToken(true);
+}
+
+const getWaitlistResolutionTemplate = (enquiry) => {
+  const name = String(enquiry?.name || "").trim();
+  const firstName = name.split(" ")[0] || "Valued Customer";
+
+  return {
+    subject: "Great news! Wealthoria Premium Subscriptions are now live",
+    message: `Hi ${firstName},
+
+Thank you for your interest and patience!
+
+We are pleased to inform you that our banking partner maintenance has been completed, and online membership subscriptions are now fully active and running smoothly.
+
+You can now complete your subscription to Wealthoria Premium directly through our secure checkout:
+https://wealthoria.in/members/subscription
+
+We look forward to welcoming you as an active member! If you have any questions or need assistance, feel free to reply directly to this email or reach our support team on WhatsApp.
+
+Warm regards,
+Wealthoria Team
+support@wealthoria.in`
+  };
+};
+
+const getGeneralFollowupTemplate = (enquiry) => {
+  const name = String(enquiry?.name || "").trim();
+  const firstName = name.split(" ")[0] || "Valued Customer";
+
+  return {
+    subject: "Following up on your Wealthoria enquiry",
+    message: `Hi ${firstName},
+
+Thank you for reaching out to Wealthoria!
+
+We are following up regarding your enquiry${enquiry?.interest ? ` about "${enquiry.interest}"` : ""}.
+
+Our team is here to assist you with all details regarding our investment resources and Wealthoria Premium membership.
+
+You can explore our membership and get started directly here:
+https://wealthoria.in/members/subscription
+
+Please let us know how we can best assist you.
+
+Warm regards,
+Wealthoria Team
+support@wealthoria.in`
+  };
+};
 
 function safeTimestamp(value) {
   if (!value) return 0;
@@ -44,6 +106,12 @@ function Enquiries() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState(null);
+  const [emailModalEnquiry, setEmailModalEnquiry] = useState(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     if (!window.db || typeof window.db.collection !== "function") {
@@ -142,6 +210,97 @@ function Enquiries() {
     } catch (err) {
       console.error("Failed to update enquiry status:", err);
       alert("Unable to update enquiry status.");
+    }
+  };
+
+  const openEmailModal = (item, templateType = "resolution") => {
+    setEmailModalEnquiry(item);
+    setEmailSuccess("");
+    setEmailError("");
+    const isWaitlist =
+      item.type === "subscription_waitlist" ||
+      item.source === "subscription_page_fallback" ||
+      String(item.interest || "").toLowerCase().includes("waitlist") ||
+      String(item.interest || "").toLowerCase().includes("maintenance");
+    const template = (templateType === "resolution" || isWaitlist)
+      ? getWaitlistResolutionTemplate(item)
+      : getGeneralFollowupTemplate(item);
+    setEmailSubject(template.subject);
+    setEmailMessage(template.message);
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailModalEnquiry?.email) {
+      setEmailError("Recipient email address is missing.");
+      return;
+    }
+    if (!emailSubject.trim()) {
+      setEmailError("Please enter an email subject.");
+      return;
+    }
+    if (!emailMessage.trim()) {
+      setEmailError("Please enter an email message.");
+      return;
+    }
+
+    try {
+      setSendingEmail(true);
+      setEmailError("");
+      setEmailSuccess("");
+
+      const token = await getAdminToken();
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/notifications/prebook-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: emailModalEnquiry.email.trim(),
+          subject: emailSubject.trim(),
+          message: emailMessage.trim()
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.message || "Failed to send email.");
+      }
+
+      // Mark enquiry as contacted in Firestore
+      if (emailModalEnquiry.id) {
+        try {
+          await window.db.collection("enquiries").doc(emailModalEnquiry.id).update({
+            status: "contacted",
+            lastEmailSentAt: new Date(),
+            lastEmailSubject: emailSubject.trim()
+          });
+          setEnquiries((prev) =>
+            prev.map((e) =>
+              e.id === emailModalEnquiry.id
+                ? { ...e, status: "contacted", lastEmailSentAt: new Date() }
+                : e
+            )
+          );
+          if (selected?.id === emailModalEnquiry.id) {
+            setSelected((prev) => ({ ...prev, status: "contacted" }));
+          }
+        } catch (dbErr) {
+          console.warn("Could not update enquiry status:", dbErr);
+        }
+      }
+
+      setEmailSuccess("Email sent successfully!");
+      setTimeout(() => {
+        setEmailModalEnquiry(null);
+        setEmailSuccess("");
+      }, 1600);
+    } catch (err) {
+      console.error("Failed to send email to lead:", err);
+      setEmailError(err.message || "Unable to send email. Check your connection or login status.");
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -454,23 +613,50 @@ function Enquiries() {
                         <div style={{ fontSize: 13, color: "#475467" }}>{formatDate(item.createdAt)}</div>
                       </td>
 
-                      <td style={{ padding: "15px 16px", verticalAlign: "middle", textAlign: "right" }}>
-                        <button
-                          type="button"
-                          className="btn btn-ghost"
-                          onClick={() => setSelected(item)}
-                          style={{
-                            minHeight: 36,
-                            padding: "7px 10px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 7,
-                            borderRadius: 9
-                          }}
-                        >
-                          {icon("eye", 15)}
-                          View
-                        </button>
+                      <td style={{ padding: "15px 16px", verticalAlign: "middle", textAlign: "right", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+                          {item.email && (
+                            <button
+                              type="button"
+                              className="btn btn-ghost"
+                              onClick={() => openEmailModal(item, "resolution")}
+                              style={{
+                                minHeight: 36,
+                                padding: "7px 11px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                borderRadius: 9,
+                                background: "#f0fdf4",
+                                color: "#15803d",
+                                border: "1px solid #bbf7d0",
+                                fontWeight: 700,
+                                fontSize: 12
+                              }}
+                              title="Send 'Subscriptions Active' email to this lead"
+                            >
+                              <span style={{ fontSize: 13 }}>✉️</span>
+                              Email
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => setSelected(item)}
+                            style={{
+                              minHeight: 36,
+                              padding: "7px 10px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 7,
+                              borderRadius: 9
+                            }}
+                          >
+                            {icon("eye", 15)}
+                            View
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -657,12 +843,332 @@ function Enquiries() {
                 padding: "14px 22px",
                 borderTop: "1px solid #eef0f2",
                 display: "flex",
-                justifyContent: "flex-end"
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12
               }}
             >
+              {selected.email ? (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => openEmailModal(selected, "resolution")}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 10,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    background: "#16a34a",
+                    borderColor: "#16a34a",
+                    color: "#fff"
+                  }}
+                >
+                  <span>✉️</span>
+                  Send "Issue Resolved" Email
+                </button>
+              ) : <div />}
+
               <button type="button" className="btn btn-ghost" onClick={() => setSelected(null)}>
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EMAIL COMPOSER MODAL */}
+      {emailModalEnquiry && (
+        <div
+          onClick={() => !sendingEmail && setEmailModalEnquiry(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15,23,42,.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            zIndex: 10000,
+            backdropFilter: "blur(3px)"
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(640px, 100%)",
+              maxHeight: "92vh",
+              overflowY: "auto",
+              background: "#fff",
+              borderRadius: 18,
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 25px 70px rgba(0,0,0,.22)"
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "18px 22px",
+                borderBottom: "1px solid #f1f5f9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 14
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: "#ecfdf5",
+                    color: "#059669",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18
+                  }}
+                >
+                  ✉️
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 750, color: "#0f172a" }}>
+                    Send Email to Lead
+                  </h3>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    To: <strong>{emailModalEnquiry.name || "Customer"}</strong> ({emailModalEnquiry.email})
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={sendingEmail}
+                onClick={() => setEmailModalEnquiry(null)}
+                style={{
+                  minWidth: 32,
+                  width: 32,
+                  height: 32,
+                  padding: 0,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "20px 22px" }}>
+              {/* Quick Template Switcher */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", color: "#64748b", marginBottom: 8 }}>
+                  Quick Template
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = getWaitlistResolutionTemplate(emailModalEnquiry);
+                      setEmailSubject(t.subject);
+                      setEmailMessage(t.message);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 650,
+                      border: "1px solid #bbf7d0",
+                      background: "#f0fdf4",
+                      color: "#15803d",
+                      cursor: "pointer"
+                    }}
+                  >
+                    ✨ Subscriptions Live / Resolved
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = getGeneralFollowupTemplate(emailModalEnquiry);
+                      setEmailSubject(t.subject);
+                      setEmailMessage(t.message);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      border: "1px solid #e2e8f0",
+                      background: "#f8fafc",
+                      color: "#475569",
+                      cursor: "pointer"
+                    }}
+                  >
+                    📝 General Follow-up
+                  </button>
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
+                  Subject Line
+                </label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  disabled={sendingEmail}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="Enter email subject"
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    borderRadius: 9,
+                    border: "1px solid #cbd5e1",
+                    fontSize: 13,
+                    color: "#0f172a"
+                  }}
+                />
+              </div>
+
+              {/* Message */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>
+                  Message Content
+                </label>
+                <textarea
+                  rows={10}
+                  value={emailMessage}
+                  disabled={sendingEmail}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  placeholder="Type your message here..."
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: 10,
+                    border: "1px solid #cbd5e1",
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                    fontFamily: "inherit",
+                    color: "#1e293b",
+                    resize: "vertical"
+                  }}
+                />
+              </div>
+
+              {/* Error Alert */}
+              {emailError && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 9,
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    marginBottom: 14
+                  }}
+                >
+                  ⚠️ {emailError}
+                </div>
+              )}
+
+              {/* Success Alert */}
+              {emailSuccess && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 9,
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    color: "#15803d",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    marginBottom: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8
+                  }}
+                >
+                  ✅ {emailSuccess}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "14px 22px",
+                borderTop: "1px solid #f1f5f9",
+                background: "#f8fafc",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                borderBottomLeftRadius: 18,
+                borderBottomRightRadius: 18
+              }}
+            >
+              <a
+                href={`mailto:${emailModalEnquiry.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailMessage)}`}
+                style={{
+                  fontSize: 12,
+                  color: "#64748b",
+                  textDecoration: "underline",
+                  fontWeight: 600
+                }}
+                title="Open your desktop email client with this prefilled message"
+              >
+                Or open in mail client
+              </a>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={sendingEmail}
+                  onClick={() => setEmailModalEnquiry(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={sendingEmail || !emailSubject.trim() || !emailMessage.trim()}
+                  onClick={handleSendEmail}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: 9,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    background: "#16a34a",
+                    borderColor: "#16a34a",
+                    color: "#fff",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8
+                  }}
+                >
+                  {sendingEmail ? (
+                    <>
+                      <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <span>✉️</span>
+                      Send Email Now
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

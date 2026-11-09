@@ -4,9 +4,8 @@ import React from "react";
 
 const { useState } = React;
 
-// TEMPORARY FALLBACK FLAG: Set to true while Razorpay fee-bearer / banking update is in progress.
-// Set to false as soon as Razorpay confirms Fee Bearer is reverted to Merchant.
-const BANK_MAINTENANCE_MODE = true;
+// Live subscription mode restored: Razorpay Fee Bearer is on Platform Bearer.
+const BANK_MAINTENANCE_MODE = false;
 
 function MemberSubscription() {
   const [name, setName] = useState("");

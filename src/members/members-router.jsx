@@ -807,6 +807,26 @@ if (
     path === "/members/login" ||
     path === "/members/"
   ) {
+    const activeSession = memberSession || initialSession;
+    if (activeSession?.token && activeSession?.uid) {
+      const status = String(activeSession.status || "").toLowerCase();
+      if (
+        status !== "inactive" &&
+        status !== "cancelled" &&
+        status !== "canceled" &&
+        status !== "deactivated"
+      ) {
+        window.history.replaceState({}, "", "/members/dashboard");
+        setTimeout(() => setPath("/members/dashboard"), 0);
+        return window.MemberDashboard
+          ? React.createElement(window.MemberDashboard)
+          : (
+              <div className="members-router-loading">
+                Loading Member Dashboard...
+              </div>
+            );
+      }
+    }
 
     return window.MemberLogin
       ? React.createElement(

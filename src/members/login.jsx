@@ -4,7 +4,8 @@ import React from "react";
 
 const {
   useState,
-  useEffect
+  useEffect,
+  useRef
 } = React;
 
 
@@ -32,8 +33,36 @@ function MemberLogin() {
   const [loading, setLoading] =
     useState(false);
 
-  const [checkingSession, setCheckingSession] =
-    useState(true);
+  const [checkingSession, setCheckingSession] = useState(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      const sessionUid =
+        sessionStorage.getItem("wealthoria-current-member") ||
+        localStorage.getItem("wealthoria-current-member");
+      if (sessionUid) return true;
+      const adminSession =
+        localStorage.getItem("wealthoria-admin-session");
+      if (adminSession) return true;
+      if (window.auth?.currentUser) return true;
+      return false;
+    } catch {
+      return false;
+    }
+  });
+
+  const sessionRestoreAttempted = useRef(false);
+
+  /* Watchdog: guarantee login form is unlocked if session check takes > 3.5s */
+  useEffect(() => {
+    if (!checkingSession) return;
+    const watchdog = window.setTimeout(() => {
+      console.warn("Wealthoria: Session restore safety timeout reached, unlocking login screen.");
+      setCheckingSession(false);
+    }, 3500);
+    return () => {
+      window.clearTimeout(watchdog);
+    };
+  }, [checkingSession]);
 
 const [subscriptionInactive, setSubscriptionInactive] =
   useState(false);
@@ -710,6 +739,16 @@ writeStorageObject(
    RESTORE EXISTING MEMBER SESSION
 ========================================================= */
 useEffect(() => {
+  if (typeof window !== "undefined" && window.__wealthoriaSessionRestoreStarted) {
+    try {
+      delete window.__wealthoriaSessionRestoreStarted;
+    } catch (e) {}
+  }
+
+  if (sessionRestoreAttempted.current) {
+    return;
+  }
+  sessionRestoreAttempted.current = true;
 
     console.log("LOGIN PAGE SESSION RESTORE RUNNING");
   let cancelled = false;
@@ -760,7 +799,7 @@ useEffect(() => {
 
 const timeoutId = window.setTimeout(() => {
   controller.abort();
-}, 15000);
+}, 3500);
 
 let response;
 
@@ -816,10 +855,13 @@ try {
     }
 
     if (!cancelled) {
-      setCheckingSession(false);
-      window.location.replace(
-        "/members/dashboard"
-      );
+      if (typeof window.membersNavigate === "function") {
+        window.membersNavigate("/members/dashboard");
+      } else {
+        window.location.replace(
+          "/members/dashboard"
+        );
+      }
     }
 
     return;
@@ -858,18 +900,33 @@ try {
       if (window.auth?.onAuthStateChanged) {
         const currentUser =
           await new Promise((resolve) => {
+            let finished = false;
+            const authTimer = setTimeout(() => {
+              if (!finished) {
+                finished = true;
+                resolve(null);
+              }
+            }, 1500);
+
             let unsubscribe;
-
-            unsubscribe =
-              window.auth.onAuthStateChanged(
-                (user) => {
-                  if (unsubscribe) {
-                    unsubscribe();
+            try {
+              unsubscribe =
+                window.auth.onAuthStateChanged(
+                  (user) => {
+                    if (!finished) {
+                      finished = true;
+                      clearTimeout(authTimer);
+                      if (unsubscribe) {
+                        try { unsubscribe(); } catch (e) {}
+                      }
+                      resolve(user);
+                    }
                   }
-
-                  resolve(user);
-                }
-              );
+                );
+            } catch (e) {
+              clearTimeout(authTimer);
+              resolve(null);
+            }
           });
 
         if (currentUser) {
@@ -944,10 +1001,7 @@ try {
     }
   };
 
- if (!window.__wealthoriaSessionRestoreStarted) {
-  window.__wealthoriaSessionRestoreStarted = true;
   restoreExistingSession();
-}
 
   return () => {
     cancelled = true;
@@ -1503,10 +1557,34 @@ if (checkingSession) {
             <span></span>
           </div>
 
+          <button
+            type="button"
+            className="wealthoria-loader-bypass"
+            onClick={() => setCheckingSession(false)}
+          >
+            Taking too long? Click here to sign in
+          </button>
+
         </div>
 
         <style>
           {`
+            .wealthoria-loader-bypass {
+              margin-top: 18px;
+              background: none;
+              border: none;
+              color: #6b7280;
+              font-size: 13px;
+              text-decoration: underline;
+              cursor: pointer;
+              padding: 4px 8px;
+              transition: color 0.2s ease;
+            }
+
+            .wealthoria-loader-bypass:hover {
+              color: #e8473f;
+            }
+
             .wealthoria-session-loader {
               text-align: center;
             }

@@ -284,8 +284,21 @@ function checkSubRenewalFailed(sub) {
   const rzStatus = normalizeValue(sub.razorpayStatus || "");
   const normStatus = normalizeValue(sub.status || "");
   const syncSource = String(sub.lastSyncSource || "");
+  const paidCount = Number(sub.paidCount || sub.paid_count || 0);
+  const hasEverPaid = paidCount > 0 || Boolean(sub.razorpayPaymentId) || Boolean(sub.paidAt) || Boolean(sub.paidThroughDate);
 
-  if (rzStatus === "pending" || normStatus === "pending" || syncSource.includes("subscription.pending") || sub.isRenewalFailed === true) {
+  // An abandoned checkout (never completed / authorized) is an unpaid lead, NOT an auto-debit renewal failure
+  if (!hasEverPaid && rzStatus === "created") {
+    return false;
+  }
+
+  // Explicit failed retry reported by Razorpay
+  if (rzStatus === "pending" || syncSource.includes("subscription.pending") || sub.isRenewalFailed === true) {
+    return true;
+  }
+
+  // Pending status on a subscription that previously paid
+  if (normStatus === "pending" && hasEverPaid) {
     return true;
   }
 
@@ -2736,6 +2749,12 @@ function UsersScreen() {
       const latestSubscription =
         memberSubscriptions[0] || null;
 
+      const hasActiveSub = memberSubscriptions.some((sub) => {
+        const normStatus = normalizeValue(sub.status || "");
+        const rzStatus = normalizeValue(sub.razorpayStatus || "");
+        return (normStatus === "active" || rzStatus === "active") && !checkSubRenewalFailed(sub);
+      });
+
       return {
         ...member,
 
@@ -2841,7 +2860,7 @@ function UsersScreen() {
           memberSubscriptions.some((sub) => checkSubAutoRenewedToday(sub, member)),
 
         isRenewalFailed:
-          memberSubscriptions.some(checkSubRenewalFailed),
+          !hasActiveSub && memberSubscriptions.some(checkSubRenewalFailed),
 
         isCancelledToday:
           memberSubscriptions.some(checkSubCancelledToday),

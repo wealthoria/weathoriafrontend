@@ -1129,6 +1129,7 @@ function PrebookOrders() {
           "RECEIVER MOBILE NO": customer.phone,
           "Phone Number": customer.phone || "",
           "Book ID": order.bookingId || "",
+          "Quantity": order.quantity || order.product?.quantity || 1,
           "Order Date": getOrderFormattedDate(order),
           "Amount": order.amount ? `₹${order.amount}` : "",
           "Coupon Code": order.couponCode || "",
@@ -1224,7 +1225,9 @@ function PrebookOrders() {
             customer.phone || addr.phone || ""
           ),
 
-          "Book ID": order.bookingId || ""
+          "Book ID": order.bookingId || "",
+
+          "Quantity": order.quantity || order.product?.quantity || 1
         };
       });
 

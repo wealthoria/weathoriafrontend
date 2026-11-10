@@ -33,7 +33,7 @@
     fbq('track', 'ViewContent', {
       content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
       content_category: 'Book',
-      value: 1199,
+      value: 1499,
       currency: 'INR'
     });
   </script>
@@ -239,6 +239,85 @@
       width: 100%;
       box-sizing: border-box;
       overflow: hidden;
+    }
+
+    /* QUANTITY STEPPER */
+    .qty-control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed #e2e8f0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 17px;
+      font-weight: 750;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      transition: all 0.15s ease;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .qty-btn:hover:not(:disabled) {
+      background: #f1f5f9;
+      color: var(--coral);
+    }
+
+    .qty-btn:active:not(:disabled) {
+      transform: scale(0.94);
+      background: #e2e8f0;
+    }
+
+    .qty-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+      background: transparent;
+    }
+
+    .qty-input {
+      width: 44px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-weight: 800;
+      font-size: 15px;
+      color: #0f172a;
+      padding: 0;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .summary-row {
@@ -704,12 +783,23 @@
               Release</span>
           </div>
 
-          <div class="summary-row">
-            <span style="font-weight:600;color:#334155;">ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (Hardcover)</span>
-            <span id="summaryBasePrice" style="font-weight:700;color:#0f172a;">₹1,499.00</span>
+          <!-- Quantity Selector -->
+          <div class="qty-control-row">
+            <div>
+              <span style="font-weight:700;font-size:14px;color:#1e293b;display:block;">Number of Copies</span>
+              <span style="font-size:11.5px;color:#64748b;">₹1,499 per book · Hardcover</span>
+            </div>
+            <div class="qty-stepper">
+              <button type="button" class="qty-btn" id="qtyMinusBtn" onclick="changeQuantity(-1)" aria-label="Decrease quantity" disabled>−</button>
+              <input type="number" id="bookQuantity" class="qty-input" value="1" min="1" max="50" inputmode="numeric" oninput="handleQuantityInput(this.value)" onblur="clampQuantityInput()">
+              <button type="button" class="qty-btn" id="qtyPlusBtn" onclick="changeQuantity(1)" aria-label="Increase quantity">+</button>
+            </div>
           </div>
 
-
+          <div class="summary-row">
+            <span id="summaryProductTitle" style="font-weight:600;color:#334155;">ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (1 copy)</span>
+            <span id="summaryBasePrice" style="font-weight:700;color:#0f172a;">₹1,499.00</span>
+          </div>
 
           <div class="summary-row" id="discountRow" style="display:none;color:#16a34a;font-weight:700;">
             <span id="discountLabel">Coupon Discount</span>
@@ -776,8 +866,112 @@
       "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
 
     const BASE_PRICE = 1499;
+    let currentQuantity = 1;
     let appliedDiscountAmount = 0;
+    let appliedDiscountPercentage = 0;
     let appliedCouponCode = null;
+
+    function getSubtotal() {
+      return BASE_PRICE * currentQuantity;
+    }
+
+    function getFinalAmount() {
+      const subtotal = getSubtotal();
+      if (appliedCouponCode && appliedDiscountPercentage > 0) {
+        appliedDiscountAmount = Math.round((subtotal * appliedDiscountPercentage) / 100);
+        return Math.max(0, subtotal - appliedDiscountAmount);
+      }
+      appliedDiscountAmount = 0;
+      return subtotal;
+    }
+
+    function updatePayButtonText() {
+      const payButton = document.getElementById("payButton");
+      if (payButton) {
+        payButton.textContent = `Pay ₹${getFinalAmount().toLocaleString("en-IN")} & Purchase`;
+      }
+    }
+
+    function changeQuantity(delta) {
+      setQuantity(currentQuantity + delta);
+    }
+
+    function handleQuantityInput(val) {
+      // Allow momentarily clearing the field while typing a new count; clamp on blur.
+      if (val === "") return;
+      const num = parseInt(val, 10);
+      if (isNaN(num)) return;
+      const clamped = Math.max(1, Math.min(50, num));
+      currentQuantity = clamped;
+      syncQuantityButtons();
+      if (num < 1 || num > 50) {
+        const qtyInput = document.getElementById("bookQuantity");
+        if (qtyInput) qtyInput.value = clamped;
+      }
+      updateOrderPricing();
+    }
+
+    function clampQuantityInput() {
+      const qtyInput = document.getElementById("bookQuantity");
+      const num = parseInt(qtyInput?.value || "", 10);
+      setQuantity(Number.isFinite(num) ? num : 1);
+    }
+
+    function syncQuantityButtons() {
+      const minusBtn = document.getElementById("qtyMinusBtn");
+      if (minusBtn) minusBtn.disabled = currentQuantity <= 1;
+      const plusBtn = document.getElementById("qtyPlusBtn");
+      if (plusBtn) plusBtn.disabled = currentQuantity >= 50;
+    }
+
+    function setQuantity(qty) {
+      const num = Number.isFinite(Number(qty)) ? parseInt(qty, 10) : 1;
+      currentQuantity = Math.max(1, Math.min(50, Number.isFinite(num) ? num : 1));
+      const qtyInput = document.getElementById("bookQuantity");
+      if (qtyInput) qtyInput.value = currentQuantity;
+
+      syncQuantityButtons();
+      updateOrderPricing();
+    }
+
+    function updateOrderPricing() {
+      const subtotal = getSubtotal();
+      const productTitle = document.getElementById("summaryProductTitle");
+      if (productTitle) {
+        productTitle.textContent = `ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ (${currentQuantity} ${currentQuantity === 1 ? "copy" : "copies"})`;
+      }
+
+      const summaryBasePrice = document.getElementById("summaryBasePrice");
+      if (summaryBasePrice) {
+        summaryBasePrice.textContent = `₹${subtotal.toLocaleString("en-IN")}.00`;
+      }
+
+      const discountRow = document.getElementById("discountRow");
+      const discountLabel = document.getElementById("discountLabel");
+      const discountValue = document.getElementById("discountValue");
+      const summaryTotal = document.getElementById("summaryTotal");
+      const couponMsg = document.getElementById("couponMsg");
+
+      if (appliedCouponCode && appliedDiscountPercentage > 0) {
+        appliedDiscountAmount = Math.round((subtotal * appliedDiscountPercentage) / 100);
+        const finalAmount = Math.max(0, subtotal - appliedDiscountAmount);
+
+        if (discountRow) discountRow.style.display = "flex";
+        if (discountLabel) discountLabel.textContent = `Coupon (${appliedCouponCode}) - ${appliedDiscountPercentage}% OFF`;
+        if (discountValue) discountValue.textContent = `-₹${appliedDiscountAmount.toLocaleString("en-IN")}.00`;
+        if (summaryTotal) summaryTotal.textContent = `₹${finalAmount.toLocaleString("en-IN")}.00`;
+        if (couponMsg) {
+          couponMsg.className = "coupon-msg success";
+          couponMsg.textContent = `✓ Coupon "${appliedCouponCode}" applied! You saved ₹${appliedDiscountAmount.toLocaleString("en-IN")}.`;
+        }
+      } else {
+        appliedDiscountAmount = 0;
+        if (discountRow) discountRow.style.display = "none";
+        if (summaryTotal) summaryTotal.textContent = `₹${subtotal.toLocaleString("en-IN")}.00`;
+      }
+
+      updatePayButtonText();
+    }
 
 
     /* BILLING TOGGLE */
@@ -828,11 +1022,6 @@
       const input = document.getElementById("couponInput");
       const msg = document.getElementById("couponMsg");
       const btn = document.getElementById("applyCouponBtn");
-      const discountRow = document.getElementById("discountRow");
-      const discountLabel = document.getElementById("discountLabel");
-      const discountValue = document.getElementById("discountValue");
-      const summaryTotal = document.getElementById("summaryTotal");
-      const payButton = document.getElementById("payButton");
 
       const code = (input.value || "").trim().toUpperCase();
 
@@ -877,13 +1066,14 @@
               const disc = Number(cData.discountPercentage || cData.discountValue || 0);
 
               if (!isExpired && !isInactive && disc > 0 && disc <= 100) {
-                const discountAmt = Math.round((BASE_PRICE * disc) / 100);
+                const subtotal = getSubtotal();
+                const discountAmt = Math.round((subtotal * disc) / 100);
                 validCouponData = {
                   valid: true,
                   couponCode: cData.couponCode || cData.code || code,
                   discountPercentage: disc,
                   discountAmount: discountAmt,
-                  finalAmount: Math.max(0, BASE_PRICE - discountAmt)
+                  finalAmount: Math.max(0, subtotal - discountAmt)
                 };
               }
             }
@@ -898,7 +1088,7 @@
             const res = await fetch(`${API_BASE}/prebook/validate-coupon`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ couponCode: code })
+              body: JSON.stringify({ couponCode: code, quantity: currentQuantity })
             });
 
             if (res.ok) {
@@ -921,17 +1111,8 @@
 
         // Success
         appliedCouponCode = validCouponData.couponCode || code;
-        appliedDiscountAmount = Number(validCouponData.discountAmount) || 0;
-        const finalAmount = Number(validCouponData.finalAmount) || (BASE_PRICE - appliedDiscountAmount);
-
-        discountRow.style.display = "flex";
-        discountLabel.textContent = `Coupon (${appliedCouponCode}) - ${validCouponData.discountPercentage}% OFF`;
-        discountValue.textContent = `-₹${appliedDiscountAmount.toLocaleString("en-IN")}.00`;
-        summaryTotal.textContent = `₹${finalAmount.toLocaleString("en-IN")}.00`;
-        payButton.textContent = `Pay ₹${finalAmount.toLocaleString("en-IN")} & Purchase`;
-
-        msg.className = "coupon-msg success";
-        msg.textContent = `✓ Coupon "${appliedCouponCode}" applied! You saved ₹${appliedDiscountAmount}.`;
+        appliedDiscountPercentage = Number(validCouponData.discountPercentage) || 0;
+        updateOrderPricing();
         btn.textContent = "Applied";
       } catch (err) {
         console.error("Coupon validation error:", err);
@@ -945,12 +1126,11 @@
 
     function removeCoupon() {
       appliedCouponCode = null;
+      appliedDiscountPercentage = 0;
       appliedDiscountAmount = 0;
-
-      document.getElementById("discountRow").style.display = "none";
-      document.getElementById("summaryTotal").textContent = `₹${BASE_PRICE.toLocaleString("en-IN")}.00`;
-      document.getElementById("payButton").textContent = `Pay ₹${BASE_PRICE.toLocaleString("en-IN")} & Purchase`;
-      document.getElementById("applyCouponBtn").textContent = "Apply";
+      updateOrderPricing();
+      const applyBtn = document.getElementById("applyCouponBtn");
+      if (applyBtn) applyBtn.textContent = "Apply";
     }
 
 
@@ -1183,6 +1363,7 @@
                 country: "India"
               },
               billingAddress: billingAddress,
+              quantity: currentQuantity,
               couponCode: appliedCouponCode || "",
               source: "website"
             })
@@ -1211,7 +1392,7 @@
           fbq('track', 'Lead', {
             content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
             content_category: 'Book Pre-Order Lead',
-            value: BASE_PRICE - appliedDiscountAmount,
+            value: getFinalAmount(),
             currency: 'INR'
           });
         }
@@ -1248,6 +1429,7 @@
           notes: {
 
             product: "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ",
+            quantity: String(currentQuantity),
             couponCode: appliedCouponCode || ""
 
           },
@@ -1313,6 +1495,7 @@
                       },
 
                       billingAddress: billingAddress,
+                      quantity: currentQuantity,
                       couponCode: appliedCouponCode || "",
                       source: "website"
 
@@ -1339,32 +1522,47 @@
               }
 
 
+              const paidAmount = getFinalAmount();
+              const paymentId =
+                response.razorpay_payment_id || response.razorpay_order_id;
+              const thankYouUrl =
+                "/thankyou.html?o=" +
+                encodeURIComponent(response.razorpay_order_id);
+
               /* SUCCESS */
               if (window.fbq) {
                 fbq('track', 'Purchase', {
                   content_name: 'ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ',
                   content_category: 'Book',
-                  value: BASE_PRICE - appliedDiscountAmount,
+                  value: paidAmount,
                   currency: 'INR',
                   order_id: response.razorpay_order_id
                 });
               }
 
               /* GOOGLE ADS CONVERSION */
-              if (window.gtag) {
+              if (typeof window.gtag === "function") {
+                let redirected = false;
+                const goToThankYou = function () {
+                  if (redirected) return;
+                  redirected = true;
+                  window.location.href = thankYouUrl;
+                };
+
                 gtag('event', 'conversion', {
-                  'send_to': 'AW-18500990314/oSuRCKXXh5sdEOrq-vVE',
-                  'value': BASE_PRICE - appliedDiscountAmount,
-                  'currency': 'INR',
-                  'transaction_id': response.razorpay_order_id
+                  send_to: 'AW-18500990314/oSuRCKXXh5sdEOrq-vVE',
+                  value: paidAmount,
+                  currency: 'INR',
+                  transaction_id: paymentId,
+                  transport_type: 'beacon',
+                  event_callback: goToThankYou
                 });
+
+                setTimeout(goToThankYou, 600);
+                return;
               }
 
-              window.location.href =
-                "/thankyou.html?o=" +
-                encodeURIComponent(
-                  response.razorpay_order_id
-                );
+              window.location.href = thankYouUrl;
 
             } catch (error) {
 
@@ -1374,7 +1572,7 @@
               );
 
               button.disabled = false;
-              button.textContent = `Pay ₹${(BASE_PRICE - appliedDiscountAmount).toLocaleString("en-IN")} & Purchase`;
+              updatePayButtonText();
 
               showError(
                 error.message ||
@@ -1391,7 +1589,7 @@
             ondismiss: async function () {
 
               button.disabled = false;
-              button.textContent = `Pay ₹${(BASE_PRICE - appliedDiscountAmount).toLocaleString("en-IN")} & Purchase`;
+              updatePayButtonText();
 
               try {
 
@@ -1419,6 +1617,7 @@
                       reason:
                         "Customer closed or cancelled the Razorpay payment window.",
 
+                      quantity: currentQuantity,
                       source: "website"
                     })
                   }
@@ -1502,6 +1701,7 @@
                     errorReason:
                       response?.error?.reason || null,
 
+                    quantity: currentQuantity,
                     source: "website"
                   })
                 }
@@ -1517,7 +1717,7 @@
             }
 
             button.disabled = false;
-            button.textContent = `Pay ₹${(BASE_PRICE - appliedDiscountAmount).toLocaleString("en-IN")} & Purchase`;
+            updatePayButtonText();
 
             showError(
               failureReason ||
@@ -1538,7 +1738,7 @@
         );
 
         button.disabled = false;
-        button.textContent = `Pay ₹${(BASE_PRICE - appliedDiscountAmount).toLocaleString("en-IN")} & Purchase`;
+        updatePayButtonText();
 
         showError(
           error.message ||

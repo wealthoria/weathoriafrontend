@@ -1900,6 +1900,365 @@ function useBackendDashboard(days) {
   return { ...state, reload: load };
 }
 
+function PriorityWaitlistTable() {
+  const [waitlist, setWaitlist] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!window.db || typeof window.db.collection !== "function") {
+      setLoading(false);
+      return;
+    }
+
+    const waitlistMap = new Map();
+
+    const updateCombined = () => {
+      const list = Array.from(waitlistMap.values());
+      list.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+      setWaitlist(list);
+      setLoading(false);
+    };
+
+    // 1. Listen to enquiries (where allow create: if true in Firestore rules)
+    const unsubEnquiries = window.db.collection("enquiries")
+      .onSnapshot((snapshot) => {
+        snapshot.docs.forEach((doc) => {
+          const d = doc.data();
+          if (d.source === "subscription_page_fallback" || d.type === "subscription_waitlist" || String(d.interest || "").includes("Waitlist")) {
+            waitlistMap.set(doc.id, {
+              id: doc.id,
+              collectionName: "enquiries",
+              ...d,
+              createdAtMs: d.createdAt?.toMillis ? d.createdAt.toMillis() : (d.createdAt?._seconds ? d.createdAt._seconds * 1000 : new Date(d.createdAtClient || d.createdAt || d.date || 0).getTime())
+            });
+          }
+        });
+        updateCombined();
+      }, (err) => {
+        console.error("Enquiries waitlist listener error:", err);
+      });
+
+    // 2. Also listen to subscription_waitlist
+    const unsubWaitlist = window.db.collection("subscription_waitlist")
+      .onSnapshot((snapshot) => {
+        snapshot.docs.forEach((doc) => {
+          const d = doc.data();
+          waitlistMap.set(doc.id, {
+            id: doc.id,
+            collectionName: "subscription_waitlist",
+            ...d,
+            createdAtMs: d.createdAt?.toMillis ? d.createdAt.toMillis() : (d.createdAt?._seconds ? d.createdAt._seconds * 1000 : new Date(d.createdAtClient || d.createdAt || 0).getTime())
+          });
+        });
+        updateCombined();
+      }, (err) => {
+        console.error("Waitlist listener error:", err);
+      });
+
+    return () => {
+      if (typeof unsubEnquiries === "function") unsubEnquiries();
+      if (typeof unsubWaitlist === "function") unsubWaitlist();
+    };
+  }, []);
+
+  const handleUpdateStatus = async (lead, newStatus) => {
+    if (!window.db || !lead) return;
+    try {
+      setUpdatingId(lead.id);
+      const targetCol = lead.collectionName || "enquiries";
+      await window.db.collection(targetCol).doc(lead.id).update({
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      setUpdatingId("");
+    } catch (e) {
+      console.error("Failed to update status:", e);
+      setUpdatingId("");
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!waitlist.length) return;
+    const headers = ["Name", "Phone", "Email", "Registered Date (IST)", "Status", "Notes"];
+    const rows = waitlist.map((w) => [
+      `"${(w.name || "").replace(/"/g, '""')}"`,
+      `"${w.phone || ""}"`,
+      `"${w.email || ""}"`,
+      `"${w.createdAtMs ? new Date(w.createdAtMs).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "-"}"`,
+      `"${w.status || "new"}"`,
+      `"${(w.notes || "").replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `wealthoria-priority-waitlist-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div
+      style={{
+        marginBottom: 24,
+        borderRadius: 16,
+        background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+        border: "1px solid #fde68a",
+        boxShadow: "0 4px 16px rgba(245, 158, 11, 0.12)",
+        overflow: "hidden"
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+          borderBottom: collapsed ? "none" : "1px solid rgba(245, 158, 11, 0.2)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              background: "#f59e0b",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 20
+            }}
+          >
+            🏦
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: "#92400e" }}>
+                Priority Membership Registrations (Bank Maintenance)
+              </span>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  background: waitlist.length > 0 ? "#b45309" : "#d97706",
+                  color: "#ffffff"
+                }}
+              >
+                {waitlist.length} {waitlist.length === 1 ? "lead" : "leads"}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "#b45309", marginTop: 2 }}>
+              Customers who registered on <code>/members/subscription</code> to be contacted for Monday activation.
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {waitlist.length > 0 && (
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              style={{
+                padding: "6px 12px",
+                background: "#ffffff",
+                border: "1px solid #d97706",
+                color: "#92400e",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5
+              }}
+            >
+              📥 Export CSV
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{
+              padding: "6px 10px",
+              background: "rgba(255, 255, 255, 0.7)",
+              border: "1px solid #fde68a",
+              color: "#92400e",
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer"
+            }}
+          >
+            {collapsed ? "Expand ▼" : "Collapse ▲"}
+          </button>
+        </div>
+      </div>
+
+      {/* CONTENT TABLE */}
+      {!collapsed && (
+        <div style={{ padding: "16px 20px", background: "rgba(255, 255, 255, 0.6)" }}>
+          {loading ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#92400e", fontSize: 13, fontWeight: 600 }}>
+              Loading priority registrations...
+            </div>
+          ) : waitlist.length === 0 ? (
+            <div
+              style={{
+                padding: "24px 16px",
+                textAlign: "center",
+                background: "#ffffff",
+                borderRadius: 12,
+                border: "1px dashed #fcd34d"
+              }}
+            >
+              <div style={{ fontSize: 28, marginBottom: 8 }}>⏳</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#92400e" }}>
+                No registrations yet
+              </div>
+              <div style={{ fontSize: 12, color: "#b45309", marginTop: 4, maxWidth: 440, margin: "4px auto 0" }}>
+                As soon as a customer fills in their details on the subscription page, their Name, Phone, and Email will pop up here live!
+              </div>
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "separate",
+                  borderSpacing: "0 6px",
+                  fontSize: 13,
+                  minWidth: 700
+                }}
+              >
+                <thead>
+                  <tr style={{ color: "#92400e", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    <th style={{ textAlign: "left", padding: "6px 12px" }}>#</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px" }}>Customer Name</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px" }}>Phone Number</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px" }}>Email</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px" }}>Registered At</th>
+                    <th style={{ textAlign: "center", padding: "6px 12px" }}>Status</th>
+                    <th style={{ textAlign: "right", padding: "6px 12px" }}>Quick Contact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {waitlist.map((lead, idx) => {
+                    const status = lead.status || "new";
+                    const isNew = status === "new" || status === "pending";
+                    const isContacted = status === "contacted";
+
+                    return (
+                      <tr
+                        key={lead.id}
+                        style={{
+                          background: "#ffffff",
+                          borderRadius: 10,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.03)"
+                        }}
+                      >
+                        <td style={{ padding: "12px", borderTopLeftRadius: 10, borderBottomLeftRadius: 10, fontWeight: 700, color: "#94a3b8" }}>
+                          {idx + 1}
+                        </td>
+
+                        <td style={{ padding: "12px", fontWeight: 700, color: "#1e293b" }}>
+                          {lead.name || "—"}
+                        </td>
+
+                        <td style={{ padding: "12px" }}>
+                          <a
+                            href={`tel:${lead.phone}`}
+                            style={{ color: "#2563eb", fontWeight: 700, textDecoration: "none" }}
+                            title="Click to Call"
+                          >
+                            📞 {lead.phone || "—"}
+                          </a>
+                        </td>
+
+                        <td style={{ padding: "12px" }}>
+                          <a
+                            href={`mailto:${lead.email}`}
+                            style={{ color: "#475569", textDecoration: "none" }}
+                            title="Click to Email"
+                          >
+                            ✉️ {lead.email || "—"}
+                          </a>
+                        </td>
+
+                        <td style={{ padding: "12px", color: "#64748b", fontSize: 12 }}>
+                          {lead.createdAtMs
+                            ? new Date(lead.createdAtMs).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: true })
+                            : "Just now"}
+                        </td>
+
+                        <td style={{ padding: "12px", textAlign: "center" }}>
+                          <select
+                            value={status}
+                            disabled={updatingId === lead.id}
+                            onChange={(e) => handleUpdateStatus(lead, e.target.value)}
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              border: "1px solid #cbd5e1",
+                              background: isNew ? "#fef3c7" : isContacted ? "#e0f2fe" : "#dcfce7",
+                              color: isNew ? "#b45309" : isContacted ? "#0369a1" : "#15803d"
+                            }}
+                          >
+                            <option value="new">⏳ Pending Contact</option>
+                            <option value="contacted">📞 Contacted</option>
+                            <option value="activated">✅ Activated</option>
+                          </select>
+                        </td>
+
+                        <td style={{ padding: "12px", borderTopRightRadius: 10, borderBottomRightRadius: 10, textAlign: "right" }}>
+                          {lead.phone ? (
+                            <a
+                              href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hello ${lead.name || "there"}, this is from Wealthoria team regarding your membership registration on our website.`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                padding: "4px 10px",
+                                background: "#22c55e",
+                                color: "#ffffff",
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                textDecoration: "none"
+                              }}
+                            >
+                              💬 WhatsApp
+                            </a>
+                          ) : null}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ControlPanel() {
   const useAdminAuth = getAdmin("useAdminAuth");
   const useRole = getAdmin("useRole");
@@ -2710,6 +3069,9 @@ const signupSpark = useMemo(() => dateSeries.slice(-14), [dateSeries]);
       }
     >
       <div className="reveal-fade">
+        {/* PRIORITY WAITLIST (BANK MAINTENANCE) */}
+        <PriorityWaitlistTable />
+
         <div className="cp-bar">
           <div className="range-pick" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             {rangeButtons.map((r) => {

@@ -233,17 +233,6 @@
       document.getElementById("orderBox").style.display =
         "block";
 
-      /* Google Ads Purchase Conversion (deduplicated by orderId) */
-      if (typeof window.gtag === "function" && !sessionStorage.getItem("gconv_" + orderId)) {
-        sessionStorage.setItem("gconv_" + orderId, "1");
-        gtag('event', 'conversion', {
-          'send_to': 'AW-18500990314/oSuRCKXXh5sdEOrq-vVE',
-          'value': 1199,
-          'currency': 'INR',
-          'transaction_id': orderId
-        });
-      }
-
     }
 
   </script>

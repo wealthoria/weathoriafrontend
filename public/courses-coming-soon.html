@@ -8,10 +8,13 @@
 
   <link rel="icon" href="assets/logo-mark.png">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Marcellus&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@600;700;800;900&family=Marcellus&display=swap"
     rel="stylesheet"
   >
+  <link rel="stylesheet" href="/assets/colors_and_type.css">
 
   <style>
 
@@ -22,9 +25,16 @@
     }
 
     body {
+      font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
       background: #f7f7f5;
-      color: #17201c;
+      color: var(--ink, #17201c);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    button, input, select, textarea, a {
+      font-family: inherit;
     }
 
     /* =========================
@@ -47,31 +57,46 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      text-decoration: none;
+      color: inherit;
     }
 
     .brand img {
       width: 34px;
       height: 34px;
+      object-fit: contain;
     }
 
     .brand-name {
-      font-family: "Marcellus", serif;
-      font-size: 23px;
+      font-family: "Marcellus", var(--font-display, serif);
+      font-size: 22px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: #17201c;
     }
 
     .back-btn {
-      border: 1px solid #ddd;
-      background: white;
-      padding: 10px 17px;
-      border-radius: 10px;
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      border: 1px solid #e0e0dc;
+      background: #ffffff;
+      padding: 9px 18px;
+      border-radius: 12px;
       cursor: pointer;
       font-weight: 600;
-      color: #333;
+      font-size: 14px;
+      color: #17201c;
       text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .back-btn:hover {
       background: #f3f3f0;
+      border-color: #d0d0cc;
+      color: #000;
     }
 
 
@@ -86,39 +111,35 @@
 
     .eyebrow {
       display: inline-block;
-
+      font-family: var(--font-sans, 'Inter', sans-serif);
       font-size: 11px;
       font-weight: 800;
       letter-spacing: 2px;
-
       text-transform: uppercase;
-
       color: #e8473f;
-
       background: rgba(232, 71, 63, 0.08);
-
-      padding: 8px 13px;
-
+      padding: 8px 14px;
       border-radius: 30px;
-
       margin-bottom: 18px;
     }
 
     .hero h1 {
-      font-family: "Marcellus", serif;
+      font-family: var(--font-display, 'Manrope', 'Inter', sans-serif);
       font-size: clamp(38px, 6vw, 64px);
-      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.08;
       margin-bottom: 18px;
+      color: #17201c;
     }
 
     .hero p {
       max-width: 650px;
       margin: auto;
-
       color: #69716d;
-
       font-size: 16px;
       line-height: 1.7;
+      font-weight: 400;
     }
 
 
@@ -187,6 +208,7 @@
       background: #17201c;
       color: #ffffff;
 
+      font-family: var(--font-display, 'Manrope', 'Inter', sans-serif);
       font-size: 14px;
       font-weight: 800;
 
@@ -195,20 +217,18 @@
 
 
     .level-card h2 {
-      font-family: "Marcellus", serif;
-
-      font-size: 30px;
-
+      font-family: var(--font-display, 'Manrope', 'Inter', sans-serif);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       margin-bottom: 10px;
+      color: #17201c;
     }
 
     .level-card p {
       color: #6c746f;
-
       line-height: 1.65;
-
-      font-size: 14px;
-
+      font-size: 14.5px;
       max-width: 420px;
     }
 
@@ -223,7 +243,7 @@
       right: 25px;
       top: 25px;
 
-      padding: 7px 11px;
+      padding: 7px 12px;
 
       border-radius: 30px;
 
@@ -231,11 +251,11 @@
 
       color: #b75b20;
 
-      font-size: 10px;
-
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      font-size: 10.5px;
       font-weight: 800;
 
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
 
       text-transform: uppercase;
     }
@@ -261,8 +281,8 @@
 
     .course-status {
       color: #858b87;
-
-      font-size: 12px;
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      font-size: 13px;
       font-weight: 600;
     }
 
@@ -291,8 +311,8 @@
       padding: 30px 20px;
 
       color: #858b87;
-
-      font-size: 12px;
+      font-family: var(--font-sans, 'Inter', sans-serif);
+      font-size: 13px;
 
       border-top: 1px solid #e8e8e4;
 
@@ -341,7 +361,7 @@
 
   <header>
 
-    <div class="brand">
+    <a href="/" class="brand">
 
       <img
         src="assets/logo-mark.png"
@@ -352,7 +372,7 @@
         Wealthoria
       </span>
 
-    </div>
+    </a>
 
 
     <a

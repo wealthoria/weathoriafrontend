@@ -458,6 +458,13 @@ const PrivacyPolicy = window.PrivacyPolicy;
             </p>
 
             <p>
+              <strong>Phone:</strong>{" "}
+              <a href="tel:+919019759001">
+                +91 90197 59001
+              </a>
+            </p>
+
+            <p>
               <strong>Website:</strong>{" "}
               <a href="https://www.wealthoria.in/">
                 www.wealthoria.in
@@ -465,9 +472,17 @@ const PrivacyPolicy = window.PrivacyPolicy;
             </p>
              <p>
               <strong>Location:</strong>{" "}
-              Wealthoria Education Private Limited No.2687/1, D-1, 2nd Floor 
-5th Cross, Kalidasa Road 
-V V Mohalla, Mysore - 570002
+              Wealthoria Education Private Limited, No.2687/1, D-1, 2nd Floor, 5th Cross, Kalidasa Road, V V Mohalla, Mysuru - 570002, Karnataka
+            </p>
+
+            <p>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Wealthoria+Education+Private+Limited+Kalidasa+Road+VV+Mohalla+Mysuru+570002"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on Google Maps →
+              </a>
             </p>
 
             <h2>Need Assistance?</h2>

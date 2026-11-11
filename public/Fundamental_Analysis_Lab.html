@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#E8473F" />
+<meta name="robots" content="noindex, nofollow" />
 <title>Wealthoria · Fundamental Analysis Lab</title>
 
 
@@ -20322,13 +20323,13 @@ function Landing({
     className: "mt-5 flex flex-wrap items-center gap-x-5 gap-y-2"
   }, /*#__PURE__*/React.createElement("span", {
     className: "figure text-[30px] leading-none text-wl"
-  }, "15"), /*#__PURE__*/React.createElement("span", {
+  }, String(CATS.length)), /*#__PURE__*/React.createElement("span", {
     className: "text-[12px] text-ink-500"
-  }, "workbenches"), /*#__PURE__*/React.createElement("span", {
+  }, "categories"), /*#__PURE__*/React.createElement("span", {
     className: "h-4 w-px bg-ink-200"
   }), /*#__PURE__*/React.createElement("span", {
     className: "figure text-[30px] leading-none text-a1"
-  }, "25"), /*#__PURE__*/React.createElement("span", {
+  }, String(TOOLS.length)), /*#__PURE__*/React.createElement("span", {
     className: "text-[12px] text-ink-500"
   }, "analytical tools"), /*#__PURE__*/React.createElement("span", {
     className: "h-4 w-px bg-ink-200"
@@ -20682,8 +20683,198 @@ function App() {
     go: setView
   })));
 }
+
+/* ---------------- members-only access guard ---------------- */
+
+function readLabMemberSession() {
+  var SESSIONS_KEY = "wealthoria-member-sessions";
+  var CURRENT_KEY = "wealthoria-current-member";
+
+  function fromStorage(storage) {
+    try {
+      var uid = storage.getItem(CURRENT_KEY);
+      if (uid) {
+        var map = JSON.parse(storage.getItem(SESSIONS_KEY) || "{}");
+        if (map && map[uid] && map[uid].uid && map[uid].token) {
+          return map[uid];
+        }
+      }
+      var legacy = storage.getItem("wealthoria-member");
+      if (legacy) {
+        var parsed = JSON.parse(legacy);
+        if (parsed && parsed.uid && parsed.token) return parsed;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  return fromStorage(window.sessionStorage) || fromStorage(window.localStorage);
+}
+
+function hasLabPaidAccessLeft(subscription, createdAtFallback) {
+  var sub = subscription || {};
+  if (sub.accessActive === false) return false;
+  var val = sub.paidUntil || sub.accessUntil || sub.nextBillingDate;
+  var millis = 0;
+  if (val && typeof val === "object") {
+    var sec = val.seconds !== undefined ? val.seconds : val._seconds;
+    if (typeof sec === "number") millis = sec * 1000;
+  } else if (val) {
+    millis = new Date(val).getTime();
+  }
+  return Number.isFinite(millis) && millis > Date.now();
+}
+
+function isLabAccessBlocked(status, memberData) {
+  var norm = String(status || "").trim().toLowerCase();
+  var blocked = ["inactive", "cancelled", "canceled", "deactivated", "disabled", "blocked", "suspended"];
+  if (blocked.indexOf(norm) === -1) return false;
+  if (norm === "cancelled" || norm === "canceled") {
+    return !hasLabPaidAccessLeft(memberData && memberData.subscription, memberData && memberData.createdAt);
+  }
+  return true;
+}
+
+function navigateTopPortal(targetPath) {
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = targetPath;
+      return;
+    }
+  } catch (e) {}
+  window.location.href = targetPath;
+}
+
+function LabMemberGate() {
+  var initialSession = useMemo(readLabMemberSession, []);
+  var [gateState, setGateState] = useState(initialSession ? "checking" : "denied");
+  var [reason, setReason] = useState(initialSession ? "" : "login_required");
+
+  useEffect(function () {
+    if (!initialSession || !initialSession.token) {
+      setGateState("denied");
+      setReason("login_required");
+      return;
+    }
+
+    var cancelled = false;
+    var host = window.location.hostname;
+    var apiBase = (host === "localhost" || host === "127.0.0.1")
+      ? ""
+      : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+
+    var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = window.setTimeout(function () {
+      if (controller) controller.abort();
+    }, 5000);
+
+    fetch(apiBase + "/api/members/me", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + initialSession.token,
+        "Content-Type": "application/json"
+      },
+      signal: controller ? controller.signal : undefined
+    })
+      .then(function (res) {
+        if (res.status === 401 || res.status === 403) {
+          throw new Error("AUTH_REJECTED");
+        }
+        if (!res.ok) {
+          throw new Error("SERVER_ERROR");
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (cancelled) return;
+        if (!data || !data.success || !data.member) {
+          if (!isLabAccessBlocked(initialSession.status, initialSession)) {
+            setGateState("allowed");
+            return;
+          }
+          setReason("inactive");
+          setGateState("denied");
+          return;
+        }
+        var m = data.member;
+        if (isLabAccessBlocked(m.status, m)) {
+          setReason("inactive");
+          setGateState("denied");
+        } else {
+          setGateState("allowed");
+        }
+      })
+      .catch(function (err) {
+        if (cancelled) return;
+        if (err && err.message === "AUTH_REJECTED") {
+          setReason("login_required");
+          setGateState("denied");
+          return;
+        }
+        if (!isLabAccessBlocked(initialSession.status, initialSession)) {
+          setGateState("allowed");
+        } else {
+          setReason("inactive");
+          setGateState("denied");
+        }
+      })
+      .finally(function () {
+        window.clearTimeout(timer);
+      });
+
+    return function () {
+      cancelled = true;
+      window.clearTimeout(timer);
+      if (controller) controller.abort();
+    };
+  }, [initialSession]);
+
+  if (gateState === "allowed") {
+    return /*#__PURE__*/React.createElement(App, null);
+  }
+
+  if (gateState === "checking") {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen bg-paper flex items-center justify-center p-6"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "border border-ink-200 bg-surf px-7 py-6 text-center max-w-sm w-full"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "eyebrow text-[10px] text-wl"
+    }, "Wealthoria Premium"), /*#__PURE__*/React.createElement("div", {
+      className: "mt-2 text-[14px] font-medium text-ink-900"
+    }, "Verifying member access...")));
+  }
+
+  var isInactive = reason === "inactive";
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen bg-paper flex items-center justify-center p-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative overflow-hidden border border-ink-200 bg-surf max-w-md w-full p-7 sm:p-9"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-y-0 left-0 w-[4px] bg-wl"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow text-[10px] text-wl"
+  }, "Wealthoria · Members Only"), /*#__PURE__*/React.createElement("h1", {
+    className: "display mt-2 text-[30px] leading-tight text-ink-950"
+  }, "Fundamental Analysis Lab"), /*#__PURE__*/React.createElement("p", {
+    className: "mt-3 text-[13.5px] leading-relaxed text-ink-500"
+  }, isInactive
+    ? "Your Wealthoria Premium subscription is currently inactive or expired. Reactivate your membership to unlock all 44 investing and valuation calculators."
+    : "Access to all 44 investing and valuation calculators is reserved for active Wealthoria Premium members. Please log in with your member account or subscribe to continue."), /*#__PURE__*/React.createElement("div", {
+    className: "mt-6 flex flex-col sm:flex-row gap-3"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: function () { navigateTopPortal("/members/login"); },
+    className: "flex-1 bg-wl text-white font-semibold text-[13.5px] px-5 py-3 hover:opacity-90 transition-opacity cursor-pointer"
+  }, isInactive ? "Go to Member Portal" : "Member Login"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: function () { navigateTopPortal(isInactive ? "/members/login" : "/membership.html"); },
+    className: "flex-1 border border-ink-200 bg-paper text-ink-900 font-semibold text-[13.5px] px-5 py-3 hover:bg-ink-100 transition-colors cursor-pointer"
+  }, isInactive ? "Reactivate (₹99/mo)" : "Join for ₹99/mo"))));
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(/*#__PURE__*/React.createElement(App, null));
+root.render(/*#__PURE__*/React.createElement(LabMemberGate, null));
 </script>
 </body>
 </html>

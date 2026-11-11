@@ -4,6 +4,27 @@ import React from "react";
 
 const { useState } = React;
 
+/** Reports a ₹99 membership sign-up conversion to Google Ads and Meta Pixel. */
+function trackSubscriptionConversion(paymentId) {
+  if (typeof window.fbq === "function") {
+    window.fbq("track", "Subscribe", {
+      value: 99,
+      currency: "INR",
+      predicted_ltv: 99,
+    });
+  }
+
+  if (typeof window.gtag === "function" && paymentId) {
+    window.gtag("event", "conversion", {
+      send_to: "AW-18500990314/Ru4cCO_hsLUdEOrq-vVE",
+      value: 99,
+      currency: "INR",
+      transaction_id: paymentId,
+      transport_type: "beacon",
+    });
+  }
+}
+
 function MemberSubscription() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -301,6 +322,8 @@ return;
               completeResponse.status === 202 &&
               completeData.pending
             ) {
+              trackSubscriptionConversion(finalPaymentId);
+
               alert(
                 "Payment received! Your membership is being activated and will be ready in a few minutes. You can log in shortly."
               );
@@ -319,13 +342,7 @@ return;
               );
             }
 
-            if (typeof window.fbq === "function") {
-              window.fbq("track", "Subscribe", {
-                value: 99,
-                currency: "INR",
-                predicted_ltv: 99,
-              });
-            }
+            trackSubscriptionConversion(finalPaymentId);
 
             alert(
               "Subscription successful! Your member account has been created."

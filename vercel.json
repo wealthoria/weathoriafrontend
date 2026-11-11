@@ -45,6 +45,10 @@
       "destination": "/kannada-book.html"
     },
     {
+      "source": "/membership",
+      "destination": "/membership.html"
+    },
+    {
       "source": "/",
       "destination": "/index.html"
     },

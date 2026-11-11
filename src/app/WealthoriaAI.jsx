@@ -271,10 +271,15 @@ async function lookupSubscriptionStatus(contactInput, lang = "en") {
         if (memSnap && !memSnap.empty) {
           member = memSnap.docs[0].data();
         }
-        if (member?.uid && subscriptions.length === 0) {
-          const subByUid = await window.db.collection("subscriptions").where("memberId", "==", member.uid).get().catch(() => null);
+        const memberUid = member?.uid || memSnap?.docs?.[0]?.id;
+        if (memberUid) {
+          const subByUid = await window.db.collection("subscriptions").where("memberId", "==", memberUid).get().catch(() => null);
           if (subByUid && !subByUid.empty) {
-            subscriptions = subByUid.docs.map(d => ({ id: d.id, ...d.data() }));
+            const seen = new Map(subscriptions.map((s) => [s.id, s]));
+            subByUid.docs.forEach((d) => {
+              if (!seen.has(d.id)) seen.set(d.id, { id: d.id, ...d.data() });
+            });
+            subscriptions = Array.from(seen.values());
           }
         }
       } else if (queryPhone) {
@@ -330,7 +335,13 @@ async function lookupSubscriptionStatus(contactInput, lang = "en") {
   const latestSub = pickStatusSubscription(subscriptions);
 
   const now = Date.now();
-  const expiryRaw = latestSub?.nextBillingDate || member?.nextBillingDate || null;
+  const expiryRaw =
+    latestSub?.paidThroughDate ||
+    latestSub?.paidUntil ||
+    member?.paidUntil ||
+    latestSub?.nextBillingDate ||
+    member?.nextBillingDate ||
+    null;
   const expiryMs = toMillis(expiryRaw);
   const daysLeft = expiryMs ? Math.ceil((expiryMs - now) / (1000 * 60 * 60 * 24)) : null;
 

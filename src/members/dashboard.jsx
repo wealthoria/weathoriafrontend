@@ -1878,8 +1878,19 @@ const [activationLoading, setActivationLoading] =
       session.subscription?.nextBillingDate ||
       null,
 
-    accessUntil:
+    paidUntil:
+      completeData.paidUntil ||
       completeData.nextBillingDate ||
+      completeData.subscription?.paidUntil ||
+      completeData.subscription?.nextBillingDate ||
+      session.subscription?.paidUntil ||
+      session.subscription?.accessUntil ||
+      null,
+
+    accessUntil:
+      completeData.paidUntil ||
+      completeData.nextBillingDate ||
+      completeData.subscription?.paidUntil ||
       completeData.subscription?.nextBillingDate ||
       session.subscription?.accessUntil ||
       null,
@@ -1981,12 +1992,21 @@ useEffect(() => {
   const updateMembershipDays = () => {
 
   const accessUntil =
+  member?.subscription?.paidUntil ||
   member?.subscription?.accessUntil ||
   member?.subscription?.nextBillingDate ||
+  member?.paidUntil ||
   member?.accessUntil ||
   member?.nextBillingDate;
 
     if (!accessUntil) {
+      if (
+        member?.subscription?.accessActive &&
+        Number(member?.subscription?.remainingDays) > 0
+      ) {
+        setMembershipDays(Number(member.subscription.remainingDays));
+        return;
+      }
       setMembershipDays(0);
       return;
     }
@@ -2246,6 +2266,23 @@ useEffect(() => {
   setMember(current.session);
   setMembershipLoaded(true);
   setAuthChecking(false);
+
+  const handleSessionUpdated = (event) => {
+    const next = event?.detail;
+    if (next?.uid && next.uid === current.session.uid) {
+      setMember(next);
+    } else {
+      const latest = getCurrentMemberSession();
+      if (latest?.session?.uid) {
+        setMember(latest.session);
+      }
+    }
+  };
+
+  window.addEventListener("wealthoria:member-session-updated", handleSessionUpdated);
+  return () => {
+    window.removeEventListener("wealthoria:member-session-updated", handleSessionUpdated);
+  };
 
 }, []);
   /* =======================================================
@@ -3837,7 +3874,7 @@ if (!membershipLoaded) {
     ).toLowerCase();
 
   const isCancelled =
-    ["cancelled", "halted"].includes(
+    ["cancelled", "canceled", "halted"].includes(
       subscriptionStatus
     );
 
@@ -3875,7 +3912,9 @@ const showMembershipPanel =
               ? "Your Wealthoria membership has expired."
               : isCancelled
               ? `You still have access until ${getDashboardDate(
+                  member?.subscription?.paidUntil ||
                   member?.subscription?.accessUntil ||
+                  member?.paidUntil ||
                   member?.accessUntil
                 )}`
               : "Your membership is ending soon."}

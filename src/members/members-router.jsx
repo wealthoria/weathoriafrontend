@@ -125,6 +125,9 @@ const saveMemberSession = (session, storageType) => {
     const sessions = readStorageObject(storage);
     sessions[session.uid] = session;
     writeStorageObject(storage, sessions);
+    if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new CustomEvent("wealthoria:member-session-updated", { detail: session }));
+    }
   } catch (error) {
     console.error("Could not save member session:", error);
   }
@@ -172,21 +175,24 @@ function hasPaidAccessLeft(session) {
     millis = new Date(value).getTime();
   }
 
-  // Cap cancelled / unpaid cycles by paidCount so advance-issued invoices do not grant free access
-  const paidCount = Number(subscription.paidCount || 1);
-  const startVal = subscription.subscriptionStartDate || subscription.createdAt || session?.createdAt;
-  let startMs = 0;
-  if (startVal && typeof startVal === "object") {
-    const s = startVal.seconds ?? startVal._seconds;
-    if (typeof s === "number") startMs = s * 1000;
-  } else if (startVal) {
-    startMs = new Date(startVal).getTime();
-  }
+  // Cap legacy cached sessions (without server-verified paidUntil) by explicit paidCount
+  // so advance-issued invoices cannot grant free cycles without defaulting 2+ cycle renewals to 1.
+  const rawPaidCount = Number(subscription.paidCount || 0);
+  if (!subscription.paidUntil && rawPaidCount > 0) {
+    const startVal = subscription.subscriptionStartDate || subscription.createdAt || session?.createdAt;
+    let startMs = 0;
+    if (startVal && typeof startVal === "object") {
+      const s = startVal.seconds ?? startVal._seconds;
+      if (typeof s === "number") startMs = s * 1000;
+    } else if (startVal) {
+      startMs = new Date(startVal).getTime();
+    }
 
-  if (startMs > 0) {
-    const maxPaidMs = startMs + (Math.max(1, paidCount) * 32 * 24 * 60 * 60 * 1000);
-    if (millis > maxPaidMs) {
-      millis = startMs + (Math.max(1, paidCount) * 30 * 24 * 60 * 60 * 1000);
+    if (startMs > 0) {
+      const maxPaidMs = startMs + (rawPaidCount * 32 * 24 * 60 * 60 * 1000);
+      if (millis > maxPaidMs) {
+        millis = startMs + (rawPaidCount * 30 * 24 * 60 * 60 * 1000);
+      }
     }
   }
 

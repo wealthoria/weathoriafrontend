@@ -27,7 +27,7 @@ const CONTENT = {
       eyebrow: "Financial education · Karnataka",
       title: ["Learning is the", "first investment"],
       lede: "Understand money, markets and investing before you ever put a rupee at risk. Structured financial education in plain language, and in Kannada.",
-      ctaPrimary: "Become a Member",
+      ctaPrimary: "Membership Benefits",
       ctaSecondary: "Courses",
       trust: "Trusted by 800+ learners across Karnataka",
       card: {
@@ -250,7 +250,7 @@ const CONTENT = {
       eyebrow: "ಹಣಕಾಸು ಶಿಕ್ಷಣ · ಕರ್ನಾಟಕ",
       title: ["ಹೂಡಿಕೆಗೂ ಮುನ್ನ", "ಕಲಿಕೆ."],
       lede: "ಒಂದು ರೂಪಾಯಿಯನ್ನು ಅಪಾಯಕ್ಕೆ ಸಿಲುಕಿಸುವ ಮೊದಲು ಹಣ, ಮಾರುಕಟ್ಟೆ ಮತ್ತು ಹೂಡಿಕೆಯನ್ನು ಸರಳ ಭಾಷೆಯಲ್ಲಿ ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ. ಸರಳ ಭಾಷೆಯಲ್ಲಿ, ಮತ್ತು ಕನ್ನಡದಲ್ಲಿ, ರಚನಾತ್ಮಕ ಹಣಕಾಸು ಶಿಕ್ಷಣ.",
-      ctaPrimary: "ಸದಸ್ಯರಾಗಿ",
+      ctaPrimary: "ಸದಸ್ಯತ್ವದ ಪ್ರಯೋಜನಗಳು",
       ctaSecondary: "ಕೋರ್ಸ್‌ಗಳು",
       trust: "ಕರ್ನಾಟಕದಾದ್ಯಂತ 800+ ಕಲಿಯುವವರ ವಿಶ್ವಾಸ",
       card: {

@@ -182,11 +182,7 @@ function Hero({ onNav }) {
             <button
               className="btn btn-green"
               onClick={() => {
-                if (window.membersNavigate) {
-                  window.membersNavigate("/members/subscription");
-                } else {
-                  window.location.href = "/members/subscription";
-                }
+                window.location.href = "/membership.html";
               }}
             >
               {h.ctaPrimary}

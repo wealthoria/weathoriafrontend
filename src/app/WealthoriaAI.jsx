@@ -43,8 +43,8 @@ const KB = [
   },
   {
     tags: ["member", "membership", "join", "subscribe", "sign up", "register", "how to join"],
-    en: "**Wealthoria Membership** 🌟\n\nOur membership gives you access to:\n• 📹 Exclusive video lessons on investing & markets\n• 📊 Weekly market round-ups and analysis\n• 📚 Member-only articles and resources\n• 📰 Latest financial education content\n\n💳 Membership is available at **₹99/month**\n\nTo become a member:\n1. Click **'Become a Member'** on the homepage\n2. Create your account\n3. Subscribe and get instant access\n\nHave more questions? Email support@wealthoria.in",
-    kn: "**Wealthoria ಸದಸ್ಯತ್ವ** 🌟\n\nಸದಸ್ಯತ್ವದಲ್ಲಿ ಲಭ್ಯ:\n• ಎಕ್ಸ್‌ಕ್ಲೂಸಿವ್ ವೀಡಿಯೊ ಪಾಠಗಳು\n• ಸಾಪ್ತಾಹಿಕ ಮಾರುಕಟ್ಟೆ ವಿಶ್ಲೇಷಣೆ\n• ಸದಸ್ಯ-ಮಾತ್ರ ಲೇಖನಗಳು\n\n💳 ₹99/ತಿಂಗಳು\n\nಸದಸ್ಯರಾಗಲು 'Become a Member' ಕ್ಲಿಕ್ ಮಾಡಿ",
+    en: "**Wealthoria Membership** 🌟\n\nOur membership gives you access to:\n• 📹 Exclusive video lessons on investing & markets\n• 📊 Weekly market round-ups and analysis\n• 📚 Member-only articles and resources\n• 📰 Latest financial education content\n\n💳 Membership is available at **₹99/month**\n\nTo become a member:\n1. Click **'Membership Benefits'** on the homepage (`/membership.html`)\n2. Click **'Become a member for ₹99'** and create your account\n3. Subscribe and get instant access\n\nHave more questions? Email support@wealthoria.in",
+    kn: "**Wealthoria ಸದಸ್ಯತ್ವ** 🌟\n\nಸದಸ್ಯತ್ವದಲ್ಲಿ ಲಭ್ಯ:\n• ಎಕ್ಸ್‌ಕ್ಲೂಸಿವ್ ವೀಡಿಯೊ ಪಾಠಗಳು\n• ಸಾಪ್ತಾಹಿಕ ಮಾರುಕಟ್ಟೆ ವಿಶ್ಲೇಷಣೆ\n• ಸದಸ್ಯ-ಮಾತ್ರ ಲೇಖನಗಳು\n\n💳 ₹99/ತಿಂಗಳು\n\nಸದಸ್ಯರಾಗಲು ಮುಖಪುಟದಲ್ಲಿ 'ಸದಸ್ಯತ್ವದ ಪ್ರಯೋಜನಗಳು' (`/membership.html`) ಕ್ಲಿಕ್ ಮಾಡಿ",
   },
   {
     tags: ["personal finance", "budget", "saving", "budgeting", "emergency fund", "savings"],

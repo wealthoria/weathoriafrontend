@@ -1,180 +1,963 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wealthoria Premium – ₹99/month | Calculators, weekly research & videos</title>
-<meta name="description" content="Wealthoria Premium for ₹99 a month: 44 investing and valuation calculators, Weekly Order Wins, weekly market Roundup, articles, company case-study videos and ratio guides, in Kannada. Education only, no tips.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Kannada:wght@600;700&display=swap" rel="stylesheet">
-<!-- Google tag (same AW-18500990314 tag the rest of the site already loads) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18500990314"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','AW-18500990314');</script>
-<style>
-:root{--ink:#141414;--paper:#F7F4EF;--line:#E7E1D8;--muted:#6B655E;--or:#E0663A;--or-d:#C9532A;--card:#fff}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Inter,'Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
-.kn{font-family:'Noto Sans Kannada','Nirmala UI',sans-serif}
-a{color:inherit}
-.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
-.eyebrow{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--or)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--or);color:#fff;text-decoration:none;font-weight:700;font-size:17px;padding:16px 28px;border-radius:12px;transition:background .15s}
-.btn:hover{background:var(--or-d)}
-.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
-nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
-nav .logo{font-weight:900;letter-spacing:.12em;color:var(--or);text-decoration:none}
-nav .login{font-size:15px;font-weight:600;text-decoration:none;color:#F7F4EF;opacity:.8}
-.hero{background:var(--ink);color:var(--paper);padding-bottom:64px}
-.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding-top:36px}
-.hero h1{font-size:clamp(36px,5.4vw,60px);line-height:1.04;font-weight:900;letter-spacing:-.025em;margin-top:14px}
-.hero p.lead{font-size:19px;opacity:.8;margin-top:18px;max-width:520px}
-.price-row{display:flex;align-items:baseline;gap:8px;margin-top:28px}
-.price-row b{font-size:56px;font-weight:900;letter-spacing:-.03em}
-.price-row span{font-size:20px;opacity:.75}
-.hero .cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:22px}
-.hero .note{font-size:14px;opacity:.65}
-.shot{border-radius:16px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);background:#fff}
-.shot img{display:block;width:100%;height:auto}
-section{padding:72px 0}
-h2{font-size:clamp(28px,3.6vw,40px);font-weight:900;letter-spacing:-.02em;line-height:1.1;margin-top:10px}
-.sub{color:var(--muted);font-size:18px;margin-top:12px;max-width:640px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}
-.card .tag{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--or)}
-.card h3{font-size:21px;font-weight:800;margin-top:8px;letter-spacing:-.01em}
-.card p{color:var(--muted);font-size:15.5px;margin-top:8px}
-.tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-.tools span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14.5px;font-weight:600}
-.tools span.more{background:var(--or);border-color:var(--or);color:#fff}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:36px}
-.yes,.no{border-radius:16px;padding:26px}
-.yes{background:#fff;border:1px solid var(--line)}
-.no{background:#EFE9E1}
-.yes li,.no li{list-style:none;padding:9px 0;border-bottom:1px solid var(--line);font-size:16px;display:flex;gap:12px}
-.yes li:last-child,.no li:last-child{border-bottom:0}
-.yes li::before{content:"✓";color:var(--or);font-weight:900}
-.no li::before{content:"–";color:var(--muted);font-weight:900}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
-.stat b{display:block;font-size:44px;font-weight:900;letter-spacing:-.03em}
-.stat span{color:var(--muted)}
-details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-top:12px}
-summary{font-weight:700;font-size:17px;cursor:pointer}
-details p{color:var(--muted);margin-top:10px}
-.final{background:var(--ink);color:var(--paper);text-align:center}
-.final h2{color:var(--paper)}
-.final .sub{color:rgba(247,244,239,.75);margin:12px auto 0}
-.final .btn{margin-top:28px}
-footer{font-size:13px;color:var(--muted);padding:28px 0 40px}
-@media (max-width:860px){
-  .hero-grid,.split{grid-template-columns:1fr}
-  .grid3,.stats{grid-template-columns:1fr}
-  section{padding:52px 0}
-  .btn{width:100%}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wealthoria Membership – ₹99/month (Launch Offer) | Calculators, weekly research &amp; videos</title>
+  <meta name="description"
+    content="Wealthoria Membership (currently ₹99/month, regularly ₹199/month): 44 investing and valuation calculators, Weekly Order Wins, weekly market Roundup, articles, company case-study videos and ratio guides, in Kannada. Education only, no tips.">
+  <link rel="icon" type="image/png" href="/assets/logo-mark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@600;700;800;900&family=Noto+Sans+Kannada:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/assets/colors_and_type.css">
+  <link rel="stylesheet" href="/app/site-shell.css">
+  <!-- Google tag (same AW-18500990314 tag the rest of the site already loads) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18500990314"></script>
+  <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'AW-18500990314');</script>
+  <style>
+    :root {
+      --ink: #0e0f0c;
+      --surface-ink: #11201f;
+      --paper: #f5f6f2;
+      --paper-2: #ebece7;
+      --line: rgba(14, 15, 12, .10);
+      --muted: #454745;
+      --or: #e8473f;
+      --or-2: #f4823c;
+      --grad: linear-gradient(120deg, #e8473f 0%, #f4823c 100%);
+      --card: #ffffff;
+      --font-sans: 'Inter', 'Noto Sans Kannada', system-ui, -apple-system, sans-serif;
+      --font-display: 'Manrope', 'Inter', 'Noto Sans Kannada', system-ui, sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "calt";
+    }
+
+    h1,
+    h2,
+    h3,
+    .price-now,
+    .price-old {
+      font-family: var(--font-display);
+    }
+
+    .kn {
+      font-family: 'Noto Sans Kannada', 'Inter', sans-serif;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .wrap {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 22px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--or);
+    }
+
+    .text-grad {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--grad);
+      color: #fff;
+      text-decoration: none;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 15px 30px;
+      border-radius: 999px;
+      box-shadow: 0 14px 30px rgba(232, 71, 63, .30);
+      transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 36px rgba(232, 71, 63, .40);
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 3px;
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(243, 245, 239, .22);
+      color: #f3f5ef;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, .07);
+      border-color: rgba(243, 245, 239, .4);
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(960px 480px at 8% -12%, rgba(232, 71, 63, .20), transparent 60%), radial-gradient(760px 420px at 95% 105%, rgba(244, 130, 60, .14), transparent 62%), var(--surface-ink);
+      color: #f3f5ef;
+      padding: 52px 0 74px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.06fr .98fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .07);
+      border: 1px solid rgba(255, 255, 255, .14);
+      color: #f7c5b4;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--or-2);
+      box-shadow: 0 0 0 4px rgba(244, 130, 60, .22);
+    }
+
+    .hero h1 {
+      font-size: clamp(34px, 4.6vw, 54px);
+      line-height: 1.07;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      margin-top: 16px;
+    }
+
+    .hero p.lead {
+      font-size: 17.5px;
+      line-height: 1.6;
+      color: rgba(243, 245, 239, .82);
+      margin-top: 16px;
+      max-width: 520px;
+    }
+
+    /* Pricing Box */
+    .price-box {
+      margin-top: 26px;
+      padding: 20px 22px;
+      border-radius: 22px;
+      background: linear-gradient(155deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, .03) 100%);
+      border: 1px solid rgba(255, 255, 255, .16);
+      box-shadow: 0 20px 44px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .12);
+      max-width: 480px;
+    }
+
+    .price-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .offer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--grad);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      box-shadow: 0 6px 16px rgba(232, 71, 63, .35);
+    }
+
+    .plan-tag {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: rgba(243, 245, 239, .68);
+    }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .price-old {
+      font-size: 28px;
+      font-weight: 700;
+      color: rgba(243, 245, 239, .48);
+      text-decoration: line-through;
+      text-decoration-color: #e8473f;
+      text-decoration-thickness: 3px;
+    }
+
+    .price-arrow {
+      color: rgba(243, 245, 239, .45);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .price-now {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      line-height: 1;
+      color: #ffffff;
+    }
+
+    .price-unit {
+      font-size: 18px;
+      font-weight: 500;
+      color: rgba(243, 245, 239, .78);
+    }
+
+    .price-note {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, .11);
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(243, 245, 239, .74);
+    }
+
+    .hero .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 22px;
+    }
+
+    .trust-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: rgba(243, 245, 239, .72);
+    }
+
+    .trust-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trust-row i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(244, 130, 60, .20);
+      color: #ffb38e;
+      font-style: normal;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    /* App Preview Frame */
+    .shot-frame {
+      border-radius: 22px;
+      overflow: hidden;
+      background: #0b1514;
+      border: 1px solid rgba(255, 255, 255, .14);
+      box-shadow: 0 32px 72px rgba(0, 0, 0, .48);
+    }
+
+    .shot-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      background: rgba(255, 255, 255, .06);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .shot-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .shot-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .24);
+    }
+
+    .shot-dots span:first-child {
+      background: #e8473f;
+    }
+
+    .shot-dots span:nth-child(2) {
+      background: #f4823c;
+    }
+
+    .shot-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(243, 245, 239, .68);
+      letter-spacing: .02em;
+    }
+
+    .shot-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+    }
+
+    /* Sections & Cards */
+    section {
+      padding: 76px 0;
+    }
+
+    .sec-head {
+      max-width: 680px;
+    }
+
+    h2 {
+      font-size: clamp(28px, 3.6vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.025em;
+      line-height: 1.12;
+      margin-top: 10px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 17px;
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 36px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: 0 8px 24px rgba(14, 15, 12, .04);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 36px rgba(14, 15, 12, .08);
+      border-color: rgba(232, 71, 63, .26);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(232, 71, 63, .12), rgba(244, 130, 60, .14));
+      color: var(--or);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card .tag {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--or);
+    }
+
+    .card h3 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 16px;
+      letter-spacing: -.015em;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* Lab Showcase */
+    .lab-showcase {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 38px;
+      box-shadow: 0 12px 30px rgba(14, 15, 12, .04);
+    }
+
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .tools span {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    .tools span:hover {
+      border-color: rgba(232, 71, 63, .35);
+      background: #fff;
+    }
+
+    .tools span.more {
+      background: var(--grad);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(232, 71, 63, .24);
+    }
+
+    /* Included vs Excluded */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 34px;
+    }
+
+    .split-card {
+      border-radius: 22px;
+      padding: 28px;
+    }
+
+    .yes-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 26px rgba(14, 15, 12, .04);
+    }
+
+    .no-card {
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+    }
+
+    .split-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .split-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .yes-card .split-badge {
+      background: rgba(232, 71, 63, .12);
+      color: var(--or);
+    }
+
+    .no-card .split-badge {
+      background: rgba(14, 15, 12, .08);
+      color: var(--muted);
+    }
+
+    .yes li,
+    .no li {
+      list-style: none;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 15.5px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .yes li:last-child,
+    .no li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .yes li::before {
+      content: "✓";
+      color: var(--or);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .no li::before {
+      content: "–";
+      color: var(--muted);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* Final CTA Band (kept cleanly separated above #wl-footer) */
+    .final {
+      background: var(--surface-ink);
+      color: #f3f5ef;
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .final h2 {
+      color: #f3f5ef;
+      margin-top: 0;
+    }
+
+    .final .sub {
+      color: rgba(243, 245, 239, .78);
+      margin: 14px auto 0;
+    }
+
+    .final .btn {
+      margin-top: 28px;
+    }
+
+    /* FAQ Accordion */
+    .faq-list {
+      margin-top: 28px;
+      display: grid;
+      gap: 12px;
+    }
+
+    details {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 22px;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    details[open] {
+      border-color: rgba(232, 71, 63, .28);
+      box-shadow: 0 10px 24px rgba(14, 15, 12, .05);
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16.5px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 600;
+      flex-shrink: 0;
+      transition: background .15s ease, color .15s ease;
+    }
+
+    details[open] summary::after {
+      content: "−";
+      background: var(--or);
+      color: #fff;
+    }
+
+    details p {
+      color: var(--muted);
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    details p a {
+      color: var(--or);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width:860px) {
+      .hero {
+        padding: 34px 0 52px;
+      }
+
+      .hero-grid,
+      .split,
+      .grid3 {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 52px 0;
+      }
+
+      .lab-showcase {
+        padding: 26px 20px;
+        border-radius: 22px;
+      }
+
+      .btn,
+      .btn-ghost {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header class="hero">
-  <div class="wrap">
-    <nav>
-      <a class="logo" href="/">WEALTHORIA</a>
-      <a class="login" href="/members/login">Member login</a>
-    </nav>
-    <div class="hero-grid">
-      <div>
-        <div class="eyebrow">Wealthoria Premium</div>
-        <h1>Research, tools and reports to judge any investment yourself.</h1>
-        <p class="lead">44 investing and valuation calculators, weekly market research and company case-study videos, mostly in Kannada. Education only, never buy or sell tips.</p>
-        <div class="price-row"><b>₹99</b><span>/ month</span></div>
-        <div class="cta">
-          <a class="btn" href="/members/subscription">Become a member for ₹99</a>
-          <span class="note">Auto-debit monthly. Cancel anytime.</span>
+  <div id="wl-header"></div>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <span class="hero-pill"><span class="pulse-dot"></span>Wealthoria Membership</span>
+          <h1>Research, tools and reports to <span class="text-grad">judge any investment yourself.</span></h1>
+          <p class="lead">44 investing and valuation calculators, weekly market research and company case-study videos,
+            mostly in Kannada. Education only, never buy or sell tips.</p>
+
+          <div class="price-box">
+            <div class="price-head">
+              <span class="offer-badge">Launch Offer · 50% Off</span>
+              <span class="plan-tag">Monthly Membership</span>
+            </div>
+            <div class="price-row">
+              <del class="price-old" aria-label="Regular price 199 rupees">₹199</del>
+              <span class="price-arrow" aria-hidden="true">→</span>
+              <strong class="price-now">₹99</strong>
+              <span class="price-unit">/ month</span>
+            </div>
+            <p class="price-note">Regular plan ₹199/month. Current offer ₹99/month for new sign-ups — future plan rates
+              are always shown clearly at checkout before payment.</p>
+          </div>
+
+          <div class="cta">
+            <a class="btn" href="/members/subscription">Become a Member <span aria-hidden="true">→</span></a>
+            <a class="btn-ghost" href="/members/login">Member Login</a>
+          </div>
+          <div class="trust-row">
+            <span><i>✓</i> Instant portal access</span>
+            <span><i>✓</i> Razorpay auto-debit</span>
+            <span><i>✓</i> Cancel anytime</span>
+          </div>
+        </div>
+
+        <div class="shot-frame">
+          <div class="shot-bar">
+            <div class="shot-dots"><span></span><span></span><span></span></div>
+            <span class="shot-title">Fundamental Analysis Lab · 44 Calculators</span>
+          </div>
+          <img src="/membership-lab.png"
+            alt="Wealthoria Fundamental Analysis Lab: SIP, XIRR, DCF and valuation calculators" width="2100"
+            height="1720">
         </div>
       </div>
-      <div class="shot"><img src="/membership-lab.png" alt="Wealthoria Fundamental Analysis Lab: SIP, XIRR, DCF and valuation calculators" width="2100" height="1720"></div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main>
-  <section>
-    <div class="wrap">
-      <div class="eyebrow">What ₹99 a month gets you</div>
-      <h2>Everything in the member portal</h2>
-      <p class="sub">One login, six kinds of resources, with new research added every week.</p>
-      <div class="grid3">
-        <div class="card"><div class="tag">Fundamental analysis lab</div><h3>44 calculators</h3><p>From SIP, goal and retirement planners to XIRR, DCF, margin of safety, ROCE and DuPont. Every tool shows its full working.</p></div>
-        <div class="card"><div class="tag">Every week</div><h3>Weekly Order Wins</h3><p>Order wins announced in BSE and NSE filings, summed up by sector, with which orders are only L1 or LoI.</p></div>
-        <div class="card"><div class="tag">Every week</div><h3>Weekly Roundup</h3><p>A newsletter on the week in markets, plus quarterly market reports.</p></div>
-        <div class="card"><div class="tag">Articles &amp; reports</div><h3 class="kn">ಹಣ ಮತ್ತು ಮನಸ್ಸು</h3><p>Our money-and-mind series on how investors really behave, plus sector deep-dives on defence, data centres, retail and more.</p></div>
-        <div class="card"><div class="tag">Videos</div><h3>Company case studies</h3><p>Business model, numbers, green flags and red flags, walked through company by company.</p></div>
-        <div class="card"><div class="tag">Library</div><h3>Ratio analysis guides</h3><p>ROE, ROCE, debt-to-equity, current and quick ratios, margins, turnover ratios and more, explained one by one.</p></div>
+  <main>
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">What membership includes</div>
+          <h2>Everything in the member portal</h2>
+          <p class="sub">One login, six kinds of resources, with new research added every week.</p>
+        </div>
+        <div class="grid3">
+          <div class="card">
+            <div class="card-top">
+              <span class="card-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="2" width="16" height="20" rx="2" />
+                  <line x1="8" y1="6" x2="16" y2="6" />
+                  <line x1="8" y1="10" x2="8" y2="10.01" />
+                  <line x1="12" y1="10" x2="12" y2="10.01" />
+                  <line x1="16" y1="10" x2="16" y2="10.01" />
+                  <line x1="8" y1="14" x2="8" y2="14.01" />
+                  <line x1="12" y1="14" x2="12" y2="14.01" />
+                  <line x1="16" y1="14" x2="16" y2="14.01" />
+                  <line x1="8" y1="18" x2="12" y2="18" />
+                  <line x1="16" y1="18" x2="16" y2="18.01" />
+                </svg></span>
+              <div class="tag">Fundamental lab</div>
+            </div>
+            <h3>44 calculators</h3>
+            <p>From SIP, goal and retirement planners to XIRR, DCF, margin of safety, ROCE and DuPont. Every tool shows
+              its full working.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <span class="card-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                  <polyline points="16 7 22 7 22 13" />
+                </svg></span>
+              <div class="tag">Every week</div>
+            </div>
+            <h3>Weekly Order Wins</h3>
+            <p>Order wins announced in BSE and NSE filings, summed up by sector, with which orders are only L1 or LoI.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <span class="card-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+                  <path d="M18 14h-8" />
+                  <path d="M15 18h-5" />
+                  <path d="M10 6h8v4h-8V6Z" />
+                </svg></span>
+              <div class="tag">Every week</div>
+            </div>
+            <h3>Weekly Roundup</h3>
+            <p>A newsletter on the week in markets, plus quarterly market reports.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <span class="card-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg></span>
+              <div class="tag">Articles &amp; reports</div>
+            </div>
+            <h3 class="kn">ಹಣ ಮತ್ತು ಮನಸ್ಸು</h3>
+            <p>Our money-and-mind series on how investors really behave, plus sector deep-dives on defence, data
+              centres,
+              retail and more.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <span class="card-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="10 8 16 12 10 16 10 8" />
+                </svg></span>
+              <div class="tag">Videos</div>
+            </div>
+            <h3>Company case studies</h3>
+            <p>Business model, numbers, green flags and red flags, walked through company by company.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-top">
+              <span class="card-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg></span>
+              <div class="tag">Library</div>
+            </div>
+            <h3>Ratio analysis guides</h3>
+            <p>ROE, ROCE, debt-to-equity, current and quick ratios, margins, turnover ratios and more, explained one by
+              one.</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section style="padding-top:0">
-    <div class="wrap">
-      <div class="eyebrow">Inside the lab</div>
-      <h2>From “what will my money become?” to “what is this business worth?”</h2>
-      <div class="tools">
-        <span>SIP &amp; step-up SIP</span><span>Lumpsum</span><span>CAGR &amp; reverse CAGR</span><span>Goal planner</span><span>Inflation impact</span><span>Retirement corpus</span><span>XIRR</span><span>Portfolio CAGR</span><span>Drawdown &amp; recovery</span><span>Rebalancing</span><span>Diversification check</span><span>FD vs debt fund vs bond</span><span>Discounted cash flow</span><span>Margin of safety</span><span>EV/EBITDA bridge</span><span>Sum of the parts</span><span>Dividend discount model</span><span>ROE &amp; DuPont</span><span>ROCE</span><span>Debt sustainability</span><span>Market expectations</span><span>Dual Engine Retirement (SWP)</span><span class="more">+ 20 more</span>
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="lab-showcase">
+          <div class="sec-head">
+            <div class="eyebrow">Inside the lab</div>
+            <h2>From “what will my money become?” to “what is this business worth?”</h2>
+          </div>
+          <div class="tools">
+            <span>SIP &amp; step-up SIP</span><span>Lumpsum</span><span>CAGR &amp; reverse CAGR</span><span>Goal
+              planner</span><span>Inflation impact</span><span>Retirement corpus</span><span>XIRR</span><span>Portfolio
+              CAGR</span><span>Drawdown &amp; recovery</span><span>Rebalancing</span><span>Diversification
+              check</span><span>FD vs debt fund vs bond</span><span>Discounted cash flow</span><span>Margin of
+              safety</span><span>EV/EBITDA bridge</span><span>Sum of the parts</span><span>Dividend discount
+              model</span><span>ROE &amp; DuPont</span><span>ROCE</span><span>Debt sustainability</span><span>Market
+              expectations</span><span>Dual Engine Retirement (SWP)</span><span class="more">+ 22 more tools</span>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section style="padding-top:0">
-    <div class="wrap">
-      <div class="eyebrow">Be clear before you join</div>
-      <h2>What's included, and what isn't</h2>
-      <div class="split">
-        <ul class="yes">
-          <li>Full access to the member portal and dashboard</li>
-          <li>All 44 calculators in the Fundamental Analysis Lab</li>
-          <li>Weekly Order Wins and Weekly Roundup reports</li>
-          <li>Articles, reports and company case-study videos</li>
-          <li>Ratio analysis guide library</li>
-        </ul>
-        <ul class="no">
-          <li>Paid courses (sold separately)</li>
-          <li>Stock tips, buy/sell calls or investment advice</li>
-          <li>Refunds for a month that has already started</li>
-        </ul>
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Be clear before you join</div>
+          <h2>What's included, and what isn't</h2>
+        </div>
+        <div class="split">
+          <div class="split-card yes-card">
+            <div class="split-title"><span class="split-badge">✓</span> Included in Membership</div>
+            <ul class="yes">
+              <li>Full access to the member portal and dashboard</li>
+              <li>All 44 calculators in the Fundamental Analysis Lab</li>
+              <li>Weekly Order Wins and Weekly Roundup reports</li>
+              <li>Articles, reports and company case-study videos</li>
+              <li>Ratio analysis guide library</li>
+            </ul>
+          </div>
+          <div class="split-card no-card">
+            <div class="split-title"><span class="split-badge">–</span> Not Included</div>
+            <ul class="no">
+              <li>Paid courses (sold separately)</li>
+              <li>Stock tips, buy/sell calls or investment advice</li>
+              <li>Refunds for a month that has already started</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="stats">
-        <div class="stat"><b>450+</b><span>active members</span></div>
-        <div class="stat"><b>62+</b><span>reports, guides and videos so far</span></div>
-        <div class="stat"><b>₹99</b><span>per month, cancel anytime</span></div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="eyebrow">Questions</div>
+          <h2>Before you subscribe</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>How much does it cost?</summary>
+            <p>The current introductory offer is ₹99 per month (regular plan ₹199/month), billed monthly via Razorpay
+              auto-debit. Future price changes, if any, are always displayed clearly before you subscribe.</p>
+          </details>
+          <details>
+            <summary>Can I cancel?</summary>
+            <p>Yes. Cancel the auto-debit anytime and future payments stop. You keep access until the end of the month
+              you've already paid for.</p>
+          </details>
+          <details>
+            <summary>Are courses included?</summary>
+            <p>No. Courses are sold separately. Everything else in the member portal is included.</p>
+          </details>
+          <details>
+            <summary>Is the content in Kannada?</summary>
+            <p>Most research, articles and videos are in Kannada, with some in English.</p>
+          </details>
+          <details>
+            <summary>Do you give stock tips?</summary>
+            <p>No. Wealthoria is a financial education company. We give you tools and research to decide for yourself,
+              never buy or sell recommendations.</p>
+          </details>
+          <details>
+            <summary>Is there a refund?</summary>
+            <p>Monthly payments are generally non-refundable once the month has started. See our <a
+                href="/refund-policy.html">refund policy</a>.</p>
+          </details>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section style="padding-top:0">
-    <div class="wrap">
-      <div class="eyebrow">Questions</div>
-      <h2>Before you subscribe</h2>
-      <details><summary>How much does it cost?</summary><p>₹99 per month, charged by Razorpay auto-debit each month.</p></details>
-      <details><summary>Can I cancel?</summary><p>Yes. Cancel the auto-debit anytime and future payments stop. You keep access until the end of the month you've already paid for.</p></details>
-      <details><summary>Are courses included?</summary><p>No. Courses are sold separately. Everything else in the member portal is included.</p></details>
-      <details><summary>Is the content in Kannada?</summary><p>Most research, articles and videos are in Kannada, with some in English.</p></details>
-      <details><summary>Do you give stock tips?</summary><p>No. Wealthoria is a financial education company. We give you tools and research to decide for yourself, never buy or sell recommendations.</p></details>
-      <details><summary>Is there a refund?</summary><p>Monthly payments are generally non-refundable once the month has started. See our <a href="/refund-policy.html">refund policy</a>.</p></details>
-    </div>
-  </section>
-
-  <section class="final">
-    <div class="wrap">
-      <h2>Start learning for ₹99 a month</h2>
-      <p class="sub">Join 450+ members using Wealthoria's tools and research to invest with understanding.</p>
-      <a class="btn" href="/members/subscription">Become a member</a>
-    </div>
-  </section>
-</main>
-
-<footer class="wrap">
-  Wealthoria Education Pvt. Ltd. provides financial education only and does not offer investment advice or stock recommendations. Investments in securities markets are subject to market risks.
-  · <a href="/terms.html">Terms</a> · <a href="/privacy-policy.html">Privacy</a> · <a href="/refund-policy.html">Refund policy</a>
-</footer>
+    <section class="final">
+      <div class="wrap">
+        <h2>Start learning with Wealthoria Membership</h2>
+        <p class="sub">Use Wealthoria's calculators, weekly research, and case-study videos to invest with
+          understanding.</p>
+        <a class="btn" href="/members/subscription">Become a Member <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+  </main>
+  <div id="wl-footer"></div>
+  <script src="/app/site-shell.js" defer></script>
 </body>
+
 </html>

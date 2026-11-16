@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cancellation &amp; Refund Policy | Wealthoria</title>
-  <meta name="description" content="Read Wealthoria's Cancellation &amp; Refund Policy for membership subscriptions, auto-debit cancellations, book pre-orders, and eligible refunds.">
+  <title>Cancellation & Refund Policy | Wealthoria</title>
+  <meta name="description" content="Read Wealthoria's Cancellation & Refund Policy for membership subscriptions, auto-debit cancellations, book pre-orders, and eligible refunds.">
   <link rel="canonical" href="https://www.wealthoria.in/refund-policy.html">
 
-  <meta property="og:title" content="Cancellation &amp; Refund Policy | Wealthoria">
-  <meta property="og:description" content="Read Wealthoria's Cancellation &amp; Refund Policy for membership subscriptions, auto-debit cancellations, book pre-orders, and eligible refunds.">
+  <meta property="og:title" content="Cancellation & Refund Policy | Wealthoria">
+  <meta property="og:description" content="Read Wealthoria's Cancellation & Refund Policy for membership subscriptions, auto-debit cancellations, book pre-orders, and eligible refunds.">
   <meta property="og:url" content="https://www.wealthoria.in/refund-policy.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Wealthoria">
@@ -17,54 +17,21 @@
   <link rel="icon" type="image/png" href="/assets/logo-mark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/colors_and_type.css">
-  <link rel="stylesheet" href="/app/site.css?v=11">
+  <link rel="stylesheet" href="/app/site-shell.css">
 
   <style>
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', var(--wl-font-sans, system-ui, sans-serif);
       background: #f8fafc;
       color: #1e293b;
       line-height: 1.7;
     }
-    .site-nav {
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .brand-link {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      color: #0f172a;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .brand-link span {
-      color: #e8473f;
-    }
-    .nav-back {
-      font-size: 14px;
-      font-weight: 600;
-      color: #64748b;
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .nav-back:hover {
-      color: #e8473f;
-    }
     .policy-container {
-      max-width: 820px;
+      max-width: 860px;
       margin: 40px auto 80px;
       padding: 0 20px;
     }
@@ -131,42 +98,97 @@
     a:hover {
       text-decoration: underline;
     }
-    .footer-nav {
-      margin-top: 40px;
-      padding-top: 24px;
-      border-top: 1px solid #e2e8f0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      font-size: 13.5px;
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
     }
-    .footer-nav a {
-      color: #64748b;
-      font-weight: 500;
+    .contact-card-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
     }
-    .footer-nav a:hover {
+    .contact-card-box strong {
+      display: block;
       color: #0f172a;
+      font-size: 14px;
+      margin-bottom: 6px;
     }
-    .site-footer {
-      text-align: center;
-      padding: 30px 20px;
-      color: #94a3b8;
-      font-size: 13px;
-      border-top: 1px solid #e2e8f0;
-      background: #ffffff;
+    .contact-card-box p {
+      margin: 0;
+      font-size: 14px;
+      color: #475569;
     }
   </style>
-</head>
-<body>
 
-  <header style="background: #ffffff; border-bottom: 1px solid #e2e8f0;">
-    <div class="site-nav">
-      <a href="/" class="brand-link">
-        WEALTHORIA<span>.</span>
+</head>
+<body data-wl-bilingual="true">
+
+  <div id="wl-header">
+<header class="wl-site-header">
+  <div class="wl-nav-inner">
+    <a class="wl-brand" href="/">
+      <img class="wl-brand-mark" src="/assets/logo-mark.png" alt="Wealthoria" />
+      <span class="wl-brand-text">
+        <span class="wl-brand-word">WEALTHORIA</span>
+        <span class="wl-brand-sub">FINANCIAL EDUCATION</span>
+      </span>
+    </a>
+    <nav class="wl-nav-links" aria-label="Main navigation">
+      <a href="/">Home</a>
+      <a href="/#why">Why us</a>
+      <a href="/#process">How it works</a>
+      <a href="/#about">About</a>
+      <a href="/wealthoria-disclosure.html">Disclosure</a>
+      <div class="wl-products-nav">
+        <a class="wl-products-trigger" href="/Book.html" aria-haspopup="true">Products</a>
+        <div class="wl-products-dropdown">
+          <a href="/Book.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Book · ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+    <div class="wl-nav-right">
+      <div class="wl-lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-wl-lang="en" class="on">EN</button>
+        <button type="button" data-wl-lang="kn" class="">ಕನ್ನಡ</button>
+      </div>
+      <a class="wl-member-btn" href="/members/login" aria-label="Member Login">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Member</span>
       </a>
-      <a href="/" class="nav-back">← Back to Home</a>
+      <button type="button" class="wl-hamburger" data-wl-drawer-open="true" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
     </div>
-  </header>
+  </div>
+</header>
+<div class="wl-drawer-scrim" id="wl-drawer-scrim"></div>
+<aside class="wl-site-drawer" id="wl-site-drawer" aria-hidden="true">
+  <div class="wl-drawer-head">
+    <a class="wl-brand" href="/">
+      <img class="wl-brand-mark" src="/assets/logo-mark.png" alt="Wealthoria" />
+      <span class="wl-brand-text"><span class="wl-brand-word">WEALTHORIA</span></span>
+    </a>
+    <button type="button" class="wl-hamburger" data-wl-drawer-close="true" aria-label="Close menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <a href="/">Home</a>
+  <a href="/#why">Why us</a>
+  <a href="/#process">How it works</a>
+  <a href="/#about">About</a>
+  <a href="/wealthoria-disclosure.html">Disclosure</a>
+  <a href="/Book.html">Book · ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</a>
+  <div class="wl-drawer-foot">
+    <a class="wl-drawer-login" href="/members/login">Member login</a>
+  </div>
+</aside>
+  </div>
 
   <main class="policy-container">
     <article class="policy-card">
@@ -175,55 +197,92 @@
       <p style="font-size: 13px; color: #94a3b8; margin-top: -8px;">Last updated: November 2026</p>
       <div class="policy-divider"></div>
 
-      <p>Thank you for subscribing to Wealthoria. This Cancellation and Refund Policy outlines the terms regarding our ₹99 monthly membership subscriptions, automated renewal debits, and educational products.</p>
+      <p>At Wealthoria Education Private Limited ("Wealthoria"), we are committed to transparent and fair business practices. This Cancellation &amp; Refund Policy outlines the terms governing subscriptions, publications, and educational services purchased on <a href="https://www.wealthoria.in/">www.wealthoria.in</a>.</p>
 
-      <h2>1. Membership Subscription (₹99 / month)</h2>
-      <p>Wealthoria offers access to an exclusive Member Portal and dashboard at ₹99 per month. Active subscribers receive access to curated financial video lessons, weekly market and order win summaries, Kannada learning articles, and 44 Fundamental Analysis Lab valuation calculators.</p>
-
-      <h2>2. Subscription Renewal and Auto-Debit</h2>
-      <p>Your subscription renews automatically every 30 days based on your authorized payment method (UPI AutoPay or Card mandate). This ensures continuous access without manual monthly payments.</p>
+      <h2>1. Monthly Membership Subscriptions (₹99/month)</h2>
+      <p>Wealthoria provides instant digital access to member-only educational lessons, 44 financial calculators in the Fundamental Analysis Lab, weekly market filings, and research reports.</p>
       <ul>
-        <li>You can cancel your recurring auto-debit authorization at any time directly through your dashboard settings or by writing to <a href="mailto:support@wealthoria.in">support@wealthoria.in</a>.</li>
-        <li>When you cancel auto-debit, no future debits will occur. You will continue to have full access to the member portal until the end of your currently paid 30-day period.</li>
+        <li><strong>Cancellation:</strong> You can cancel your monthly recurring auto-debit subscription at any time with no lock-in period and no cancellation fee.</li>
+        <li><strong>Access After Cancellation:</strong> Once cancelled, you will not be billed for any subsequent cycles, and you will retain full access to all member features until the expiration date of your current billing period.</li>
+        <li><strong>Refunds:</strong> Because access to digital proprietary tools and weekly content is granted immediately upon successful activation, monthly subscription fees already charged are generally non-refundable once a cycle has commenced.</li>
+        <li><strong>Duplicate Charges:</strong> In the event of a technical glitch causing duplicate deductions for the same billing cycle, the duplicate amount will be refunded in full upon verification.</li>
       </ul>
 
-      <h2>3. Access After Expiry or Failed Renewal</h2>
-      <p>Once your paid subscription cycle expires, if an automatic renewal payment fails or has been cancelled, member portal access is deactivated. You will not be charged extra, and you can renew at any time.</p>
-
-      <h2>4. Reactivating Your Membership</h2>
-      <p>You can reactivate your membership at any time by visiting <a href="/subscription.html">www.wealthoria.in/subscription.html</a> and entering your registered email address. Once payment is confirmed, your account access is instantly restored.</p>
-
-      <h2>5. Refund Eligibility</h2>
-      <p>Due to the immediate access granted to proprietary digital educational materials, calculators, and videos upon payment:</p>
+      <h2>2. Physical Book Pre-Orders (ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ)</h2>
+      <p>Wealthoria offers pre-orders for its comprehensive financial education book written in Kannada (₹1,499).</p>
       <ul>
-        <li>Monthly subscription fees (₹99) are generally <strong>non-refundable</strong> once the billing cycle has commenced.</li>
-        <li><strong>Duplicate or Erroneous Charges:</strong> If you were accidentally charged twice for the same billing cycle due to a technical glitch, please notify us within 7 days. Verified duplicate charges will be refunded in full to your original payment method within 5–7 business days.</li>
+        <li><strong>Pre-Dispatch Cancellation:</strong> You may cancel your pre-order at any time before the book is dispatched from our fulfillment facility for a 100% full refund.</li>
+        <li><strong>Damaged or Defective Delivery:</strong> If you receive a book that has printing defects or was damaged during transit, notify us within 7 days of delivery with photos of the damage. We will dispatch a replacement copy at no additional charge or issue a full refund upon return of the damaged copy.</li>
       </ul>
 
-      <h2>6. Book Pre-Orders Cancellation</h2>
-      <p>For physical pre-orders of <em>"ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ"</em> (The Science of Investing), cancellation requests received prior to order dispatch will be eligible for a full refund. Once the book has been packed and shipped, standard return policies apply.</p>
+      <h2>3. Special Workshops &amp; Masterclasses</h2>
+      <p>For ticketed live webinars or specialized seminars:</p>
+      <ul>
+        <li>Cancellations requested at least 48 hours prior to the event schedule will receive a full refund.</li>
+        <li>Cancellations requested within 48 hours of the event are non-refundable, but access to session recordings and digital learning handouts will be provided.</li>
+        <li>If an event is rescheduled or cancelled by Wealthoria, participants will receive a full 100% refund or free transfer to the rescheduled date.</li>
+      </ul>
 
-      <h2>7. Customer Support &amp; Refund Assistance</h2>
-      <p>For any queries related to subscription cancellations, payments, or refunds, please reach out to our team:</p>
+      <h2>4. Refund Processing Time</h2>
+      <p>Approved refunds are processed through our payment gateway partner, Razorpay Software Ltd., and credited back to the original payment source (UPI account, debit card, or credit card) within <strong>5 to 7 business days</strong> as per banking turnaround standards.</p>
+
+      <h2>5. How to Request Cancellation or Refund</h2>
+      <p>To request a cancellation, refund, or check the status of your payment, please contact our support desk:</p>
       <p>
         <strong>Email:</strong> <a href="mailto:support@wealthoria.in">support@wealthoria.in</a><br>
-        <strong>Phone:</strong> <a href="tel:+919019759001">+91 90197 59001</a><br>
-        <strong>Operating Hours:</strong> Monday – Saturday, 9:30 AM to 6:30 PM IST
+        <strong>Phone:</strong> <a href="tel:+919019759001">+91 90197 59001</a> (Mon – Sat, 9:30 AM – 6:30 PM IST)<br>
+        <strong>Details to Include:</strong> Your registered email ID, mobile number, and Razorpay payment ID (e.g., `pay_...`).
       </p>
-
-      <div class="footer-nav">
-        <a href="/">Home</a>
-        <a href="/privacy-policy.html">Privacy Policy</a>
-        <a href="/terms.html">Terms &amp; Conditions</a>
-        <a href="/contact.html">Contact Us</a>
-        <a href="/wealthoria-disclosure.html">Regulatory Disclosure</a>
-      </div>
     </article>
   </main>
 
-  <footer class="site-footer">
-    <p>© 2026 Wealthoria Education Private Limited. All rights reserved.</p>
-  </footer>
+  <div id="wl-footer">
+<footer class="wl-site-footer">
+  <div class="wl-footer-wrap">
+    <div class="wl-footer-top">
+      <div>
+        <a class="wl-footer-brand" href="/">
+          <img class="wl-brand-mark" src="/assets/logo-mark.png" alt="Wealthoria" />
+          <span class="wl-brand-text">
+            <span class="wl-brand-word">WEALTHORIA</span>
+            <span class="wl-brand-sub">FINANCIAL EDUCATION</span>
+          </span>
+        </a>
+        <p class="wl-footer-blurb">Wealthoria is a financial education company on a mission to build a financially aware India, learning before investing, investing before trading.</p>
+      </div>
+      <div class="wl-footer-right">
+        <div class="wl-footer-links">
+          <a href="/">Home</a>
+          <a href="/privacy-policy.html">Privacy Policy</a>
+          <a href="/terms.html">Terms & Conditions</a>
+          <a href="/refund-policy.html">Refund Policy</a>
+          <a href="/contact.html">Contact Us</a>
+        </div>
+        <div class="wl-footer-social">
+          <a href="https://www.youtube.com/@Wealthoria_edu/featured" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+          </a>
+          <a href="https://www.instagram.com/wealthoria_edu" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+          </a>
+          <a href="https://wa.me/919019759001" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/wealthoria-education-988411413/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <p class="wl-footer-disclaimer">Wealthoria provides financial education only and does not offer investment advice, stock tips, or guaranteed returns. Investments in securities markets are subject to market risks.</p>
+    <div class="wl-footer-bar">
+      <span>&copy; 2026 Wealthoria Education Pvt. Ltd. All rights reserved.</span>
+      <span>Learning is the first investment.</span>
+    </div>
+  </div>
+</footer>
+  </div>
 
+  <script src="/app/site-shell.js" defer></script>
 </body>
 </html>

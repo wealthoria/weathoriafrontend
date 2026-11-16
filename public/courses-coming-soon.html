@@ -5,16 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Courses — Wealthoria</title>
+  <meta name="robots" content="noindex, follow">
 
-  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="icon" href="/assets/logo-mark.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@600;700;800;900&family=Marcellus&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@600;700;800;900&display=swap"
     rel="stylesheet"
   >
   <link rel="stylesheet" href="/assets/colors_and_type.css">
+  <link rel="stylesheet" href="/app/site-shell.css">
 
   <style>
 
@@ -68,11 +70,11 @@
     }
 
     .brand-name {
-      font-family: "Marcellus", var(--font-display, serif);
+      font-family: var(--font-display, 'Manrope', 'Inter', sans-serif);
       font-size: 22px;
-      letter-spacing: .2em;
+      letter-spacing: .16em;
       text-transform: uppercase;
-      font-weight: 500;
+      font-weight: 800;
       color: #17201c;
     }
 
@@ -359,30 +361,7 @@
        HEADER
   ========================= -->
 
-  <header>
-
-    <a href="/" class="brand">
-
-      <img
-        src="assets/logo-mark.png"
-        alt="Wealthoria"
-      >
-
-      <span class="brand-name">
-        Wealthoria
-      </span>
-
-    </a>
-
-
-    <a
-      href="javascript:history.back()"
-      class="back-btn"
-    >
-      ← Back
-    </a>
-
-  </header>
+  <div id="wl-header"></div>
 
 
 
@@ -576,12 +555,8 @@
        FOOTER
     ========================= -->
 
-  <footer>
-
-    © 2026 Wealthoria Education Pvt. Ltd.
-    · Learning is the first investment.
-
-  </footer>
+  <div id="wl-footer"></div>
+  <script src="/app/site-shell.js" defer></script>
 
 
 </body>

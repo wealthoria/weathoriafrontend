@@ -209,11 +209,9 @@ function isMemberAccessActive(member) {
   const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
   const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
 
-  // When renewal charge has failed (in retry mode), access is strictly restricted to paid period (NO extra free access)
+  // When renewal charge has failed (in retry mode): payment for the new cycle failed, strictly INACTIVE
   if (isFailedRetry) {
-    const truePaidUntil = getMemberTruePaidUntil(member);
-    if (!truePaidUntil) return false;
-    return truePaidUntil > Date.now();
+    return false;
   }
 
   if (subStatus === "cancelled" || normStatus === "cancelled" || subStatus === "halted" || subStatus === "expired") {
@@ -5807,9 +5805,10 @@ Wealthoria Team`;
                             >
 
                               {(() => {
+                                const isRenewalFailed = Boolean(member.isRenewalFailed) || member.subscriptionStatusPrimary === "pending";
                                 const accessActive = isMemberAccessActive(member);
                                 const rawStatus = String(member.status || "active").toLowerCase();
-                                const effectiveStatus = (rawStatus === "deactivated" || rawStatus === "blocked" || rawStatus === "suspended" || !accessActive)
+                                const effectiveStatus = (rawStatus === "deactivated" || rawStatus === "blocked" || rawStatus === "suspended" || isRenewalFailed || !accessActive)
                                   ? (rawStatus === "deactivated" ? "deactivated" : "inactive")
                                   : "active";
                                 const isActive = effectiveStatus === "active";

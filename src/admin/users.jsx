@@ -200,6 +200,39 @@ function getMemberTruePaidUntil(member) {
   return rawNextBilling || 0;
 }
 
+function isMemberAccessActive(member) {
+  if (!member) return false;
+  const normStatus = normalizeValue(member.status || "");
+  if (["deactivated", "disabled", "blocked", "suspended", "inactive"].includes(normStatus)) {
+    return false;
+  }
+  const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
+  const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
+
+  // When renewal charge has failed (in retry mode), access is strictly restricted to paid period (NO extra free access)
+  if (isFailedRetry) {
+    const truePaidUntil = getMemberTruePaidUntil(member);
+    if (!truePaidUntil) return false;
+    return truePaidUntil > Date.now();
+  }
+
+  if (subStatus === "cancelled" || normStatus === "cancelled" || subStatus === "halted" || subStatus === "expired") {
+    const truePaidUntil = getMemberTruePaidUntil(member);
+    return truePaidUntil > Date.now();
+  }
+
+  // Active subscription: must have paid and paid period must still be valid in the future
+  if (member.hasPaid) {
+    const truePaidUntil = getMemberTruePaidUntil(member);
+    if (!truePaidUntil || truePaidUntil <= Date.now()) {
+      return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 function toDateInputValue(date) {
   if (!date) return "";
   const d = new Date(date);
@@ -3212,45 +3245,6 @@ function UsersScreen() {
     }, [joinedMembers]);
 
 
-  /* =======================================================
-     MEMBER ACCESS VALIDATION (Strict Dashboard Login Access)
-     A member can ONLY access the dashboard if:
-     1. Status is not deactivated/blocked/inactive.
-     2. Subscription is active OR if cancelled/failed, paid period
-        has not expired (i.e., within 30 days of last payment).
-  ======================================================= */
-  const isMemberAccessActive = (member) => {
-    if (!member) return false;
-    const normStatus = normalizeValue(member.status || "");
-    if (["deactivated", "disabled", "blocked", "suspended", "inactive"].includes(normStatus)) {
-      return false;
-    }
-    const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
-    const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
-
-    // When renewal charge has failed (in retry mode), access is strictly restricted to paid period (NO extra free access)
-    if (isFailedRetry) {
-      const truePaidUntil = getMemberTruePaidUntil(member);
-      if (!truePaidUntil) return false;
-      return truePaidUntil > Date.now();
-    }
-
-    if (subStatus === "cancelled" || normStatus === "cancelled" || subStatus === "halted" || subStatus === "expired") {
-      const truePaidUntil = getMemberTruePaidUntil(member);
-      return truePaidUntil > Date.now();
-    }
-
-    // Active subscription: must have paid and paid period must still be valid in the future
-    if (member.hasPaid) {
-      const truePaidUntil = getMemberTruePaidUntil(member);
-      if (!truePaidUntil || truePaidUntil <= Date.now()) {
-        return false;
-      }
-      return true;
-    }
-
-    return false;
-  };
 
   /* =======================================================
      RECURRING SUBSCRIBERS LIST & FILTERING

@@ -1,12 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-
   "buildCommand": "npm run build",
-
   "outputDirectory": "dist",
-
   "cleanUrls": false,
-
+  "redirects": [
+    {
+      "source": "/Wealthoria.html",
+      "destination": "/",
+      "statusCode": 301
+    },
+    {
+      "source": "/wealthoria.html",
+      "destination": "/",
+      "statusCode": 301
+    }
+  ],
   "headers": [
     {
       "source": "/wealthoria-disclosure.html",
@@ -30,7 +38,6 @@
       ]
     }
   ],
-
   "rewrites": [
     {
       "source": "/customer-details",
@@ -49,7 +56,23 @@
       "destination": "/membership.html"
     },
     {
+      "source": "/calculators",
+      "destination": "/Fundamental_Analysis_Lab.html"
+    },
+    {
+      "source": "/calculators/",
+      "destination": "/Fundamental_Analysis_Lab.html"
+    },
+    {
       "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/kn",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/kn/",
       "destination": "/index.html"
     },
     {

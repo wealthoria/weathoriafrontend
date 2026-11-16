@@ -1,4 +1,5 @@
 import React from "react";
+import { findInternalExcerptMarkers } from "./excerptGuard.js";
 
 /* global React, window */
 /* =========================================================================
@@ -15,18 +16,18 @@ const M_ICONS = {
   courses: <><path d="M4 5h16v14H4z" /><path d="M4 9h16" /><path d="M8 13h8M8 16h5" /></>,
   users: <><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 6a3 3 0 0 1 0 6M21 20a6 6 0 0 0-3-5.2" /></>,
   video: <><rect x="3" y="6" width="13" height="12" rx="2" /><path d="M16 10l5-3v10l-5-3z" /></>,
-youtube: (
-  <>
-    <path
-      d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8Z"
-    />
-    <path
-      d="m10 8 6 4-6 4V8Z"
-      fill="currentColor"
-      stroke="none"
-    />
-  </>
-),
+  youtube: (
+    <>
+      <path
+        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8Z"
+      />
+      <path
+        d="m10 8 6 4-6 4V8Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </>
+  ),
   instagram: (
     <>
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -41,20 +42,20 @@ youtube: (
     </>
   ),
 
-reports: (
-  <>
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <path d="M7 16v-5" />
-    <path d="M12 16V8" />
-    <path d="M17 16v-7" />
-  </>
-),
-enquiries: (
-  <>
-    <path d="M4 5h16v11H8l-4 4V5z" />
-    <path d="M8 9h8M8 12h5" />
-  </>
-),
+  reports: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M7 16v-5" />
+      <path d="M12 16V8" />
+      <path d="M17 16v-7" />
+    </>
+  ),
+  enquiries: (
+    <>
+      <path d="M4 5h16v11H8l-4 4V5z" />
+      <path d="M8 9h8M8 12h5" />
+    </>
+  ),
 
   pdf: <><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6" /><path d="M8 14h1.5a1.5 1.5 0 0 1 0 3H8zM8 14v6" /></>,
   quiz: <><path d="M9 11l3 3 8-8" /><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" /></>,
@@ -107,11 +108,11 @@ function MIcon({ name, size = 20, stroke = 2, ...rest }) {
 function typeIcon(type) { return type === "video" ? "video" : type === "pdf" ? "pdf" : "quiz"; }
 
 /* ---- router (hash with params) ------------------------------------------ */
-const MRouterContext = createContext({ path: "/member/login", navigate: () => {} });
+const MRouterContext = createContext({ path: "/member/login", navigate: () => { } });
 function useMRouter() { return useContext(MRouterContext); }
 
 /* ---- toast --------------------------------------------------------------- */
-const MToastContext = createContext({ push: () => {} });
+const MToastContext = createContext({ push: () => { } });
 function useMToast() { return useContext(MToastContext); }
 function MToastProvider({ children }) {
   const [items, setItems] = useState([]);
@@ -173,9 +174,66 @@ function Switch({ checked, onChange }) {
     </label>
   );
 }
-function StatusPill({ status }) {
-  return <span className={`pill ${status}`}><span className="dot" />{status.charAt(0).toUpperCase() + status.slice(1)}</span>;
+function ExcerptSocialFields({
+  description,
+  onDescriptionChange,
+  socialCaption,
+  onSocialCaptionChange,
+  descriptionPlaceholder = "Short description"
+}) {
+  const markers = findInternalExcerptMarkers(description);
+
+  return (
+    <>
+      <div className="field">
+        <label>Description</label>
+        <textarea
+          className="textarea"
+          value={description}
+          onChange={(event) => onDescriptionChange(event.target.value)}
+          placeholder={descriptionPlaceholder}
+        />
+        {markers.length > 0 && (
+          <div className="excerpt-warn" role="alert">
+            Internal note marker detected in excerpt (
+            <strong>{markers.join(", ")}</strong>). Remove it from Description
+            or move it into <strong>Social caption</strong> before publishing.
+          </div>
+        )}
+      </div>
+
+      <div className="field">
+        <label>Social caption</label>
+        <textarea
+          className="textarea"
+          value={socialCaption}
+          onChange={(event) => onSocialCaptionChange(event.target.value)}
+          placeholder="Optional WhatsApp / social media caption (never shown in member excerpts)"
+        />
+        <span className="field-hint">
+          Saved separately for WhatsApp and social sharing; excluded from member cards.
+        </span>
+      </div>
+    </>
+  );
 }
 
-Object.assign(window, { MIcon, typeIcon, MRouterContext, useMRouter, MToastContext, useMToast, MToastProvider, ConfirmContext, useConfirm, ConfirmProvider, Switch, StatusPill });
+function ExcerptPublishError({ error }) {
+  if (!error) return null;
+  return (
+    <div className="excerpt-block-err" role="alert">
+      {error}
+    </div>
+  );
+}
+
+function StatusPill({ status }) {
+  const safeStatus = String(status || "draft");
+  const label = safeStatus === "under_review"
+    ? "Under Review"
+    : safeStatus.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return <span className={`pill ${safeStatus}`}><span className="dot" />{label}</span>;
+}
+
+Object.assign(window, { MIcon, typeIcon, MRouterContext, useMRouter, MToastContext, useMToast, MToastProvider, ConfirmContext, useConfirm, ConfirmProvider, Switch, StatusPill, ExcerptSocialFields, ExcerptPublishError });
 

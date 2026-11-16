@@ -166,7 +166,6 @@ function getMemberTruePaidUntil(member) {
     safeTimestamp(member.lastPaymentDate) ||
     safeTimestamp(member.paidAt) ||
     safeTimestamp(member.lastPaymentAt) ||
-    safeTimestamp(member.lastChargedAt) ||
     0;
 
   const baseMs = lastPayMs || initialStartMs;
@@ -179,17 +178,26 @@ function getMemberTruePaidUntil(member) {
   const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
   const isCancelled = ["cancelled", "halted", "expired", "completed"].includes(subStatus);
 
-  if (isCancelled || isFailedRetry) {
-    if (baseMs > 0) {
-      // 31 days max per paid cycle
-      const maxPaidCoveredMs = baseMs + (lastPayMs ? 31 * 86400000 : paidCount * 31 * 86400000);
-      if (rawNextBilling > maxPaidCoveredMs) {
-        return baseMs + (lastPayMs ? 30 * 86400000 : paidCount * 30 * 86400000);
-      }
+  // Absolute maximum paid access based on confirmed paid invoices (31 days max per paid count)
+  const maxPaidMs = initialStartMs > 0
+    ? initialStartMs + (paidCount * 31 * 86400000)
+    : (baseMs > 0 ? baseMs + (paidCount * 31 * 86400000) : 0);
+
+  if (maxPaidMs > 0) {
+    // If renewal failed, pending retry, or cancelled: strictly cap access at paid count coverage
+    if (isCancelled || isFailedRetry) {
+      return maxPaidMs;
     }
+
+    // If active mandate, but rawNextBilling exceeds paid coverage, do not grant extra free access
+    if (rawNextBilling > maxPaidMs) {
+      return maxPaidMs;
+    }
+
+    return rawNextBilling || maxPaidMs;
   }
 
-  return rawNextBilling || (baseMs ? baseMs + 30 * 86400000 : 0);
+  return rawNextBilling || 0;
 }
 
 function toDateInputValue(date) {
@@ -302,11 +310,11 @@ function checkSubRenewalFailed(sub) {
     return true;
   }
 
-  // Automatic overdue detection: If an active mandate has exceeded 32 days from last successful payment without renewal
+  // Automatic overdue detection: If an active mandate has exceeded 31 days from last successful payment without renewal
   if (normStatus === "active" || rzStatus === "active") {
     const createdMs = safeTimestamp(sub.createdAt) || safeTimestamp(sub.joinedAt) || safeTimestamp(sub.subscriptionStartDate) || 0;
     const lastPayMs = safeTimestamp(sub.paidAt) || safeTimestamp(sub.lastPaymentAt) || safeTimestamp(sub.lastChargedAt) || safeTimestamp(sub.lastPaymentDate) || createdMs;
-    if (lastPayMs > 0 && (lastPayMs + 32 * 24 * 60 * 60 * 1000) < Date.now()) {
+    if (lastPayMs > 0 && (lastPayMs + 31 * 24 * 60 * 60 * 1000) < Date.now()) {
       return true;
     }
   }
@@ -2693,7 +2701,6 @@ function UsersScreen() {
           })
           .sort(
             (a, b) =>
-              subscriptionRank(b) - subscriptionRank(a) ||
               toMillis(
                 b.updatedAt ||
                 b.createdAt ||
@@ -2703,7 +2710,8 @@ function UsersScreen() {
                 a.updatedAt ||
                 a.createdAt ||
                 a.subscriptionStartDate
-              )
+              ) ||
+              subscriptionRank(b) - subscriptionRank(a)
           );
 
       const hasPaid =
@@ -3041,12 +3049,17 @@ function UsersScreen() {
                 value.includes(query)
             );
 
-          const normalizedMemberStatus = normalizeValue(member.status || "active");
+          const accessActive = isMemberAccessActive(member);
+          const rawMemberStatus = normalizeValue(member.status || "active");
+          const effectiveMemberStatus =
+            ["deactivated", "disabled", "blocked", "suspended"].includes(rawMemberStatus)
+              ? rawMemberStatus
+              : (!accessActive ? "inactive" : "active");
 
           const matchesMemberStatus =
             memberStatusFilter === "all" ||
-            normalizedMemberStatus ===
-            memberStatusFilter;
+            effectiveMemberStatus === memberStatusFilter ||
+            (memberStatusFilter === "active" && effectiveMemberStatus === "active");
 
           const matchesSubscriptionStatus =
             subscriptionStatusFilter === "all" ||
@@ -3215,19 +3228,28 @@ function UsersScreen() {
     const subStatus = normalizeValue(member.subscriptionStatusPrimary || "");
     const isFailedRetry = Boolean(member.isRenewalFailed) || subStatus === "pending";
 
-    // When renewal charge has failed (in retry mode), allow only a strict 48-hour grace window from true paid end
+    // When renewal charge has failed (in retry mode), access is strictly restricted to paid period (NO extra free access)
     if (isFailedRetry) {
       const truePaidUntil = getMemberTruePaidUntil(member);
       if (!truePaidUntil) return false;
-      const GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
-      return (truePaidUntil + GRACE_PERIOD_MS) > Date.now();
+      return truePaidUntil > Date.now();
     }
 
     if (subStatus === "cancelled" || normStatus === "cancelled" || subStatus === "halted" || subStatus === "expired") {
       const truePaidUntil = getMemberTruePaidUntil(member);
       return truePaidUntil > Date.now();
     }
-    return Boolean(member.hasPaid);
+
+    // Active subscription: must have paid and paid period must still be valid in the future
+    if (member.hasPaid) {
+      const truePaidUntil = getMemberTruePaidUntil(member);
+      if (!truePaidUntil || truePaidUntil <= Date.now()) {
+        return false;
+      }
+      return true;
+    }
+
+    return false;
   };
 
   /* =======================================================
@@ -5793,7 +5815,9 @@ Wealthoria Team`;
                               {(() => {
                                 const accessActive = isMemberAccessActive(member);
                                 const rawStatus = String(member.status || "active").toLowerCase();
-                                const effectiveStatus = (rawStatus === "deactivated" || !accessActive) ? "inactive" : "active";
+                                const effectiveStatus = (rawStatus === "deactivated" || rawStatus === "blocked" || rawStatus === "suspended" || !accessActive)
+                                  ? (rawStatus === "deactivated" ? "deactivated" : "inactive")
+                                  : "active";
                                 const isActive = effectiveStatus === "active";
 
                                 return (
@@ -5804,8 +5828,8 @@ Wealthoria Team`;
                                       gap: 6,
                                       padding: "5px 9px",
                                       borderRadius: 999,
-                                      background: isActive ? "#eaf7ed" : "#f1f3f5",
-                                      color: isActive ? "#217a36" : "#69727c",
+                                      background: isActive ? "#eaf7ed" : "#fef2f2",
+                                      color: isActive ? "#217a36" : "#b91c1c",
                                       fontSize: 11,
                                       fontWeight: 750
                                     }}
@@ -5815,7 +5839,7 @@ Wealthoria Team`;
                                         width: 6,
                                         height: 6,
                                         borderRadius: "50%",
-                                        background: isActive ? "#2ead4b" : "#9aa1a8"
+                                        background: isActive ? "#2ead4b" : "#dc2626"
                                       }}
                                     />
                                     {displayValue(effectiveStatus)}

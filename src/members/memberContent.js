@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 /* =========================================================
    MEMBER CONTENT HELPERS
@@ -229,7 +229,7 @@ export function getCurrentMemberInfo() {
         ...JSON.parse(window.localStorage.getItem("wealthoria-member-sessions") || "{}"),
         ...JSON.parse(window.sessionStorage.getItem("wealthoria-member-sessions") || "{}")
       };
-    } catch {}
+    } catch { }
 
     let session = uid ? sessions[uid] || {} : {};
 
@@ -255,7 +255,7 @@ export function getCurrentMemberInfo() {
             session = { ...session, ...userObj };
           }
         }
-      } catch {}
+      } catch { }
     }
 
     // Fallback: Firebase Auth
@@ -271,7 +271,7 @@ export function getCurrentMemberInfo() {
             phone: session.phone || fbUser.phoneNumber
           };
         }
-      } catch {}
+      } catch { }
     }
 
     if (!uid) {
@@ -321,12 +321,12 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
       t.includes("roundup")
         ? "weekly_roundup"
         : t.includes("news")
-        ? "newsletter"
-        : (t.includes("video") || t.includes("vedio") || t.includes("course") || t.includes("watch"))
-        ? "video"
-        : t.includes("ratio")
-        ? "ratio_analysis"
-        : "weekly_report";
+          ? "newsletter"
+          : (t.includes("video") || t.includes("vedio") || t.includes("course") || t.includes("watch"))
+            ? "video"
+            : t.includes("ratio")
+              ? "ratio_analysis"
+              : "weekly_report";
 
     const member = getCurrentMemberInfo();
     const token = getMemberToken();
@@ -351,7 +351,7 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
           content_title: contentTitle || "",
           member_id: member?.uid || ""
         });
-      } catch {}
+      } catch { }
     }
 
     // Helper to send to Cloud Functions API fallback
@@ -369,13 +369,13 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
           member
         })
       })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(`[Wealthoria Track] 🌐 Backend tracking response:`, data);
-      })
-      .catch((err) => {
-        console.warn(`[Wealthoria Track] ⚠️ Backend tracking request failed:`, err);
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(`[Wealthoria Track] 🌐 Backend tracking response:`, data);
+        })
+        .catch((err) => {
+          console.warn(`[Wealthoria Track] ⚠️ Backend tracking request failed:`, err);
+        });
     };
 
     // 2. Direct Firestore log for real-time reactivity (preferred)
@@ -461,4 +461,97 @@ export function trackMemberContentOpen({ type, contentId, contentTitle }) {
   } catch (err) {
     console.error("[Wealthoria Track] ❌ Error in trackMemberContentOpen:", err);
   }
+}
+
+/* ---------------------------------------------------------
+   EDUCATIONAL & ADVISORY DISCLAIMER
+--------------------------------------------------------- */
+
+export const STUDY_DISCLAIMER_PREFIX =
+  "Disclaimer (Educational & Study Purpose Only):";
+
+export function StudyDisclaimer({
+  variant = "video",
+  subject = "This video"
+}) {
+  return React.createElement(
+    "div",
+    {
+      className: `member-study-disclaimer member-study-disclaimer--${variant}`,
+      role: "note",
+      "aria-label": "Educational and advisor confirmation disclaimer",
+      onClick: (event) => event.stopPropagation()
+    },
+    React.createElement("strong", null, STUDY_DISCLAIMER_PREFIX),
+    " ",
+    `${subject} is strictly for educational and study purposes only. Before investing, please take confirmation from a SEBI-registered financial advisor.`
+  );
+}
+
+/* ---------------------------------------------------------
+   PAID-ONLY MEMBER ACCESS GUARD
+--------------------------------------------------------- */
+
+function parseMembershipDateMillis(value) {
+  if (!value) return 0;
+  if (typeof value === "object") {
+    const sec = value.seconds !== undefined ? value.seconds : value._seconds;
+    if (typeof sec === "number") return sec * 1000;
+  }
+  const t = new Date(value).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
+export function hasPaidMemberAccess(memberData) {
+  if (!memberData || typeof memberData !== "object") return false;
+
+  const status = String(memberData.status || "").trim().toLowerCase();
+  if (status !== "active" && status !== "cancelled" && status !== "canceled") {
+    return false;
+  }
+
+  const sub = memberData.subscription || {};
+  if (sub.accessActive === false) return false;
+
+  const paidCount = Math.max(1, Number(sub.paidCount || 1));
+  const startMs = parseMembershipDateMillis(sub.startDate || sub.subscriptionStartDate || sub.createdAt);
+  const lastPayMs = parseMembershipDateMillis(sub.lastPaymentDate || sub.paidAt || sub.lastPaymentAt) || startMs;
+  const maxCoveredMs = lastPayMs > 0 ? (lastPayMs + 31 * 86400000) : 0;
+
+  const rawPaidMillis = parseMembershipDateMillis(
+    sub.paidUntil || sub.accessUntil || sub.nextBillingDate
+  );
+
+  const isRenewalFailed =
+    Boolean(sub.isRenewalFailed) ||
+    sub.status === "pending" ||
+    sub.razorpayStatus === "pending";
+
+  // If renewal failed or mandate cancelled, or if rawPaidMillis was advanced beyond paid coverage:
+  const paidMillis = (isRenewalFailed || (maxCoveredMs > 0 && rawPaidMillis > maxCoveredMs))
+    ? (maxCoveredMs || rawPaidMillis)
+    : rawPaidMillis;
+
+  const hasPaymentProof =
+    Number(sub.paidCount || 0) > 0 ||
+    Boolean(sub.razorpayPaymentId || sub.paymentId || sub.paidUntil || sub.accessUntil);
+
+  if (!hasPaymentProof && sub.accessActive !== true) {
+    return false;
+  }
+
+  // If the paid period has expired, strictly block access - no extra free access during retries
+  if (paidMillis > 0 && paidMillis <= Date.now()) {
+    return false;
+  }
+
+  if (isRenewalFailed) {
+    return paidMillis > Date.now();
+  }
+
+  if (status === "cancelled" || status === "canceled") {
+    return (sub.accessActive === true || paidMillis > Date.now()) && hasPaymentProof;
+  }
+
+  return sub.accessActive === true || (paidMillis > Date.now() && hasPaymentProof);
 }

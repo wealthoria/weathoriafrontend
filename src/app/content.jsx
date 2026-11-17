@@ -6,6 +6,11 @@
    native reviewer confirm before publishing.
    ========================================================================= */
 
+const ACTIVE_MEMBERS_COUNT = "450+";
+if (typeof window !== "undefined") {
+  window.WEALTHORIA_ACTIVE_MEMBERS = ACTIVE_MEMBERS_COUNT;
+}
+
 const CONTENT = {
   en: {
     dir: "ltr",
@@ -25,6 +30,9 @@ const CONTENT = {
       ],
       cta: "Book consultation",
       products: "Products",
+      home: "Home",
+      memberLogin: "Member",
+      memberLoginFull: "Member login",
     },
     hero: {
       eyebrow: "Financial education · Karnataka",
@@ -32,7 +40,7 @@ const CONTENT = {
       lede: "Understand money, markets and investing before you ever put a rupee at risk. Structured financial education in plain language, and in Kannada.",
       ctaPrimary: "Membership Benefits",
       ctaSecondary: "Courses",
-      trust: "Trusted by 800+ learners across Karnataka",
+      trust: `Trusted by ${ACTIVE_MEMBERS_COUNT} active members across Karnataka`,
       card: {
         title: "Your learning path",
         level: "Beginner",
@@ -40,13 +48,15 @@ const CONTENT = {
         modules: [
           { t: "What is money, really?", s: "done" },
           { t: "Needs, wants & saving", s: "done" },
-          { t: "Stock market fundamentals", s: "now" },
-          { t: "Mutual funds & SIPs", s: "lock" },
+          { t: "The cost of waiting (compounding)", s: "now" },
+          { t: "How the stock market works", s: "lock" },
+          { t: "Reading a financial statement", s: "lock" },
+          { t: "Building your first portfolio", s: "lock" },
         ],
         cta: "Continue learning",
       },
     },
-    ticker: ["Learn in Kannada & English", "No tips, no signals", "800+ active clients", "Risk before returns", "Long-term wealth, not luck", "All over Karnataka", "Education first"],
+    ticker: ["Learn in Kannada & English", "No tips, no signals", `${ACTIVE_MEMBERS_COUNT} active members`, "Risk before returns", "Long-term wealth, not luck", "All over Karnataka", "Education first"],
     narrative: {
       eyebrow: "001 \u00b7 The problem",
       l1: "Tips groups gamble your savings.",
@@ -56,8 +66,7 @@ const CONTENT = {
       sub: "No signals, no predictions, no shortcuts. Just a calm, structured path from your first rupee to independent, informed investing.",
     },
     metrics: [
-      { n: "80+", l: "Students educated", c: "Classroom-first, not webinar spam" },
-      { n: "800+", l: "Active clients", c: "Families investing with a plan" },
+      { n: ACTIVE_MEMBERS_COUNT, l: "Active members", c: "Members learning across Karnataka" },
       { n: "Karnataka", l: "Reach", c: "Tier 2 and 3 cities included" },
       { n: "1,200+", l: "Learning hours delivered", c: "In Kannada and English" },
     ],
@@ -113,7 +122,7 @@ const CONTENT = {
         {
           photoLabel: "Sandeep's photo, drop image",
           name: "Sandeep M. Kalburgi",
-          photo: "assets/founder-sandeep.jpg",
+          photo: "/assets/founder-sandeep.jpg",
           role: "Director, Business & Management",
           quote: "Every share represents a piece of human productivity. Invest in that, not in price movements.",
           creds: [
@@ -128,7 +137,7 @@ const CONTENT = {
         {
           photoLabel: "Manjunath's photo, drop image",
           name: "Manjunath K.S.",
-          photo: "assets/founder-manjunath.jpg",
+          photo: "/assets/founder-manjunath.jpg",
           role: "Director, Research & Content",
           quote: "The goal of investing is not to beat everyone else. It is to secure your financial independence.",
           creds: [
@@ -177,11 +186,13 @@ const CONTENT = {
     },
     library: {
       eyebrow: "Free knowledge library",
-      title: "Guides, calculators & cheat-sheets",
-      sub: "Self-serve resources to keep learning between sessions, all free.",
+      title: "Guides, checklists & cheat-sheets",
+      sub: "Free self-serve resources to learn between sessions — while all calculators are reserved strictly for paid ₹99/mo members.",
+      ctaCalc: "Members Only",
+      ctaRead: "Read",
       items: [
         { ic: "file", tag: "Guide", t: "Beginner's guide to investing", d: "A plain-language primer covering the absolute basics." },
-        { ic: "calc", tag: "Calculators", t: "Explore calculators", d: "See how disciplined monthly investing compounds over time." },
+        { ic: "calc", tag: "Paid Members Only", t: "Investing & valuation calculators", d: "SIP, DCF & 44 Fundamental Analysis Lab calculators — exclusively for active ₹99/mo members." },
         { ic: "list", tag: "Checklist", t: "Personal finance checklist", d: "The 10 money habits to set up before you invest." },
         { ic: "book", tag: "Glossary", t: "Investing terms, demystified", d: "Every key term explained in one simple place." },
       ],
@@ -198,7 +209,7 @@ const CONTENT = {
       contacts: [
         { ic: "mail", v: "support@wealthoria.in", href: "mailto:support@wealthoria.in" },
         { ic: "phone", v: "+91 90197 59001", href: "tel:+919019759001" },
-        { ic: "pin", v: "Mysuru, Karnataka, India", href: "#" },
+        { ic: "pin", v: "Mysuru, Karnataka, India", href: "https://www.google.com/maps/search/?api=1&query=Wealthoria+Education+Private+Limited+Kalidasa+Road+VV+Mohalla+Mysuru+570002" },
       ],
       form: {
         name: "Full name", email: "Email", phone: "Phone", city: "City",
@@ -224,14 +235,34 @@ const CONTENT = {
         { q: "How do I book a consultation?", a: "Use the consultation form above. Tell us your goals and we'll recommend the right learning path, free, with no obligation." },
       ],
     },
+    introVideo: {
+      titleBefore: "Your journey to financial knowledge starts with",
+      highlight: "Wealthoria.",
+      desc: "Explore courses, practical tools and learning resources designed to help you understand investing, step by step.",
+      benefits: [
+        "Learn at your own pace",
+        "Kannada and English resources",
+        "Explore courses and tools",
+      ],
+      iframeTitle: "Explore Wealthoria",
+    },
     footer: {
       blurb: "Wealthoria is a financial education company on a mission to build a financially aware India, learning before investing, investing before trading.",
       newsletter: "Get a free lesson in your inbox each week",
       newsletterCta: "Join",
+      legalLinks: {
+        privacy: "Privacy Policy",
+        terms: "Terms & Conditions",
+        refund: "Refund Policy",
+        contact: "Contact Us",
+      },
+      tagline: "Learning is the first investment.",
+      rights: "Wealthoria Education Pvt. Ltd. All rights reserved.",
+      backToTop: "Back to top",
       cols: [
         { h: "Learn", links: ["Programs", "Seminars", "Knowledge library", "YouTube channel"] },
         { h: "Company", links: ["About us", "Founder vision", "Careers", "Contact"] },
-        { h: "Resources", links: ["Beginner's guide", "Calculators", "Glossary", "Blog"] },
+        { h: "Resources", links: ["Beginner's guide", "Member Calculators", "Glossary", "Blog"] },
         { h: "Legal", links: ["Privacy policy", "Terms of use", "Disclaimer", "Refund policy"] },
 
       ],
@@ -244,17 +275,20 @@ const CONTENT = {
     dir: "ltr",
     nav: {
       links: [
-        { id: "Why", label: "ನಾವು ಏಕೆ?" },
+        { id: "why", label: "ನಾವು ಏಕೆ?" },
       /*  { id: "programs", label: "ಕಾರ್ಯಕ್ರಮಗಳು" },*/
-        { id: "Process", label: "ಕೆಲಸ ಹೇಗೆ" },
+        { id: "process", label: "ಕೆಲಸ ಹೇಗೆ" },
     /*    { id: "seminars", label: "ಸೆಮಿನಾರ್" },*/
        /* { id: "resources", label: "ಸಂಪನ್ಮೂಲಗಳು" },*/
-        { id: "About", label: "ನಮ್ಮ ಬಗ್ಗೆ" },
+        { id: "about", label: "ನಮ್ಮ ಬಗ್ಗೆ" },
          { id: "Disclosure", label: "ಬಹಿರಂಗೀಕರಣ" },
 
       ],
       cta: "ಸಮಾಲೋಚನೆ ಕಾಯ್ದಿರಿಸಿ",
       products: "ಉತ್ಪನ್ನಗಳು",
+      home: "ಮುಖಪುಟ",
+      memberLogin: "ಸದಸ್ಯರು",
+      memberLoginFull: "ಸದಸ್ಯರ ಲಾಗಿನ್",
     },
     hero: {
       eyebrow: "ಹಣಕಾಸು ಶಿಕ್ಷಣ · ಕರ್ನಾಟಕ",
@@ -262,21 +296,23 @@ const CONTENT = {
       lede: "ಒಂದು ರೂಪಾಯಿಯನ್ನು ಅಪಾಯಕ್ಕೆ ಸಿಲುಕಿಸುವ ಮೊದಲು ಹಣ, ಮಾರುಕಟ್ಟೆ ಮತ್ತು ಹೂಡಿಕೆಯನ್ನು ಸರಳ ಭಾಷೆಯಲ್ಲಿ ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ. ಸರಳ ಭಾಷೆಯಲ್ಲಿ, ಮತ್ತು ಕನ್ನಡದಲ್ಲಿ, ರಚನಾತ್ಮಕ ಹಣಕಾಸು ಶಿಕ್ಷಣ.",
       ctaPrimary: "ಸದಸ್ಯತ್ವದ ಪ್ರಯೋಜನಗಳು",
       ctaSecondary: "ಕೋರ್ಸ್‌ಗಳು",
-      trust: "ಕರ್ನಾಟಕದಾದ್ಯಂತ 800+ ಕಲಿಯುವವರ ವಿಶ್ವಾಸ",
+      trust: `ಕರ್ನಾಟಕದಾದ್ಯಂತ ${ACTIVE_MEMBERS_COUNT} ಸಕ್ರಿಯ ಸದಸ್ಯರ ವಿಶ್ವಾಸ`,
       card: {
         title: "ನಿಮ್ಮ ಕಲಿಕಾ ಮಾರ್ಗ",
         level: "ಆರಂಭಿಕ",
         progress: "6 ರಲ್ಲಿ 2 ಮಾಡ್ಯೂಲ್ ಪೂರ್ಣ",
         modules: [
           { t: "ಹಣ ಎಂದರೇನು?", s: "done" },
-          { t: "ಅಗತ್ಯ, ಬಯಕೆ ಮತ್ತು ಉಳಿತಾಯ", s: "done" },
-          { t: "ಷೇರು ಮಾರುಕಟ್ಟೆ ಮೂಲಾಂಶಗಳು", s: "now" },
-          { t: "ಮ್ಯೂಚುವಲ್ ಫಂಡ್ ಮತ್ತು SIP", s: "lock" },
+          { t: "ಅಗತ್ಯಗಳು, ಆಸೆಗಳು ಮತ್ತು ಉಳಿತಾಯ", s: "done" },
+          { t: "ಕಾಯುವಿಕೆಯ ವೆಚ್ಚ (ಚಕ್ರಬಡ್ಡಿ)", s: "now" },
+          { t: "ಷೇರು ಮಾರುಕಟ್ಟೆ ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ", s: "lock" },
+          { t: "ಹಣಕಾಸು ವರದಿ ಓದುವುದು", s: "lock" },
+          { t: "ನಿಮ್ಮ ಮೊದಲ ಪೋರ್ಟ್‌ಫೋಲಿಯೊ ನಿರ್ಮಿಸುವುದು", s: "lock" },
         ],
         cta: "ಕಲಿಕೆ ಮುಂದುವರಿಸಿ",
       },
     },
-    ticker: ["ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಕಲಿಯಿರಿ", "ಸಲಹೆಗಳಿಲ್ಲ, ಸಿಗ್ನಲ್‌ಗಳಿಲ್ಲ", "800+ ಸಕ್ರಿಯ ಗ್ರಾಹಕರು", "ಲಾಭಕ್ಕೂ ಮುನ್ನ ಅಪಾಯದ ಅರಿವು", "ಅದೃಷ್ಟವಲ್ಲ, ದೀರ್ಘಾವಧಿ ಸಂಪತ್ತು", "ಕರ್ನಾಟಕದಾದ್ಯಂತ", "ಮೊದಲು ಶಿಕ್ಷಣ"],
+    ticker: ["ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಕಲಿಯಿರಿ", "ಸಲಹೆಗಳಿಲ್ಲ, ಸಿಗ್ನಲ್‌ಗಳಿಲ್ಲ", `${ACTIVE_MEMBERS_COUNT} ಸಕ್ರಿಯ ಸದಸ್ಯರು`, "ಲಾಭಕ್ಕೂ ಮುನ್ನ ಅಪಾಯದ ಅರಿವು", "ಅದೃಷ್ಟವಲ್ಲ, ದೀರ್ಘಾವಧಿ ಸಂಪತ್ತು", "ಕರ್ನಾಟಕದಾದ್ಯಂತ", "ಮೊದಲು ಶಿಕ್ಷಣ"],
     narrative: {
       eyebrow: "001 \u00b7 ಸಮಸ್ಯೆ",
       l1: "ಟಿಪ್ಸ್ ಗುಂಪುಗಳು ನಿಮ್ಮ ಉಳಿತಾಯವನ್ನು ಜೂಜಾಡುತ್ತವೆ.",
@@ -286,9 +322,8 @@ const CONTENT = {
       sub: "ಸಿಗ್ನಲ್ ಇಲ್ಲ, ಭವಿಷ್ಯವಾಣಿ ಇಲ್ಲ, ಶಾರ್ಟ್‌ಕಟ್ ಇಲ್ಲ. ನಿಮ್ಮ ಮೊದಲ ರೂಪಾಯಿಯಿಂದ ಸ್ವತಂತ್ರ ಹೂಡಿಕೆಯವರೆಗೆ ಶಾಂತ, ರಚನಾತ್ಮಕ ದಾರಿ.",
     },
     metrics: [
-      { n: "80+", l: "ಶಿಕ್ಷಣ ಪಡೆದ ವಿದ್ಯಾರ್ಥಿಗಳು", c: "ತರಗತಿ-ಮೊದಲ ಕಲಿಕೆ" },
-      { n: "800+", l: "ಸಕ್ರಿಯ ಗ್ರಾಹಕರು", c: "ಯೋಜನೆಯೊಂದಿಗೆ ಹೂಡುವ ಕುಟುಂಬಗಳು" },
-      { n: "ಕರ್ನಾಟಕದಾದ್ಯಂತ", l: "ವ್ಯಾಪ್ತಿ", c: "ಟಯರ್ 2 ಮತ್ತು 3 ನಗರಗಳೂ ಸೇರಿ" },
+      { n: ACTIVE_MEMBERS_COUNT, l: "ಸಕ್ರಿಯ ಸದಸ್ಯರು", c: "ಕರ್ನಾಟಕದಾದ್ಯಂತ ಕಲಿಯುತ್ತಿರುವ ಸದಸ್ಯರು" },
+      { n: "ಕರ್ನಾಟಕ", l: "ವ್ಯಾಪ್ತಿ", c: "ಟಯರ್ 2 ಮತ್ತು 3 ನಗರಗಳೂ ಸೇರಿ" },
       { n: "1,200+", l: "ಒದಗಿಸಿದ ಕಲಿಕಾ ಗಂಟೆಗಳು", c: "ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ" },
     ],
     why: {
@@ -343,7 +378,7 @@ const CONTENT = {
         {
           photoLabel: "ಸಂದೀಪ್ ಫೋಟೋ, ಚಿತ್ರ ಸೇರಿಸಿ",
           name: "ಸಂದೀಪ್ ಎಂ. ಕಲಬುರ್ಗಿ",
-          photo: "assets/founder-sandeep.jpg",
+          photo: "/assets/founder-sandeep.jpg",
           role: "ನಿರ್ದೇಶಕರು, ವ್ಯವಹಾರ ಮತ್ತು ನಿರ್ವಹಣೆ",
           quote: "ನಿಜವಾದ ಸಂಪತ್ತು ಅದೃಷ್ಟದಿಂದಲ್ಲ, ಶಿಸ್ತಿನಿಂದ ಬೆಳೆಯುತ್ತದೆ. ಮೊದಲು ಹಣವನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ನಾವು ಕಲಿಸುತ್ತೇವೆ, ಆಗ ಪ್ರತಿ ನಿರ್ಧಾರವೂ ಅವರದ್ದೇ ಆಗಿರುತ್ತದೆ.",
           creds: [
@@ -358,7 +393,7 @@ const CONTENT = {
         {
           photoLabel: "ಮಂಜುನಾಥ್ ಫೋಟೋ, ಚಿತ್ರ ಸೇರಿಸಿ",
           name: "ಮಂಜುನಾಥ್ ಕೆ.ಎಸ್.",
-          photo: "assets/founder-manjunath.jpg",
+          photo: "/assets/founder-manjunath.jpg",
           role: "ನಿರ್ದೇಶಕರು, ಸಂಶೋಧನೆ ಮತ್ತು ವಿಷಯ",
           quote: "ಹೂಡಿಕೆಯ ಗುರಿ ಎಲ್ಲರನೂನೂ ಸೋಲಿಸುವುದಲ್ಲ. ನಿಮ್ಮ ಆರ್ಥಿಕ ಸ್ವಾತಂತ್ರ್ಯವನ್ನು ಭದ್ರಪಡಿಸುವುದು.",
           creds: [
@@ -407,11 +442,13 @@ const CONTENT = {
     },
     library: {
       eyebrow: "ಉಚಿತ ಜ್ಞಾನ ಗ್ರಂಥಾಲಯ",
-      title: "ಮಾರ್ಗದರ್ಶಿಗಳು, ಕ್ಯಾಲ್ಕುಲೇಟರ್ ಮತ್ತು ಚೀಟ್‌ಶೀಟ್‌ಗಳು",
-      sub: "ತರಗತಿಗಳ ನಡುವೆ ಕಲಿಕೆ ಮುಂದುವರಿಸಲು ಸ್ವಯಂ-ಸೇವಾ ಸಂಪನ್ಮೂಲಗಳು, ಎಲ್ಲವೂ ಉಚಿತ.",
+      title: "ಮಾರ್ಗದರ್ಶಿಗಳು, ಪರಿಶೀಲನಾ ಪಟ್ಟಿ ಮತ್ತು ಚೀಟ್‌ಶೀಟ್‌ಗಳು",
+      sub: "ತರಗತಿಗಳ ನಡುವೆ ಕಲಿಕೆ ಮುಂದುವರಿಸಲು ಉಚಿತ ಮಾರ್ಗದರ್ಶಿಗಳು ಮತ್ತು ಪದಕೋಶ — ಎಲ್ಲಾ ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು ಕೇವಲ ಪಾವತಿಸಿದ ₹99/ತಿಂಗಳು ಸದಸ್ಯರಿಗೆ ಮಾತ್ರ.",
+      ctaCalc: "ಸದಸ್ಯರಿಗೆ ಮಾತ್ರ",
+      ctaRead: "ಓದಿ",
       items: [
         { ic: "file", tag: "ಮಾರ್ಗದರ್ಶಿ", t: "ಹೂಡಿಕೆಗೆ ಆರಂಭಿಕ ಮಾರ್ಗದರ್ಶಿ", d: "ಮೂಲಾಂಶಗಳನ್ನು ಒಳಗೊಂಡ ಸರಳ ಭಾಷೆಯ ಪರಿಚಯ." },
-        { ic: "calc", tag: "ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು", t: "ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳನ್ನು ಅನ್ವೇಷಿಸಿ", d: "ಶಿಸ್ತಿನ ಮಾಸಿಕ ಹೂಡಿಕೆ ಕಾಲಾನಂತರ ಹೇಗೆ ಬೆಳೆಯುತ್ತದೆ ನೋಡಿ." },
+        { ic: "calc", tag: "ಪಾವತಿಸಿದ ಸದಸ್ಯರಿಗೆ ಮಾತ್ರ", t: "ಹೂಡಿಕೆ ಮತ್ತು ಮೌಲ್ಯಮಾಪನ ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು", d: "SIP, DCF ಮತ್ತು 44 ಫಂಡಮೆಂಟಲ್ ಅನಾಲಿಸಿಸ್ ಲ್ಯಾಬ್ ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು — ಕೇವಲ ₹99/ತಿಂಗಳು ಪಾವತಿಸಿದ ಸದಸ್ಯರಿಗೆ ಮಾತ್ರ." },
         { ic: "list", tag: "ಪರಿಶೀಲನಾ ಪಟ್ಟಿ", t: "ವೈಯಕ್ತಿಕ ಹಣಕಾಸು ಪರಿಶೀಲನಾ ಪಟ್ಟಿ", d: "ಹೂಡಿಕೆಗೆ ಮೊದಲು ಹೊಂದಿಸಬೇಕಾದ 10 ಹಣದ ಅಭ್ಯಾಸಗಳು." },
         { ic: "book", tag: "ಪದಕೋಶ", t: "ಹೂಡಿಕೆ ಪದಗಳ ವಿವರಣೆ", d: "ಪ್ರತಿ ಪ್ರಮುಖ ಪದವೂ ಒಂದೇ ಸರಳ ಸ್ಥಳದಲ್ಲಿ ವಿವರಿಸಲಾಗಿದೆ." },
       ],
@@ -428,7 +465,7 @@ const CONTENT = {
       contacts: [
         { ic: "mail", v: "support@wealthoria.in", href: "mailto:support@wealthoria.in" },
         { ic: "phone", v: "+91 90197 59001", href: "tel:+919019759001" },
-        { ic: "pin", v: "ಮೈಸೂರು, ಕರ್ನಾಟಕ, ಭಾರತ", href: "#" },
+        { ic: "pin", v: "ಮೈಸೂರು, ಕರ್ನಾಟಕ, ಭಾರತ", href: "https://www.google.com/maps/search/?api=1&query=Wealthoria+Education+Private+Limited+Kalidasa+Road+VV+Mohalla+Mysuru+570002" },
       ],
       form: {
         name: "ಪೂರ್ಣ ಹೆಸರು", email: "ಇಮೇಲ್", phone: "ದೂರವಾಣಿ", city: "ನಗರ",
@@ -454,14 +491,34 @@ const CONTENT = {
         { q: "ಸಮಾಲೋಚನೆ ಹೇಗೆ ಕಾಯ್ದಿರಿಸುವುದು?", a: "ಮೇಲಿನ ಫಾರ್ಮ್ ಬಳಸಿ. ನಿಮ್ಮ ಗುರಿ ಹೇಳಿ, ನಾವು ಸರಿಯಾದ ಮಾರ್ಗ ಶಿಫಾರಸು ಮಾಡುತ್ತೇವೆ, ಉಚಿತ." },
       ],
     },
+    introVideo: {
+      titleBefore: "ಹಣಕಾಸು ಜ್ಞಾನದತ್ತ ನಿಮ್ಮ ಪಯಣ ಆರಂಭವಾಗುವುದು",
+      highlight: "Wealthoria ಜೊತೆ.",
+      desc: "ಹಂತ ಹಂತವಾಗಿ ಹೂಡಿಕೆಯನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ವಿನ್ಯಾಸಗೊಳಿಸಿದ ಕೋರ್ಸ್‌ಗಳು, ಪ್ರಾಯೋಗಿಕ ಪರಿಕರಗಳು ಮತ್ತು ಕಲಿಕಾ ಸಂಪನ್ಮೂಲಗಳನ್ನು ಅನ್ವೇಷಿಸಿ.",
+      benefits: [
+        "ನಿಮ್ಮ ಅನುಕೂಲಕ್ಕೆ ತಕ್ಕ ವೇಗದಲ್ಲಿ ಕಲಿಯಿರಿ",
+        "ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್ ಸಂಪನ್ಮೂಲಗಳು",
+        "ಕೋರ್ಸ್‌ಗಳು ಮತ್ತು ಪರಿಕರಗಳನ್ನು ಅನ್ವೇಷಿಸಿ",
+      ],
+      iframeTitle: "Wealthoria ಪರಿಚಯ",
+    },
     footer: {
       blurb: "Wealthoria ಒಂದು ಹಣಕಾಸು ಶಿಕ್ಷಣ ಸಂಸ್ಥೆ, ಹಣಕಾಸು ಅರಿವಿನ ಭಾರತವನ್ನು ಕಟ್ಟುವ ಗುರಿ. ಹೂಡಿಕೆಗೆ ಮೊದಲು ಕಲಿಕೆ, ವ್ಯಾಪಾರಕ್ಕಿಂತ ಮೊದಲು ಹೂಡಿಕೆ.",
       newsletter: "ಪ್ರತಿ ವಾರ ನಿಮ್ಮ ಇನ್‌ಬಾಕ್ಸ್‌ಗೆ ಉಚಿತ ಪಾಠ",
       newsletterCta: "ಸೇರಿ",
+      legalLinks: {
+        privacy: "ಗೌಪ್ಯತಾ ನೀತಿ",
+        terms: "ಬಳಕೆಯ ನಿಯಮಗಳು",
+        refund: "ಮರುಪಾವತಿ ನೀತಿ",
+        contact: "ಸಂಪರ್ಕಿಸಿ",
+      },
+      tagline: "ಹೂಡಿಕೆಗೂ ಮುನ್ನ ಕಲಿಕೆ.",
+      rights: "Wealthoria Education Pvt. Ltd. ಎಲ್ಲಾ ಹಕ್ಕುಗಳು ಕಾಯ್ದಿರಿಸಲ್ಪಟ್ಟಿವೆ.",
+      backToTop: "ಮೇಲಕ್ಕೆ ಹೋಗಿ",
       cols: [
         { h: "ಕಲಿಕೆ", links: ["ಕಾರ್ಯಕ್ರಮಗಳು", "ಸೆಮಿನಾರ್‌ಗಳು", "ಜ್ಞಾನ ಗ್ರಂಥಾಲಯ", "ಯೂಟ್ಯೂಬ್ ಚಾನಲ್"] },
         { h: "ಸಂಸ್ಥೆ", links: ["ನಮ್ಮ ಬಗ್ಗೆ", "ಸಂಸ್ಥಾಪಕರ ದೃಷ್ಟಿ", "ವೃತ್ತಿ", "ಸಂಪರ್ಕ"] },
-        { h: "ಸಂಪನ್ಮೂಲ", links: ["ಆರಂಭಿಕ ಮಾರ್ಗದರ್ಶಿ", "ಕ್ಯಾಲ್ಕುಲೇಟರ್", "ಪದಕೋಶ", "ಬ್ಲಾಗ್"] },
+        { h: "ಸಂಪನ್ಮೂಲ", links: ["ಆರಂಭಿಕ ಮಾರ್ಗದರ್ಶಿ", "ಸದಸ್ಯರ ಕ್ಯಾಲ್ಕುಲೇಟರ್", "ಪದಕೋಶ", "ಬ್ಲಾಗ್"] },
         { h: "ಕಾನೂನು", links: ["ಗೌಪ್ಯತಾ ನೀತಿ", "ಬಳಕೆ ನಿಯಮಗಳು", "ಹಕ್ಕು ನಿರಾಕರಣೆ", "ಮರುಪಾವತಿ ನೀತಿ"] },
       ],
       disclaimer: "Wealthoria ಕೇವಲ ಹಣಕಾಸು ಶಿಕ್ಷಣವನ್ನು ಒದಗಿಸುತ್ತದೆ ಮತ್ತು ಹೂಡಿಕೆ ಸಲಹೆ ಅಥವಾ ಖಾತರಿ ಲಾಭವನ್ನು ನೀಡುವುದಿಲ್ಲ. ಹೂಡಿಕೆಗಳು ಮಾರುಕಟ್ಟೆ ಅಪಾಯಗಳಿಗೆ ಒಳಪಟ್ಟಿವೆ.",

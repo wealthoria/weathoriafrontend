@@ -200,44 +200,27 @@ function Hero({ onNav }) {
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="pathcard member-preview-card">
-            <div className="member-preview-head">
-              <div>
-                {h.card.kicker && (
-                  <div className="member-preview-kicker">{h.card.kicker}</div>
-                )}
-                <h4>{h.card.title}</h4>
-              </div>
-              <span className="member-preview-price">{h.card.badge}</span>
+          <div className="pathcard">
+            <div className="ph">
+              <h4>{h.card.title}</h4>
+              <span className="badge badge-green">{h.card.level}</span>
             </div>
-            <div className="member-preview-list">
-              {(h.card.items || []).map((m, i) => (
-                <a
-                  key={i}
-                  href="/membership.html"
-                  className="member-preview-item"
-                >
-                  <div className="member-preview-icon">
-                    <Icon name={m.ic || "file"} size={17} stroke={2.1} />
+            <div className="pbar"><i /></div>
+            <div className="pbar-l">{h.card.progress}</div>
+            <div style={{ marginTop: 8 }}>
+              {(h.card.modules || []).map((m, i) =>
+                <div key={i} className={`mod ${m.s === "lock" ? "locked" : ""}`}>
+                  <div className={`dot ${m.s}`}>
+                    {m.s === "done" ? <Icon name="check" size={14} stroke={3} /> : m.s === "now" ? <Icon name="play" size={11} /> : ""}
                   </div>
-                  <div className="member-preview-copy">
-                    <div className="member-preview-title-row">
-                      <span className="member-preview-title">{m.t}</span>
-                      {m.tag && <span className="member-preview-tag">{m.tag}</span>}
-                    </div>
-                    {m.d && <div className="member-preview-desc">{m.d}</div>}
-                  </div>
-                  <Icon name="arrow" size={15} stroke={2.1} className="member-preview-chev" />
-                </a>
-              ))}
+                  <div className="t">{m.t}</div>
+                </div>
+              )}
             </div>
-            {h.card.footnote && (
-              <div className="member-preview-foot">{h.card.footnote}</div>
-            )}
             <a
-              href="/membership.html"
+              href="/courses-coming-soon.html"
               className="btn btn-green btn-block"
-              style={{ marginTop: 14, textDecoration: "none" }}
+              style={{ marginTop: 18, textDecoration: "none" }}
             >
               <span>{h.card.cta}</span>
               <Icon name="arrow" size={17} stroke={2.2} />

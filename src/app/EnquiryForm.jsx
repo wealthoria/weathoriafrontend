@@ -246,7 +246,7 @@ function EnquiryForm() {
                   }`}
                 >
 
-                  <label>
+                  <label htmlFor="consult-name">
                     {F.name}
 
                     <span className="req">
@@ -255,6 +255,11 @@ function EnquiryForm() {
                   </label>
 
                   <input
+                    id="consult-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    aria-required="true"
                     className="input"
                     value={vals.name}
                     onChange={set("name")}
@@ -281,7 +286,7 @@ function EnquiryForm() {
                     style={{ margin: 0 }}
                   >
 
-                    <label>
+                    <label htmlFor="consult-email">
                       {F.email}
 
                       <span className="req">
@@ -290,6 +295,11 @@ function EnquiryForm() {
                     </label>
 
                     <input
+                      id="consult-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      aria-required="true"
                       className="input"
                       value={vals.email}
                       onChange={set("email")}
@@ -313,7 +323,7 @@ function EnquiryForm() {
                     style={{ margin: 0 }}
                   >
 
-                    <label>
+                    <label htmlFor="consult-phone">
                       {F.phone}
 
                       <span className="req">
@@ -322,6 +332,11 @@ function EnquiryForm() {
                     </label>
 
                     <input
+                      id="consult-phone"
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      aria-required="true"
                       className="input"
                       value={vals.phone}
                       onChange={set("phone")}
@@ -342,11 +357,15 @@ function EnquiryForm() {
 
                 <div className="field">
 
-                  <label>
+                  <label htmlFor="consult-city">
                     {F.city}
                   </label>
 
                   <input
+                    id="consult-city"
+                    name="city"
+                    type="text"
+                    autoComplete="address-level2"
                     className="input"
                     value={vals.city}
                     onChange={set("city")}
@@ -360,11 +379,14 @@ function EnquiryForm() {
 
                 <div className="field">
 
-                  <label>
+                  <label htmlFor="consult-interest">
                     {F.interest}
                   </label>
 
                   <select
+                    id="consult-interest"
+                    name="interest"
+                    aria-label="I am interested in"
                     className="select"
                     value={vals.interest}
                     onChange={set("interest")}
@@ -388,11 +410,14 @@ function EnquiryForm() {
 
                 <div className="field">
 
-                  <label>
+                  <label htmlFor="consult-message">
                     {F.message}
                   </label>
 
                   <textarea
+                    id="consult-message"
+                    name="message"
+                    aria-label="Anything you would like us to know"
                     className="textarea"
                     value={vals.message}
                     onChange={set("message")}

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 /* global React, window */
 const { useState } = React;
@@ -126,19 +126,24 @@ const submit = async (ev) => {
 
           <div className="contacts">
 
-            {c.contacts.map((ct, i) => (
-              <a
-                key={i}
-                href={ct.href}
-              >
-                <Icon
-                  name={ct.ic}
-                  size={18}
-                />
+            {c.contacts.map((ct, i) => {
+              const isExternal = String(ct.href || "").startsWith("http");
+              return (
+                <a
+                  key={i}
+                  href={ct.href}
+                  target={isExternal ? "_blank" : undefined}
+                  rel={isExternal ? "noopener noreferrer" : undefined}
+                >
+                  <Icon
+                    name={ct.ic}
+                    size={18}
+                  />
 
-                {ct.v}
-              </a>
-            ))}
+                  {ct.v}
+                </a>
+              );
+            })}
 
           </div>
 
@@ -217,7 +222,7 @@ const submit = async (ev) => {
                   }`}
                 >
 
-                  <label>
+                  <label htmlFor="consult-name-d">
                     {F.name}
 
                     <span className="req">
@@ -226,6 +231,11 @@ const submit = async (ev) => {
                   </label>
 
                   <input
+                    id="consult-name-d"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    aria-required="true"
                     className="input"
                     value={vals.name}
                     onChange={set("name")}
@@ -252,7 +262,7 @@ const submit = async (ev) => {
                     style={{ margin: 0 }}
                   >
 
-                    <label>
+                    <label htmlFor="consult-email-d">
                       {F.email}
 
                       <span className="req">
@@ -261,6 +271,11 @@ const submit = async (ev) => {
                     </label>
 
                     <input
+                      id="consult-email-d"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      aria-required="true"
                       className="input"
                       value={vals.email}
                       onChange={set("email")}
@@ -284,7 +299,7 @@ const submit = async (ev) => {
                     style={{ margin: 0 }}
                   >
 
-                    <label>
+                    <label htmlFor="consult-phone-d">
                       {F.phone}
 
                       <span className="req">
@@ -293,6 +308,11 @@ const submit = async (ev) => {
                     </label>
 
                     <input
+                      id="consult-phone-d"
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      aria-required="true"
                       className="input"
                       value={vals.phone}
                       onChange={set("phone")}
@@ -313,11 +333,15 @@ const submit = async (ev) => {
 
                 <div className="field">
 
-                  <label>
+                  <label htmlFor="consult-city-d">
                     {F.city}
                   </label>
 
                   <input
+                    id="consult-city-d"
+                    name="city"
+                    type="text"
+                    autoComplete="address-level2"
                     className="input"
                     value={vals.city}
                     onChange={set("city")}
@@ -331,11 +355,14 @@ const submit = async (ev) => {
 
                 <div className="field">
 
-                  <label>
+                  <label htmlFor="consult-interest-d">
                     {F.interest}
                   </label>
 
                   <select
+                    id="consult-interest-d"
+                    name="interest"
+                    aria-label="I am interested in"
                     className="select"
                     value={vals.interest}
                     onChange={set("interest")}
@@ -359,11 +386,14 @@ const submit = async (ev) => {
 
                 <div className="field">
 
-                  <label>
+                  <label htmlFor="consult-message-d">
                     {F.message}
                   </label>
 
                   <textarea
+                    id="consult-message-d"
+                    name="message"
+                    aria-label="Anything you would like us to know"
                     className="textarea"
                     value={vals.message}
                     onChange={set("message")}
@@ -494,8 +524,8 @@ function Footer() {
   const f = t.footer;
  const socials = [
     ["youtube", "https://www.youtube.com/@Wealthoria_edu/featured"],
-    ["instagram", "https://www.instagram.com/wealthoria_edu?stkn=NG1neTF4eDVkd3ly"],
-    ["whatsapp", "https://wa.me/90197 59001"],
+    ["instagram", "https://www.instagram.com/wealthoria_edu"],
+    ["whatsapp", "https://wa.me/919019759001"],
     ["linkedin", "https://www.linkedin.com/in/wealthoria-education-988411413/"]
   ];
   return (
@@ -510,7 +540,7 @@ function Footer() {
     <BrandLockup
       markHeight={38}
       showSub
-      href="#top"
+      href="/"
     />
 
     <p className="blurb">
@@ -527,19 +557,19 @@ function Footer() {
     <div className="footer-cols">
 
       <a href="/privacy-policy.html">
-        Privacy Policy
+        {f.legalLinks?.privacy || "Privacy Policy"}
       </a>
 
       <a href="/terms.html">
-        Terms &amp; Conditions
+        {f.legalLinks?.terms || "Terms & Conditions"}
       </a>
 
       <a href="/refund-policy.html">
-        Refund Policy
+        {f.legalLinks?.refund || "Refund Policy"}
       </a>
 
       <a href="/contact.html">
-        Contact Us
+        {f.legalLinks?.contact || "Contact Us"}
       </a>
 
     
@@ -553,6 +583,8 @@ function Footer() {
         <a
           key={ic}
           href={href}
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label={ic}
         >
           <Icon name={ic} size={18} />
@@ -578,11 +610,11 @@ function Footer() {
           behavior: "smooth"
         });
       }}
-      aria-label="Back to top"
+      aria-label={f.backToTop || "Back to top"}
     >
       <img
         src="/assets/back-to-top.png"
-        alt="Back to top"
+        alt={f.backToTop || "Back to top"}
       />
     </button>
 
@@ -601,11 +633,11 @@ function Footer() {
         <div className="footer-bar">
 
           <span>
-  © {new Date().getFullYear()} Wealthoria Education Pvt. Ltd. All rights reserved.
+  © {new Date().getFullYear()} {f.rights || "Wealthoria Education Pvt. Ltd. All rights reserved."}
 </span>
 
           <span>
-            Learning is the first investment.
+            {f.tagline || "Learning is the first investment."}
           </span>
 
         </div>

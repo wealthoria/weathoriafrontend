@@ -463,7 +463,7 @@ useEffect(() => {
     target="_blank"
     rel="noopener noreferrer"
   >
-    Visit Our Channel
+    {y.cta}
 
     <Icon
       name="arrow"
@@ -1160,15 +1160,22 @@ function Library() {
 
 
   const isCalc = (it) =>
+    it.ic === "calc" ||
+    it.tag === "Paid Members Only" ||
+    it.tag === "ಪಾವತಿಸಿದ ಸದಸ್ಯರಿಗೆ ಮಾತ್ರ" ||
     it.tag === "Calculator" ||
+    it.tag === "Calculators" ||
     it.tag ===
-      "\u0c95\u0ccd\u0caf\u0cbe\u0cb2\u0ccd\u0c95\u0cc1\u0cb2\u0cc7\u0c9f\u0cb0\u0ccd";
+      "\u0c95\u0ccd\u0caf\u0cbe\u0cb2\u0ccd\u0c95\u0cc1\u0cb2\u0cc7\u0c9f\u0cb0\u0ccd" ||
+    it.tag ===
+      "\u0c95\u0ccd\u0caf\u0cbe\u0cb2\u0ccd\u0c95\u0cc1\u0cb2\u0cc7\u0c9f\u0cb0\u0ccd\u200c\u0c97\u0cb3\u0cc1";
 
 
   return (
 
     <section
       className="band band-white"
+      id="library"
     >
 
       <div className="wrap">
@@ -1187,7 +1194,8 @@ function Library() {
             (it, i) => (
 
               <Reveal
-                as="button"
+                as="a"
+                href={isCalc(it) ? "/calculators" : "/courses-coming-soon.html"}
                 key={i}
                 className="lib"
                 delay={(i % 4) * 70}
@@ -1195,17 +1203,20 @@ function Library() {
                   border: 0,
                   font: "inherit",
                   cursor: "pointer",
-                  textAlign: "left"
+                  textAlign: "left",
+                  textDecoration: "none",
+                  color: "inherit"
                 }}
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
                   setOverlay(
                     isCalc(it)
                       ? "calc"
                       : {
                           soon: it.t
                         }
-                  )
-                }
+                  );
+                }}
               >
 
                 <div className="iconwrap">
@@ -1249,12 +1260,9 @@ function Library() {
                   />
 
                   {
-                    it.tag ===
-                      "Calculator" ||
-                    it.tag ===
-                      "ಕ್ಯಾಲ್ಕುಲೇಟರ್"
-                      ? "Open"
-                      : "Read"
+                    isCalc(it)
+                      ? (l.ctaCalc || "Members Only")
+                      : (l.ctaRead || "Read")
                   }
 
                 </span>

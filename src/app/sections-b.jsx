@@ -26,7 +26,7 @@ function Programs({ onNav }) {
         </Reveal>
         <div className="prog-grid">
           {items.map((it, i) => (
-            <Reveal as="button" key={it.t} className="prog" delay={(i % 3) * 80} onClick={() => window.open("courses-coming-soon.html", "_self")}>
+            <Reveal as="a" href="/courses-coming-soon.html" key={it.t} className="prog" delay={(i % 3) * 80} style={{ textDecoration: "none", color: "inherit" }}>
               <div className="top">
                 <div className="iconwrap"><Icon name={it.ic} size={24} /></div>
                 <span className="badge badge-outline">{it.level}</span>

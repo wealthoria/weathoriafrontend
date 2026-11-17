@@ -55,9 +55,9 @@ function NavBar({ onNav }) {
             </div>
           </nav>
           <div className="nav-right">
-            <div className="lang-toggle" role="group" aria-label="Language selection">
-              <button type="button" className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} aria-label="English">EN</button>
-              <button type="button" className={lang === "kn" ? "on" : ""} onClick={() => setLang("kn")} aria-label="Kannada">ಕನ್ನಡ</button>
+            <div className="lang-toggle" role="group" aria-label="Language">
+              <span className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</span>
+              <span className={lang === "kn" ? "on" : ""} onClick={() => setLang("kn")}>ಕನ್ನಡ</span>
             </div>
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
@@ -206,7 +206,7 @@ function Hero({ onNav }) {
                 {h.card.kicker && (
                   <div className="member-preview-kicker">{h.card.kicker}</div>
                 )}
-                <h2>{h.card.title}</h2>
+                <h4>{h.card.title}</h4>
               </div>
               <span className="member-preview-price">{h.card.badge}</span>
             </div>

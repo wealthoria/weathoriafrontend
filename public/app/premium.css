@@ -691,7 +691,6 @@
   margin-bottom: 5px;
 }
 
-.member-preview-head h2,
 .member-preview-head h4 {
   font: var(--display-xs);
   font-size: 21px;
@@ -835,8 +834,7 @@
 }
 
 html[lang="kn"] .narrative h2,
-html[lang="kn"] .member-preview-head h2,
-.member-preview-head h4 {
+html[lang="kn"] .member-preview-head h4 {
   line-height: 1.3;
 }
 

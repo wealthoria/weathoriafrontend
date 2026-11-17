@@ -1,5 +1,6 @@
 /* global React, window, sessionStorage, localStorage, navigator, document */
 import React from "react";
+import QRCode from "qrcode";
 
 const { useState, useEffect } = React;
 
@@ -150,16 +151,18 @@ async function runInstall() {
   if (ev) {
     let outcome = "";
     try {
-      ev.prompt();
+      await ev.prompt();
       const choice = await ev.userChoice;
       outcome = choice && choice.outcome;
-    } catch (e) {}
-    window.__wlInstallEvent = null; // the event can only be used once
-    if (outcome === "accepted") { window.__wlJustInstalled = true; markInstalled(); }
-    window.dispatchEvent(new Event("wl-install-change"));
-    return;
+      window.__wlInstallEvent = null; // the event can only be used once
+      if (outcome === "accepted") { window.__wlJustInstalled = true; markInstalled(); }
+      window.dispatchEvent(new Event("wl-install-change"));
+      return;
+    } catch (e) {
+      window.__wlInstallEvent = null;
+    }
   }
-  // No native prompt available: show the manual steps.
+  // No native prompt available: show the QR + manual Add-to-Home-screen steps.
   window.dispatchEvent(new Event("wl-install-steps"));
 }
 window.triggerPwaInstall = runInstall;
@@ -201,6 +204,8 @@ const TEXT = {
       "Or click the \u22EE menu in Chrome/Edge and select 'Install Wealthoria'.",
       "Click 'Install' to add Wealthoria to your desktop."
     ],
+    qrAlt: "QR code to install the Wealthoria app",
+    qrHint: "Scan with your phone camera to open & add Wealthoria to your Home Screen.",
     done: "Got it"
   },
   kn: {
@@ -223,6 +228,8 @@ const TEXT = {
       "\u0c85\u0ca5\u0cb5\u0cbe Chrome/Edge \u0cae\u0cc6\u0ca8\u0cc1\u0cb5\u0cbf\u0ca8\u0cb2\u0ccd\u0cb2\u0cbf 'Install Wealthoria' \u0c86\u0caf\u0ccd\u0c95\u0cc6\u0cae\u0cbe\u0ca1\u0cbf.",
       "'Install' \u0c92\u0ca4\u0ccd\u0ca4\u0cbf \u0ca8\u0cbf\u0cae\u0ccd\u0cae \u0ca1\u0cc6\u0cb8\u0ccd\u0c95\u0ccd\u200c\u0c9f\u0cbe\u0caa\u0ccd\u200c\u0c97\u0cc6 \u0cb8\u0cc7\u0cb0\u0cbf\u0cb8\u0cbf."
     ],
+    qrAlt: "Wealthoria \u0c86\u0ccd\u0caf\u0caa\u0ccd \u0c87\u0ca8\u0ccd\u200c\u0cb8\u0ccd\u0c9f\u0cbe\u0cb2\u0ccd \u0cae\u0cbe\u0ca1\u0cb2\u0cc1 QR \u0c95\u0ccb\u0ca1\u0ccd",
+    qrHint: "\u0cae\u0cca\u0cac\u0cc8\u0cb2\u0ccd\u200c\u0ca8\u0cb2\u0ccd\u0cb2\u0cbf Wealthoria \u0ca4\u0cc6\u0cb0\u0cc6\u0caf\u0cb2\u0cc1 \u0cae\u0ca4\u0ccd\u0ca4\u0cc1 Home Screen \u0c97\u0cc6 \u0cb8\u0cc7\u0cb0\u0cbf\u0cb8\u0cb2\u0cc1 \u0cb8\u0ccd\u0c95\u0ccd\u0caf\u0cbe\u0ca8\u0ccd \u0cae\u0cbe\u0ca1\u0cbf.",
     done: "\u0cb8\u0cb0\u0cbf"
   }
 };
@@ -255,12 +262,26 @@ function InstallPopup() {
 
   const rerender = useInstallRefresh();
   const [sheet, setSheet] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
 
   useEffect(() => {
     const open = () => setSheet(true);
     window.addEventListener("wl-install-steps", open);
     return () => window.removeEventListener("wl-install-steps", open);
   }, []);
+
+  useEffect(() => {
+    if (!sheet) return;
+    const onKey = (e) => { if (e.key === "Escape") setSheet(false); };
+    document.addEventListener("keydown", onKey);
+    if (!qrUrl) {
+      const targetUrl = (window.location && window.location.origin ? window.location.origin + "/" : "https://wealthoria.in/");
+      QRCode.toDataURL(targetUrl, { width: 280, margin: 1, color: { dark: "#0f172a", light: "#ffffff" } })
+        .then((url) => setQrUrl(url))
+        .catch(() => {});
+    }
+    return () => document.removeEventListener("keydown", onKey);
+  }, [sheet, qrUrl]);
 
   const canInstall = canInstallHere();
   const showBar = canInstall && isHomePage() && !wasDismissed();
@@ -334,6 +355,14 @@ function InstallPopup() {
               height="56"
             />
             <h3 className="pwa-pop-title">{tx.stepsTitle}</h3>
+            {qrUrl && (
+              <React.Fragment>
+                <div className="pwa-pop-qr">
+                  <img src={qrUrl} alt={tx.qrAlt} width="136" height="136" />
+                </div>
+                <p className="pwa-pop-qr-note">{tx.qrHint}</p>
+              </React.Fragment>
+            )}
             <ol className="pwa-pop-steps">
               {(isIos() ? tx.iosSteps : isPhone() ? tx.androidSteps : tx.desktopSteps).map((t, i) => (
                 <li key={i}>{t}</li>
@@ -392,5 +421,5 @@ function InstallIcon() {
 
 window.InstallPopup = InstallPopup;
 window.InstallIcon = InstallIcon;
-export { InstallIcon };
+export { InstallIcon, isStandalone };
 export default InstallPopup;

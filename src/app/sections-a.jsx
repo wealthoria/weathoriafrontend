@@ -18,7 +18,7 @@ function NavBar({ onNav }) {
       mql = window.matchMedia("(display-mode: standalone)");
       if (mql.addEventListener) mql.addEventListener("change", update);
       else if (mql.addListener) mql.addListener(update);
-    } catch (e) {}
+    } catch (e) { }
     window.addEventListener("appinstalled", update);
     window.addEventListener("wl-install-change", update);
     return () => {
@@ -32,26 +32,26 @@ function NavBar({ onNav }) {
   }, []);
   const currentPath = window.location.pathname.toLowerCase();
 
-const currentPage = new URLSearchParams(
-  window.location.search
-).get("page");
+  const currentPage = new URLSearchParams(
+    window.location.search
+  ).get("page");
 
 
-const isLegalPage =
-  [
-    "/privacy-policy.html",
-    "/terms.html",
-    "/refund-policy.html",
-    "/contact.html",
-    "/contactus.html"
-  ].includes(currentPath) ||
-  [
-    "privacy-policy",
-    "terms",
-    "contactus",
-    "refund-policy"
-  ].includes(currentPage);
-  const go = (id) => {setOpen(false);onNav(id);};
+  const isLegalPage =
+    [
+      "/privacy-policy.html",
+      "/terms.html",
+      "/refund-policy.html",
+      "/contact.html",
+      "/contactus.html"
+    ].includes(currentPath) ||
+    [
+      "privacy-policy",
+      "terms",
+      "contactus",
+      "refund-policy"
+    ].includes(currentPage);
+  const go = (id) => { setOpen(false); onNav(id); };
   const productsLabel = t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products");
   const productLinks = [
     { href: "/Book.html", ic: "book", label: lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "Book · ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" },
@@ -91,50 +91,50 @@ const isLegalPage =
     <React.Fragment>
       <header className="nav">
         <div className="wrap nav-inner">
-<span className="mobile-logo-only">
-  <BrandLockup
-    markHeight={32}
-    href="/"
-    onClick={(e) => {
-      if (!isLegalPage) {
-        e.preventDefault();
-        go("top");
-      }
-    }}
-  />
-</span>         <nav className="nav-links">
+          <span className="mobile-logo-only">
+            <BrandLockup
+              markHeight={32}
+              href="/"
+              onClick={(e) => {
+                if (!isLegalPage) {
+                  e.preventDefault();
+                  go("top");
+                }
+              }}
+            />
+          </span>         <nav className="nav-links">
 
- {isLegalPage && (
-  <a href="/">{t.nav?.home || "Home"}</a>
-)}
- {t.nav.links.map((l) =>
-  <a
-    key={l.id}
-    href={
-      l.id === "Disclosure"
-        ? "/wealthoria-disclosure.html"
-        : isLegalPage
-          ? `/#${l.id}`
-          : `#${l.id}`
-    }
-    onClick={(e) => {
-      if (l.id === "Disclosure" || isLegalPage) {
-        return;
-      }
+            {isLegalPage && (
+              <a href="/">{t.nav?.home || "Home"}</a>
+            )}
+            {t.nav.links.map((l) =>
+              <a
+                key={l.id}
+                href={
+                  l.id === "Disclosure"
+                    ? "/wealthoria-disclosure.html"
+                    : isLegalPage
+                      ? `/#${l.id}`
+                      : `#${l.id}`
+                }
+                onClick={(e) => {
+                  if (l.id === "Disclosure" || isLegalPage) {
+                    return;
+                  }
 
-      e.preventDefault();
-      go(l.id);
-    }}
-  >
-    {l.label}
-  </a>
-)}
-{renderProductsNav(false)}
-</nav>
+                  e.preventDefault();
+                  go(l.id);
+                }}
+              >
+                {l.label}
+              </a>
+            )}
+            {renderProductsNav(false)}
+          </nav>
           <div className="nav-right">
-            <div className="lang-toggle" role="group" aria-label="Language">
-              <span className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</span>
-              <span className={lang === "kn" ? "on" : ""} onClick={() => setLang("kn")}>ಕನ್ನಡ</span>
+            <div className="lang-toggle" role="group" aria-label="Language selection">
+              <button type="button" className={lang === "en" ? "on" : ""} onClick={() => setLang("en")} aria-label="English">EN</button>
+              <button type="button" className={lang === "kn" ? "on" : ""} onClick={() => setLang("kn")} aria-label="Kannada">ಕನ್ನಡ</button>
             </div>
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <Icon name={theme === "dark" ? "sun" : "moon"} size={19} />
@@ -181,7 +181,7 @@ const isLegalPage =
       </header>
 
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
-  
+
       <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
           <BrandLockup
@@ -196,34 +196,34 @@ const isLegalPage =
           />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
-{isLegalPage && (
-  <a href="/" onClick={() => setOpen(false)}>{t.nav?.home || "Home"}</a>
-)}
-{t.nav.links.map((l) =>
-  <a
-    key={l.id}
-    href={
-      l.id === "Disclosure"
-        ? "/wealthoria-disclosure.html"
-        : isLegalPage
-          ? `/#${l.id}`
-          : `#${l.id}`
-    }
-    onClick={(e) => {
-      if (l.id === "Disclosure" || isLegalPage) {
-        setOpen(false);
-        return;
-      }
+        {isLegalPage && (
+          <a href="/" onClick={() => setOpen(false)}>{t.nav?.home || "Home"}</a>
+        )}
+        {t.nav.links.map((l) =>
+          <a
+            key={l.id}
+            href={
+              l.id === "Disclosure"
+                ? "/wealthoria-disclosure.html"
+                : isLegalPage
+                  ? `/#${l.id}`
+                  : `#${l.id}`
+            }
+            onClick={(e) => {
+              if (l.id === "Disclosure" || isLegalPage) {
+                setOpen(false);
+                return;
+              }
 
-      e.preventDefault();
-      go(l.id);
-    }}
-  >
-    {l.label}
-  </a>
-)}
+              e.preventDefault();
+              go(l.id);
+            }}
+          >
+            {l.label}
+          </a>
+        )}
 
-{renderProductsNav(true)}
+        {renderProductsNav(true)}
 
         <div className="drawer-foot">
           {!standaloneApp && (
@@ -276,7 +276,7 @@ function Hero({ onNav }) {
     if (!v || !hero || !("IntersectionObserver" in window)) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const io = new IntersectionObserver((es) => {
-      es.forEach((e) => {if (e.isIntersecting) {v.play().catch(() => {});} else {v.pause();}});
+      es.forEach((e) => { if (e.isIntersecting) { v.play().catch(() => { }); } else { v.pause(); } });
     }, { threshold: 0.05 });
     io.observe(hero);
     return () => io.disconnect();
@@ -284,29 +284,29 @@ function Hero({ onNav }) {
   return (
     <section className="hero" id="top">
       <div className="hero-video" aria-hidden="true">
-      
-      <video
-  autoPlay
-  loop
-  muted
-  playsInline
-  preload="metadata"
-  poster="/assets/hero-bg.png"
-  ref={(el) => {
-    if (
-      el &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      el.removeAttribute("autoplay");
-      el.pause();
-    }
-  }}
->
-  <source
-    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4"
-    type="video/mp4"
-  />
-</video>
+
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          poster="/assets/hero-bg.png"
+          ref={(el) => {
+            if (
+              el &&
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ) {
+              el.removeAttribute("autoplay");
+              el.pause();
+            }
+          }}
+        >
+          <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260603_132049_036591b8-6e92-4760-b94c-a7ea6eef315c.mp4"
+            type="video/mp4"
+          />
+        </video>
       </div>
       <div className="hero-blob" aria-hidden="true"></div>
       <div className="wrap hero-grid">
@@ -317,11 +317,11 @@ function Hero({ onNav }) {
           <div className="ctas">
             <a href="/membership.html" className="btn btn-green">{h.ctaPrimary}<Icon name="arrow" size={18} /></a>
 
-{h.ctaSecondary && (
-  <a href="/courses-coming-soon.html" className="btn btn-outline">
-    {h.ctaSecondary}
-  </a>
-)}
+            {h.ctaSecondary && (
+              <a href="/courses-coming-soon.html" className="btn btn-outline">
+                {h.ctaSecondary}
+              </a>
+            )}
           </div>
           <div className="trustline">
             <span className="avatars"><i /><i /><i /><i /></span>
@@ -336,7 +336,7 @@ function Hero({ onNav }) {
                 {h.card.kicker && (
                   <div className="member-preview-kicker">{h.card.kicker}</div>
                 )}
-                <h4>{h.card.title}</h4>
+                <h2>{h.card.title}</h2>
               </div>
               <span className="member-preview-price">{h.card.badge}</span>
             </div>
@@ -427,7 +427,7 @@ function Metrics() {
       <div className="wrap">
         <div className="statband">
           {t.metrics.map((m, i) =>
-          <Reveal key={i} className="statb" delay={i * 80}>
+            <Reveal key={i} className="statb" delay={i * 80}>
               <div className="sl"><i></i>{m.l}</div>
               <div className="sn">{m.n}</div>
               {m.c && <div className="sc">{m.c}</div>}
@@ -451,7 +451,7 @@ function Why() {
         <SectionHead eyebrow={t.why.eyebrow} title={t.why.title} sub={t.why.sub} />
         <div className="feat-grid">
           {t.why.items.map((it, i) =>
-          <Reveal key={i} className={`feat ${WHY_SURFACES[i % WHY_SURFACES.length]}`} delay={i % 3 * 90}>
+            <Reveal key={i} className={`feat ${WHY_SURFACES[i % WHY_SURFACES.length]}`} delay={i % 3 * 90}>
               <span className="idx">{String(i + 1).padStart(2, "0")}</span>
               <div className="iconwrap"><Icon name={it.ic} size={24} /></div>
               <h3>{it.t}</h3>

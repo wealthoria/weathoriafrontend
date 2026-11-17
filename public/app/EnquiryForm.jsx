@@ -155,7 +155,7 @@ function EnquiryForm() {
                 </div>
 
                 <div>
-                  <h4>{item.t}</h4>
+                  <h3 style={{ margin: 0, font: "inherit", fontWeight: 700 }}>{item.t}</h3>
                   <p>{item.d}</p>
                 </div>
 

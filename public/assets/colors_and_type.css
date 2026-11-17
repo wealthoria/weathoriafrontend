@@ -40,7 +40,7 @@
   --ink:              #0e0f0c;  /* near-black w/ olive warmth — default text */
   --ink-deep:         #163300;  /* deep forest-green ink on positive surfaces*/
   --body:             #454745;  /* secondary body text                      */
-  --mute:             #868685;  /* lowest priority — captions, placeholders  */
+  --mute:             #595958;  /* lowest priority — captions, placeholders (WCAG AA 4.5:1+) */
 
   /* =======================================================================
      SEMANTIC

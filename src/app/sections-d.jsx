@@ -115,7 +115,7 @@ const submit = async (ev) => {
                 </div>
 
                 <div>
-                  <h4>{p.t}</h4>
+                  <h3 style={{ margin: 0, font: "inherit", fontWeight: 700 }}>{p.t}</h3>
                   <p>{p.d}</p>
                 </div>
 

@@ -1,8 +1,7 @@
 /* global React, window */
-import React from "react";
-import { InstallIcon } from "./InstallPopup.jsx";
+import React, { useState, useEffect } from "react";
+import { InstallIcon, isStandalone } from "./InstallPopup.jsx";
 
-const { useState } = React;
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
 
 /* =========================================================================
@@ -11,7 +10,27 @@ const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
 function NavBar({ onNav }) {
   const { t, lang, setLang, theme, toggleTheme } = useApp();
   const [open, setOpen] = useState(false);
-const currentPath = window.location.pathname.toLowerCase();
+  const [standaloneApp, setStandaloneApp] = useState(() => isStandalone());
+  useEffect(() => {
+    const update = () => setStandaloneApp(isStandalone());
+    let mql = null;
+    try {
+      mql = window.matchMedia("(display-mode: standalone)");
+      if (mql.addEventListener) mql.addEventListener("change", update);
+      else if (mql.addListener) mql.addListener(update);
+    } catch (e) {}
+    window.addEventListener("appinstalled", update);
+    window.addEventListener("wl-install-change", update);
+    return () => {
+      if (mql) {
+        if (mql.removeEventListener) mql.removeEventListener("change", update);
+        else if (mql.removeListener) mql.removeListener(update);
+      }
+      window.removeEventListener("appinstalled", update);
+      window.removeEventListener("wl-install-change", update);
+    };
+  }, []);
+  const currentPath = window.location.pathname.toLowerCase();
 
 const currentPage = new URLSearchParams(
   window.location.search
@@ -23,6 +42,7 @@ const isLegalPage =
     "/privacy-policy.html",
     "/terms.html",
     "/refund-policy.html",
+    "/contact.html",
     "/contactus.html"
   ].includes(currentPath) ||
   [
@@ -32,6 +52,40 @@ const isLegalPage =
     "refund-policy"
   ].includes(currentPage);
   const go = (id) => {setOpen(false);onNav(id);};
+  const productsLabel = t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products");
+  const productLinks = [
+    { href: "/Book.html", ic: "book", label: lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "Book · ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" },
+  ];
+  const renderProductsNav = (closeDrawer = false) => (
+    <div className="products-nav">
+      <a
+        href="/Book.html"
+        aria-haspopup="true"
+        onClick={closeDrawer ? () => setOpen(false) : undefined}
+      >
+        {productsLabel}
+      </a>
+      <div className="products-dropdown">
+        {productLinks.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            onClick={closeDrawer ? () => setOpen(false) : undefined}
+          >
+            <Icon name={item.ic} size={16} stroke={2} />
+            <span>{item.label}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+  const handleGetApp = () => {
+    if (typeof window.triggerPwaInstall === "function") {
+      window.triggerPwaInstall();
+    } else {
+      window.dispatchEvent(new Event("wl-install-steps"));
+    }
+  };
 
   return (
     <React.Fragment>
@@ -40,12 +94,18 @@ const isLegalPage =
 <span className="mobile-logo-only">
   <BrandLockup
     markHeight={32}
-    href="/Wealthoria.html"
+    href="/"
+    onClick={(e) => {
+      if (!isLegalPage) {
+        e.preventDefault();
+        go("top");
+      }
+    }}
   />
 </span>         <nav className="nav-links">
 
  {isLegalPage && (
-  <a href="/">Home</a>
+  <a href="/">{t.nav?.home || "Home"}</a>
 )}
  {t.nav.links.map((l) =>
   <a
@@ -53,10 +113,12 @@ const isLegalPage =
     href={
       l.id === "Disclosure"
         ? "/wealthoria-disclosure.html"
-        : `#${l.id}`
+        : isLegalPage
+          ? `/#${l.id}`
+          : `#${l.id}`
     }
     onClick={(e) => {
-      if (l.id === "Disclosure") {
+      if (l.id === "Disclosure" || isLegalPage) {
         return;
       }
 
@@ -67,27 +129,7 @@ const isLegalPage =
     {l.label}
   </a>
 )}
-<div className="products-nav">
-
-  <a
-    href="#"
-    aria-haspopup="true"
-    onClick={(e) => e.preventDefault()}
-  >
-    {t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products")}
-  </a>
-
-  <div className="products-dropdown">
-
-    <a
-      href="Book.html"
-    >
-      📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
-    </a>
-
-  </div>
-
-</div>
+{renderProductsNav(false)}
 </nav>
           <div className="nav-right">
             <div className="lang-toggle" role="group" aria-label="Language">
@@ -107,35 +149,31 @@ const isLegalPage =
               <span>{t.nav?.memberLogin || "Member"}</span>
             </a>
 
-            <button
-              type="button"
-              className="btn-get-app"
-              onClick={() => {
-                if (typeof window.triggerPwaInstall === "function") {
-                  window.triggerPwaInstall();
-                } else {
-                  window.dispatchEvent(new Event("wl-install-steps"));
-                }
-              }}
-              aria-label="Get App"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
+            {!standaloneApp && (
+              <button
+                type="button"
+                className="btn-get-app"
+                onClick={handleGetApp}
+                aria-label="Get App"
               >
-                <path d="M12 3v13" />
-                <path d="m7 11 5 5 5-5" />
-                <path d="M5 21h14" />
-              </svg>
-              <span>{lang === "kn" ? "ಆ್ಯಪ್ ಪಡೆಯಿರಿ" : "Get App"}</span>
-            </button>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v13" />
+                  <path d="m7 11 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+                <span>{lang === "kn" ? "ಆ್ಯಪ್ ಪಡೆಯಿರಿ" : "Get App"}</span>
+              </button>
+            )}
 
             <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu" type="button"><Icon name="menu" size={20} /></button>
           </div>
@@ -146,19 +184,34 @@ const isLegalPage =
   
       <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
-          <BrandLockup markHeight={30} onClick={(e) => {e.preventDefault();go("top");}} />
+          <BrandLockup
+            markHeight={30}
+            href="/"
+            onClick={(e) => {
+              if (!isLegalPage) {
+                e.preventDefault();
+                go("top");
+              }
+            }}
+          />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
+{isLegalPage && (
+  <a href="/" onClick={() => setOpen(false)}>{t.nav?.home || "Home"}</a>
+)}
 {t.nav.links.map((l) =>
   <a
     key={l.id}
     href={
       l.id === "Disclosure"
         ? "/wealthoria-disclosure.html"
-        : `#${l.id}`
+        : isLegalPage
+          ? `/#${l.id}`
+          : `#${l.id}`
     }
     onClick={(e) => {
-      if (l.id === "Disclosure") {
+      if (l.id === "Disclosure" || isLegalPage) {
+        setOpen(false);
         return;
       }
 
@@ -170,62 +223,39 @@ const isLegalPage =
   </a>
 )}
 
-<div className="products-nav">
-
-  <a
-    href="#"
-    aria-haspopup="true"
-    onClick={(e) => e.preventDefault()}
-  >
-    {t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products")}
-  </a>
-
-  <div className="products-dropdown">
-
-    <a
-      href="Book.html"
-      
-    >
-      📖&nbsp; ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ
-    </a>
-
-  </div>
-
-</div>
+{renderProductsNav(true)}
 
         <div className="drawer-foot">
-          <button
-            type="button"
-            className="btn btn-outline btn-block"
-            style={{ marginBottom: "10px" }}
-            onClick={() => {
-              setOpen(false);
-              if (typeof window.triggerPwaInstall === "function") {
-                window.triggerPwaInstall();
-              } else {
-                window.dispatchEvent(new Event("wl-install-steps"));
-              }
-            }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              style={{ marginRight: 6 }}
+          {!standaloneApp && (
+            <button
+              type="button"
+              className="btn btn-outline btn-block"
+              style={{ marginBottom: "10px" }}
+              onClick={() => {
+                setOpen(false);
+                handleGetApp();
+              }}
             >
-              <path d="M12 3v13" />
-              <path d="m7 11 5 5 5-5" />
-              <path d="M5 21h14" />
-            </svg>
-            {lang === "kn" ? "ಆ್ಯಪ್ ಪಡೆಯಿರಿ" : "Get App"}
-          </button>
-          <a className="btn btn-green btn-block drawer-member-login" href="/members/login"><Icon name="lock" size={16} />Member login</a>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                style={{ marginRight: 6 }}
+              >
+                <path d="M12 3v13" />
+                <path d="m7 11 5 5 5-5" />
+                <path d="M5 21h14" />
+              </svg>
+              {lang === "kn" ? "ಆ್ಯಪ್ ಪಡೆಯಿರಿ" : "Get App"}
+            </button>
+          )}
+          <a className="btn btn-green btn-block drawer-member-login" href="/members/login"><Icon name="lock" size={16} />{t.nav?.memberLoginFull || "Member login"}</a>
         </div>
       </aside>
     </React.Fragment>);
@@ -285,14 +315,12 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} className="titlehead"></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button className="btn btn-green" onClick={() => {
-              window.location.href = "/membership.html";
-            }}>{h.ctaPrimary}<Icon name="arrow" size={18} /></button>
+            <a href="/membership.html" className="btn btn-green">{h.ctaPrimary}<Icon name="arrow" size={18} /></a>
 
 {h.ctaSecondary && (
-  <button className="btn btn-outline" onClick={() => window.open("courses-coming-soon.html", "_self")}>
+  <a href="/courses-coming-soon.html" className="btn btn-outline">
     {h.ctaSecondary}
-  </button>
+  </a>
 )}
           </div>
           <div className="trustline">
@@ -302,26 +330,48 @@ function Hero({ onNav }) {
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="pathcard">
-            <div className="ph">
-              <h4>{h.card.title}</h4>
-              <span className="badge badge-green">{h.card.level}</span>
+          <div className="pathcard member-preview-card">
+            <div className="member-preview-head">
+              <div>
+                {h.card.kicker && (
+                  <div className="member-preview-kicker">{h.card.kicker}</div>
+                )}
+                <h4>{h.card.title}</h4>
+              </div>
+              <span className="member-preview-price">{h.card.badge}</span>
             </div>
-            <div className="pbar"><i /></div>
-            <div className="pbar-l">{h.card.progress}</div>
-            <div style={{ marginTop: 8 }}>
-              {h.card.modules.map((m, i) =>
-              <div key={i} className={`mod ${m.s === "lock" ? "locked" : ""}`}>
-                  <div className={`dot ${m.s}`}>
-                    {m.s === "done" ? <Icon name="check" size={14} stroke={3} /> : m.s === "now" ? <Icon name="play" size={11} /> : ""}
+            <div className="member-preview-list">
+              {(h.card.items || []).map((m, i) => (
+                <a
+                  key={i}
+                  href="/membership.html"
+                  className="member-preview-item"
+                >
+                  <div className="member-preview-icon">
+                    <Icon name={m.ic || "file"} size={17} stroke={2.1} />
                   </div>
-                  <div className="t">{m.t}</div>
-                </div>
-              )}
+                  <div className="member-preview-copy">
+                    <div className="member-preview-title-row">
+                      <span className="member-preview-title">{m.t}</span>
+                      {m.tag && <span className="member-preview-tag">{m.tag}</span>}
+                    </div>
+                    {m.d && <div className="member-preview-desc">{m.d}</div>}
+                  </div>
+                  <Icon name="arrow" size={15} stroke={2.1} className="member-preview-chev" />
+                </a>
+              ))}
             </div>
-            <button className="btn btn-green btn-block" style={{ marginTop: 18 }} onClick={() => window.open("courses-coming-soon.html", "_self")}>
-              {h.card.cta}
-            </button>
+            {h.card.footnote && (
+              <div className="member-preview-foot">{h.card.footnote}</div>
+            )}
+            <a
+              href="/membership.html"
+              className="btn btn-green btn-block"
+              style={{ marginTop: 14, textDecoration: "none" }}
+            >
+              <span>{h.card.cta}</span>
+              <Icon name="arrow" size={17} stroke={2.2} />
+            </a>
           </div>
         </Reveal>
       </div>

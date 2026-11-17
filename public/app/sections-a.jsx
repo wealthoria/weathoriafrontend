@@ -15,7 +15,7 @@ function NavBar({ onNav }) {
     <React.Fragment>
       <header className="nav">
         <div className="wrap nav-inner">
-          <BrandLockup markHeight={32} onClick={(e) => { e.preventDefault(); go("top"); }} />
+          <BrandLockup markHeight={32} href="/" onClick={(e) => { e.preventDefault(); go("top"); }} />
           <nav className="nav-links">
             {t.nav.links.map((l) =>
               <a
@@ -45,7 +45,7 @@ function NavBar({ onNav }) {
 
               <div className="products-dropdown">
                 <a href="/hoodikeya-vijnana.html">
-                  <span className="product-icon">📖</span>
+                  <span className="product-icon"><Icon name="book" size={16} stroke={2} /></span>
                   <span>
                     <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
                     <small>₹999 · Pre-book now</small>
@@ -70,7 +70,7 @@ function NavBar({ onNav }) {
               aria-label="Member Login"
             >
               <Icon name="user" size={17} />
-              <span >Member</span>
+              <span>{t.nav?.memberLogin || "Member"}</span>
             </a>
             <a
               className="nav-login"
@@ -90,7 +90,7 @@ function NavBar({ onNav }) {
       <div className={`drawer-scrim ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
       <aside id="mobile-navigation" className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="drawer-head">
-          <BrandLockup markHeight={30} onClick={(e) => { e.preventDefault(); go("top"); }} />
+          <BrandLockup markHeight={30} href="/" onClick={(e) => { e.preventDefault(); go("top"); }} />
           <button className="hamburger" onClick={() => setOpen(false)} aria-label="Close menu"><Icon name="x" size={20} /></button>
         </div>
         {t.nav.links.map((l) => (
@@ -113,12 +113,12 @@ function NavBar({ onNav }) {
           href="/hoodikeya-vijnana.html"
           onClick={() => setOpen(false)}
         >
-          📖 {lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ · ₹999"}
+          <Icon name="book" size={16} stroke={2} /> {lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ · ₹999"}
         </a>
 
         <div className="drawer-foot">
           <a className="btn btn-outline btn-block" href="/students/login"><Icon name="user" size={17} />Student login</a>
-          <a className="btn btn-outline btn-block" href="/members/login"><Icon name="lock" size={16} />Member login</a>
+          <a className="btn btn-outline btn-block" href="/members/login"><Icon name="lock" size={16} />{t.nav?.memberLoginFull || "Member login"}</a>
           {/* <button className="btn btn-green btn-block" onClick={() => go("consult")}>{t.nav.cta}</button>*/}
         </div>
       </aside>
@@ -179,20 +179,18 @@ function Hero({ onNav }) {
           <h1 dangerouslySetInnerHTML={{ __html: `${h.title[0]}<br/>${h.title[1]}` }} ></h1>
           <p className="lede">{h.lede}</p>
           <div className="ctas">
-            <button
+            <a
+              href="/membership.html"
               className="btn btn-green"
-              onClick={() => {
-                window.location.href = "/membership.html";
-              }}
             >
               {h.ctaPrimary}
               <Icon name="arrow" size={18} />
-            </button>
+            </a>
 
             {h.ctaSecondary && (
-              <button className="btn btn-outline" onClick={() => window.open("courses-coming-soon.html", "_self")}>
+              <a href="/courses-coming-soon.html" className="btn btn-outline">
                 {h.ctaSecondary}
-              </button>
+              </a>
             )}
           </div>
           <div className="trustline">
@@ -202,26 +200,48 @@ function Hero({ onNav }) {
         </Reveal>
 
         <Reveal delay={120}>
-          <div className="pathcard">
-            <div className="ph">
-              <h4>{h.card.title}</h4>
-              <span className="badge badge-green">{h.card.level}</span>
+          <div className="pathcard member-preview-card">
+            <div className="member-preview-head">
+              <div>
+                {h.card.kicker && (
+                  <div className="member-preview-kicker">{h.card.kicker}</div>
+                )}
+                <h4>{h.card.title}</h4>
+              </div>
+              <span className="member-preview-price">{h.card.badge}</span>
             </div>
-            <div className="pbar"><i /></div>
-            <div className="pbar-l">{h.card.progress}</div>
-            <div style={{ marginTop: 8 }}>
-              {h.card.modules.map((m, i) =>
-                <div key={i} className={`mod ${m.s === "lock" ? "locked" : ""}`}>
-                  <div className={`dot ${m.s}`}>
-                    {m.s === "done" ? <Icon name="check" size={14} stroke={3} /> : m.s === "now" ? <Icon name="play" size={11} /> : ""}
+            <div className="member-preview-list">
+              {(h.card.items || []).map((m, i) => (
+                <a
+                  key={i}
+                  href="/membership.html"
+                  className="member-preview-item"
+                >
+                  <div className="member-preview-icon">
+                    <Icon name={m.ic || "file"} size={17} stroke={2.1} />
                   </div>
-                  <div className="t">{m.t}</div>
-                </div>
-              )}
+                  <div className="member-preview-copy">
+                    <div className="member-preview-title-row">
+                      <span className="member-preview-title">{m.t}</span>
+                      {m.tag && <span className="member-preview-tag">{m.tag}</span>}
+                    </div>
+                    {m.d && <div className="member-preview-desc">{m.d}</div>}
+                  </div>
+                  <Icon name="arrow" size={15} stroke={2.1} className="member-preview-chev" />
+                </a>
+              ))}
             </div>
-            <button className="btn btn-green btn-block" style={{ marginTop: 18 }} onClick={() => window.open("courses-coming-soon.html", "_self")}>
-              {h.card.cta}
-            </button>
+            {h.card.footnote && (
+              <div className="member-preview-foot">{h.card.footnote}</div>
+            )}
+            <a
+              href="/membership.html"
+              className="btn btn-green btn-block"
+              style={{ marginTop: 14, textDecoration: "none" }}
+            >
+              <span>{h.card.cta}</span>
+              <Icon name="arrow" size={17} stroke={2.2} />
+            </a>
           </div>
         </Reveal>
       </div>

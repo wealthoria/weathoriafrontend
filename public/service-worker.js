@@ -212,7 +212,7 @@ self.addEventListener("notificationclick", function (event) {
    CACHE CONFIGURATION
    ========================================================================= */
 
-const CACHE_VERSION = "wealthoria-v17";
+const CACHE_VERSION = "wealthoria-v18";
 const PRECACHE      = CACHE_VERSION + "-precache";
 const RUNTIME       = CACHE_VERSION + "-runtime";
 

@@ -576,6 +576,15 @@ setVideos(data);
 
                 <div
                   className="thumb"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Play video: ${v.title || "YouTube video"}`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openPreview(v);
+                    }
+                  }}
                   onClick={() =>
                     openPreview(v)
                   }
@@ -898,6 +907,8 @@ setVideos(data);
               {/* CLOSE BUTTON */}
 
               <button
+                type="button"
+                aria-label="Close video preview"
                 onClick={
                   closePreview
                 }

@@ -211,6 +211,16 @@
     gtag('config', 'AW-18500990314');
   </script>
 
+  <script>
+    document.documentElement.classList.add('js-ready');
+  </script>
+  <style>
+    /* In browsers with JavaScript, hide the raw crawler fallback so users do not see an unstyled flash before React mounts */
+    .js-ready .crawler-prerender {
+      display: none !important;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -220,98 +230,130 @@
 
   <div id="root">
     <!-- Pre-rendered semantic HTML for search crawlers & social link previews (WhatsApp, LinkedIn, Google) -->
-    <main style="max-width: 1200px; margin: 0 auto; padding: 24px 20px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b;">
+    <main
+      class="crawler-prerender"
+      style="max-width: 1200px; margin: 0 auto; padding: 24px 20px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b;">
       <!-- HERO -->
       <section id="hero" style="margin-bottom: 48px;">
-        <p style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 13px; font-weight: 700; color: #e8473f;">Financial education · Karnataka</p>
-        <h1 style="font-size: 38px; line-height: 1.15; font-weight: 800; color: #0f172a; margin: 12px 0 16px;">Learning is the first investment</h1>
+        <p
+          style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 13px; font-weight: 700; color: #e8473f;">
+          Financial education · Karnataka</p>
+        <h1 style="font-size: 38px; line-height: 1.15; font-weight: 800; color: #0f172a; margin: 12px 0 16px;">Learning
+          is the first investment</h1>
         <p style="font-size: 17px; line-height: 1.6; color: #475569; max-width: 720px;">
-          Understand money, markets and investing before you ever put a rupee at risk. Structured financial education in plain language, and in Kannada.
+          Understand money, markets and investing before you ever put a rupee at risk. Structured financial education in
+          plain language, and in Kannada.
         </p>
         <p style="font-size: 14px; font-weight: 600; color: #64748b; margin-top: 12px;">
           Trusted by 450+ active members across Karnataka
         </p>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 24px; max-width: 640px;">
-          <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 10px; color: #0f172a;">What members get — ₹99 / month</h2>
+        <div
+          style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 24px; max-width: 640px;">
+          <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 10px; color: #0f172a;">What members get — ₹99 /
+            month</h2>
           <ul style="margin: 0; padding-left: 20px; color: #334155; line-height: 1.6;">
             <li><strong>Weekly Order Wins:</strong> BSE &amp; NSE order filings, summed up by sector</li>
             <li><strong>ಹಣ ಮತ್ತು ಮನಸ್ಸು:</strong> Money-and-mind articles &amp; market reports in Kannada</li>
-            <li><strong>44 Calculators:</strong> SIP, XIRR, DCF, ROCE &amp; valuation tools in the Fundamental Analysis Lab</li>
+            <li><strong>44 Calculators:</strong> SIP, XIRR, DCF, ROCE &amp; valuation tools in the Fundamental Analysis
+              Lab</li>
           </ul>
         </div>
       </section>
 
       <!-- WHY WEALTHORIA -->
       <section id="why" style="margin-bottom: 48px;">
-        <p style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">Why Wealthoria</p>
+        <p
+          style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">
+          Why Wealthoria</p>
         <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 8px 0 12px;">Education first. Always.</h2>
         <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">
           We believe wealth is built on understanding, not luck. Here is what we put before everything else.
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
-            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Knowledge before capital</h3>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">Learn how money and markets actually work before you invest a single rupee.</p>
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Knowledge before capital
+            </h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">Learn how money and markets actually work before you
+              invest a single rupee.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
-            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Investing before trading</h3>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">We teach patient, long-term investing, never speculation or quick-flip trading.</p>
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Investing before trading
+            </h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">We teach patient, long-term investing, never
+              speculation or quick-flip trading.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
-            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Regional language learning</h3>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">Concepts taught in Kannada and English, so language is never a barrier to literacy.</p>
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Regional language learning
+            </h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">Concepts taught in Kannada and English, so language
+              is never a barrier to literacy.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
-            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Independent decision making</h3>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">We don't give tips. We give you the framework to decide for yourself, with confidence.</p>
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Independent decision making
+            </h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">We don't give tips. We give you the framework to
+              decide for yourself, with confidence.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Risk awareness</h3>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">Understand risk before reward. Every lesson grounds you in what can go wrong, and why.</p>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">Understand risk before reward. Every lesson grounds
+              you in what can go wrong, and why.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
-            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Long-term wealth creation</h3>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">Habits and discipline that compound over decades, not headlines that fade in days.</p>
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Long-term wealth creation
+            </h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">Habits and discipline that compound over decades, not
+              headlines that fade in days.</p>
           </div>
         </div>
       </section>
 
       <!-- PROGRAMS -->
       <section id="programs" style="margin-bottom: 48px;">
-        <p style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">Learning programs</p>
-        <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 8px 0 12px;">A structured path, step by step</h2>
+        <p
+          style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">
+          Learning programs</p>
+        <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 8px 0 12px;">A structured path, step by
+          step</h2>
         <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">
           Six focused programs that take you from the basics of money to confident, independent investing.
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
-            <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Stock market fundamentals</h3>
-            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">How shares, indices and the market really work, explained from zero.</p>
+            <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Stock market fundamentals
+            </h3>
+            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">How shares, indices and the market really
+              work, explained from zero.</p>
             <span style="font-size: 12px; font-weight: 600; color: #059669;">8 modules · Beginner</span>
           </div>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Mutual funds &amp; SIPs</h3>
-            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Build wealth steadily through diversified funds and disciplined SIPs.</p>
+            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Build wealth steadily through diversified
+              funds and disciplined SIPs.</p>
             <span style="font-size: 12px; font-weight: 600; color: #059669;">6 modules · Beginner</span>
           </div>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Personal finance</h3>
-            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Budgeting, saving, debt and emergency funds, your financial foundation.</p>
+            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Budgeting, saving, debt and emergency funds,
+              your financial foundation.</p>
             <span style="font-size: 12px; font-weight: 600; color: #059669;">7 modules · Beginner</span>
           </div>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Financial planning</h3>
-            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Set goals, plan for life events, and map money to the life you want.</p>
+            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Set goals, plan for life events, and map
+              money to the life you want.</p>
             <span style="font-size: 12px; font-weight: 600; color: #2563eb;">5 modules · Intermediate</span>
           </div>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Investor psychology</h3>
-            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Master the emotions (fear, greed, patience) that decide real returns.</p>
+            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Master the emotions (fear, greed, patience)
+              that decide real returns.</p>
             <span style="font-size: 12px; font-weight: 600; color: #2563eb;">4 modules · Intermediate</span>
           </div>
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
             <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">Asset allocation</h3>
-            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Balance risk across equity, debt and gold to match your goals.</p>
+            <p style="font-size: 13.5px; color: #64748b; margin: 0 0 8px;">Balance risk across equity, debt and gold to
+              match your goals.</p>
             <span style="font-size: 12px; font-weight: 600; color: #7c3aed;">5 modules · Advanced</span>
           </div>
         </div>
@@ -319,53 +361,77 @@
 
       <!-- HOW IT WORKS -->
       <section id="process" style="margin-bottom: 48px;">
-        <p style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">How it works</p>
-        <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 8px 0 12px;">From confused to confident in four steps</h2>
+        <p
+          style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">
+          How it works</p>
+        <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 8px 0 12px;">From confused to confident in
+          four steps</h2>
         <ol style="padding-left: 20px; line-height: 1.8; color: #334155; font-size: 15px;">
-          <li><strong>Learn:</strong> Start with the fundamentals of money, markets and investing in plain language.</li>
-          <li><strong>Understand risk:</strong> Before any reward, learn exactly what can go wrong and how to manage it.</li>
+          <li><strong>Learn:</strong> Start with the fundamentals of money, markets and investing in plain language.
+          </li>
+          <li><strong>Understand risk:</strong> Before any reward, learn exactly what can go wrong and how to manage it.
+          </li>
           <li><strong>Build knowledge:</strong> Layer concepts gradually until the full picture clicks into place.</li>
-          <li><strong>Invest with discipline:</strong> Apply what you know patiently, for the long term, on your own terms.</li>
+          <li><strong>Invest with discipline:</strong> Apply what you know patiently, for the long term, on your own
+            terms.</li>
         </ol>
       </section>
 
       <!-- FAQ -->
       <section id="faq" style="margin-bottom: 48px;">
-        <p style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">FAQ</p>
+        <p
+          style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: #e8473f;">
+          FAQ</p>
         <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 8px 0 16px;">Questions, answered</h2>
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Do I need any prior knowledge to start?</h3>
-            <p style="font-size: 14px; color: #475569; margin: 0;">Not at all. Our programs begin from the absolute basics of money and build up gradually, so first-time learners feel comfortable from day one.</p>
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Do I need any prior
+              knowledge to start?</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0;">Not at all. Our programs begin from the absolute
+              basics of money and build up gradually, so first-time learners feel comfortable from day one.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Are the sessions available in Kannada?</h3>
-            <p style="font-size: 14px; color: #475569; margin: 0;">Yes. Core programs and many seminars are taught in both Kannada and English, because language should never be a barrier to financial literacy.</p>
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Are the sessions available
+              in Kannada?</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0;">Yes. Core programs and many seminars are taught in
+              both Kannada and English, because language should never be a barrier to financial literacy.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Is Wealthoria giving stock tips or advisory?</h3>
-            <p style="font-size: 14px; color: #475569; margin: 0;">No. We are a financial education company. We teach you how to think and decide for yourself, we never give tips or recommend specific stocks.</p>
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Is Wealthoria giving stock
+              tips or advisory?</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0;">No. We are a financial education company. We teach
+              you how to think and decide for yourself, we never give tips or recommend specific stocks.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Who are the programs designed for?</h3>
-            <p style="font-size: 14px; color: #475569; margin: 0;">First-time investors, young professionals, salaried individuals, business owners and students, anyone who wants to understand money before investing.</p>
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Who are the programs
+              designed for?</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0;">First-time investors, young professionals, salaried
+              individuals, business owners and students, anyone who wants to understand money before investing.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Are there free resources to start with?</h3>
-            <p style="font-size: 14px; color: #475569; margin: 0;">Yes. Our YouTube channel, knowledge library and select seminars are completely free. You can begin learning today at no cost.</p>
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">Are there free resources to
+              start with?</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0;">Yes. Our YouTube channel, knowledge library and
+              select seminars are completely free. You can begin learning today at no cost.</p>
           </div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">How do I book a consultation?</h3>
-            <p style="font-size: 14px; color: #475569; margin: 0;">Use the consultation form above or contact support. Tell us your goals and we'll recommend the right learning path, free, with no obligation.</p>
+            <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px;">How do I book a
+              consultation?</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0;">Use the consultation form above or contact support.
+              Tell us your goals and we'll recommend the right learning path, free, with no obligation.</p>
           </div>
         </div>
       </section>
 
       <!-- FOOTER -->
-      <footer style="border-top: 1px solid #e2e8f0; padding-top: 24px; color: #64748b; font-size: 13.5px; line-height: 1.6;">
+      <footer
+        style="border-top: 1px solid #e2e8f0; padding-top: 24px; color: #64748b; font-size: 13.5px; line-height: 1.6;">
         <p style="margin: 0 0 8px;"><strong>Wealthoria</strong> — Learning is the first investment.</p>
-        <p style="margin: 0 0 8px;">Wealthoria Education Pvt. Ltd. is a financial education company on a mission to build a financially aware India, learning before investing, investing before trading.</p>
-        <p style="margin: 0 0 8px;">Support: <a href="mailto:support@wealthoria.in" style="color: #e8473f; text-decoration: none;">support@wealthoria.in</a> · +91 90197 59001 · Mysuru, Karnataka, India</p>
+        <p style="margin: 0 0 8px;">Wealthoria Education Pvt. Ltd. is a financial education company on a mission to
+          build a financially aware India, learning before investing, investing before trading.</p>
+        <p style="margin: 0 0 8px;">Support: <a href="mailto:support@wealthoria.in"
+            style="color: #e8473f; text-decoration: none;">support@wealthoria.in</a> · +91 90197 59001 · Mysuru,
+          Karnataka, India</p>
         <p style="margin: 0;">© 2026 Wealthoria Education Pvt. Ltd. All rights reserved.</p>
       </footer>
     </main>

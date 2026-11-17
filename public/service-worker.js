@@ -212,7 +212,7 @@ self.addEventListener("notificationclick", function (event) {
    CACHE CONFIGURATION
    ========================================================================= */
 
-const CACHE_VERSION = "wealthoria-v14";
+const CACHE_VERSION = "wealthoria-v16";
 const PRECACHE      = CACHE_VERSION + "-precache";
 const RUNTIME       = CACHE_VERSION + "-runtime";
 
@@ -315,6 +315,15 @@ self.addEventListener("activate", function (event) {
    ========================================================================= */
 
 self.addEventListener("fetch", function (event) {
+
+  // Do not cache or intercept responses on local dev servers so live edits
+  // always load fresh without stale cache hits.
+  if (
+    self.location.hostname === "localhost" ||
+    self.location.hostname === "127.0.0.1"
+  ) {
+    return;
+  }
 
   const request = event.request;
 

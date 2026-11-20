@@ -20,7 +20,7 @@ window.AOP_CONFIG = {
       titleKn: 'ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್ (ಕನ್ನಡ ಆವೃತ್ತಿ)',
       language: 'Kannada',
       edition: 'kannada',
-      price: 1, // Test price ₹1; change to 999 for launch
+      price: 999, // Normal price ₹999
       displayPrice: 999,
       mrp: 1499,
       currency: 'INR',
@@ -32,7 +32,7 @@ window.AOP_CONFIG = {
       titleEn: 'The Art of Price (English Edition)',
       language: 'English',
       edition: 'english',
-      price: 1, // Test price ₹1; change to 999 for launch
+      price: 999, // Normal price ₹999
       displayPrice: 999,
       mrp: 1499,
       currency: 'INR',

@@ -195,11 +195,25 @@ const NAV = [
   { to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
 
   {
-    to: "/admin/prebook-orders",
-    label: "Pre-book Orders",
-    icon: "courses"
+    type: "group",
+    id: "products",
+    label: "Products",
+    icon: "courses",
+    children: [
+      {
+        to: "/admin/products/hoodikeya-vijnana",
+        altTo: ["/admin/prebook-orders"],
+        label: "Hoodikeya Vijnana",
+        badge: "Book 1"
+      },
+      {
+        to: "/admin/products/art-of-price",
+        altTo: ["/admin/art-of-price-orders", "/admin/the-art-of-price-orders"],
+        label: "The Art of Price",
+        badge: "Book 2"
+      }
+    ]
   },
-
 
   {
     to: "/admin/generate-label",
@@ -223,6 +237,12 @@ const NAV = [
     to: "/admin/users",
     label: "Members",
     icon: "users"
+  },
+
+  {
+    to: "/admin/upcoming-subscriptions",
+    label: "Upcoming Subscriptions",
+    icon: "calendar"
   },
 
   {
@@ -277,6 +297,9 @@ function Shell({
 
   const [open, setOpen] =
     useState(false);
+
+  const [productsOpen, setProductsOpen] =
+    useState(true);
 
 
   /* =======================================================
@@ -390,36 +413,65 @@ function Shell({
             Manage
           </div>
 
-          {NAV.map(
-            (item) => (
+          {NAV.map((item) => {
+            if (item.children) {
+              const isGroupActive = item.children.some(
+                (c) => isActive(c.to) || (c.altTo && c.altTo.some((a) => isActive(a)))
+              );
+              const isOpen = productsOpen !== undefined ? productsOpen : isGroupActive;
 
+              return (
+                <div key={item.id || item.label} className="sb-group">
+                  <button
+                    type="button"
+                    className={`sb-link sb-group-header ${isGroupActive ? "group-on" : ""}`}
+                    onClick={() => setProductsOpen((prev) => !prev)}
+                    title="Toggle Products"
+                  >
+                    <MIcon name={item.icon} size={18} />
+                    <span style={{ flex: 1, textAlign: "left" }}>{item.label}</span>
+                    <span className={`sb-chevron ${isOpen ? "open" : ""}`}>
+                      {isOpen ? "▲" : "▼"}
+                    </span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="sb-subnav">
+                      {item.children.map((sub) => {
+                        const isSubActive =
+                          isActive(sub.to) || (sub.altTo && sub.altTo.some((a) => isActive(a)));
+
+                        return (
+                          <button
+                            key={sub.to}
+                            type="button"
+                            className={`sb-sublink ${isSubActive ? "on" : ""}`}
+                            onClick={() => go(sub.to)}
+                          >
+                            <span className="sb-bullet" />
+                            <span className="sb-sub-main">{sub.label}</span>
+                            {sub.badge && <span className="sb-badge-new">{sub.badge}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
               <button
                 key={item.to}
                 type="button"
-                className={
-                  `sb-link ${isActive(item.to)
-                    ? "on"
-                    : ""
-                  }`
-                }
-                onClick={() =>
-                  go(item.to)
-                }
+                className={`sb-link ${isActive(item.to) ? "on" : ""}`}
+                onClick={() => go(item.to)}
               >
-
-                <MIcon
-                  name={item.icon}
-                  size={18}
-                />
-
-                <span>
-                  {item.label}
-                </span>
-
+                <MIcon name={item.icon} size={18} />
+                <span>{item.label}</span>
               </button>
-
-            )
-          )}
+            );
+          })}
 
         </nav>
 

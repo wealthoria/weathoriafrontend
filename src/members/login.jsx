@@ -1,4 +1,6 @@
 import React from "react";
+import { hasPaidMemberAccess } from "./memberContent.js";
+import { loadRazorpayScript } from "../utils/loadRazorpay.js";
 
 /* global React, window */
 
@@ -525,7 +527,10 @@ const removeMemberSession = (
       }
 
       if (!window.Razorpay) {
-        throw new Error("Payment system is still loading. Please try again.");
+        const loaded = await loadRazorpayScript();
+        if (!loaded || !window.Razorpay) {
+          throw new Error("Payment system could not be loaded. Please check your internet connection and try again.");
+        }
       }
 
       /* Create a NEW Razorpay subscription using the existing plan */
@@ -823,29 +828,22 @@ try {
   if (response.ok && data?.success) {
     const restoredMember = data?.member || {};
 
-    const restoredStatus = String(
-      restoredMember.status ||
-      restoredMember.subscription?.status ||
-      sessionData.status ||
-      ""
-    ).trim().toLowerCase();
+    const updatedSession = {
+      ...sessionData,
+      ...restoredMember,
+      subscription:
+        restoredMember.subscription ||
+        sessionData.subscription ||
+        null,
+      token: sessionData.token
+    };
 
-    if (
-      restoredStatus === "inactive" ||
-      restoredStatus === "cancelled" ||
-      restoredStatus === "canceled"
-    ) {
-      const updatedSession = {
-        ...sessionData,
-        ...restoredMember,
-        token: sessionData.token
-      };
+    saveMemberSession(
+      updatedSession,
+      savedSession.type === "local"
+    );
 
-      saveMemberSession(
-        updatedSession,
-        savedSession.type === "local"
-      );
-
+    if (!hasPaidMemberAccess(updatedSession)) {
       if (!cancelled) {
         setSubscriptionInactive(true);
         setCheckingSession(false);
@@ -1407,7 +1405,13 @@ if (
   return;
 }
 
-if (!accessActive && effectiveStatus !== "active") {
+if (
+  (!accessActive && effectiveStatus !== "active") ||
+  !hasPaidMemberAccess({
+    ...updatedSession,
+    status: effectiveStatus
+  })
+) {
   setSubscriptionInactive(true);
   setLoading(false);
   return;

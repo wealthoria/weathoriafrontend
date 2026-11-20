@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://book.wealthoria.in/</loc></url>
+  <url><loc>https://book.wealthoria.in/kn/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://book.wealthoria.in/en/"/>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://book.wealthoria.in/kn/"/></url>
+  <url><loc>https://book.wealthoria.in/en/</loc>
+    <xhtml:link rel="alternate" hreflang="kn" href="https://book.wealthoria.in/kn/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://book.wealthoria.in/en/"/></url>
+</urlset>

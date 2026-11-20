@@ -1,4 +1,5 @@
 import React from "react";
+import { hasPaidMemberAccess } from "./memberContent.js";
 
 /* global React, window */
 
@@ -200,12 +201,18 @@ function hasPaidAccessLeft(session) {
 }
 
 function isAccessBlocked(status, session, inactiveStatuses) {
-  if (!inactiveStatuses.includes(status)) return false;
+  const normStatus = String(status || "").trim().toLowerCase();
+  if (inactiveStatuses.includes(normStatus)) {
+    return !(
+      CANCELLED_STATUSES.includes(normStatus) &&
+      hasPaidAccessLeft(session)
+    );
+  }
 
-  return !(
-    CANCELLED_STATUSES.includes(status) &&
-    hasPaidAccessLeft(session)
-  );
+  return !hasPaidMemberAccess({
+    ...(session || {}),
+    status: normStatus
+  });
 }
 
 function getInitialMemberSession() {
@@ -222,7 +229,13 @@ function getInitialMemberSession() {
         "deactivated",
         "disabled",
         "blocked",
-        "suspended"
+        "suspended",
+        "expired",
+        "pending",
+        "unpaid",
+        "created",
+        "failed",
+        "halted"
       ];
       if (!isAccessBlocked(status, parsed, inactiveStatuses)) {
         return parsed;
@@ -571,7 +584,13 @@ function MembersRouter() {
             "deactivated",
             "disabled",
             "blocked",
-            "suspended"
+            "suspended",
+            "expired",
+            "pending",
+            "unpaid",
+            "created",
+            "failed",
+            "halted"
           ];
 
 
@@ -814,14 +833,7 @@ if (
     path === "/members/"
   ) {
     const activeSession = memberSession || initialSession;
-    if (activeSession?.token && activeSession?.uid) {
-      const status = String(activeSession.status || "").toLowerCase();
-      if (
-        status !== "inactive" &&
-        status !== "cancelled" &&
-        status !== "canceled" &&
-        status !== "deactivated"
-      ) {
+    if (activeSession?.token && activeSession?.uid && hasPaidMemberAccess(activeSession)) {
         window.history.replaceState({}, "", "/members/dashboard");
         setTimeout(() => setPath("/members/dashboard"), 0);
         return window.MemberDashboard
@@ -831,7 +843,6 @@ if (
                 Loading Member Dashboard...
               </div>
             );
-      }
     }
 
     return window.MemberLogin

@@ -1,4 +1,8 @@
 import React from "react";
+import {
+  isPublishedStatus,
+  validatePublishExcerpt
+} from "./excerptGuard.js";
 
 /* global React, window */
 
@@ -192,6 +196,16 @@ const loadContent = useCallback(async () => {
 
         try {
 
+          const guard =
+            validatePublishExcerpt(
+              item?.status,
+              item?.description
+            );
+
+          if (!guard.ok) {
+            throw new Error(guard.message);
+          }
+
           const db =
             getDB();
 
@@ -254,6 +268,26 @@ const updateContent = useCallback(
 
       if (!item) {
         throw new Error("Content not found.");
+      }
+
+      const nextStatus =
+        patch.status !== undefined
+          ? patch.status
+          : item.status;
+
+      const nextDescription =
+        patch.description !== undefined
+          ? patch.description
+          : item.description;
+
+      const guard =
+        validatePublishExcerpt(
+          nextStatus,
+          nextDescription
+        );
+
+      if (!guard.ok) {
+        throw new Error(guard.message);
       }
 
       const firestoreId =
@@ -361,6 +395,26 @@ const setContentStatus = useCallback(
       const items = content.filter(
         (item) => ids.includes(item.id)
       );
+
+      if (isPublishedStatus(status)) {
+        const blocked = items.find(
+          (item) =>
+            !validatePublishExcerpt(
+              status,
+              item.description
+            ).ok
+        );
+
+        if (blocked) {
+          throw new Error(
+            `"${blocked.title || "Untitled"}": ` +
+              validatePublishExcerpt(
+                status,
+                blocked.description
+              ).message
+          );
+        }
+      }
 
       await Promise.all(
         items.map((item) => {

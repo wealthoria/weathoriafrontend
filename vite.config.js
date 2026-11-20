@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import labBundleHandler from "./api/lab-bundle.js";
+import thumbHandler from "./api/thumb.js";
 import labPdfMiddleware from "./middleware.js";
 
 function wealthoriaLabServerGatePlugin() {
@@ -10,7 +11,7 @@ function wealthoriaLabServerGatePlugin() {
         const rawUrl = req.url || "/";
         const pathname = rawUrl.split("?")[0];
 
-        if (pathname === "/api/lab-bundle") {
+        if (pathname === "/api/lab-bundle" || pathname === "/api/thumb") {
           const mockRes = {
             setHeader: (k, v) => res.setHeader(k, v),
             status(code) {
@@ -26,7 +27,11 @@ function wealthoriaLabServerGatePlugin() {
               };
             },
           };
-          await labBundleHandler(req, mockRes);
+          if (pathname === "/api/thumb") {
+            await thumbHandler(req, mockRes);
+          } else {
+            await labBundleHandler(req, mockRes);
+          }
           return;
         }
 

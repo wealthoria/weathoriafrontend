@@ -43,6 +43,7 @@ function NavBar({ onNav }) {
                 <span className="products-arrow">⌄</span>
               </button>
 
+
               <div className="products-dropdown">
                 <a href="/hoodikeya-vijnana.html">
                   <span className="product-icon"><Icon name="book" size={16} stroke={2} /></span>
@@ -50,7 +51,20 @@ function NavBar({ onNav }) {
                     <strong>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</strong>
                     <small>₹999 · Pre-book now</small>
                   </span>
+
+
+
                 </a>
+
+                <a href="/artofbookhomepage.html">
+                  <span className="product-icon"><Icon name="book" size={16} stroke={2} /></span>
+                  <span>
+                    <strong>ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್</strong>
+                    <small>₹999 · Pre-book now</small>
+                  </span>
+                </a>
+
+
               </div>
             </div>
           </nav>

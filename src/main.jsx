@@ -120,6 +120,7 @@ import "./admin/Generatelable.jsx";
 import "./admin/GenerateCoupon.jsx";
 import "./admin/unsubscribedMembers.jsx";
 import "./admin/customemail.jsx";
+import "./admin/upcomingSubscriptions.jsx";
 
 import PrebookForm from "./components/PrebookForm.jsx";
 

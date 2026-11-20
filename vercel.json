@@ -58,6 +58,62 @@
   ],
   "rewrites": [
     {
+      "source": "/artofbookhomepage",
+      "destination": "/artofbookhomepage.html"
+    },
+    {
+      "source": "/the-art-of-price",
+      "destination": "/artofbookhomepage.html"
+    },
+    {
+      "source": "/the-art-of-price-kannada",
+      "destination": "/the-art-of-price-kannada.html"
+    },
+    {
+      "source": "/the-art-of-price-english",
+      "destination": "/the-art-of-price-english.html"
+    },
+    {
+      "source": "/the-art-of-price/kn",
+      "destination": "/the-art-of-price-kannada.html"
+    },
+    {
+      "source": "/the-art-of-price/en",
+      "destination": "/the-art-of-price-english.html"
+    },
+    {
+      "source": "/thank-you",
+      "destination": "/thank-you.html"
+    },
+    {
+      "source": "/thank-you/",
+      "destination": "/thank-you.html"
+    },
+    {
+      "source": "/the-art-of-price/thank-you",
+      "destination": "/thank-you.html"
+    },
+    {
+      "source": "/the-art-of-price/thank-you/",
+      "destination": "/thank-you.html"
+    },
+    {
+      "source": "/the-art-of-price-thank-you",
+      "destination": "/thank-you.html"
+    },
+    {
+      "source": "/the-art-of-price-prebook",
+      "destination": "/the-art-of-price-prebook.html"
+    },
+    {
+      "source": "/art-of-price-prebook",
+      "destination": "/the-art-of-price-prebook.html"
+    },
+    {
+      "source": "/the-art-of-price-prebooking",
+      "destination": "/the-art-of-price-prebooking.html"
+    },
+    {
       "source": "/customer-details",
       "destination": "/customer-details.html"
     },

@@ -1,9 +1,11 @@
 import React from "react";
+import MemberThumbnail from "./MemberThumbnail.jsx";
 
 import {
   trackMemberContentOpen,
   getCurrentMemberInfo,
-  getMemberToken
+  getMemberToken,
+  StudyDisclaimer
 } from "./memberContent.js";
 
 const { useState, useEffect, useRef } = React;
@@ -359,6 +361,11 @@ function MemberVideoPlayer({
               {formatCategory(video.category)}
             </span>
           )}
+
+          <StudyDisclaimer
+            variant="modal"
+            subject="This video"
+          />
         </div>
       </div>
     </div>
@@ -1517,14 +1524,11 @@ function MemberVideo() {
                                 }`}
                             >
                               {video.thumbnailUrl ? (
-                                <img
-                                  src={getFileUrl(
-                                    video.thumbnailUrl
-                                  )}
-                                  alt={
-                                    video.title ||
-                                    "Video thumbnail"
-                                  }
+                                <MemberThumbnail
+                                  src={getFileUrl(video.thumbnailUrl)}
+                                  alt={video.title || "Video thumbnail"}
+                                  width={320}
+                                  height={180}
                                 />
                               ) : (
                                 <div className="member-video-no-thumbnail">
@@ -1643,7 +1647,10 @@ function MemberVideo() {
                                 </button>
                               </div>
 
-
+                              <StudyDisclaimer
+                                variant="video"
+                                subject="This video"
+                              />
 
 
                               <div
@@ -1698,11 +1705,11 @@ function MemberVideo() {
                                 const visibleComments = getVisibleCommentsForVideo(video.id);
                                 const shouldShowComments = isAdmin
                                   ? ((videoComments[video.id]?.length || 0) > 0 ||
-                                      commentOpenVideoId === video.id ||
-                                      openCommentsVideoId === video.id)
+                                    commentOpenVideoId === video.id ||
+                                    openCommentsVideoId === video.id)
                                   : (visibleComments.length > 0 ||
-                                      openCommentsVideoId === video.id ||
-                                      commentOpenVideoId === video.id);
+                                    openCommentsVideoId === video.id ||
+                                    commentOpenVideoId === video.id);
 
                                 if (!shouldShowComments) return null;
 

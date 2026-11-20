@@ -354,38 +354,32 @@ function DcfCalc() {
 }
 
 /* ---------------- overlay shells ---------------- */
-const TABS = [
-  { k: "sip", label: "SIP", title: "SIP calculator", C: SipCalc },
-  { k: "lumpsum", label: "Lumpsum", title: "Lumpsum calculator", C: LumpsumCalc },
-  { k: "goal", label: "Goal planning", title: "Goal planning · SIP", C: GoalCalc },
-  { k: "retire", label: "Retirement", title: "Retirement planning", C: RetireCalc },
-  { k: "dcf", label: "DCF", title: "DCF calculator", C: DcfCalc },
-];
-
 function CalcOverlay({ onClose }) {
-  const [tab, setTab] = useState("sip");
-  const ref = useRef(null);
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [onClose]);
-  const T = TABS.find((t) => t.k === tab);
+
   return (
     <div className="calc-scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="calc-modal" role="dialog" aria-modal="true" aria-label="Calculators" ref={ref}>
-        <div className="calc-head">
-          <span className="cic"><Icon name="calc" size={20} /></span>
-          <div><h2>{T.title}</h2><div className="sub">Free tools · educational estimates, not advice</div></div>
-          <button className="calc-close" onClick={onClose} aria-label="Close calculators"><Icon name="x" size={18} /></button>
+      <div className="soon-card" role="dialog" aria-modal="true" aria-label="Paid Members Only" style={{ maxWidth: 460 }}>
+        <span className="sic" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </span>
+        <h3>Paid Members Only</h3>
+        <p>
+          All Wealthoria calculators — including SIP, Lumpsum, Goal Planning, Retirement, DCF, and our 44 Fundamental Analysis Lab calculators — are exclusively for active paid members (₹99/month).
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+          <a className="btn btn-green" href="/members/login">Member Login</a>
+          <a className="btn btn-outline" href="/membership.html">Unlock Membership</a>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Close</button>
         </div>
-        <div className="calc-tabs" role="tablist">
-          {TABS.map((t) => (
-            <button key={t.k} role="tab" aria-selected={tab === t.k} className={`calc-tab ${tab === t.k ? "on" : ""}`} onClick={() => setTab(t.k)}>{t.label}</button>
-          ))}
-        </div>
-        <div className="calc-body"><T.C /></div>
       </div>
     </div>
   );
@@ -402,7 +396,7 @@ function ComingSoonOverlay({ title, onClose }) {
       <div className="soon-card" role="dialog" aria-modal="true">
         <span className="sic"><Icon name="clock" size={26} /></span>
         <h3>Coming soon</h3>
-        <p>{title ? `"${title}" is` : "This resource is"} being written with care. It will be free when it arrives.</p>
+        <p>{title ? `"${title}" is` : "This resource is"} being written with care and will be available once published.</p>
         <button className="btn btn-green" onClick={onClose}>Got it</button>
       </div>
     </div>

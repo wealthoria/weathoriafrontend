@@ -1,6 +1,7 @@
 /* global React, window */
 import React, { useState, useEffect } from "react";
 import { InstallIcon, isStandalone } from "./InstallPopup.jsx";
+import { useLaunchCountdown } from "./ArtOfPriceSpotlight.jsx";
 
 const { useApp, Icon, Reveal, SectionHead, BrandLockup } = window;
 
@@ -55,6 +56,7 @@ function NavBar({ onNav }) {
   const productsLabel = t.nav?.products || (lang === "kn" ? "ಉತ್ಪನ್ನಗಳು" : "Products");
   const productLinks = [
     { href: "/Book.html", ic: "book", label: lang === "kn" ? "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" : "Book · ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" },
+    { href: "/artofbookhomepage.html", ic: "book", label: lang === "kn" ? "ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್" : "Book · The Art of Price", isNew: true },
   ];
   const renderProductsNav = (closeDrawer = false) => (
     <div className="products-nav">
@@ -74,6 +76,7 @@ function NavBar({ onNav }) {
           >
             <Icon name={item.ic} size={16} stroke={2} />
             <span>{item.label}</span>
+            {item.isNew && <span className="aop-nav-new">NEW</span>}
           </a>
         ))}
       </div>
@@ -266,8 +269,9 @@ function NavBar({ onNav }) {
    HERO  (Direction A - calm split)
    ========================================================================= */
 function Hero({ onNav }) {
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const h = t.hero;
+  const cd = useLaunchCountdown();
 
   // pause the ambient video while the hero is offscreen (saves CPU/battery)
   React.useEffect(() => {
@@ -326,6 +330,126 @@ function Hero({ onNav }) {
           <div className="trustline">
             <span className="avatars"><i /><i /><i /><i /></span>
             {h.trust}
+          </div>
+
+          {/* Book Launch Animated Ad Card (Sleek horizontal compact layout) */}
+          <div className="hero-book-ad-card">
+            {/* Ambient Candlestick Motion Watermark (Creative financial background art) */}
+            <div className="hba-candlestick-bg" aria-hidden="true">
+              <svg viewBox="0 0 120 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="16" y1="12" x2="16" y2="44" stroke="currentColor" strokeWidth="1" opacity="0.3" />
+                <rect x="13" y="18" width="6" height="18" rx="1" fill="currentColor" opacity="0.35" />
+
+                <line x1="38" y1="10" x2="38" y2="48" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+                <rect x="35" y="16" width="6" height="22" rx="1" fill="currentColor" opacity="0.45" />
+
+                <line x1="60" y1="8" x2="60" y2="42" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+                <rect x="57" y="14" width="6" height="18" rx="1" fill="currentColor" opacity="0.45" />
+
+                {/* Glowing Bullish Breakout Candle */}
+                <line x1="82" y1="2" x2="82" y2="50" stroke="#ea580c" strokeWidth="1.2" className="hba-breakout-line" />
+                <rect x="79" y="8" width="6" height="32" rx="1" fill="#ea580c" className="hba-breakout-body" />
+
+                <line x1="104" y1="2" x2="104" y2="36" stroke="#f4823c" strokeWidth="1" opacity="0.6" />
+                <rect x="101" y="6" width="6" height="20" rx="1" fill="#f4823c" opacity="0.65" />
+              </svg>
+            </div>
+
+            {/* Main Showcase: Left Book Cover Stage + Right Content Column */}
+            <div className="hba-showcase">
+              <div className="hba-cover-col">
+                <a
+                  href="/artofbookhomepage.html"
+                  className="hba-cover-stage"
+                  style={{ display: "block", textDecoration: "none" }}
+                  title={lang === "kn" ? "ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್ - ಆವೃತ್ತಿಯನ್ನು ಆರಿಸಿ" : "The Art of Price - Choose Edition"}
+                >
+                  <img
+                    src="/assets/art-of-price-cover.webp"
+                    alt="The Art of Price"
+                    className="hba-cover-img"
+                    width="78"
+                    height="114"
+                    loading="eager"
+                    decoding="async"
+                  />
+                  <span className="hba-cover-glow" aria-hidden="true" />
+                  <span className="hba-cover-sheen" aria-hidden="true" />
+                </a>
+                <a
+                  href="/artofbookhomepage.html"
+                  className="hba-preview-link"
+                >
+                  {lang === "kn" ? "ಆವೃತ್ತಿ ಆರಿಸಿ / ಮಾದರಿ →" : "Choose Edition / Sample →"}
+                </a>
+              </div>
+
+              <div className="hba-info">
+                {/* Badges Row */}
+                <div className="hba-badge-row">
+                  <span className="hba-tag">
+                    <span className="hba-pulse-dot" aria-hidden="true" />
+                    {lang === "kn" ? "PRE-BOOKING ವಿಶೇಷ ಆಫರ್" : "PRE-BOOKING SPECIAL"}
+                  </span>
+                  <span className="hba-discount">
+                    {lang === "kn" ? "SAVE ₹500 · 33% OFF" : "SAVE ₹500 · 33% OFF"}
+                  </span>
+                </div>
+
+                <div className="hba-title-row">
+                  <h4 className="hba-title">
+                    {lang === "kn" ? "The Art of Price" : "The Art of Price"}
+                  </h4>
+                  <span className="hba-subtitle">
+                    {lang === "kn"
+                      ? "Whispers Beyond Candlesticks · 500+ Pages, 29 Chapters"
+                      : "Whispers Beyond Candlesticks · 500+ Pages, 29 Chapters"}
+                  </span>
+                </div>
+
+                <div className="hba-features-list">
+                  <div className="hba-feat-item">
+                    <span className="hba-feat-check">✓</span>
+                    <span>{lang === "kn" ? "Kannada & English Editions" : "Kannada & English Editions"}</span>
+                  </div>
+                  <div className="hba-feat-item">
+                    <span className="hba-feat-check">✓</span>
+                    <span>{lang === "kn" ? "Real NSE Chart Proofs" : "Real NSE Chart Proofs"}</span>
+                  </div>
+                  <div className="hba-feat-item">
+                    <span className="hba-feat-check">✓</span>
+                    <span>{lang === "kn" ? "Free Pan-India Delivery" : "Free Pan-India Delivery"}</span>
+                  </div>
+                </div>
+
+                {/* Horizontal Action Row: Price + Timer + Button */}
+                <div className="hba-action-row">
+                  <div className="hba-price-group">
+                    <span className="hba-price-curr">₹999</span>
+                    <span className="hba-price-mrp">₹1,499</span>
+                    <span className="hba-discount-pill">33% OFF</span>
+                  </div>
+
+                  {cd.phase !== "closed" && (
+                    <div className="hba-timer" title={lang === "kn" ? "ಪ್ರಿ-ಬುಕಿಂಗ್ ಮುಕ್ತಾಯದ ಕೌಂಟ್‌ಡೌನ್" : "Pre-booking countdown"}>
+                      <span className="hba-timer-label">
+                        {lang === "kn" ? "ಮುಕ್ತಾಯ:" : "CLOSES IN:"}
+                      </span>
+                      <span className="hba-timer-txt">
+                        {cd.d}d : {cd.h}h : {cd.m}m : {cd.s}s
+                      </span>
+                    </div>
+                  )}
+
+                  <a
+                    href="/artofbookhomepage.html"
+                    className="hba-btn-cta"
+                  >
+                    <span>{lang === "kn" ? "Pre-book at ₹999 →" : "Pre-book at ₹999 →"}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </Reveal>
 

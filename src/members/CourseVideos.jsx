@@ -1,5 +1,7 @@
 import React from "react";
 import { trackMemberContentOpen } from "./memberContent.js";
+import { loadRazorpayScript } from "../utils/loadRazorpay.js";
+import MemberThumbnail from "./MemberThumbnail.jsx";
 
 /* global React, window */
 
@@ -9,9 +11,9 @@ const API_BASE_URL =
   typeof window !== "undefined" && window.WEALTHORIA_API_BASE !== undefined
     ? window.WEALTHORIA_API_BASE
     : (typeof window !== "undefined" &&
-       (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-        ? ""
-        : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net");
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+      ? ""
+      : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net");
 
 /* =========================================================
    COURSE DATA
@@ -257,7 +259,7 @@ function CourseVideos() {
     script.async = true;
 
     script.onload = () => {
-     
+
     };
 
     script.onerror = () => {
@@ -467,8 +469,8 @@ function CourseVideos() {
      SELECTED COURSE LEVEL
   ======================================================= */
 
- const [selectedLevel, setSelectedLevel] =
-  useState("beginner");
+  const [selectedLevel, setSelectedLevel] =
+    useState("beginner");
 
 
   /* =======================================================
@@ -492,53 +494,53 @@ function CourseVideos() {
   /* =======================================================
      PURCHASED COURSES
   ======================================================= */
-const [purchasedCourses, setPurchasedCourses] =
-  useState([]);
+  const [purchasedCourses, setPurchasedCourses] =
+    useState([]);
 
-useEffect(() => {
-  const loadPurchasedCourses = async () => {
-    const session = getMemberSession();
+  useEffect(() => {
+    const loadPurchasedCourses = async () => {
+      const session = getMemberSession();
 
-    if (!session?.token) {
-      setPurchasedCourses([]);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/payment/purchase-history`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.token}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to load purchase history."
-        );
+      if (!session?.token) {
+        setPurchasedCourses([]);
+        return;
       }
 
-      const ids = (data.purchases || [])
-        .filter((item) => item.status === "paid")
-        .map((item) => String(item.courseId || ""))
-        .filter(Boolean);
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/payment/purchase-history`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
 
-      setPurchasedCourses([...new Set(ids)]);
+        const data = await response.json();
 
-    } catch (error) {
-      console.error("Purchase lookup error:", error);
-      setPurchasedCourses([]);
-    }
-  };
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Unable to load purchase history."
+          );
+        }
 
-  loadPurchasedCourses();
-}, []);
+        const ids = (data.purchases || [])
+          .filter((item) => item.status === "paid")
+          .map((item) => String(item.courseId || ""))
+          .filter(Boolean);
+
+        setPurchasedCourses([...new Set(ids)]);
+
+      } catch (error) {
+        console.error("Purchase lookup error:", error);
+        setPurchasedCourses([]);
+      }
+    };
+
+    loadPurchasedCourses();
+  }, []);
   /* =======================================================
      COURSES FROM FIRESTORE
   ======================================================= */
@@ -546,48 +548,48 @@ useEffect(() => {
   const [firestoreCourses, setFirestoreCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
 
- useEffect(() => {
-  const loadCourses = async () => {
-    const session = getMemberSession();
+  useEffect(() => {
+    const loadCourses = async () => {
+      const session = getMemberSession();
 
-    if (!session?.token) {
-      setFirestoreCourses([]);
-      setCoursesLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/members/dashboard-content`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.token}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to load courses."
-        );
+      if (!session?.token) {
+        setFirestoreCourses([]);
+        setCoursesLoading(false);
+        return;
       }
 
-      setFirestoreCourses(data.courses || []);
-      setCoursesLoading(false);
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/members/dashboard-content`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
 
-    } catch (error) {
-      console.error("Error loading courses:", error);
-      setFirestoreCourses([]);
-      setCoursesLoading(false);
-    }
-  };
+        const data = await response.json();
 
-  loadCourses();
-}, []);
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Unable to load courses."
+          );
+        }
+
+        setFirestoreCourses(data.courses || []);
+        setCoursesLoading(false);
+
+      } catch (error) {
+        console.error("Error loading courses:", error);
+        setFirestoreCourses([]);
+        setCoursesLoading(false);
+      }
+    };
+
+    loadCourses();
+  }, []);
 
   /* =======================================================
      SAVE PURCHASED COURSES
@@ -599,54 +601,54 @@ useEffect(() => {
   ======================================================= */
 
   const isPurchased = (courseId) => {
-  return purchasedCourses.includes(
-    String(courseId)
-  );
-};
+    return purchasedCourses.includes(
+      String(courseId)
+    );
+  };
 
 
   /* =======================================================
      OPEN COURSE
   ======================================================= */
 
- const openCourse = (course) => {
-  if (course) {
-    trackMemberContentOpen({
-      type: "video",
-      contentId: course.id || "course_video",
-      contentTitle: course.title || "Course Video"
-    });
-  }
+  const openCourse = (course) => {
+    if (course) {
+      trackMemberContentOpen({
+        type: "video",
+        contentId: course.id || "course_video",
+        contentTitle: course.title || "Course Video"
+      });
+    }
 
-  setSelectedCourse(course);
+    setSelectedCourse(course);
 
-  setShowPreview(true);
+    setShowPreview(true);
 
-  setPreviewEnded(false);
+    setPreviewEnded(false);
 
-  setTimeLeft(30);
+    setTimeLeft(30);
 
-  // Google Analytics - track course opened
-  if (
-    typeof window.gtag === "function" &&
-    course
-  ) {
-    window.gtag("event", "course_viewed", {
-      course_id: String(course.id || ""),
-      course_name: course.title || "",
-      course_category: course.category || "",
-      course_level: course.level || ""
-    });
+    // Google Analytics - track course opened
+    if (
+      typeof window.gtag === "function" &&
+      course
+    ) {
+      window.gtag("event", "course_viewed", {
+        course_id: String(course.id || ""),
+        course_name: course.title || "",
+        course_category: course.category || "",
+        course_level: course.level || ""
+      });
 
-    window.gtag("event", "video_player_opened", {
-  course_id: String(course.id || ""),
-  course_name: course.title || "",
-  course_category: course.category || "",
-  course_level: course.level || ""
-});
-  }
+      window.gtag("event", "video_player_opened", {
+        course_id: String(course.id || ""),
+        course_name: course.title || "",
+        course_category: course.category || "",
+        course_level: course.level || ""
+      });
+    }
 
-};
+  };
 
   /* =======================================================
      HANDLE BACK BUTTON / MODAL HISTORY
@@ -722,25 +724,25 @@ useEffect(() => {
 
       setTimeLeft((current) => {
 
-      if (current <= 1) {
-  clearInterval(timer);
-  setPreviewEnded(true);
+        if (current <= 1) {
+          clearInterval(timer);
+          setPreviewEnded(true);
 
-  // Google Analytics - preview completed
-  if (
-    typeof window.gtag === "function" &&
-    selectedCourse
-  ) {
-    window.gtag("event", "course_preview_completed", {
-      course_id: String(selectedCourse.id || ""),
-      course_name: selectedCourse.title || "",
-      course_category: selectedCourse.category || "",
-      course_level: selectedCourse.level || ""
-    });
-  }
+          // Google Analytics - preview completed
+          if (
+            typeof window.gtag === "function" &&
+            selectedCourse
+          ) {
+            window.gtag("event", "course_preview_completed", {
+              course_id: String(selectedCourse.id || ""),
+              course_name: selectedCourse.title || "",
+              course_category: selectedCourse.category || "",
+              course_level: selectedCourse.level || ""
+            });
+          }
 
-  return 0;
-}
+          return 0;
+        }
         return current - 1;
 
       });
@@ -765,259 +767,260 @@ useEffect(() => {
   /* =======================================================
      BUY COURSE
   ======================================================= */
-const buyCourse = async (course) => {
+  const buyCourse = async (course) => {
 
-  try {
+    try {
 
-    if (!course?.id) {
-      alert("Course information is missing.");
-      return;
-    }
-
-   const memberSession =
-  getMemberSession();
-
-if (!memberSession?.token) {
-  alert("Please login first.");
-  return;
-}
-
-    /* =====================================================
-       1. CREATE RAZORPAY ORDER
-    ===================================================== */
-
-    const response = await fetch(
-   `${API_BASE_URL}/api/payment/create-course-order`,
-      {
-        method: "POST",
-
-      headers: {
-  "Content-Type": "application/json",
-  "Authorization":
-    `Bearer ${memberSession.token}`
-},
-
-      body: JSON.stringify({
-  courseId: course.id
-})
+      if (!course?.id) {
+        alert("Course information is missing.");
+        return;
       }
-    );
 
+      const memberSession =
+        getMemberSession();
 
-    const data = await response.json();
+      if (!memberSession?.token) {
+        alert("Please login first.");
+        return;
+      }
 
+      /* =====================================================
+         1. CREATE RAZORPAY ORDER
+      ===================================================== */
 
-    if (!response.ok) {
+      const response = await fetch(
+        `${API_BASE_URL}/api/payment/create-course-order`,
+        {
+          method: "POST",
 
-      throw new Error(
-        data?.message ||
-        "Unable to create payment."
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${memberSession.token}`
+          },
+
+          body: JSON.stringify({
+            courseId: course.id
+          })
+        }
       );
 
-    }
+
+      const data = await response.json();
 
 
-    /* =====================================================
-       2. OPEN RAZORPAY
-    ===================================================== */
+      if (!response.ok) {
 
-    const options = {
+        throw new Error(
+          data?.message ||
+          "Unable to create payment."
+        );
 
-      key: data.keyId,
-
-      amount: data.amount,
-
-      currency: data.currency || "INR",
-
-      name: "Wealthoria",
-
-      description:
-        course.title,
-
-      order_id:
-        data.orderId,
+      }
 
 
-      handler:
-        async function (paymentResponse) {
+      /* =====================================================
+         2. OPEN RAZORPAY
+      ===================================================== */
 
-          try {
+      const options = {
 
-            /* =============================================
-               3. VERIFY PAYMENT
-            ============================================= */
-/* =============================================
-   3. VERIFY PAYMENT
-============================================= */
-const memberSession =
-  getMemberSession();
+        key: data.keyId,
 
-if (!memberSession?.token) {
-  throw new Error(
-    "Please login again before completing payment."
-  );
-}
+        amount: data.amount,
 
+        currency: data.currency || "INR",
 
-const verifyResponse =
-  await fetch(
-    `${API_BASE_URL}/api/payment/verify-course-payment`,
-    {
-      method: "POST",
+        name: "Wealthoria",
 
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization":
-  `Bearer ${memberSession.token}`
-      },
-    body: JSON.stringify({
-      courseId:
-        course.id,
+        description:
+          course.title,
 
-      razorpay_order_id:
-        paymentResponse.razorpay_order_id,
-
-      razorpay_payment_id:
-        paymentResponse.razorpay_payment_id,
-
-      razorpay_signature:
-        paymentResponse.razorpay_signature
-    })
-    }
-  );
-
-const verifyData =
-  await verifyResponse.json();
-
-if (!verifyResponse.ok) {
-
-  throw new Error(
-    verifyData?.message ||
-    "Payment verification failed."
-  );
-}
+        order_id:
+          data.orderId,
 
 
+        handler:
+          async function (paymentResponse) {
 
-/* =====================================================
-   UNLOCK COURSE
-===================================================== */
+            try {
 
-// Google Analytics - track successful course purchase
-if (typeof window.gtag === "function") {
-  window.gtag("event", "course_purchased", {
-    course_id: String(course.id || ""),
-    course_name: course.title || "",
-    course_category: course.category || "",
-    course_level: course.level || "",
-    value: Number(course.price || 0),
-    currency: "INR"
-  });
-}
+              /* =============================================
+                 3. VERIFY PAYMENT
+              ============================================= */
+              /* =============================================
+                 3. VERIFY PAYMENT
+              ============================================= */
+              const memberSession =
+                getMemberSession();
 
-alert(
-  "Payment successful. Course unlocked."
-);
+              if (!memberSession?.token) {
+                throw new Error(
+                  "Please login again before completing payment."
+                );
+              }
+
+
+              const verifyResponse =
+                await fetch(
+                  `${API_BASE_URL}/api/payment/verify-course-payment`,
+                  {
+                    method: "POST",
+
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization":
+                        `Bearer ${memberSession.token}`
+                    },
+                    body: JSON.stringify({
+                      courseId:
+                        course.id,
+
+                      razorpay_order_id:
+                        paymentResponse.razorpay_order_id,
+
+                      razorpay_payment_id:
+                        paymentResponse.razorpay_payment_id,
+
+                      razorpay_signature:
+                        paymentResponse.razorpay_signature
+                    })
+                  }
+                );
+
+              const verifyData =
+                await verifyResponse.json();
+
+              if (!verifyResponse.ok) {
+
+                throw new Error(
+                  verifyData?.message ||
+                  "Payment verification failed."
+                );
+              }
 
 
 
+              /* =====================================================
+                 UNLOCK COURSE
+              ===================================================== */
 
-            setPreviewEnded(false);
+              // Google Analytics - track successful course purchase
+              if (typeof window.gtag === "function") {
+                window.gtag("event", "course_purchased", {
+                  course_id: String(course.id || ""),
+                  course_name: course.title || "",
+                  course_category: course.category || "",
+                  course_level: course.level || "",
+                  value: Number(course.price || 0),
+                  currency: "INR"
+                });
+              }
 
-            setTimeLeft(30);
+              alert(
+                "Payment successful. Course unlocked."
+              );
 
 
-          } catch (error) {
-
-            console.error(
-              "Payment verification error:",
-              error
-            );
 
 
-            alert(
-              error.message ||
-              "Payment verification failed."
-            );
+              setPreviewEnded(false);
 
-          }
+              setTimeLeft(30);
+
+
+            } catch (error) {
+
+              console.error(
+                "Payment verification error:",
+                error
+              );
+
+
+              alert(
+                error.message ||
+                "Payment verification failed."
+              );
+
+            }
+
+          },
+
+
+        prefill: {
+
+          name:
+            memberSession.name || "",
+
+          email:
+            memberSession.email || ""
 
         },
 
 
-     prefill: {
+        theme: {
 
-  name:
-    memberSession.name || "",
+          color:
+            "#e8473f"
 
-  email:
-    memberSession.email || ""
+        },
 
-},
+        modal: {
+
+          ondismiss: function () {
 
 
-      theme: {
 
-        color:
-          "#e8473f"
-
-      },
-
-      modal: {
-
-        ondismiss: function () {
-
-        
+          }
 
         }
 
+      };
+
+
+      if (
+        typeof window.Razorpay !==
+        "function"
+      ) {
+        await loadRazorpayScript();
+        if (typeof window.Razorpay !== "function") {
+          throw new Error(
+            "Razorpay Checkout could not be loaded. Please check your internet connection and try again."
+          );
+        }
       }
 
-    };
+
+      const razorpay =
+        new window.Razorpay(
+          options
+        );
 
 
-    if (
-      typeof window.Razorpay !==
-      "function"
-    ) {
+      razorpay.open();
 
-      throw new Error(
-        "Razorpay Checkout is still loading. Please wait a moment and try again."
+
+    } catch (error) {
+
+      console.error(
+        "Course payment error:",
+        error
+      );
+
+
+      alert(
+        error.message ||
+        "Unable to start payment."
       );
 
     }
 
-
-    const razorpay =
-      new window.Razorpay(
-        options
-      );
-
-
-    razorpay.open();
-
-
-  } catch (error) {
-
-    console.error(
-      "Course payment error:",
-      error
-    );
-
-
-    alert(
-      error.message ||
-      "Unable to start payment."
-    );
-
-  }
-
-};
+  };
   /* =======================================================
      FILTER COURSES
   ======================================================= */
 
- const availableCourses = firestoreCourses;
+  const availableCourses = firestoreCourses;
 
   const filteredCourses =
     availableCourses.filter((course) => {
@@ -1056,7 +1059,7 @@ alert(
 
     <section
       className="member-course-page"
-      
+
     >
 
 
@@ -1078,21 +1081,21 @@ alert(
           type="text"
           placeholder="Search courses..."
           value={searchQuery}
-         onChange={(e) => {
-  const value = e.target.value;
+          onChange={(e) => {
+            const value = e.target.value;
 
-  setSearchQuery(value);
+            setSearchQuery(value);
 
-  // Google Analytics - track course search
-  if (
-    typeof window.gtag === "function" &&
-    value.trim().length >= 3
-  ) {
-    window.gtag("event", "course_search", {
-      search_term: value.trim()
-    });
-  }
-}}
+            // Google Analytics - track course search
+            if (
+              typeof window.gtag === "function" &&
+              value.trim().length >= 3
+            ) {
+              window.gtag("event", "course_search", {
+                search_term: value.trim()
+              });
+            }
+          }}
         />
 
 
@@ -1158,24 +1161,24 @@ alert(
                 ? "member-course-level-btn active"
                 : "member-course-level-btn"
             }
-        onClick={() => {
-  const newLevel =
-    selectedLevel === level.id
-      ? null
-      : level.id;
+            onClick={() => {
+              const newLevel =
+                selectedLevel === level.id
+                  ? null
+                  : level.id;
 
-  setSelectedLevel(newLevel);
+              setSelectedLevel(newLevel);
 
-  // Google Analytics - track course level selection
-  if (
-    typeof window.gtag === "function" &&
-    newLevel
-  ) {
-    window.gtag("event", "course_level_selected", {
-      course_level: newLevel
-    });
-  }
-}}
+              // Google Analytics - track course level selection
+              if (
+                typeof window.gtag === "function" &&
+                newLevel
+              ) {
+                window.gtag("event", "course_level_selected", {
+                  course_level: newLevel
+                });
+              }
+            }}
           >
             {level.title.replace(" Videos", "")}
           </button>
@@ -1194,7 +1197,7 @@ alert(
         <div className="member-course-empty">
 
           <div className="member-course-empty-icon">
-           ⏳
+            ⏳
           </div>
 
           <h3>
@@ -1325,13 +1328,11 @@ alert(
 
                               {course.thumbnailUrl ? (
 
-                                <img
-                                  src={
-                                    course.thumbnailUrl
-                                  }
-                                  alt={
-                                    course.title
-                                  }
+                                <MemberThumbnail
+                                  src={course.thumbnailUrl}
+                                  alt={course.title}
+                                  width={320}
+                                  height={180}
                                   onContextMenu={(event) =>
                                     event.preventDefault()
                                   }
@@ -1550,117 +1551,117 @@ alert(
 
               </div>
 
-{/* =========================================
+              {/* =========================================
     VIDEO
 ========================================= */}
 
-<div className="member-course-video">
+              <div className="member-course-video">
 
-  {/* VIDEO PLAYS ONLY WHILE PREVIEW IS ACTIVE
+                {/* VIDEO PLAYS ONLY WHILE PREVIEW IS ACTIVE
       OR AFTER THE COURSE IS PURCHASED */}
 
-  {(isPurchased(selectedCourse.id) || !previewEnded) && (
-    
-    selectedCourse.videoEmbedUrl ? (
+                {(isPurchased(selectedCourse.id) || !previewEnded) && (
 
-      <iframe
-      key={
-    selectedCourse.videoEmbedUrl +
-    "-" +
-    (isPurchased(selectedCourse.id)
-      ? "full"
-      : "preview")
-  }
-  src={(() => {
-    const url =
-      selectedCourse.videoEmbedUrl;
+                  selectedCourse.videoEmbedUrl ? (
 
-    if (isPurchased(selectedCourse.id)) {
-      return url;
-    }
+                    <iframe
+                      key={
+                        selectedCourse.videoEmbedUrl +
+                        "-" +
+                        (isPurchased(selectedCourse.id)
+                          ? "full"
+                          : "preview")
+                      }
+                      src={(() => {
+                        const url =
+                          selectedCourse.videoEmbedUrl;
 
-    return url.includes("?")
-      ? `${url}&controls=off`
-      : `${url}?controls=off`;
-  })()}
-        title={selectedCourse.title}
-        allow="autoplay; encrypted-media; fullscreen"
-        allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups"
-        onContextMenu={(event) =>
-          event.preventDefault()
-        }
-        style={{
-          width: "100%",
-          height: "100%",
-          border: 0
-        }}
-      />
+                        if (isPurchased(selectedCourse.id)) {
+                          return url;
+                        }
 
-    ) : (
+                        return url.includes("?")
+                          ? `${url}&controls=off`
+                          : `${url}?controls=off`;
+                      })()}
+                      title={selectedCourse.title}
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups"
+                      onContextMenu={(event) =>
+                        event.preventDefault()
+                      }
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        border: 0
+                      }}
+                    />
 
-      <div
-        style={{
-          height: "100%",
-          minHeight: "360px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#fff",
-          background: "#111"
-        }}
-      >
-        Video player is not available.
-      </div>
+                  ) : (
 
-    )
+                    <div
+                      style={{
+                        height: "100%",
+                        minHeight: "360px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        background: "#111"
+                      }}
+                    >
+                      Video player is not available.
+                    </div>
 
-  )}
+                  )
+
+                )}
 
 
-  {/* =========================================
+                {/* =========================================
       PREVIEW ENDED
   ========================================= */}
 
-  {!isPurchased(selectedCourse.id) &&
-    previewEnded && (
+                {!isPurchased(selectedCourse.id) &&
+                  previewEnded && (
 
-      <div className="member-course-lock">
+                    <div className="member-course-lock">
 
-        <div className="member-course-lock-icon">
-         🔒
-        </div>
+                      <div className="member-course-lock-icon">
+                        🔒
+                      </div>
 
-        <span className="member-course-lock-label">
-          PREVIEW ENDED
-        </span>
+                      <span className="member-course-lock-label">
+                        PREVIEW ENDED
+                      </span>
 
-        <h3>
-          Buy to watch more
-        </h3>
+                      <h3>
+                        Buy to watch more
+                      </h3>
 
-        <p>
-          Your 30-second preview has ended.
-          Purchase this course to watch the
-          complete video.
-        </p>
+                      <p>
+                        Your 30-second preview has ended.
+                        Purchase this course to watch the
+                        complete video.
+                      </p>
 
-        <button
-          type="button"
-          className="member-course-buy"
-          onClick={() =>
-            buyCourse(selectedCourse)
-          }
-        >
-          Buy to Watch More. ₹
-          {selectedCourse.price}
-        </button>
+                      <button
+                        type="button"
+                        className="member-course-buy"
+                        onClick={() =>
+                          buyCourse(selectedCourse)
+                        }
+                      >
+                        Buy to Watch More. ₹
+                        {selectedCourse.price}
+                      </button>
 
-      </div>
+                    </div>
 
-    )}
+                  )}
 
-</div>
+              </div>
 
               {/* =========================================
                   PREVIEW TIMER
@@ -1695,18 +1696,18 @@ alert(
                 selectedCourse.id
               ) && (
 
-                <div className="member-course-unlocked">
+                  <div className="member-course-unlocked">
 
-                  <span>
-                    ✓
-                  </span>
+                    <span>
+                      ✓
+                    </span>
 
-                  You have full access
-                  to this course.
+                    You have full access
+                    to this course.
 
-                </div>
+                  </div>
 
-              )}
+                )}
 
 
               {/* =========================================

@@ -62,7 +62,7 @@ function checkPublicDependencies() {
     ["Testimonials", Testimonials],
     ["YouTube", YouTube],
     ["IntroVideo", IntroVideo],
-   
+
     ["Library", Library],
     ["EnquiryForm", EnquiryForm],
     ["FAQ", FAQ],
@@ -104,17 +104,22 @@ function checkPublicDependencies() {
    PUBLIC WEBSITE
    ========================================================= */
 
+function getInitialLang() {
+  try {
+    const p = (window.location.pathname || "").toLowerCase();
+    if (p === "/kn" || p.startsWith("/kn/")) return "kn";
+    const sp = new URLSearchParams(window.location.search).get("lang");
+    if (sp === "kn" || sp === "en") return sp;
+  } catch { }
+  return localStorage.getItem("wl-lang") || "en";
+}
+
 function App() {
 
   const [
     lang,
     setLangState
-  ] = useState(
-    () =>
-      localStorage.getItem(
-        "wl-lang"
-      ) || "en"
-  );
+  ] = useState(getInitialLang);
 
 
   const [
@@ -169,6 +174,16 @@ function App() {
           ? "kn"
           : "en";
 
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        canonical.setAttribute(
+          "href",
+          lang === "kn"
+            ? "https://www.wealthoria.in/kn/"
+            : "https://www.wealthoria.in/"
+        );
+      }
+
     },
     [lang]
   );
@@ -185,6 +200,20 @@ function App() {
         setLangState(
           language
         );
+
+        try {
+          const p = (window.location.pathname || "").toLowerCase();
+          if (p === "/" || p === "/index.html" || p === "/kn" || p === "/kn/") {
+            const target = language === "kn" ? "/kn/" : "/";
+            if (window.location.pathname !== target) {
+              window.history.replaceState(
+                {},
+                "",
+                target + window.location.search + window.location.hash
+              );
+            }
+          }
+        } catch { }
 
       },
       []
@@ -292,19 +321,19 @@ function App() {
 
   };
 
-const currentPage = new URLSearchParams(
-  window.location.search
-).get("page");
+  const currentPage = new URLSearchParams(
+    window.location.search
+  ).get("page");
 
-const isPrivacyPolicy =
-  window.location.pathname === "/privacy-policy.html" ||
-  currentPage === "privacy-policy";
+  const isPrivacyPolicy =
+    window.location.pathname === "/privacy-policy.html" ||
+    currentPage === "privacy-policy";
 
-const isTermsPage =
-  window.location.pathname === "/terms.html" ||
-  currentPage === "terms";
+  const isTermsPage =
+    window.location.pathname === "/terms.html" ||
+    currentPage === "terms";
 
-const PrivacyPolicy = window.PrivacyPolicy;
+  const PrivacyPolicy = window.PrivacyPolicy;
   /* =======================================================
      RENDER
      ======================================================= */
@@ -317,151 +346,151 @@ const PrivacyPolicy = window.PrivacyPolicy;
         onNav={onNav}
       />
 
-              {isPrivacyPolicy ? (
+      {isPrivacyPolicy ? (
 
-          <section
-            id="privacy-policy"
-            style={{
-              maxWidth: "1000px",
-              margin: "0 auto",
-              padding: "120px 24px 80px",
-              minHeight: "60vh",
-              lineHeight: 1.8
-            }}
-          >
-            <h1>Privacy Policy</h1>
+        <section
+          id="privacy-policy"
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+            padding: "120px 24px 80px",
+            minHeight: "60vh",
+            lineHeight: 1.8
+          }}
+        >
+          <h1>Privacy Policy</h1>
+
+          <p>
+            Last updated: September 30, 2026
+          </p>
+
+          <p>
+            Welcome to Wealthoria. We respect your privacy
+            and are committed to protecting your personal
+            information.
+          </p>
+
+          <h2>Information We Collect</h2>
+
+          <p>
+            We may collect information you provide when
+            registering, contacting us, making payments,
+            or using our services.
+          </p>
+
+          <h2>How We Use Your Information</h2>
+
+          <p>
+            We use collected information to provide and
+            maintain our services, process registrations
+            and payments, communicate with you, and
+            improve our website.
+          </p>
+
+          <h2>Payments</h2>
+
+          <p>
+            Payments may be processed by third-party
+            payment providers. Payment information is
+            handled according to the applicable provider's
+            policies and procedures.
+          </p>
+
+          <h2>Data Security</h2>
+
+          <p>
+            We take reasonable measures to protect
+            personal information. However, no method
+            of electronic storage or transmission is
+            completely secure.
+          </p>
+
+          <h2>Third-Party Services</h2>
+
+          <p>
+            Our website may use third-party services
+            to support payments, communications, and
+            other website features. Their own privacy
+            policies may also apply.
+          </p>
+
+          <h2>Your Privacy</h2>
+
+          <p>
+            For questions about your personal information
+            or this Privacy Policy, please contact
+            Wealthoria through the contact details
+            provided on our website.
+          </p>
+
+          <h2>Changes to This Policy</h2>
+
+          <p>
+            We may update this Privacy Policy from time
+            to time. Updates will be published on this
+            page.
+          </p>
+        </section>
+
+      ) : isTermsPage ? (
+        <main className="privacy-page">
+          <article className="privacy-card">
+            <span className="privacy-eyebrow">
+              WEALTHORIA
+            </span>
+
+            <h1>Terms &amp; Conditions</h1>
+
+            <div className="privacy-divider" />
 
             <p>
-              Last updated: September 30, 2026
+              By registering for Wealthoria webinars you agree
+              to these terms.
             </p>
 
-            <p>
-              Welcome to Wealthoria. We respect your privacy
-              and are committed to protecting your personal
-              information.
-            </p>
+            <ul>
+              <li>Registration is subject to payment confirmation.</li>
+              <li>Webinar timings may change with prior notice.</li>
+              <li>Content is for educational purposes only.</li>
+              <li>
+                Recording or redistribution without permission
+                is prohibited.
+              </li>
+            </ul>
+          </article>
+        </main>
+      ) : (
 
-            <h2>Information We Collect</h2>
 
-            <p>
-              We may collect information you provide when
-              registering, contacting us, making payments,
-              or using our services.
-            </p>
+        <>
+          <Hero onNav={onNav} />
 
-            <h2>How We Use Your Information</h2>
+          <Ticker />
 
-            <p>
-              We use collected information to provide and
-              maintain our services, process registrations
-              and payments, communicate with you, and
-              improve our website.
-            </p>
+          <Metrics />
 
-            <h2>Payments</h2>
+          <Narrative />
 
-            <p>
-              Payments may be processed by third-party
-              payment providers. Payment information is
-              handled according to the applicable provider's
-              policies and procedures.
-            </p>
+          <Why />
 
-            <h2>Data Security</h2>
+          <Programs onNav={onNav} />
 
-            <p>
-              We take reasonable measures to protect
-              personal information. However, no method
-              of electronic storage or transmission is
-              completely secure.
-            </p>
+          <Process />
 
-            <h2>Third-Party Services</h2>
+          <Founder />
 
-            <p>
-              Our website may use third-party services
-              to support payments, communications, and
-              other website features. Their own privacy
-              policies may also apply.
-            </p>
+          <Testimonials />
 
-            <h2>Your Privacy</h2>
+          <YouTube />
 
-            <p>
-              For questions about your personal information
-              or this Privacy Policy, please contact
-              Wealthoria through the contact details
-              provided on our website.
-            </p>
+          <Library />
 
-            <h2>Changes to This Policy</h2>
+          <EnquiryForm />
 
-            <p>
-              We may update this Privacy Policy from time
-              to time. Updates will be published on this
-              page.
-            </p>
-          </section>
+          <FAQ />
+        </>
 
-       ) : isTermsPage ? (
-  <main className="privacy-page">
-    <article className="privacy-card">
-      <span className="privacy-eyebrow">
-        WEALTHORIA
-      </span>
-
-      <h1>Terms &amp; Conditions</h1>
-
-      <div className="privacy-divider" />
-
-      <p>
-        By registering for Wealthoria webinars you agree
-        to these terms.
-      </p>
-
-      <ul>
-        <li>Registration is subject to payment confirmation.</li>
-        <li>Webinar timings may change with prior notice.</li>
-        <li>Content is for educational purposes only.</li>
-        <li>
-          Recording or redistribution without permission
-          is prohibited.
-        </li>
-      </ul>
-    </article>
-  </main>
-) : (
- 
-
-          <>
-            <Hero onNav={onNav} />
-
-            <Ticker />
-
-            <Metrics />
-
-            <Narrative />
-
-            <Why />
-
-            <Programs onNav={onNav} />
-
-            <Process />
-
-            <Founder />
-
-            <Testimonials />
-
-            <YouTube />
-
-            <Library />
-
-            <EnquiryForm />
-
-            <FAQ />
-          </>
-
-        )}
+      )}
 
 
       <main>
@@ -505,7 +534,7 @@ const PrivacyPolicy = window.PrivacyPolicy;
 
 
       <Footer />
- <IntroVideo />
+      <IntroVideo />
 
       <SiteAnimations />
 
@@ -539,7 +568,7 @@ function RootApp() {
     path.startsWith("/admin/")
   ) {
 
- 
+
 
     if (
       typeof AdminApp === "function"

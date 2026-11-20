@@ -1,10 +1,14 @@
 import React from "react";
 import AdminVideoCommentsModal from "./AdminVideoCommentsModal.jsx";
+import {
+  findInternalExcerptMarkers,
+  validatePublishExcerpt
+} from "./excerptGuard.js";
 
 const { useState, useMemo, useEffect } = React;
 const { useAdminAuth, useRole } = window;
 const { useAdminData } = window;
-const { useMRouter, MIcon, StatusPill, useMToast, useConfirm } = window;
+const { useMRouter, MIcon, StatusPill, ExcerptSocialFields, ExcerptPublishError, useMToast, useConfirm } = window;
 const { Shell } = window;
 
 function ContentScreen() {
@@ -18,6 +22,7 @@ function ContentScreen() {
   const [q, setQ] = useState("");
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
+  const [onlyFlagged, setOnlyFlagged] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [sel, setSel] = useState([]);
@@ -94,13 +99,35 @@ function ContentScreen() {
     [data.content, isAdmin, user]
   );
 
+  const flaggedCount = useMemo(
+    () =>
+      scoped.filter(
+        (c) => findInternalExcerptMarkers(c.description).length > 0
+      ).length,
+    [scoped]
+  );
+
   const rows = useMemo(
     () =>
       scoped.filter((c) => {
-        if (
-          q.trim() &&
-          !c.title.toLowerCase().includes(q.trim().toLowerCase())
-        ) {
+        const searchText = q.trim().toLowerCase();
+        if (searchText) {
+          const matchesQuery = [
+            c.title,
+            c.description,
+            c.socialCaption,
+            c.category
+          ]
+            .filter(Boolean)
+            .some((field) =>
+              String(field).toLowerCase().includes(searchText)
+            );
+          if (!matchesQuery) {
+            return false;
+          }
+        }
+
+        if (onlyFlagged && findInternalExcerptMarkers(c.description).length === 0) {
           return false;
         }
 
@@ -122,7 +149,7 @@ function ContentScreen() {
 
         return true;
       }),
-    [scoped, q, type, status, from, to]
+    [scoped, q, onlyFlagged, type, status, from, to]
   );
 
   const allSel = rows.length > 0 && sel.length === rows.length;
@@ -140,16 +167,32 @@ function ContentScreen() {
 
   const clearSel = () => setSel([]);
 
-  const doBulkPublish = () => {
-    data.setContentStatus(sel, "published");
-
-    push(
-      `Published ${sel.length} item${
-        sel.length > 1 ? "s" : ""
-      }`
+  const doBulkPublish = async () => {
+    const selectedItems = scoped.filter((item) => sel.includes(item.id));
+    const blocked = selectedItems.find(
+      (item) => !validatePublishExcerpt("published", item.description).ok
     );
 
-    clearSel();
+    if (blocked) {
+      push(
+        `Cannot publish "${blocked.title || "Untitled"}": ` +
+          validatePublishExcerpt("published", blocked.description).message,
+        "err"
+      );
+      return;
+    }
+
+    try {
+      await data.setContentStatus(sel, "published");
+      push(
+        `Published ${sel.length} item${
+          sel.length > 1 ? "s" : ""
+        }`
+      );
+      clearSel();
+    } catch (err) {
+      push(err?.message || "Unable to publish selected items.", "err");
+    }
   };
 
   const doBulkDelete = async () => {
@@ -177,19 +220,29 @@ function ContentScreen() {
     }
   };
 
-  const togglePublish = (c) => {
+  const togglePublish = async (c) => {
     const next =
       c.status === "published"
         ? "draft"
         : "published";
 
-    data.setContentStatus([c.id], next);
+    const guard = validatePublishExcerpt(next, c.description);
+    if (!guard.ok) {
+      push(`"${c.title || "Untitled"}": ${guard.message}`, "err");
+      return;
+    }
 
-    push(
-      next === "published"
-        ? `Published "${c.title}"`
-        : `Unpublished "${c.title}"`
-    );
+    try {
+      await data.setContentStatus([c.id], next);
+
+      push(
+        next === "published"
+          ? `Published "${c.title}"`
+          : `Unpublished "${c.title}"`
+      );
+    } catch (err) {
+      push(err?.message || "Unable to update publish status.", "err");
+    }
   };
 
   const removeOne = async (c) => {
@@ -211,6 +264,7 @@ function ContentScreen() {
     setQ("");
     setType("all");
     setStatus("all");
+    setOnlyFlagged(false);
     setFrom("");
     setTo("");
   };
@@ -255,7 +309,7 @@ function ContentScreen() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search by title"
+              placeholder="Search title, excerpt, or caption"
             />
           </div>
 
@@ -278,6 +332,7 @@ function ContentScreen() {
             <option value="all">All status</option>
             <option value="published">Published</option>
             <option value="draft">Draft</option>
+            <option value="under_review">Under Review</option>
             <option value="archived">Archived</option>
           </select>
 
@@ -299,7 +354,20 @@ function ContentScreen() {
             title="Modified to"
           />
 
+          <button
+            type="button"
+            className={`btn btn-sm ${
+              onlyFlagged ? "btn-green" : "btn-ghost"
+            }`}
+            onClick={() => setOnlyFlagged((v) => !v)}
+          >
+            {onlyFlagged
+              ? `Showing flagged notes (${flaggedCount})`
+              : `Flagged notes (${flaggedCount})`}
+          </button>
+
           {(q ||
+            onlyFlagged ||
             type !== "all" ||
             status !== "all" ||
             from ||
@@ -313,6 +381,25 @@ function ContentScreen() {
           )}
 
         </div>
+
+        {flaggedCount > 0 && (
+          <div className="flagged-banner" role="status">
+            <span>
+              <strong>{flaggedCount}</strong> content item
+              {flaggedCount === 1 ? "" : "s"} contain internal excerpt markers (
+              <code>One-liner</code>, <code>WhatsApp:</code>, <code>TODO</code>,{" "}
+              <code>Note:</code>). Move social captions into the{" "}
+              <strong>Social caption</strong> field before publishing.
+            </span>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setOnlyFlagged((v) => !v)}
+            >
+              {onlyFlagged ? "Show all" : "Review flagged"}
+            </button>
+          </div>
+        )}
 
 
         {/* =========================================================
@@ -531,6 +618,15 @@ function ContentScreen() {
                       <span className="t-title">
                         {c.title}
                       </span>
+                      {findInternalExcerptMarkers(c.description).length > 0 && (
+                        <span
+                          className="internal-note-pill"
+                          style={{ marginLeft: 8 }}
+                          title={`Detected in excerpt: ${findInternalExcerptMarkers(c.description).join(", ")}`}
+                        >
+                          Internal note: {findInternalExcerptMarkers(c.description).join(", ")}
+                        </span>
+                      )}
                     </td>
 
 
@@ -803,62 +899,74 @@ function ContentScreen() {
           onClose={() =>
             setEditing(null)
           }
-          onSave={(patch) => {
+          onSave={async (patch) => {
+            try {
+              if (editing.id === "new") {
 
-            if (editing.id === "new") {
+                const item = {
+                  id:
+                    "c" +
+                    Date.now(),
 
-              const item = {
-                id:
-                  "c" +
-                  Date.now(),
+                  title:
+                    patch.title,
 
-                title:
-                  patch.title,
+                  description:
+                    patch.description,
 
-                type:
-                  patch.type,
+                  socialCaption:
+                    patch.socialCaption,
 
-                status:
-                  patch.status,
+                  thumbnailUrl:
+                    patch.thumbnailUrl,
 
-                category:
-                  patch.category,
+                  type:
+                    patch.type,
 
-                authorId:
-                  user?.uid ||
-                  user?.id,
+                  status:
+                    patch.status,
 
-                author:
-                  user?.name ||
-                  user?.displayName ||
-                  user?.email ||
-                  "Admin",
+                  category:
+                    patch.category,
 
-                modified:
-                  new Date()
-                    .toISOString()
-                    .slice(0, 10),
-              };
+                  authorId:
+                    user?.uid ||
+                    user?.id,
 
-              data.addContent(item);
+                  author:
+                    user?.name ||
+                    user?.displayName ||
+                    user?.email ||
+                    "Admin",
 
-              push(
-                `Created "${item.title}"`
-              );
+                  modified:
+                    new Date()
+                      .toISOString()
+                      .slice(0, 10),
+                };
 
-            } else {
+                await data.addContent(item);
 
-              data.updateContent(
-                editing.id,
-                patch
-              );
+                push(
+                  `Created "${item.title}"`
+                );
 
-              push(
-                `Saved "${patch.title}"`
-              );
+              } else {
+
+                await data.updateContent(
+                  editing.id,
+                  patch
+                );
+
+                push(
+                  `Saved "${patch.title}"`
+                );
+              }
+
+              setEditing(null);
+            } catch (err) {
+              push(err?.message || "Unable to save content.", "err");
             }
-
-            setEditing(null);
           }}
         />
       )}
@@ -889,6 +997,12 @@ function ContentEditor({
   const [title, setTitle] =
     useState(item.title || "");
 
+  const [description, setDescription] =
+    useState(item.description || "");
+
+  const [socialCaption, setSocialCaption] =
+    useState(item.socialCaption || "");
+
   const [type, setType] =
     useState(item.type || "video");
 
@@ -897,6 +1011,12 @@ function ContentEditor({
 
   const [status, setStatus] =
     useState(item.status || "draft");
+
+  const [thumbnailUrl, setThumbnailUrl] =
+    useState(item.thumbnailUrl || "");
+
+  const [publishError, setPublishError] =
+    useState("");
 
 
   return (
@@ -1006,6 +1126,41 @@ function ContentEditor({
         </div>
 
 
+        {/* THUMBNAIL URL */}
+        <div className="field">
+
+          <label>
+            Thumbnail URL
+          </label>
+
+          <input
+            className="input"
+            type="url"
+            value={thumbnailUrl}
+            onChange={(e) =>
+              setThumbnailUrl(
+                e.target.value
+              )
+            }
+            placeholder="https://... or /members/..."
+          />
+
+        </div>
+
+
+        {/* DESCRIPTION & SOCIAL CAPTION */}
+        <ExcerptSocialFields
+          description={description}
+          onDescriptionChange={(val) => {
+            setDescription(val);
+            setPublishError("");
+          }}
+          socialCaption={socialCaption}
+          onSocialCaptionChange={setSocialCaption}
+          descriptionPlaceholder="Short description / excerpt shown to members"
+        />
+
+
         {/* STATUS */}
         <div className="field">
 
@@ -1016,15 +1171,20 @@ function ContentEditor({
           <select
             className="select"
             value={status}
-            onChange={(e) =>
+            onChange={(e) => {
               setStatus(
                 e.target.value
-              )
-            }
+              );
+              setPublishError("");
+            }}
           >
 
             <option value="draft">
               Draft
+            </option>
+
+            <option value="under_review">
+              Under Review
             </option>
 
             <option value="published">
@@ -1038,6 +1198,9 @@ function ContentEditor({
           </select>
 
         </div>
+
+
+        <ExcerptPublishError error={publishError} />
 
 
         {/* ACTIONS */}
@@ -1057,20 +1220,37 @@ function ContentEditor({
 
           <button
             className="btn btn-green btn-sm"
-            onClick={() =>
+            onClick={() => {
+              const cleanDescription = description.trim();
+              const check = validatePublishExcerpt(
+                status,
+                cleanDescription
+              );
+              if (!check.ok) {
+                setPublishError(check.message);
+                return;
+              }
+              setPublishError("");
               onSave({
                 title:
                   title.trim() ||
                   "Untitled",
+
+                description: cleanDescription,
+
+                socialCaption: socialCaption.trim(),
 
                 type,
 
                 category:
                   category.trim(),
 
+                thumbnailUrl:
+                  thumbnailUrl.trim(),
+
                 status,
-              })
-            }
+              });
+            }}
           >
             Save
           </button>

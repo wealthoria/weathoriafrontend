@@ -1,4 +1,5 @@
 import React from "react";
+import { optimizeThumbnailToWebP } from "../utils/optimizeThumbnail.js";
 
 /* global React, window */
 
@@ -1508,7 +1509,7 @@ function CourseForm({
               type="file"
               accept="image/png,image/jpeg,image/webp"
               disabled={saving || uploadingThumbnail}
-              onChange={(event) => {
+              onChange={async (event) => {
 
                 const file =
                   event.target.files?.[0];
@@ -1528,10 +1529,12 @@ function CourseForm({
 
                 setError("");
 
-                setThumbnailFile(file);
+                const optimized = await optimizeThumbnailToWebP(file);
+
+                setThumbnailFile(optimized);
 
                 setThumbnailPreview(
-                  URL.createObjectURL(file)
+                  URL.createObjectURL(optimized)
                 );
 
               }}

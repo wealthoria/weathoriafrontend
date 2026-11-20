@@ -4,6 +4,7 @@ import {
   trackMemberContentOpen
 } from "./memberContent.js";
 import React from "react";
+import MemberThumbnail from "./MemberThumbnail.jsx";
 
 /* global React, window */
 
@@ -484,9 +485,11 @@ function WeeklyRoundup() {
                   >
                     <div className="member-newsletter-icon">
                       {report.thumbnailUrl ? (
-                        <img
+                        <MemberThumbnail
                           src={getFileUrl(report.thumbnailUrl)}
                           alt={report.title}
+                          width={320}
+                          height={180}
                         />
                       ) : (
                         <span>PDF</span>

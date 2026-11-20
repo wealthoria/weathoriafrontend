@@ -101,6 +101,12 @@ service cloud.firestore {
         && request.auth.token.admin == true;
     }
 
+    match /artOfPriceOrders/{document} {
+      allow read, update, delete: if request.auth != null
+        && request.auth.token.admin == true;
+      allow create: if true;
+    }
+
     match /enquiries/{document} {
       allow read, update, delete: if request.auth != null
         && request.auth.token.admin == true;

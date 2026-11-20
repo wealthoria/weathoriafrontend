@@ -9,6 +9,9 @@ const { useState, useEffect, useRef, useCallback } = React;
    No external API needed. Uses keyword matching + curated responses.
    ========================================================================= */
 
+const ACTIVE_MEMBERS_LABEL =
+  (typeof window !== "undefined" && window.WEALTHORIA_ACTIVE_MEMBERS) || "450+";
+
 /* ── Knowledge base ─────────────────────────────────────────────────────── */
 const KB = [
   {
@@ -18,8 +21,8 @@ const KB = [
   },
   {
     tags: ["what is wealthoria", "about wealthoria", "who is wealthoria", "wealthoria"],
-    en: "**Wealthoria** is a financial education company based in Mysuru, Karnataka 🎓\n\nWe teach people how money and markets actually work — *before* they invest a single rupee.\n\n🌟 Key facts:\n• Founded by Sandeep M. Kalburgi & Manjunath K.S.\n• 800+ active clients across Karnataka\n• 1,200+ learning hours delivered\n• Teaching in **Kannada and English**\n• No tips, no signals — only real education",
-    kn: "**Wealthoria** ಮೈಸೂರಿನಲ್ಲಿ ನೆಲೆಸಿದ ಹಣಕಾಸು ಶಿಕ್ಷಣ ಸಂಸ್ಥೆ 🎓\n\nಹಣ ಮತ್ತು ಮಾರುಕಟ್ಟೆ ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ ಎಂದು ಒಂದು ರೂಪಾಯಿ ಹೂಡುವ ಮೊದಲೇ ಕಲಿಸುತ್ತೇವೆ.\n\n🌟 ಮುಖ್ಯ ವಿಷಯಗಳು:\n• 800+ ಸಕ್ರಿಯ ಗ್ರಾಹಕರು\n• 1,200+ ಕಲಿಕಾ ಗಂಟೆಗಳು\n• ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಕಲಿಕೆ",
+    en: `**Wealthoria** is a financial education company based in Mysuru, Karnataka 🎓\n\nWe teach people how money and markets actually work — *before* they invest a single rupee.\n\n🌟 Key facts:\n• Founded by Sandeep M. Kalburgi & Manjunath K.S.\n• ${ACTIVE_MEMBERS_LABEL} active members across Karnataka\n• 1,200+ learning hours delivered\n• Teaching in **Kannada and English**\n• No tips, no signals — only real education`,
+    kn: `**Wealthoria** ಮೈಸೂರಿನಲ್ಲಿ ನೆಲೆಸಿದ ಹಣಕಾಸು ಶಿಕ್ಷಣ ಸಂಸ್ಥೆ 🎓\n\nಹಣ ಮತ್ತು ಮಾರುಕಟ್ಟೆ ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ ಎಂದು ಒಂದು ರೂಪಾಯಿ ಹೂಡುವ ಮೊದಲೇ ಕಲಿಸುತ್ತೇವೆ.\n\n🌟 ಮುಖ್ಯ ವಿಷಯಗಳು:\n• ${ACTIVE_MEMBERS_LABEL} ಸಕ್ರಿಯ ಸದಸ್ಯರು\n• 1,200+ ಕಲಿಕಾ ಗಂಟೆಗಳು\n• ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಕಲಿಕೆ`,
   },
   {
     tags: ["sip", "systematic investment plan", "monthly investment", "sip meaning"],
@@ -53,7 +56,7 @@ const KB = [
   },
   {
     tags: ["compounding", "compound interest", "how money grows", "power of compounding"],
-    en: "**The Power of Compounding** 🚀\n\nEinstein called compound interest the *eighth wonder of the world* — and for good reason.\n\n📊 Example:\n• Invest ₹5,000/month for 20 years at 12% annual return\n• Total invested: ₹12 lakhs\n• Value after 20 years: **~₹50 lakhs!**\n\nThe secret? Your **returns earn returns**. The longer you stay invested, the more powerful it becomes.\n\n⏰ This is why starting early matters more than the amount. Even ₹500/month at age 22 beats ₹5,000/month at age 35.\n\nWant to explore our SIP Calculator?",
+    en: "**The Power of Compounding** 🚀\n\nEinstein called compound interest the *eighth wonder of the world* — and for good reason.\n\n📊 Example:\n• Invest ₹5,000/month for 20 years at 12% annual return\n• Total invested: ₹12 lakhs\n• Value after 20 years: **~₹50 lakhs!**\n\nThe secret? Your **returns earn returns**. The longer you stay invested, the more powerful it becomes.\n\n⏰ This is why starting early matters more than the amount. Even ₹500/month at age 22 beats ₹5,000/month at age 35.\n\nAll SIP & valuation calculators are available exclusively to active ₹99/mo paid members inside the Member Portal.",
     kn: "**ಚಕ್ರಬಡ್ಡಿ ಶಕ್ತಿ** 🚀\n\n📊 ಉದಾಹರಣೆ:\n• ₹5,000/ತಿಂಗಳು 20 ವರ್ಷ (12% ಆದಾಯ)\n• ಒಟ್ಟು ಹೂಡಿಕೆ: ₹12 ಲಕ್ಷ\n• 20 ವರ್ಷದ ನಂತರ: **~₹50 ಲಕ್ಷ!**\n\nಬೇಗ ಆರಂಭಿಸುವುದೇ ಮೊದಲ ಕೆಲಸ.",
   },
   {
@@ -98,8 +101,8 @@ const KB = [
   },
   {
     tags: ["price", "cost", "fee", "how much", "expensive", "affordable"],
-    en: "**Wealthoria Pricing** 💳\n\n🌟 **Membership**: ₹99 per month\n\nYour membership includes:\n• All exclusive video lessons\n• Weekly market round-ups\n• Member-only articles & resources\n• Access to the full member portal\n\n🆓 **Free content**:\n• YouTube channel (Stock Market Kannada)\n• Knowledge library (guides, calculators, cheat-sheets)\n• Select seminars and webinars\n\nYou can start learning for free and upgrade to membership anytime!",
-    kn: "**Wealthoria ಬೆಲೆ** 💳\n\n🌟 ಸದಸ್ಯತ್ವ: ₹99/ತಿಂಗಳು\n\n🆓 ಉಚಿತ: YouTube ಚಾನಲ್, ಜ್ಞಾನ ಗ್ರಂಥಾಲಯ, ಆಯ್ದ ಸೆಮಿನಾರ್‌ಗಳು",
+    en: "**Wealthoria Pricing** 💳\n\n🌟 **Membership**: ₹99 per month\n\nYour membership includes:\n• All exclusive video lessons\n• Weekly market round-ups\n• Member-only articles & resources\n• All investing & Fundamental Analysis Lab calculators (44+ tools)\n• Access to the full member portal\n\n🆓 **Free content**:\n• YouTube channel (Stock Market Kannada)\n• Knowledge library (guides, checklists, glossary)\n• Select seminars and webinars\n\nYou can start learning for free and upgrade to membership anytime!",
+    kn: "**Wealthoria ಬೆಲೆ** 💳\n\n🌟 ಸದಸ್ಯತ್ವ: ₹99/ತಿಂಗಳು (ಎಲ್ಲಾ ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು ಮತ್ತು ಸದಸ್ಯ ಪೋರ್ಟಲ್ ಸೇರಿವೆ)\n\n🆓 ಉಚಿತ: YouTube ಚಾನಲ್, ಮಾರ್ಗದರ್ಶಿಗಳು ಮತ್ತು ಪದಕೋಶ, ಆಯ್ದ ಸೆಮಿನಾರ್‌ಗಳು",
   },
   {
     tags: ["refund", "cancel", "cancellation", "money back", "unsubscribe"],
@@ -537,14 +540,19 @@ function WealthoriaAI({ open, onClose, lang = "en" }) {
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  /* prevent body scroll when open */
+  /* prevent body scroll & hide back-to-top when open */
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
+      document.body.classList.add("wai-chat-open");
     } else {
       document.body.style.overflow = "";
+      document.body.classList.remove("wai-chat-open");
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+      document.body.classList.remove("wai-chat-open");
+    };
   }, [open]);
 
   const sendMessage = useCallback(async (text) => {

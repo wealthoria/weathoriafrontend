@@ -1,6 +1,13 @@
 
 import React from "react";
-import { takePendingPage, queueNotificationLink, trackMemberContentOpen } from "./memberContent.js";
+import { loadRazorpayScript } from "../utils/loadRazorpay.js";
+import MemberThumbnail from "./MemberThumbnail.jsx";
+import {
+  takePendingPage,
+  queueNotificationLink,
+  trackMemberContentOpen,
+  hasPaidMemberAccess
+} from "./memberContent.js";
 const {
   useState,
   useEffect,
@@ -165,20 +172,20 @@ function getDashboardTime(value) {
       return value.toDate().getTime();
     }
 
-  if (value?._seconds) {
-  return value._seconds * 1000;
-}
+    if (value?._seconds) {
+      return value._seconds * 1000;
+    }
 
-if (value?.seconds) {
-  return value.seconds * 1000;
-}
+    if (value?.seconds) {
+      return value.seconds * 1000;
+    }
 
-const time =
-  new Date(value).getTime();
+    const time =
+      new Date(value).getTime();
 
-return Number.isNaN(time)
-  ? 0
-  : time;
+    return Number.isNaN(time)
+      ? 0
+      : time;
 
   } catch (error) {
 
@@ -316,37 +323,37 @@ function DashboardNewsletter({ onOpen }) {
   const [loading, setLoading] =
     useState(true);
 
-useEffect(() => {
-  const loadNewsletter = async () => {
-    try {
-      const current = getCurrentMemberSession();
+  useEffect(() => {
+    const loadNewsletter = async () => {
+      try {
+        const current = getCurrentMemberSession();
 
-      if (!current?.session?.token) {
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(
-        `${DASHBOARD_API}/api/members/dashboard-content`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${current.session.token}`,
-            "Content-Type": "application/json"
-          }
+        if (!current?.session?.token) {
+          setLoading(false);
+          return;
         }
-      );
 
-      const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.message || "Unable to load newsletter."
+        const response = await fetch(
+          `${DASHBOARD_API}/api/members/dashboard-content`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${current.session.token}`,
+              "Content-Type": "application/json"
+            }
+          }
         );
-      }
 
-      const rows = Array.isArray(data.content)
-        ? data.content
+        const data = await response.json();
+
+        if (!response.ok || !data?.success) {
+          throw new Error(
+            data?.message || "Unable to load newsletter."
+          );
+        }
+
+        const rows = Array.isArray(data.content)
+          ? data.content
             .filter(
               item =>
                 item.category === "Newsletter" &&
@@ -372,29 +379,29 @@ useEffect(() => {
                 item.createdAt ||
                 ""
             }))
-        : [];
+          : [];
 
-      rows.sort(
-        (a, b) =>
-          getDashboardTime(b.publishedAt) -
-          getDashboardTime(a.publishedAt)
-      );
+        rows.sort(
+          (a, b) =>
+            getDashboardTime(b.publishedAt) -
+            getDashboardTime(a.publishedAt)
+        );
 
-      setNewsletter(rows[0] || null);
-    } catch (error) {
-      console.error(
-        "Dashboard Newsletter error:",
-        error
-      );
+        setNewsletter(rows[0] || null);
+      } catch (error) {
+        console.error(
+          "Dashboard Newsletter error:",
+          error
+        );
 
-      setNewsletter(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setNewsletter(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  loadNewsletter();
-}, []);
+    loadNewsletter();
+  }, []);
 
   const openNewsletter =
     () => {
@@ -403,7 +410,7 @@ useEffect(() => {
         window.membersNavigate
       ) {
 
-       onOpen();
+        onOpen();
 
       }
 
@@ -473,11 +480,11 @@ useEffect(() => {
 
             {newsletter.thumbnailUrl ? (
 
-              <img
-                src={getDashboardFileUrl(
-                  newsletter.thumbnailUrl
-                )}
+              <MemberThumbnail
+                src={getDashboardFileUrl(newsletter.thumbnailUrl)}
                 alt={newsletter.title}
+                width={320}
+                height={180}
               />
 
             ) : (
@@ -534,7 +541,7 @@ window.DashboardNewsletter =
    LATEST WEEKLY ROUNDUP
 ========================================================= */
 
-function DashboardWeeklyRoundup({onOpen}) {
+function DashboardWeeklyRoundup({ onOpen }) {
 
   const [report, setReport] =
     useState(null);
@@ -542,37 +549,37 @@ function DashboardWeeklyRoundup({onOpen}) {
   const [loading, setLoading] =
     useState(true);
 
-useEffect(() => {
-  const loadWeeklyRoundup = async () => {
-    try {
-      const current = getCurrentMemberSession();
+  useEffect(() => {
+    const loadWeeklyRoundup = async () => {
+      try {
+        const current = getCurrentMemberSession();
 
-      if (!current?.session?.token) {
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(
-        `${DASHBOARD_API}/api/members/dashboard-content`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${current.session.token}`,
-            "Content-Type": "application/json"
-          }
+        if (!current?.session?.token) {
+          setLoading(false);
+          return;
         }
-      );
 
-      const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.message || "Unable to load weekly roundup."
+        const response = await fetch(
+          `${DASHBOARD_API}/api/members/dashboard-content`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${current.session.token}`,
+              "Content-Type": "application/json"
+            }
+          }
         );
-      }
 
-      const rows = Array.isArray(data.content)
-        ? data.content
+        const data = await response.json();
+
+        if (!response.ok || !data?.success) {
+          throw new Error(
+            data?.message || "Unable to load weekly roundup."
+          );
+        }
+
+        const rows = Array.isArray(data.content)
+          ? data.content
             .filter(
               item =>
                 item.category === "Weekly Roundup" &&
@@ -595,29 +602,29 @@ useEffect(() => {
                 item.createdAt ||
                 ""
             }))
-        : [];
+          : [];
 
-      rows.sort(
-        (a, b) =>
-          getDashboardTime(b.publishedAt) -
-          getDashboardTime(a.publishedAt)
-      );
+        rows.sort(
+          (a, b) =>
+            getDashboardTime(b.publishedAt) -
+            getDashboardTime(a.publishedAt)
+        );
 
-      setReport(rows[0] || null);
-    } catch (error) {
-      console.error(
-        "Dashboard Weekly Roundup error:",
-        error
-      );
+        setReport(rows[0] || null);
+      } catch (error) {
+        console.error(
+          "Dashboard Weekly Roundup error:",
+          error
+        );
 
-      setReport(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setReport(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  loadWeeklyRoundup();
-}, []);
+    loadWeeklyRoundup();
+  }, []);
 
   const openWeekly = () => {
     trackMemberContentOpen({
@@ -658,7 +665,7 @@ useEffect(() => {
             WEEKLY ROUNDUP
           </span>
 
-         
+
 
         </div>
 
@@ -692,11 +699,11 @@ useEffect(() => {
 
             {report.thumbnailUrl ? (
 
-              <img
-                src={getDashboardFileUrl(
-                  report.thumbnailUrl
-                )}
+              <MemberThumbnail
+                src={getDashboardFileUrl(report.thumbnailUrl)}
                 alt={report.title}
+                width={320}
+                height={180}
               />
 
             ) : (
@@ -758,51 +765,96 @@ function DashboardBookPromo() {
     window.location.href = "https://www.wealthoria.in/Book.html";
   };
 
+  const couponUrl =
+    "https://wa.me/919019759001?text=Hi%20Wealthoria%2C%20I%20want%20to%20purchase%20'ಹೂಡಿಕೆಯ%20ವಿಜ್ಞಾನ'%20book.%20Please%20share%20a%20coupon%20code!";
+
+  const renderActions = () => (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
+      <span className="wd-book-ad-cta" style={{ margin: 0 }}>
+        Purchase now →
+      </span>
+      <a
+        href={couponUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          padding: '7px 12px',
+          borderRadius: '999px',
+          background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+          color: '#ffffff',
+          fontSize: '10px',
+          fontWeight: '800',
+          textDecoration: 'none',
+          boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
+          cursor: 'pointer'
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#ffffff">
+          <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.766c0 5.518-4.482 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.304 1.34-4.887c-.896-1.493-1.424-3.238-1.424-5.175 0-5.518 4.482-10 10-10 5.518 0 10 4.482 10 10z" />
+        </svg>
+        <span>Coupon Code</span>
+      </a>
+    </div>
+  );
+
   return (
-    <section className="wd-book-ad" aria-label="Hoodikeya Vijnana pre-book offer">
+    <section className="wd-book-ad" aria-label="Hoodikeya Vijnana purchase offer">
       <div className="wd-book-ad-track">
-        <button type="button" className="wd-book-ad-card" onClick={openBook}>
+        <div role="button" tabIndex={0} className="wd-book-ad-card" onClick={openBook}>
           <div className="wd-book-ad-copy">
-            <span className="wd-book-ad-kicker">NEW RELEASE</span>
+            <span className="wd-book-ad-kicker">OFFICIAL RELEASE</span>
             <h3>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h3>
             <p>Learn investing with practical, simple insights.</p>
             <div className="wd-book-ad-price"><b>₹1,499</b></div>
-            <span className="wd-book-ad-cta">Pre-book now →</span>
+            {renderActions()}
           </div>
-          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
-        </button>
+          <div className="wd-book-ad-cover">
+            <img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" loading="lazy" decoding="async" width="160" height="220" />
+          </div>
+        </div>
 
-        <button type="button" className="wd-book-ad-card wd-book-ad-card-alt" onClick={openBook}>
+        <div role="button" tabIndex={0} className="wd-book-ad-card wd-book-ad-card-alt" onClick={openBook}>
           <div className="wd-book-ad-copy">
             <span className="wd-book-ad-kicker">LIMITED OFFER</span>
             <h3>Build wealth with knowledge.</h3>
-            <p>Pre-book today for ₹1,499. Shipping starts soon.</p>
-            <span className="wd-book-ad-cta">Explore the book →</span>
+            <p>Purchase today for ₹1,499. Free delivery across India.</p>
+            <div className="wd-book-ad-price"><b>₹1,499</b></div>
+            {renderActions()}
           </div>
-          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
-        </button>
+          <div className="wd-book-ad-cover">
+            <img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" loading="lazy" decoding="async" width="160" height="220" />
+          </div>
+        </div>
 
-        <button type="button" className="wd-book-ad-card" onClick={openBook}>
+        <div role="button" tabIndex={0} className="wd-book-ad-card" onClick={openBook}>
           <div className="wd-book-ad-copy">
             <span className="wd-book-ad-kicker">WEALTHORIA BOOK</span>
             <h3>6 Months Ahead.</h3>
             <p>Start your investing journey with Wealthoria.</p>
             <div className="wd-book-ad-price"><b>₹1,499</b></div>
-            <span className="wd-book-ad-cta">Pre-book now →</span>
+            {renderActions()}
           </div>
-          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
-        </button>
+          <div className="wd-book-ad-cover">
+            <img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" loading="lazy" decoding="async" width="160" height="220" />
+          </div>
+        </div>
 
-        <button type="button" className="wd-book-ad-card wd-book-ad-card-alt" onClick={openBook}>
+        <div role="button" tabIndex={0} className="wd-book-ad-card wd-book-ad-card-alt" onClick={openBook}>
           <div className="wd-book-ad-copy">
             <span className="wd-book-ad-kicker">NEW RELEASE</span>
             <h3>ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ</h3>
-            <p>Learn investing with practical, simple insights.</p>
+            <p>Master money, stocks and investing in simple Kannada.</p>
             <div className="wd-book-ad-price"><b>₹1,499</b></div>
-            <span className="wd-book-ad-cta">Pre-book now →</span>
+            {renderActions()}
           </div>
-          <div className="wd-book-ad-cover"><img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" /></div>
-        </button>
+          <div className="wd-book-ad-cover">
+            <img src="/hoodikeya-vijnana-cover.jpg" alt="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ book cover" loading="lazy" decoding="async" width="160" height="220" />
+          </div>
+        </div>
       </div>
       <div className="wd-book-ad-glow" aria-hidden="true" />
     </section>
@@ -822,163 +874,163 @@ function DashboardLatestContent({ onOpen, member }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  if (!member?.token) {
-    setLoading(false);
-    return;
-  }
+  useEffect(() => {
+    if (!member?.token) {
+      setLoading(false);
+      return;
+    }
 
-  let cancelled = false;
+    let cancelled = false;
 
-  const loadLatest = async () => {
-    try {
-      const response = await fetch(
-        `${DASHBOARD_API}/api/members/dashboard-content`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${member.token}`,
-            "Content-Type": "application/json"
+    const loadLatest = async () => {
+      try {
+        const response = await fetch(
+          `${DASHBOARD_API}/api/members/dashboard-content`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${member.token}`,
+              "Content-Type": "application/json"
+            }
           }
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.message ||
-          "Unable to load dashboard content."
         );
-      }
 
-      if (cancelled) {
-        return;
-      }
+        const data = await response.json();
 
-      const configs = [
-        {
-          type: "Newsletter",
-          category: "Newsletter",
-          rows: Array.isArray(data.content)
-            ? data.content.filter(
+        if (!response.ok || !data?.success) {
+          throw new Error(
+            data?.message ||
+            "Unable to load dashboard content."
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        const configs = [
+          {
+            type: "Newsletter",
+            category: "Newsletter",
+            rows: Array.isArray(data.content)
+              ? data.content.filter(
                 item =>
                   item.category === "Newsletter"
               )
-            : []
-        },
-        {
-          type: "Weekly Roundup",
-          category: "Weekly Roundup",
-          rows: Array.isArray(data.content)
-            ? data.content.filter(
+              : []
+          },
+          {
+            type: "Weekly Roundup",
+            category: "Weekly Roundup",
+            rows: Array.isArray(data.content)
+              ? data.content.filter(
                 item =>
                   item.category === "Weekly Roundup"
               )
-            : []
-        },
-        {
-          type: "Articles & Reports",
-          category: "Articles & Reports",
-          rows: Array.isArray(data.content)
-            ? data.content.filter(
+              : []
+          },
+          {
+            type: "Articles & Reports",
+            category: "Articles & Reports",
+            rows: Array.isArray(data.content)
+              ? data.content.filter(
                 item =>
                   item.category === "Articles & Reports"
               )
-            : []
-        },
-        {
-          type: "Videos",
-          category: "Videos",
-          rows: Array.isArray(data.content)
-            ? data.content.filter(
+              : []
+          },
+          {
+            type: "Videos",
+            category: "Videos",
+            rows: Array.isArray(data.content)
+              ? data.content.filter(
                 item =>
                   item.category === "Videos" || item.category === "Vedios"
               )
-            : []
-        },
-        {
-          type: "Courses",
-          category: "Courses",
-          rows: Array.isArray(data.courses)
-            ? data.courses
-            : []
+              : []
+          },
+          {
+            type: "Courses",
+            category: "Courses",
+            rows: Array.isArray(data.courses)
+              ? data.courses
+              : []
+          }
+        ];
+
+        const latest = configs
+          .map(config => {
+            const rows = config.rows
+              .map(data => {
+                const publishedAt =
+                  data.publishedAt ||
+                  data.createdAt ||
+                  "";
+
+                return {
+                  id: data.id,
+                  type: config.type,
+                  category: config.category,
+
+                  title:
+                    data.title ||
+                    data.name ||
+                    data.pdfName ||
+                    config.type,
+
+                  description:
+                    data.description ||
+                    data.shortDescription ||
+                    "",
+
+                  thumbnailUrl:
+                    data.thumbnailUrl ||
+                    data.imageUrl ||
+                    data.thumbnail ||
+                    "",
+
+                  publishedAt,
+
+                  _time:
+                    getDashboardTime(
+                      publishedAt
+                    )
+                };
+              });
+
+            rows.sort(
+              (a, b) =>
+                b._time - a._time
+            );
+
+            return rows[0] || null;
+          })
+          .filter(Boolean);
+
+        setItems(latest);
+
+      } catch (error) {
+        console.error(
+          "Dashboard latest content error:",
+          error
+        );
+
+        setItems([]);
+
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
         }
-      ];
-
-      const latest = configs
-        .map(config => {
-          const rows = config.rows
-            .map(data => {
-              const publishedAt =
-                data.publishedAt ||
-                data.createdAt ||
-                "";
-
-              return {
-                id: data.id,
-                type: config.type,
-                category: config.category,
-
-                title:
-                  data.title ||
-                  data.name ||
-                  data.pdfName ||
-                  config.type,
-
-                description:
-                  data.description ||
-                  data.shortDescription ||
-                  "",
-
-                thumbnailUrl:
-                  data.thumbnailUrl ||
-                  data.imageUrl ||
-                  data.thumbnail ||
-                  "",
-
-                publishedAt,
-
-                _time:
-                  getDashboardTime(
-                    publishedAt
-                  )
-              };
-            });
-
-          rows.sort(
-            (a, b) =>
-              b._time - a._time
-          );
-
-          return rows[0] || null;
-        })
-        .filter(Boolean);
-
-      setItems(latest);
-
-    } catch (error) {
-      console.error(
-        "Dashboard latest content error:",
-        error
-      );
-
-      setItems([]);
-
-    } finally {
-      if (!cancelled) {
-        setLoading(false);
       }
-    }
-  };
+    };
 
-  loadLatest();
+    loadLatest();
 
-  return () => {
-    cancelled = true;
-  };
+    return () => {
+      cancelled = true;
+    };
 
-}, [member]);
+  }, [member]);
 
   if (loading) {
 
@@ -1032,12 +1084,12 @@ function DashboardLatestContent({ onOpen, member }) {
               item.type === "Articles & Reports"
                 ? "Read Article →"
                 : item.type === "Weekly Roundup"
-                ? "Read Report →"
-                : item.type === "Newsletter"
-                ? "Read Weekly Order Wins →"
-                : item.type === "Courses"
-                ? "View Course →"
-                : "Watch Video →";
+                  ? "Read Report →"
+                  : item.type === "Newsletter"
+                    ? "Read Weekly Order Wins →"
+                    : item.type === "Courses"
+                      ? "View Course →"
+                      : "Watch Video →";
 
             return (
               <button
@@ -1059,11 +1111,11 @@ function DashboardLatestContent({ onOpen, member }) {
 
                   {item.thumbnailUrl ? (
 
-                    <img
-                      src={getDashboardFileUrl(
-                        item.thumbnailUrl
-                      )}
+                    <MemberThumbnail
+                      src={getDashboardFileUrl(item.thumbnailUrl)}
                       alt={item.title}
+                      width={320}
+                      height={180}
                     />
 
                   ) : (
@@ -1140,66 +1192,66 @@ function MemberNotificationsPage({
   const [loading, setLoading] =
     useState(true);
 
-    const [openNotificationId, setOpenNotificationId] =
-  useState(null);
+  const [openNotificationId, setOpenNotificationId] =
+    useState(null);
 
 
   const [selectedNotification, setSelectedNotification] =
-  useState(null);
+    useState(null);
 
 
-const handleClearAllNotifications = async () => {
+  const handleClearAllNotifications = async () => {
 
-  const confirmed = window.confirm(
-    "Are you sure you want to clear all notifications?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-
-    const response = await fetch(
-      `${DASHBOARD_API}/api/members/notifications/clear-all`,
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            `Bearer ${member.token}`
-        }
-      }
+    const confirmed = window.confirm(
+      "Are you sure you want to clear all notifications?"
     );
 
-    const data =
-      await response.json();
-
-    if (!response.ok || !data?.success) {
-      throw new Error(
-        data?.message ||
-        "Unable to clear notifications."
-      );
+    if (!confirmed) {
+      return;
     }
 
-  setNotifications([]);
+    try {
 
-setSelectedNotification(null);
+      const response = await fetch(
+        `${DASHBOARD_API}/api/members/notifications/clear-all`,
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              `Bearer ${member.token}`
+          }
+        }
+      );
 
-onNotificationsRead();
+      const data =
+        await response.json();
 
-  } catch (error) {
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.message ||
+          "Unable to clear notifications."
+        );
+      }
 
-    console.error(
-      "❌ Clear notifications error:",
-      error
-    );
+      setNotifications([]);
 
-    alert(
-      "Unable to clear notifications. Please try again."
-    );
+      setSelectedNotification(null);
 
-  }
-};
+      onNotificationsRead();
+
+    } catch (error) {
+
+      console.error(
+        "❌ Clear notifications error:",
+        error
+      );
+
+      alert(
+        "Unable to clear notifications. Please try again."
+      );
+
+    }
+  };
 
   useEffect(() => {
 
@@ -1413,22 +1465,22 @@ onNotificationsRead();
 
   return (
     <><div className="member-notifications-page-header">
-  <div className="member-notifications-page-title">
-    <span className="member-notifications-page-title-icon">
-      🔔
-    </span>
-  </div>
+      <div className="member-notifications-page-title">
+        <span className="member-notifications-page-title-icon">
+          🔔
+        </span>
+      </div>
 
-  {notifications.length > 0 && (
-    <button
-      type="button"
-      className="clear-all-notifications-button"
-      onClick={handleClearAllNotifications}
-    >
-      Clear All
-    </button>
-  )}
-</div>
+      {notifications.length > 0 && (
+        <button
+          type="button"
+          className="clear-all-notifications-button"
+          onClick={handleClearAllNotifications}
+        >
+          Clear All
+        </button>
+      )}
+    </div>
 
 
       <div className="member-notification-page-list">
@@ -1438,11 +1490,11 @@ onNotificationsRead();
           const isOpen =
             openNotificationId === notification.id;
 
-          const message =   notification.message || "";
+          const message = notification.message || "";
 
           const title = notification.title || "Notification";
 
-          const displayTitle = title.length > 25 ? title.slice(0, 25) + "...": title;
+          const displayTitle = title.length > 25 ? title.slice(0, 25) + "..." : title;
 
           const preview =
             message.length > 80
@@ -1645,8 +1697,8 @@ function MemberDashboard() {
 
   const CourseVideos =
     window.CourseVideos;
-    const MemberVideo =
-  window.MemberVideo;
+  const MemberVideo =
+    window.MemberVideo;
 
   const Newsletter =
     window.Newsletter;
@@ -1654,8 +1706,8 @@ function MemberDashboard() {
   const WeeklyRoundup =
     window.WeeklyRoundup;
 
-    const RatioAnalysis =
-  window.RatioAnalysis; 
+  const RatioAnalysis =
+    window.RatioAnalysis;
 
   const PurchaseHistory =
     window.PurchaseHistory;
@@ -1675,465 +1727,468 @@ function MemberDashboard() {
   const DashboardBookPromo =
     window.DashboardBookPromo;
 
-    const MemberArticles =
-  window.MemberArticles;
+  const MemberArticles =
+    window.MemberArticles;
 
   /* =======================================================
      MEMBER
   ======================================================= */
-const initialMemberSession = getCurrentMemberSession();
+  const initialMemberSession = getCurrentMemberSession();
 
-const [member, setMember] =
-  useState(initialMemberSession?.session || null);
+  const [member, setMember] =
+    useState(initialMemberSession?.session || null);
 
   const [membershipDays, setMembershipDays] =
-  useState(
-    Number(
-      initialMemberSession?.session?.subscription?.remainingDays ??
-      initialMemberSession?.session?.remainingDays ??
-      0
-    )
-  );
+    useState(
+      Number(
+        initialMemberSession?.session?.subscription?.remainingDays ??
+        initialMemberSession?.session?.remainingDays ??
+        0
+      )
+    );
 
-const [activationLoading, setActivationLoading] =
-  useState(false);
+  const [activationLoading, setActivationLoading] =
+    useState(false);
 
 
   const activateSubscription = async () => {
-  setActivationLoading(true);
+    setActivationLoading(true);
 
-  try {
-    const current = getCurrentMemberSession();
+    try {
+      const current = getCurrentMemberSession();
 
-    if (!current?.session?.token || !current?.session?.uid) {
-      throw new Error(
-        "Your login session was not found. Please login again."
-      );
-    }
+      if (!current?.session?.token || !current?.session?.uid) {
+        throw new Error(
+          "Your login session was not found. Please login again."
+        );
+      }
 
-    const session = current.session;
+      const session = current.session;
 
-    if (!window.Razorpay) {
-      throw new Error(
-        "Payment system is still loading. Please try again."
-      );
-    }
-
-    // Create new Razorpay subscription
-    const createResponse = await fetch(
-      `${DASHBOARD_API}/api/subscription/reactivate`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.token}`,
-          "Content-Type": "application/json"
+      if (!window.Razorpay) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded || !window.Razorpay) {
+          throw new Error(
+            "Payment system could not be loaded. Please check your internet connection and try again."
+          );
         }
       }
-    );
 
-    const createData =
-      await createResponse.json();
-
-    if (
-      !createResponse.ok ||
-      !createData?.success
-    ) {
-      throw new Error(
-        createData?.message ||
-        "Unable to start subscription activation."
-      );
-    }
-
-    const subscriptionId =
-      createData.subscriptionId;
-
-    const razorpayKey =
-      createData.key;
-
-    if (!subscriptionId || !razorpayKey) {
-      throw new Error(
-        "Razorpay subscription details were not received."
-      );
-    }
-
-    setActivationLoading(false);
-
-    const options = {
-      key: razorpayKey,
-
-      subscription_id:
-        subscriptionId,
-
-      name: "Wealthoria",
-
-      description:
-        "Wealthoria Premium Subscription",
-
-      prefill: {
-        name: session.name || "",
-        email: session.email || ""
-      },
-
-      theme: {
-        color: "#e8473f"
-      },
-
-      handler: async (response) => {
-        setActivationLoading(true);
-
-        try {
-          const paymentId =
-            response?.razorpay_payment_id;
-
-          const returnedSubscriptionId =
-            response?.razorpay_subscription_id ||
-            subscriptionId;
-
-          if (!paymentId) {
-            throw new Error(
-              "Razorpay payment ID was not received."
-            );
+      // Create new Razorpay subscription
+      const createResponse = await fetch(
+        `${DASHBOARD_API}/api/subscription/reactivate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.token}`,
+            "Content-Type": "application/json"
           }
+        }
+      );
 
-          if (
-            returnedSubscriptionId !==
-            subscriptionId
-          ) {
-            throw new Error(
-              "Razorpay subscription verification failed."
-            );
-          }
+      const createData =
+        await createResponse.json();
 
-          // Complete subscription activation
-          const completeResponse =
-            await fetch(
-              `${DASHBOARD_API}/api/subscription/reactivate/complete`,
-              {
-                method: "POST",
+      if (
+        !createResponse.ok ||
+        !createData?.success
+      ) {
+        throw new Error(
+          createData?.message ||
+          "Unable to start subscription activation."
+        );
+      }
 
-                headers: {
-                  Authorization:
-                    `Bearer ${session.token}`,
-                  "Content-Type":
-                    "application/json"
-                },
+      const subscriptionId =
+        createData.subscriptionId;
 
-                body: JSON.stringify({
+      const razorpayKey =
+        createData.key;
+
+      if (!subscriptionId || !razorpayKey) {
+        throw new Error(
+          "Razorpay subscription details were not received."
+        );
+      }
+
+      setActivationLoading(false);
+
+      const options = {
+        key: razorpayKey,
+
+        subscription_id:
+          subscriptionId,
+
+        name: "Wealthoria",
+
+        description:
+          "Wealthoria Premium Subscription",
+
+        prefill: {
+          name: session.name || "",
+          email: session.email || ""
+        },
+
+        theme: {
+          color: "#e8473f"
+        },
+
+        handler: async (response) => {
+          setActivationLoading(true);
+
+          try {
+            const paymentId =
+              response?.razorpay_payment_id;
+
+            const returnedSubscriptionId =
+              response?.razorpay_subscription_id ||
+              subscriptionId;
+
+            if (!paymentId) {
+              throw new Error(
+                "Razorpay payment ID was not received."
+              );
+            }
+
+            if (
+              returnedSubscriptionId !==
+              subscriptionId
+            ) {
+              throw new Error(
+                "Razorpay subscription verification failed."
+              );
+            }
+
+            // Complete subscription activation
+            const completeResponse =
+              await fetch(
+                `${DASHBOARD_API}/api/subscription/reactivate/complete`,
+                {
+                  method: "POST",
+
+                  headers: {
+                    Authorization:
+                      `Bearer ${session.token}`,
+                    "Content-Type":
+                      "application/json"
+                  },
+
+                  body: JSON.stringify({
+                    subscriptionId,
+                    paymentId,
+                    razorpay_signature:
+                      response?.razorpay_signature
+                  })
+                }
+              );
+
+            const completeData =
+              await completeResponse.json();
+
+            // 202 = payment received, Razorpay still confirming.
+            // Activation finishes automatically; reload shortly.
+            if (
+              completeResponse.status === 202 &&
+              completeData?.pending
+            ) {
+              alert(
+                "Payment received! Your membership is being activated. The page will refresh in a moment."
+              );
+
+              setTimeout(() => {
+                window.location.replace("/members/dashboard");
+              }, 15000);
+
+              return;
+            }
+
+            if (
+              !completeResponse.ok ||
+              !completeData?.success
+            ) {
+              throw new Error(
+                completeData?.message ||
+                "Payment was received, but subscription activation could not be completed."
+              );
+            }
+
+            // Update saved member session
+            const updatedSession = {
+              ...session,
+
+              status: "active",
+
+              subscription: {
+                ...(session.subscription || {}),
+
+                status: "active",
+
+                razorpaySubscriptionId:
+                  completeData.razorpaySubscriptionId ||
                   subscriptionId,
-                  paymentId,
-                  razorpay_signature:
-                    response?.razorpay_signature
-                })
+
+                nextBillingDate:
+                  completeData.nextBillingDate ||
+                  completeData.subscription?.nextBillingDate ||
+                  session.subscription?.nextBillingDate ||
+                  null,
+
+                paidUntil:
+                  completeData.paidUntil ||
+                  completeData.nextBillingDate ||
+                  completeData.subscription?.paidUntil ||
+                  completeData.subscription?.nextBillingDate ||
+                  session.subscription?.paidUntil ||
+                  session.subscription?.accessUntil ||
+                  null,
+
+                accessUntil:
+                  completeData.paidUntil ||
+                  completeData.nextBillingDate ||
+                  completeData.subscription?.paidUntil ||
+                  completeData.subscription?.nextBillingDate ||
+                  session.subscription?.accessUntil ||
+                  null,
+
+                remainingDays:
+                  Number(
+                    completeData.remainingDays ||
+                    completeData.subscription?.remainingDays ||
+                    0
+                  ),
+
+                accessActive: true
               }
+            };
+
+            updateCurrentMemberSession(
+              current.storage,
+              updatedSession
             );
 
-          const completeData =
-            await completeResponse.json();
+            setMember(updatedSession);
 
-          // 202 = payment received, Razorpay still confirming.
-          // Activation finishes automatically; reload shortly.
-          if (
-            completeResponse.status === 202 &&
-            completeData?.pending
-          ) {
+            setMembershipDays(
+              Number(
+                completeData?.remainingDays ||
+                updatedSession?.subscription
+                  ?.remainingDays ||
+                0
+              )
+            );
+
+            // Reload dashboard with active subscription
+            window.location.replace(
+              "/members/dashboard"
+            );
+
+          } catch (error) {
+            console.error(
+              "Subscription activation completion error:",
+              error
+            );
+
             alert(
-              "Payment received! Your membership is being activated. The page will refresh in a moment."
+              error?.message ||
+              "Subscription activation failed. Please contact support."
             );
 
-            setTimeout(() => {
-              window.location.replace("/members/dashboard");
-            }, 15000);
-
-            return;
+            setActivationLoading(false);
           }
+        },
 
-          if (
-            !completeResponse.ok ||
-            !completeData?.success
-          ) {
-            throw new Error(
-              completeData?.message ||
-              "Payment was received, but subscription activation could not be completed."
-            );
+        modal: {
+          ondismiss: () => {
+            setActivationLoading(false);
           }
+        }
+      };
 
-          // Update saved member session
-        const updatedSession = {
-  ...session,
+      const razorpay =
+        new window.Razorpay(options);
 
-  status: "active",
-
-  subscription: {
-    ...(session.subscription || {}),
-
-    status: "active",
-
-    razorpaySubscriptionId:
-      completeData.razorpaySubscriptionId ||
-      subscriptionId,
-
-    nextBillingDate:
-      completeData.nextBillingDate ||
-      completeData.subscription?.nextBillingDate ||
-      session.subscription?.nextBillingDate ||
-      null,
-
-    paidUntil:
-      completeData.paidUntil ||
-      completeData.nextBillingDate ||
-      completeData.subscription?.paidUntil ||
-      completeData.subscription?.nextBillingDate ||
-      session.subscription?.paidUntil ||
-      session.subscription?.accessUntil ||
-      null,
-
-    accessUntil:
-      completeData.paidUntil ||
-      completeData.nextBillingDate ||
-      completeData.subscription?.paidUntil ||
-      completeData.subscription?.nextBillingDate ||
-      session.subscription?.accessUntil ||
-      null,
-
-    remainingDays:
-      Number(
-        completeData.remainingDays ||
-        completeData.subscription?.remainingDays ||
-        0
-      ),
-
-    accessActive: true
-  }
-};
-
-          updateCurrentMemberSession(
-            current.storage,
-            updatedSession
-          );
-
-          setMember(updatedSession);
-
-          setMembershipDays(
-            Number(
-              completeData?.remainingDays ||
-              updatedSession?.subscription
-                ?.remainingDays ||
-              0
-            )
-          );
-
-          // Reload dashboard with active subscription
-          window.location.replace(
-            "/members/dashboard"
-          );
-
-        } catch (error) {
+      razorpay.on(
+        "payment.failed",
+        (response) => {
           console.error(
-            "Subscription activation completion error:",
-            error
+            "Razorpay activation payment failed:",
+            response?.error
           );
 
           alert(
-            error?.message ||
-            "Subscription activation failed. Please contact support."
+            response?.error?.description ||
+            "Payment failed. Your subscription remains inactive."
           );
 
           setActivationLoading(false);
         }
-      },
-
-      modal: {
-        ondismiss: () => {
-          setActivationLoading(false);
-        }
-      }
-    };
-
-    const razorpay =
-      new window.Razorpay(options);
-
-    razorpay.on(
-      "payment.failed",
-      (response) => {
-        console.error(
-          "Razorpay activation payment failed:",
-          response?.error
-        );
-
-        alert(
-          response?.error?.description ||
-          "Payment failed. Your subscription remains inactive."
-        );
-
-        setActivationLoading(false);
-      }
-    );
-
-    razorpay.open();
-
-  } catch (error) {
-    console.error(
-      "Subscription activation error:",
-      error
-    );
-
-    alert(
-      error?.message ||
-      "Unable to activate subscription."
-    );
-
-    setActivationLoading(false);
-  }
-};
-
-
-useEffect(() => {
-
-  const updateMembershipDays = () => {
-
-  const accessUntil =
-  member?.subscription?.paidUntil ||
-  member?.subscription?.accessUntil ||
-  member?.subscription?.nextBillingDate ||
-  member?.paidUntil ||
-  member?.accessUntil ||
-  member?.nextBillingDate;
-
-    if (!accessUntil) {
-      if (
-        member?.subscription?.accessActive &&
-        Number(member?.subscription?.remainingDays) > 0
-      ) {
-        setMembershipDays(Number(member.subscription.remainingDays));
-        return;
-      }
-      setMembershipDays(0);
-      return;
-    }
-
-  const expiryTime =
-  getDashboardTime(accessUntil);
-    if (!Number.isFinite(expiryTime)) {
-      return;
-    }
-
-    const remaining =
-      Math.max(
-        0,
-        Math.ceil(
-          (expiryTime - Date.now()) /
-          (1000 * 60 * 60 * 24)
-        )
       );
 
-    setMembershipDays(remaining);
+      razorpay.open();
+
+    } catch (error) {
+      console.error(
+        "Subscription activation error:",
+        error
+      );
+
+      alert(
+        error?.message ||
+        "Unable to activate subscription."
+      );
+
+      setActivationLoading(false);
+    }
   };
 
-  updateMembershipDays();
 
-  const timer =
-    setInterval(
-      updateMembershipDays,
-      60 * 1000
-    );
+  useEffect(() => {
 
-  return () => clearInterval(timer);
+    const updateMembershipDays = () => {
 
-}, [member]);
+      const accessUntil =
+        member?.subscription?.paidUntil ||
+        member?.subscription?.accessUntil ||
+        member?.subscription?.nextBillingDate ||
+        member?.paidUntil ||
+        member?.accessUntil ||
+        member?.nextBillingDate;
 
-const [authChecking, setAuthChecking] =
-  useState(false);
+      if (!accessUntil) {
+        if (
+          member?.subscription?.accessActive &&
+          Number(member?.subscription?.remainingDays) > 0
+        ) {
+          setMembershipDays(Number(member.subscription.remainingDays));
+          return;
+        }
+        setMembershipDays(0);
+        return;
+      }
+
+      const expiryTime =
+        getDashboardTime(accessUntil);
+      if (!Number.isFinite(expiryTime)) {
+        return;
+      }
+
+      const remaining =
+        Math.max(
+          0,
+          Math.ceil(
+            (expiryTime - Date.now()) /
+            (1000 * 60 * 60 * 24)
+          )
+        );
+
+      setMembershipDays(remaining);
+    };
+
+    updateMembershipDays();
+
+    const timer =
+      setInterval(
+        updateMembershipDays,
+        60 * 1000
+      );
+
+    return () => clearInterval(timer);
+
+  }, [member]);
+
+  const [authChecking, setAuthChecking] =
+    useState(false);
 
   const [membershipLoaded, setMembershipLoaded] =
-  useState(false);
-const [notificationStatus, setNotificationStatus] =
-  useState("checking");
+    useState(false);
+  const [notificationStatus, setNotificationStatus] =
+    useState("checking");
 
-const [notificationError, setNotificationError] =
-  useState("");
+  const [notificationError, setNotificationError] =
+    useState("");
 
-const [enablingNotifications, setEnablingNotifications] =
-  useState(false);
+  const [enablingNotifications, setEnablingNotifications] =
+    useState(false);
 
-const isIosDevice =
-  typeof navigator !== "undefined" &&
-  /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+  const isIosDevice =
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
-/* Enable push on THIS device. Each phone / computer must do this once. */
-const handleEnableNotifications = async () => {
+  /* Enable push on THIS device. Each phone / computer must do this once. */
+  const handleEnableNotifications = async () => {
 
-  setNotificationError("");
-  setEnablingNotifications(true);
+    setNotificationError("");
+    setEnablingNotifications(true);
 
-  try {
+    try {
 
+      if (!("Notification" in window)) {
+        setNotificationStatus("unsupported");
+        return;
+      }
+
+      // Ask permission FIRST, straight from the tap. Safari and some
+      // Android browsers ignore the request if we await anything before it.
+      let permission = Notification.permission;
+      if (permission !== "granted") {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission === "denied") {
+        setNotificationStatus("blocked");
+        return;
+      }
+
+      if (permission !== "granted") {
+        setNotificationStatus("not-enabled");
+        return;
+      }
+
+      await ensureMemberNotificationsScript();
+
+      const result =
+        await window.enableMemberNotifications(member);
+
+      if (result && result.ok) {
+        setNotificationStatus("enabled");
+      } else {
+        setNotificationStatus("error");
+        setNotificationError(
+          (result && result.error) ||
+          window.wealthoriaLastPushError ||
+          "Could not finish enabling notifications on this device."
+        );
+      }
+
+    } catch (error) {
+
+      setNotificationStatus("error");
+      setNotificationError(
+        error?.message ||
+        "Could not finish enabling notifications on this device."
+      );
+
+    } finally {
+
+      setEnablingNotifications(false);
+
+    }
+  };
+
+  useEffect(() => {
     if (!("Notification" in window)) {
       setNotificationStatus("unsupported");
       return;
     }
 
-    // Ask permission FIRST, straight from the tap. Safari and some
-    // Android browsers ignore the request if we await anything before it.
-    let permission = Notification.permission;
-    if (permission !== "granted") {
-      permission = await Notification.requestPermission();
-    }
-
-    if (permission === "denied") {
-      setNotificationStatus("blocked");
-      return;
-    }
-
-    if (permission !== "granted") {
-      setNotificationStatus("not-enabled");
-      return;
-    }
-
-    await ensureMemberNotificationsScript();
-
-    const result =
-      await window.enableMemberNotifications(member);
-
-    if (result && result.ok) {
+    if (Notification.permission === "granted") {
       setNotificationStatus("enabled");
+    } else if (Notification.permission === "denied") {
+      setNotificationStatus("blocked");
     } else {
-      setNotificationStatus("error");
-      setNotificationError(
-        (result && result.error) ||
-        window.wealthoriaLastPushError ||
-        "Could not finish enabling notifications on this device."
-      );
+      setNotificationStatus("not-enabled");
     }
-
-  } catch (error) {
-
-    setNotificationStatus("error");
-    setNotificationError(
-      error?.message ||
-      "Could not finish enabling notifications on this device."
-    );
-
-  } finally {
-
-    setEnablingNotifications(false);
-
-  }
-};
-
-useEffect(() => {
-  if (!("Notification" in window)) {
-    setNotificationStatus("unsupported");
-    return;
-  }
-
-  if (Notification.permission === "granted") {
-    setNotificationStatus("enabled");
-  } else if (Notification.permission === "denied") {
-    setNotificationStatus("blocked");
-  } else {
-    setNotificationStatus("not-enabled");
-  }
-}, []);
+  }, []);
 
   /* =======================================================
      NOTIFICATIONS
@@ -2178,7 +2233,7 @@ useEffect(() => {
           ) {
             return "videos";
           }
-        } catch (e) {}
+        } catch (e) { }
 
         return "dashboard";
       }
@@ -2243,48 +2298,48 @@ useEffect(() => {
   /* =======================================================
      MEMBER SESSION
   ======================================================= */
-useEffect(() => {
+  useEffect(() => {
 
-  const current = getCurrentMemberSession();
+    const current = getCurrentMemberSession();
 
-  if (!current?.session?.uid || !current?.session?.token) {
-    setMember(null);
+    if (!current?.session?.uid || !current?.session?.token) {
+      setMember(null);
+      setAuthChecking(false);
+
+      if (window.membersNavigate) {
+        window.membersNavigate("/members/login");
+      } else {
+        window.location.replace("/members/login");
+      }
+
+      return;
+    }
+
+    // MembersRouter already verified /api/members/me before rendering
+    // the dashboard. Reusing that verified session avoids a second
+    // Firestore request and prevents the dashboard from blocking.
+    setMember(current.session);
+    setMembershipLoaded(true);
     setAuthChecking(false);
 
-    if (window.membersNavigate) {
-      window.membersNavigate("/members/login");
-    } else {
-      window.location.replace("/members/login");
-    }
-
-    return;
-  }
-
-  // MembersRouter already verified /api/members/me before rendering
-  // the dashboard. Reusing that verified session avoids a second
-  // Firestore request and prevents the dashboard from blocking.
-  setMember(current.session);
-  setMembershipLoaded(true);
-  setAuthChecking(false);
-
-  const handleSessionUpdated = (event) => {
-    const next = event?.detail;
-    if (next?.uid && next.uid === current.session.uid) {
-      setMember(next);
-    } else {
-      const latest = getCurrentMemberSession();
-      if (latest?.session?.uid) {
-        setMember(latest.session);
+    const handleSessionUpdated = (event) => {
+      const next = event?.detail;
+      if (next?.uid && next.uid === current.session.uid) {
+        setMember(next);
+      } else {
+        const latest = getCurrentMemberSession();
+        if (latest?.session?.uid) {
+          setMember(latest.session);
+        }
       }
-    }
-  };
+    };
 
-  window.addEventListener("wealthoria:member-session-updated", handleSessionUpdated);
-  return () => {
-    window.removeEventListener("wealthoria:member-session-updated", handleSessionUpdated);
-  };
+    window.addEventListener("wealthoria:member-session-updated", handleSessionUpdated);
+    return () => {
+      window.removeEventListener("wealthoria:member-session-updated", handleSessionUpdated);
+    };
 
-}, []);
+  }, []);
   /* =======================================================
      LOAD UNREAD COUNT ONLY
      
@@ -2295,16 +2350,16 @@ useEffect(() => {
 
 
   // Google Analytics - dashboard view
-useEffect(() => {
-  if (
-    member?.uid &&
-    typeof window.gtag === "function"
-  ) {
-    window.gtag("event", "dashboard_viewed", {
-      user_id: member.uid
-    });
-  }
-}, [member]);
+  useEffect(() => {
+    if (
+      member?.uid &&
+      typeof window.gtag === "function"
+    ) {
+      window.gtag("event", "dashboard_viewed", {
+        user_id: member.uid
+      });
+    }
+  }, [member]);
 
   useEffect(() => {
 
@@ -2428,7 +2483,7 @@ useEffect(() => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         }
-      }).catch(() => {});
+      }).catch(() => { });
     };
 
     sendHeartbeat();
@@ -2554,8 +2609,8 @@ useEffect(() => {
           message:
             notification.message ||
             "You have a new notification.",
-              url:
-    notification.url || "",
+          url:
+            notification.url || "",
 
           read:
             false
@@ -2643,9 +2698,9 @@ useEffect(() => {
 
   useEffect(() => {
 
- if (!member?.token) {
-  return;
-}
+    if (!member?.token) {
+      return;
+    }
 
 
     let cancelled = false;
@@ -2658,46 +2713,46 @@ useEffect(() => {
 
           setStatsLoading(true);
 
-const response = await fetch(
-  `${DASHBOARD_API}/api/members/dashboard-content`,
-  {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${member.token}`,
-      "Content-Type": "application/json"
-    }
-  }
-);
+          const response = await fetch(
+            `${DASHBOARD_API}/api/members/dashboard-content`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${member.token}`,
+                "Content-Type": "application/json"
+              }
+            }
+          );
 
-const data = await response.json();
+          const data = await response.json();
 
-if (!response.ok || !data.success) {
-  throw new Error(
-    data.message || "Unable to load dashboard statistics."
-  );
-}
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.message || "Unable to load dashboard statistics."
+            );
+          }
 
-const purchaseResponse = await fetch(
-  `${DASHBOARD_API}/api/payment/purchase-history`,
-  {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${member.token}`,
-      "Content-Type": "application/json"
-    }
-  }
-);
+          const purchaseResponse = await fetch(
+            `${DASHBOARD_API}/api/payment/purchase-history`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${member.token}`,
+                "Content-Type": "application/json"
+              }
+            }
+          );
 
-const purchaseData = await purchaseResponse.json();
+          const purchaseData = await purchaseResponse.json();
 
-if (!purchaseResponse.ok || !purchaseData.success) {
-  throw new Error(
-    purchaseData.message ||
-    "Unable to load purchase history."
-  );
-}
+          if (!purchaseResponse.ok || !purchaseData.success) {
+            throw new Error(
+              purchaseData.message ||
+              "Unable to load purchase history."
+            );
+          }
 
-const dashboardStats = data.stats || {};
+          const dashboardStats = data.stats || {};
 
 
           if (cancelled) {
@@ -2707,26 +2762,26 @@ const dashboardStats = data.stats || {};
           }
 
 
-         setStats(
-  current => ({
-    totalContent:
-      dashboardStats.totalContent || 0,
+          setStats(
+            current => ({
+              totalContent:
+                dashboardStats.totalContent || 0,
 
-    courses:
-      dashboardStats.courses || 0,
+              courses:
+                dashboardStats.courses || 0,
 
-    marketReports:
-      dashboardStats.marketReports || 0,
+              marketReports:
+                dashboardStats.marketReports || 0,
 
-    purchases:
-      Array.isArray(purchaseData.purchases)
-        ? purchaseData.purchases.length
-        : 0,
+              purchases:
+                Array.isArray(purchaseData.purchases)
+                  ? purchaseData.purchases.length
+                  : 0,
 
-    notifications:
-      current.notifications
-  })
-);
+              notifications:
+                current.notifications
+            })
+          );
 
 
         } catch (error) {
@@ -2803,34 +2858,34 @@ const dashboardStats = data.stats || {};
   ======================================================= */
 
   const openPage =
-  (page) => {
+    (page) => {
 
-    setActivePage(page);
+      setActivePage(page);
 
-    sessionStorage.setItem(
-      "wealthoria-active-page",
-      page
-    );
+      sessionStorage.setItem(
+        "wealthoria-active-page",
+        page
+      );
 
-    // Leaving Videos: don't reopen the last video next time.
-    if (page !== "videos") {
-      try {
-        localStorage.removeItem("wealthoria-open-video");
-      } catch (e) {}
-    }
+      // Leaving Videos: don't reopen the last video next time.
+      if (page !== "videos") {
+        try {
+          localStorage.removeItem("wealthoria-open-video");
+        } catch (e) { }
+      }
 
-    // Google Analytics - track member page navigation
-    if (
-      typeof window.gtag === "function" &&
-      page
-    ) {
-      window.gtag("event", "member_page_viewed", {
-        page_name: page
-      });
-    }
+      // Google Analytics - track member page navigation
+      if (
+        typeof window.gtag === "function" &&
+        page
+      ) {
+        window.gtag("event", "member_page_viewed", {
+          page_name: page
+        });
+      }
 
-    setMobileDrawerOpen(false);
-  };
+      setMobileDrawerOpen(false);
+    };
 
   /* =======================================================
      OPEN THE PAGE A PUSH NOTIFICATION POINTS TO
@@ -2851,98 +2906,98 @@ const dashboardStats = data.stats || {};
   /* =======================================================
      LOGOUT
   ======================================================= */
-const logout =
-  async () => {
+  const logout =
+    async () => {
 
-  const current =
-    getCurrentMemberSession();
+      const current =
+        getCurrentMemberSession();
 
 
       // Google Analytics - track member logout
-  if (
-    typeof window.gtag === "function" &&
-    current?.session?.uid
-  ) {
-    window.gtag("event", "member_logout", {
-      user_id: current.session.uid
-    });
-  }
+      if (
+        typeof window.gtag === "function" &&
+        current?.session?.uid
+      ) {
+        window.gtag("event", "member_logout", {
+          user_id: current.session.uid
+        });
+      }
 
 
-  try {
+      try {
 
-    const session =
-      current?.session;
+        const session =
+          current?.session;
 
-    if (session?.token) {
+        if (session?.token) {
 
-      await fetch(
-        `${DASHBOARD_API}/api/members/logout`,
-        {
-          method: "POST",
+          await fetch(
+            `${DASHBOARD_API}/api/members/logout`,
+            {
+              method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
+              headers: {
+                "Content-Type":
+                  "application/json",
 
-            Authorization:
-              `Bearer ${session.token}`
-          }
+                Authorization:
+                  `Bearer ${session.token}`
+              }
+            }
+          );
+
         }
+
+      } catch (error) {
+
+        console.warn(
+          "Could not record member logout:",
+          error
+        );
+
+      }
+
+      /* Remove the current member from BOTH storage types. */
+      if (current?.session?.uid) {
+        removeCurrentMemberSession(
+          current.session.uid
+        );
+      }
+
+      sessionStorage.removeItem(
+        "wealthoria-active-page"
       );
 
-    }
+      try {
+        localStorage.removeItem("wealthoria-open-video");
+      } catch (e) { }
 
-  } catch (error) {
+      setMember(null);
 
-    console.warn(
-      "Could not record member logout:",
-      error
-    );
+      setNotificationSlides(
+        []
+      );
 
-  }
+      setUnreadNotifications(
+        0
+      );
 
-  /* Remove the current member from BOTH storage types. */
-  if (current?.session?.uid) {
-    removeCurrentMemberSession(
-      current.session.uid
-    );
-  }
+      if (
+        window.membersNavigate
+      ) {
 
-  sessionStorage.removeItem(
-    "wealthoria-active-page"
-  );
+        window.membersNavigate(
+          "/members/login"
+        );
 
-  try {
-    localStorage.removeItem("wealthoria-open-video");
-  } catch (e) {}
+      } else {
 
-  setMember(null);
+        window.location.href =
+          "/members/login";
 
-  setNotificationSlides(
-    []
-  );
+      }
 
-  setUnreadNotifications(
-    0
-  );
-
-  if (
-    window.membersNavigate
-  ) {
-
-    window.membersNavigate(
-      "/members/login"
-    );
-
-  } else {
-
-    window.location.href =
-      "/members/login";
-
-  }
-
-};
+    };
   /* =======================================================
      GREETING
   ======================================================= */
@@ -2993,22 +3048,22 @@ const logout =
 
 
 
-if (!member) {
-  return null;
-}
+  if (!member) {
+    return null;
+  }
 
-if (!membershipLoaded) {
-  return (
-  <div className="wd-page-state">
-  <span className="membership-loading-animation">
-    <span></span>
-    <span></span>
-    <span></span>
-  </span>
-  Loading membership...
-</div>
-  );
-}
+  if (!membershipLoaded) {
+    return (
+      <div className="wd-page-state">
+        <span className="membership-loading-animation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        Loading membership...
+      </div>
+    );
+  }
 
 
   /* =======================================================
@@ -3037,24 +3092,24 @@ if (!membershipLoaded) {
           {notificationSlides.map(
             notification => (
 
-           <div
-  key={notification.id}
-  className="member-notification-slide"
-  onClick={() => {
-    if (!notification.url) return;
+              <div
+                key={notification.id}
+                className="member-notification-slide"
+                onClick={() => {
+                  if (!notification.url) return;
 
-    const page = queueNotificationLink(notification.url);
+                  const page = queueNotificationLink(notification.url);
 
-    if (page) {
-      openPage(page);
-      setNotificationSlides(
-        current => current.filter(item => item.id !== notification.id)
-      );
-    } else {
-      window.location.href = notification.url;
-    }
-  }}
->
+                  if (page) {
+                    openPage(page);
+                    setNotificationSlides(
+                      current => current.filter(item => item.id !== notification.id)
+                    );
+                  } else {
+                    window.location.href = notification.url;
+                  }
+                }}
+              >
                 <div className="member-notification-slide-icon">
                   🔔
                 </div>
@@ -3186,7 +3241,7 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("dashboard")}
           >
-<span className="wd-nav-icon">⌂</span>
+            <span className="wd-nav-icon">⌂</span>
             <b>Dashboard</b>
           </button>
 
@@ -3208,7 +3263,7 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("articles")}
           >
-           <span className="wd-nav-icon">◈</span>
+            <span className="wd-nav-icon">◈</span>
             <b>Articles & Reports</b>
           </button>
 
@@ -3224,7 +3279,7 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("calculator")}
           >
-<span className="wd-nav-icon">=</span>
+            <span className="wd-nav-icon">=</span>
             <b>Calculators</b>
           </button>
 
@@ -3240,7 +3295,7 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("courses")}
           >
-          <span className="wd-nav-icon">▶</span>
+            <span className="wd-nav-icon">▶</span>
 
             <b>Courses</b>
           </button>
@@ -3257,8 +3312,8 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("newsletter")}
           >
-           <span className="wd-nav-icon">✉</span>
-              <b>Weekly Order Wins</b>
+            <span className="wd-nav-icon">✉</span>
+            <b>Weekly Order Wins</b>
           </button>
 
 
@@ -3295,7 +3350,7 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("purchase")}
           >
-          <span className="wd-nav-icon">▣</span>
+            <span className="wd-nav-icon">▣</span>
             <b>Purchase History</b>
 
             {stats.purchases > 0 && (
@@ -3317,7 +3372,7 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("videos")}
           >
-           <span className="wd-nav-icon">▶</span>
+            <span className="wd-nav-icon">▶</span>
             <b>Videos</b>
           </button>
 
@@ -3333,24 +3388,24 @@ if (!membershipLoaded) {
             }
             onClick={() => openPage("weekly")}
           >
-           <span className="wd-nav-icon">↗</span>
+            <span className="wd-nav-icon">↗</span>
             <b>Weekly Roundup</b>
           </button>
 
-{/* RATIO ANALYSIS */}
+          {/* RATIO ANALYSIS */}
 
-<button
-  type="button"
-  className={
-    activePage === "ratio"
-      ? "wd-nav-item active"
-      : "wd-nav-item"
-  }
-  onClick={() => openPage("ratio")}
->
- <span className="wd-nav-icon">◈</span>
-  <b>Ratio Analysis</b>
-</button>
+          <button
+            type="button"
+            className={
+              activePage === "ratio"
+                ? "wd-nav-item active"
+                : "wd-nav-item"
+            }
+            onClick={() => openPage("ratio")}
+          >
+            <span className="wd-nav-icon">◈</span>
+            <b>Ratio Analysis</b>
+          </button>
 
 
         </nav>
@@ -3457,29 +3512,29 @@ if (!membershipLoaded) {
                 {activePage === "dashboard"
                   ? "Dashboard"
                   : activePage === "courses"
-                  ? "Courses"
-                   : activePage === "videos"
-                  ? "Videos"
-                  : activePage === "newsletter"
-                  ? "Weekly Order Wins"
-                  : activePage === "weekly"
-                  ? "Weekly Roundup"
-                  : activePage === "ratio"
-                   ? "Ratio Analysis"
+                    ? "Courses"
+                    : activePage === "videos"
+                      ? "Videos"
+                      : activePage === "newsletter"
+                        ? "Weekly Order Wins"
+                        : activePage === "weekly"
+                          ? "Weekly Roundup"
+                          : activePage === "ratio"
+                            ? "Ratio Analysis"
 
-                  : activePage === "articles"
-                  ? "Articles & Reports"
-                  : activePage === "purchase"
-                  ? "Purchase History"
-                  : activePage === "notifications"
-                  ? "Notifications"
-                  : activePage === "charts"
-                  ? "Market Charts"
-                  : activePage === "calculator"
-                  ? "Calculators"
-                  : activePage === "settings"
-                  ? "Settings"
-                  : "Dashboard"}
+                            : activePage === "articles"
+                              ? "Articles & Reports"
+                              : activePage === "purchase"
+                                ? "Purchase History"
+                                : activePage === "notifications"
+                                  ? "Notifications"
+                                  : activePage === "charts"
+                                    ? "Market Charts"
+                                    : activePage === "calculator"
+                                      ? "Calculators"
+                                      : activePage === "settings"
+                                        ? "Settings"
+                                        : "Dashboard"}
 
               </h1>
 
@@ -3509,9 +3564,9 @@ if (!membershipLoaded) {
             <button
               type="button"
               className="member-header-button wd-mobile-header-action wd-mobile-notification-action"
-          onClick={() => {
-            openPage("notifications");
-          }}
+              onClick={() => {
+                openPage("notifications");
+              }}
             >
 
               🔔 Notifications
@@ -3584,52 +3639,52 @@ if (!membershipLoaded) {
         ================================================= */}
 
         <div className="wd-content">
- {/* NOTIFICATION PERMISSION */}
+          {/* NOTIFICATION PERMISSION */}
 
-  {(notificationStatus === "not-enabled" || notificationStatus === "error") && (
-    <div className="notification-banner">
-      <div className="notification-banner-content">
-        <div>
-          <strong>
-            {notificationStatus === "error"
-              ? "🔔 Notifications are not working on this device yet"
-              : "🔔 Stay updated with Wealthoria"}
-          </strong>
-          <p>
-            {notificationStatus === "error"
-              ? notificationError
-              : "Enable notifications to receive important updates, webinar reminders and new content. Do this once on each phone and computer you use."}
-          </p>
-        </div>
+          {(notificationStatus === "not-enabled" || notificationStatus === "error") && (
+            <div className="notification-banner">
+              <div className="notification-banner-content">
+                <div>
+                  <strong>
+                    {notificationStatus === "error"
+                      ? "🔔 Notifications are not working on this device yet"
+                      : "🔔 Stay updated with Wealthoria"}
+                  </strong>
+                  <p>
+                    {notificationStatus === "error"
+                      ? notificationError
+                      : "Enable notifications to receive important updates, webinar reminders and new content. Do this once on each phone and computer you use."}
+                  </p>
+                </div>
 
-        <button
-          type="button"
-          disabled={enablingNotifications}
-          onClick={handleEnableNotifications}
-        >
-          {enablingNotifications
-            ? "Enabling..."
-            : notificationStatus === "error"
-              ? "Try Again"
-              : "Enable Notifications"}
-        </button>
-      </div>
-    </div>
-  )}
+                <button
+                  type="button"
+                  disabled={enablingNotifications}
+                  onClick={handleEnableNotifications}
+                >
+                  {enablingNotifications
+                    ? "Enabling..."
+                    : notificationStatus === "error"
+                      ? "Try Again"
+                      : "Enable Notifications"}
+                </button>
+              </div>
+            </div>
+          )}
 
-  {notificationStatus === "unsupported" && isIosDevice && (
-    <div className="notification-blocked">
-      📱 To get Wealthoria notifications on iPhone: tap Share, then
-      "Add to Home Screen", open Wealthoria from that icon, log in and
-      tap Enable Notifications.
-    </div>
-  )}
+          {notificationStatus === "unsupported" && isIosDevice && (
+            <div className="notification-blocked">
+              📱 To get Wealthoria notifications on iPhone: tap Share, then
+              "Add to Home Screen", open Wealthoria from that icon, log in and
+              tap Enable Notifications.
+            </div>
+          )}
 
-  {notificationStatus === "blocked" && (
-    <div className="notification-blocked">
-      🔕 Notifications are blocked. Please enable them in your browser/device settings.
-    </div>
-  )}
+          {notificationStatus === "blocked" && (
+            <div className="notification-blocked">
+              🔕 Notifications are blocked. Please enable them in your browser/device settings.
+            </div>
+          )}
 
           {/* SETTINGS */}
 
@@ -3648,7 +3703,7 @@ if (!membershipLoaded) {
             )
 
 
-                  ) : activePage === "courses" ? (
+          ) : activePage === "courses" ? (
 
             CourseVideos ? (
 
@@ -3706,533 +3761,55 @@ if (!membershipLoaded) {
             )
 
 
-          ) 
+          )
 
-: activePage === "ratio" ? (
+            : activePage === "ratio" ? (
 
-  RatioAnalysis ? (
+              RatioAnalysis ? (
 
-    <RatioAnalysis />
+                <RatioAnalysis />
 
-  ) : (
+              ) : (
 
-    <div className="wd-page-state">
-      Ratio Analysis is loading...
-    </div>
+                <div className="wd-page-state">
+                  Ratio Analysis is loading...
+                </div>
 
-  )
-
-)
-
-
-           : activePage === "articles" ? (
-
-  MemberArticles ? (
-
-    <MemberArticles />
-
-  ) : (
-
-    <div className="wd-page-state">
-      Articles & Reports are loading...
-    </div>
-
-  )
-
-) : activePage === "purchase" ? (
-
-            PurchaseHistory ? (
-
-              <PurchaseHistory />
-
-            ) : (
-
-              <div className="wd-page-state">
-                Purchase History is loading...
-              </div>
+              )
 
             )
 
 
-          ) : activePage === "notifications" ? (
+              : activePage === "articles" ? (
 
-            <section className="wd-panel">
+                MemberArticles ? (
 
+                  <MemberArticles />
 
-              <div className="wd-panel-head">
+                ) : (
 
-                <div>
-
-                  <span className="wd-panel-label">
-                    ACCOUNT
-                  </span>
-
-                  <h3>
-                    Notifications
-                  </h3>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  className="wd-view-button"
-                  onClick={() =>
-                    openPage("dashboard")
-                  }
-                >
-                  ← Dashboard
-                </button>
-
-              </div>
-
-
-              <MemberNotificationsPage
-                member={member}
-                onOpenLink={(url) => {
-                  const page = queueNotificationLink(url);
-
-                  if (page) {
-                    openPage(page);
-                  } else if (url) {
-                    window.location.href = url;
-                  }
-                }}
-                onNotificationsRead={() => {
-
-                  setUnreadNotifications(
-                    0
-                  );
-
-
-                  setNotificationSlides(
-                    []
-                  );
-
-
-                  setStats(
-                    current => ({
-
-                      ...current,
-
-                      notifications:
-                        0
-
-                    })
-                  );
-
-                }}
-              />
-
-
-            </section>
-
-
-          ) : activePage === "calculator" ? (
-
-            <section className="wd-calculator-page">
-
-
-              <button
-                type="button"
-                className="wd-calculator-close"
-                onClick={() =>
-                  openPage("dashboard")
-                }
-              >
-                ×
-              </button>
-
-
-              <iframe
-                src="/Fundamental_Analysis_Lab.html"
-                title="Wealthoria Fundamental Analysis Lab"
-                className="wd-calculator-frame"
-                allow="fullscreen"
-              />
-
-
-            </section>
-
-
-          ) : (
-
-
-            /* =================================================
-               DASHBOARD HOME
-            ================================================= */
-
-            <>
-
-{/* MEMBERSHIP STATUS */}
-
-{(() => {
-
-  const subscriptionStatus =
-    String(
-      member?.subscription?.status || ""
-    ).toLowerCase();
-
-  const isCancelled =
-    ["cancelled", "canceled", "halted"].includes(
-      subscriptionStatus
-    );
-
-  // Show membership panel only when:
-  // 1. Subscription is cancelled
-  // 2. Only 1 day is remaining
-  // 3. Membership has expired
-const showMembershipPanel =
-  isCancelled || membershipDays <= 1;
-  if (!showMembershipPanel) {
-    return null;
-  }
-
-  return (
-    <section className="wd-panel membership-status-panel">
-
-      <div className="wd-panel-head">
-
-        <div>
-
-          <span className="wd-panel-label">
-            MEMBERSHIP
-          </span>
-
-          <h3>
-            {membershipDays <= 0
-              ? "Membership Expired"
-              : isCancelled
-              ? "Membership: Cancelled"
-              : "Membership Expiring Soon"}
-          </h3>
-
-          <p>
-            {membershipDays <= 0
-              ? "Your Wealthoria membership has expired."
-              : isCancelled
-              ? `You still have access until ${getDashboardDate(
-                  member?.subscription?.paidUntil ||
-                  member?.subscription?.accessUntil ||
-                  member?.paidUntil ||
-                  member?.accessUntil
-                )}`
-              : "Your membership is ending soon."}
-          </p>
-
-        </div>
-{membershipDays === 1 && (
-  <button
-    type="button"
-    onClick={activateSubscription}
-    disabled={activationLoading}
-  >
-    {activationLoading
-      ? "Opening Payment..."
-      : "Activate Subscription"}
-  </button>
-)}
-
-      </div>
-
-    </section>
-  );
-
-})()}
-
-              {/* WELCOME */}
-
-              <section className="wd-welcome">
-
-                <span>
-                  WELCOME BACK
-                </span>
-
-
-                <h2>
-                  {getGreeting()}, {name} 👋
-                </h2>
-
-
-                <p>
-                  Stay informed, keep learning,
-                  and make smarter financial
-                  decisions with Wealthoria.
-                </p>
-
-              </section>
-
-
-              {/* STATS */}
-
-              <section className="wd-stats">
-
-
-                <div className="wd-stat-card">
-
-                  <div className="wd-stat-icon">
-                    ◈
+                  <div className="wd-page-state">
+                    Articles & Reports are loading...
                   </div>
 
+                )
 
-                  <div>
+              ) : activePage === "purchase" ? (
 
-                    <span>
-                      Total Content
-                    </span>
+                PurchaseHistory ? (
 
+                  <PurchaseHistory />
 
-                    <strong>
-                      {statsLoading
-                        ? "—"
-                        : stats.totalContent}
-                    </strong>
+                ) : (
 
-
-                    <small>
-                      Published resources
-                    </small>
-
+                  <div className="wd-page-state">
+                    Purchase History is loading...
                   </div>
 
-                </div>
+                )
 
 
-                <div className="wd-stat-card">
-
-                  <div className="wd-stat-icon">
-                    ▶
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      Courses
-                    </span>
-
-
-                    <strong>
-                      {statsLoading
-                        ? "—"
-                        : stats.courses}
-                    </strong>
-
-
-                    <small>
-                      Published courses
-                    </small>
-
-                  </div>
-
-                </div>
-
-
-              
-
-<div className="wd-stat-card">
-  <div className="wd-stat-icon">
-    ◒
-  </div>
-
-  <div>
-    <span>Weekly Roundups</span>
-
-    <strong>
-      {statsLoading
-        ? "—"
-        : stats.marketReports}
-    </strong>
-
-    <small>
-      Published weekly reports
-    </small>
-  </div>
-</div>
-
-              
-
-
-                <div className="wd-stat-card">
-
-                  <div className="wd-stat-icon">
-                    ♢
-                  </div>
-
-
-                  <div>
-
-                    <span>
-                      Notifications
-                    </span>
-
-
-                    <strong>
-                      {statsLoading
-                        ? "—"
-                        : unreadNotifications}
-                    </strong>
-
-
-                    <small>
-                      Unread notifications
-                    </small>
-
-                  </div>
-
-                </div>
-
-
-              </section>
-
-
-              {/* OVERVIEW CHARTS */}
-
-              {/* BOOK PROMO */}
-
-              {DashboardBookPromo && (
-                <DashboardBookPromo />
-              )}
-
-
-              {/* LATEST CONTENT */}
-
-              <section className="wd-feature-grid">
-
-                {DashboardLatestContent && (
-<DashboardLatestContent
-  member={member}
-  onOpen={(category) => {
-
-                      if (
-                        category ===
-                        "Articles & Reports"
-                      ) {
-
-                        openPage(
-                          "articles"
-                        );
-
-                      } else if (
-                        (category === "Videos" || category === "Vedios")
-                      ) {
-
-                        openPage(
-                          "videos"
-                        );
-
-                      } else if (
-                        category === "Newsletter"
-                      ) {
-
-                        openPage(
-                          "newsletter"
-                        );
-
-                      } else if (
-                        category === "Weekly Roundup"
-                      ) {
-
-                        openPage(
-                          "weekly"
-                        );
-
-                      } else if (
-                        category === "Courses"
-                      ) {
-
-                        openPage(
-                          "courses"
-                        );
-
-                      }
-
-                    }}
-                  />
-
-                )}
-
-              </section>
-
-
-              {/* LOWER ROW */}
-
-              <section className="wd-two-column">
-
-
-                {/* COURSES */}
-
-                <section className="wd-panel">
-
-
-                  <div className="wd-panel-head">
-
-                    <div>
-
-                      <span className="wd-panel-label">
-                        LEARNING
-                      </span>
-
-
-                      <h3>
-                        Continue Learning
-                      </h3>
-
-                    </div>
-
-
-                    <button
-                      type="button"
-                      className="wd-view-button"
-                      onClick={() =>
-                        openPage("courses")
-                      }
-                    >
-                      View all →
-                    </button>
-
-                  </div>
-
-
-                  <button
-                    type="button"
-                    className="wd-action-card"
-                    onClick={() =>
-                      openPage("courses")
-                    }
-                  >
-
-                    <div className="wd-action-icon">
-                      ▶
-                    </div>
-
-
-                    <div>
-
-                      <strong>
-                        Explore Courses
-                      </strong>
-
-
-                      <span>
-                        {stats.courses} published
-                        courses available
-                      </span>
-
-                    </div>
-
-
-                    <b>
-                      →
-                    </b>
-
-                  </button>
-
-
-                </section>
-
-
-                {/* PURCHASE HISTORY */}
+              ) : activePage === "notifications" ? (
 
                 <section className="wd-panel">
 
@@ -4245,9 +3822,8 @@ const showMembershipPanel =
                         ACCOUNT
                       </span>
 
-
                       <h3>
-                        Purchase History
+                        Notifications
                       </h3>
 
                     </div>
@@ -4257,320 +3833,886 @@ const showMembershipPanel =
                       type="button"
                       className="wd-view-button"
                       onClick={() =>
-                        openPage("purchase")
+                        openPage("dashboard")
                       }
                     >
-                      View all →
+                      ← Dashboard
                     </button>
 
                   </div>
 
 
-                  <button
-                    type="button"
-                    className="wd-action-card"
-                    onClick={() =>
-                      openPage("purchase")
-                    }
-                  >
+                  <MemberNotificationsPage
+                    member={member}
+                    onOpenLink={(url) => {
+                      const page = queueNotificationLink(url);
 
-                    <div className="wd-action-icon">
-                      ₹
-                    </div>
+                      if (page) {
+                        openPage(page);
+                      } else if (url) {
+                        window.location.href = url;
+                      }
+                    }}
+                    onNotificationsRead={() => {
 
-
-                    <div>
-
-                      <strong>
-                        Your Purchases
-                      </strong>
+                      setUnreadNotifications(
+                        0
+                      );
 
 
-                      <span>
-                        {stats.purchases} course
-                        {stats.purchases === 1
-                          ? ""
-                          : "s"} purchased
-                      </span>
-
-                    </div>
+                      setNotificationSlides(
+                        []
+                      );
 
 
-                    <b>
-                      →
-                    </b>
+                      setStats(
+                        current => ({
 
-                  </button>
+                          ...current,
+
+                          notifications:
+                            0
+
+                        })
+                      );
+
+                    }}
+                  />
 
 
                 </section>
 
 
-              </section>
+              ) : activePage === "calculator" ? (
+
+                hasPaidMemberAccess(member) ? (
+
+                  <section className="wd-calculator-page">
 
 
-              {/* QUICK ACCESS */}
-
-              <section className="wd-panel">
-
-
-                <div className="wd-panel-head">
-
-                  <div>
-
-                    <span className="wd-panel-label">
-                      QUICK ACCESS
-                    </span>
+                    <button
+                      type="button"
+                      className="wd-calculator-close"
+                      onClick={() =>
+                        openPage("dashboard")
+                      }
+                    >
+                      ×
+                    </button>
 
 
-                    <h3>
-                      Explore Wealthoria
-                    </h3>
-                  
-
-                  </div>
-
-                </div>
+                    <iframe
+                      src="/Fundamental_Analysis_Lab.html"
+                      title="Wealthoria Fundamental Analysis Lab"
+                      className="wd-calculator-frame"
+                      allow="fullscreen"
+                    />
 
 
-                <div className="wd-quick-grid">
+                  </section>
 
+                ) : (
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openPage("newsletter")
-                    }
+                  <section
+                    className="wd-calculator-page"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "32px 20px"
+                    }}
                   >
+                    <div
+                      style={{
+                        maxWidth: 460,
+                        width: "100%",
+                        padding: 28,
+                        borderRadius: 14,
+                        border: "1px solid var(--hair, #e5e7eb)",
+                        background: "var(--surface, #ffffff)",
+                        textAlign: "center"
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          color: "#e8473f",
+                          marginBottom: 8
+                        }}
+                      >
+                        Paid Members Only
+                      </span>
+
+                      <h2 style={{ margin: "0 0 10px", fontSize: 22 }}>
+                        Fundamental Analysis Lab
+                      </h2>
+
+                      <p style={{ margin: "0 0 20px", fontSize: 14, opacity: 0.78, lineHeight: 1.55 }}>
+                        Access to all 44 investing and valuation calculators is reserved strictly for members with an active paid subscription.
+                      </p>
+
+                      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                        <a
+                          href="/members/subscription"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "10px 18px",
+                            borderRadius: 8,
+                            background: "#e8473f",
+                            color: "#ffffff",
+                            fontWeight: 700,
+                            fontSize: 14,
+                            textDecoration: "none"
+                          }}
+                        >
+                          Activate Membership (₹99/mo)
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => openPage("dashboard")}
+                          style={{
+                            padding: "10px 16px",
+                            borderRadius: 8,
+                            border: "1px solid var(--hair, #d1d5db)",
+                            background: "transparent",
+                            color: "inherit",
+                            fontWeight: 600,
+                            fontSize: 14,
+                            cursor: "pointer"
+                          }}
+                        >
+                          Back to Dashboard
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+
+                )
+
+
+              ) : (
+
+
+                /* =================================================
+                   DASHBOARD HOME
+                ================================================= */
+
+                <>
+
+                  {/* MEMBERSHIP STATUS */}
+
+                  {(() => {
+
+                    const subscriptionStatus =
+                      String(
+                        member?.subscription?.status || ""
+                      ).toLowerCase();
+
+                    const isCancelled =
+                      ["cancelled", "canceled", "halted"].includes(
+                        subscriptionStatus
+                      );
+
+                    // Show membership panel only when:
+                    // 1. Subscription is cancelled
+                    // 2. Only 1 day is remaining
+                    // 3. Membership has expired
+                    const showMembershipPanel =
+                      isCancelled || membershipDays <= 1;
+                    if (!showMembershipPanel) {
+                      return null;
+                    }
+
+                    return (
+                      <section className="wd-panel membership-status-panel">
+
+                        <div className="wd-panel-head">
+
+                          <div>
+
+                            <span className="wd-panel-label">
+                              MEMBERSHIP
+                            </span>
+
+                            <h3>
+                              {membershipDays <= 0
+                                ? "Membership Expired"
+                                : isCancelled
+                                  ? "Membership: Cancelled"
+                                  : "Membership Expiring Soon"}
+                            </h3>
+
+                            <p>
+                              {membershipDays <= 0
+                                ? "Your Wealthoria membership has expired."
+                                : isCancelled
+                                  ? `You still have access until ${getDashboardDate(
+                                    member?.subscription?.paidUntil ||
+                                    member?.subscription?.accessUntil ||
+                                    member?.paidUntil ||
+                                    member?.accessUntil
+                                  )}`
+                                  : "Your membership is ending soon."}
+                            </p>
+
+                          </div>
+                          {membershipDays === 1 && (
+                            <button
+                              type="button"
+                              onClick={activateSubscription}
+                              disabled={activationLoading}
+                            >
+                              {activationLoading
+                                ? "Opening Payment..."
+                                : "Activate Subscription"}
+                            </button>
+                          )}
+
+                        </div>
+
+                      </section>
+                    );
+
+                  })()}
+
+                  {/* WELCOME */}
+
+                  <section className="wd-welcome">
 
                     <span>
-                      ✉
+                      WELCOME BACK
                     </span>
 
 
-                    <div>
-
-                      <strong>
-                        Newsletter
-                      </strong>
+                    <h2>
+                      {getGreeting()}, {name} 👋
+                    </h2>
 
 
-                      <small>
-                        Latest insights
-                      </small>
+                    <p>
+                      Stay informed, keep learning,
+                      and make smarter financial
+                      decisions with Wealthoria.
+                    </p>
+
+                  </section>
+
+
+                  {/* STATS */}
+
+                  <section className="wd-stats">
+
+
+                    <div className="wd-stat-card">
+
+                      <div className="wd-stat-icon">
+                        ◈
+                      </div>
+
+
+                      <div>
+
+                        <span>
+                          Total Content
+                        </span>
+
+
+                        <strong>
+                          {statsLoading
+                            ? "—"
+                            : stats.totalContent}
+                        </strong>
+
+
+                        <small>
+                          Published resources
+                        </small>
+
+                      </div>
 
                     </div>
 
 
-                    <b>
-                      →
-                    </b>
+                    <div className="wd-stat-card">
 
-                  </button>
-
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openPage("weekly")
-                    }
-                  >
-
-                    <span>
-                      ↗
-                    </span>
+                      <div className="wd-stat-icon">
+                        ▶
+                      </div>
 
 
-                    <div>
+                      <div>
 
-                      <strong>
-                        Weekly Roundup
-                      </strong>
+                        <span>
+                          Courses
+                        </span>
 
 
-                      <small>
-                        Market reports
-                      </small>
+                        <strong>
+                          {statsLoading
+                            ? "—"
+                            : stats.courses}
+                        </strong>
+
+
+                        <small>
+                          Published courses
+                        </small>
+
+                      </div>
 
                     </div>
 
 
-                    <b>
-                      →
-                    </b>
-
-                  </button>
 
 
+                    <div className="wd-stat-card">
+                      <div className="wd-stat-icon">
+                        ◒
+                      </div>
+
+                      <div>
+                        <span>Weekly Roundups</span>
+
+                        <strong>
+                          {statsLoading
+                            ? "—"
+                            : stats.marketReports}
+                        </strong>
+
+                        <small>
+                          Published weekly reports
+                        </small>
+                      </div>
+                    </div>
 
 
-                  <button
-  type="button"
-  className={
-    activePage === "articles"
-      ? "wd-nav-item active"
-      : "wd-nav-item"
-  }
-  onClick={() =>
-    openPage("articles")
-  }
->
-
-  <span>
-    ◈
-  </span>
-
-  <b>
-    Articles & Reports
-  </b>
-
-</button>
 
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openPage("videos")
-                    }
-                  >
+                    <div className="wd-stat-card">
 
-                    <span>
-                      ▶
-                    </span>
+                      <div className="wd-stat-icon">
+                        ♢
+                      </div>
 
 
-                    <div>
+                      <div>
 
-                      <strong>
-                        Videos
-                      </strong>
+                        <span>
+                          Notifications
+                        </span>
 
 
-                      <small>
-                        Watch & learn
-                      </small>
+                        <strong>
+                          {statsLoading
+                            ? "—"
+                            : unreadNotifications}
+                        </strong>
+
+
+                        <small>
+                          Unread notifications
+                        </small>
+
+                      </div>
 
                     </div>
 
 
-                    <b>
-                      →
-                    </b>
-
-                  </button>
+                  </section>
 
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openPage("articles")
-                    }
-                  >
+                  {/* OVERVIEW CHARTS */}
 
-                    <span>
-                      ◈
-                    </span>
+                  {/* BOOK PROMO */}
+
+                  {DashboardBookPromo && (
+                    <DashboardBookPromo />
+                  )}
 
 
-                    <div>
+                  {/* LATEST CONTENT */}
 
-                      <strong>
-                        Articles & Reports
-                      </strong>
+                  <section className="wd-feature-grid">
+
+                    {DashboardLatestContent && (
+                      <DashboardLatestContent
+                        member={member}
+                        onOpen={(category) => {
+
+                          if (
+                            category ===
+                            "Articles & Reports"
+                          ) {
+
+                            openPage(
+                              "articles"
+                            );
+
+                          } else if (
+                            (category === "Videos" || category === "Vedios")
+                          ) {
+
+                            openPage(
+                              "videos"
+                            );
+
+                          } else if (
+                            category === "Newsletter"
+                          ) {
+
+                            openPage(
+                              "newsletter"
+                            );
+
+                          } else if (
+                            category === "Weekly Roundup"
+                          ) {
+
+                            openPage(
+                              "weekly"
+                            );
+
+                          } else if (
+                            category === "Courses"
+                          ) {
+
+                            openPage(
+                              "courses"
+                            );
+
+                          }
+
+                        }}
+                      />
+
+                    )}
+
+                  </section>
 
 
-                      <small>
-                        Research & insights
-                      </small>
+                  {/* LOWER ROW */}
+
+                  <section className="wd-two-column">
+
+
+                    {/* COURSES */}
+
+                    <section className="wd-panel">
+
+
+                      <div className="wd-panel-head">
+
+                        <div>
+
+                          <span className="wd-panel-label">
+                            LEARNING
+                          </span>
+
+
+                          <h3>
+                            Continue Learning
+                          </h3>
+
+                        </div>
+
+
+                        <button
+                          type="button"
+                          className="wd-view-button"
+                          onClick={() =>
+                            openPage("courses")
+                          }
+                        >
+                          View all →
+                        </button>
+
+                      </div>
+
+
+                      <button
+                        type="button"
+                        className="wd-action-card"
+                        onClick={() =>
+                          openPage("courses")
+                        }
+                      >
+
+                        <div className="wd-action-icon">
+                          ▶
+                        </div>
+
+
+                        <div>
+
+                          <strong>
+                            Explore Courses
+                          </strong>
+
+
+                          <span>
+                            {stats.courses} published
+                            courses available
+                          </span>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+                    </section>
+
+
+                    {/* PURCHASE HISTORY */}
+
+                    <section className="wd-panel">
+
+
+                      <div className="wd-panel-head">
+
+                        <div>
+
+                          <span className="wd-panel-label">
+                            ACCOUNT
+                          </span>
+
+
+                          <h3>
+                            Purchase History
+                          </h3>
+
+                        </div>
+
+
+                        <button
+                          type="button"
+                          className="wd-view-button"
+                          onClick={() =>
+                            openPage("purchase")
+                          }
+                        >
+                          View all →
+                        </button>
+
+                      </div>
+
+
+                      <button
+                        type="button"
+                        className="wd-action-card"
+                        onClick={() =>
+                          openPage("purchase")
+                        }
+                      >
+
+                        <div className="wd-action-icon">
+                          ₹
+                        </div>
+
+
+                        <div>
+
+                          <strong>
+                            Your Purchases
+                          </strong>
+
+
+                          <span>
+                            {stats.purchases} course
+                            {stats.purchases === 1
+                              ? ""
+                              : "s"} purchased
+                          </span>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+                    </section>
+
+
+                  </section>
+
+
+                  {/* QUICK ACCESS */}
+
+                  <section className="wd-panel">
+
+
+                    <div className="wd-panel-head">
+
+                      <div>
+
+                        <span className="wd-panel-label">
+                          QUICK ACCESS
+                        </span>
+
+
+                        <h3>
+                          Explore Wealthoria
+                        </h3>
+
+
+                      </div>
 
                     </div>
 
 
-                    <b>
-                      →
-                    </b>
-
-                  </button>
+                    <div className="wd-quick-grid">
 
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openPage("courses")
-                    }
-                  >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPage("newsletter")
+                        }
+                      >
 
-                    <span>
-                      ▶
-                    </span>
-
-
-                    <div>
-
-                      <strong>
-                        Courses
-                      </strong>
+                        <span>
+                          ✉
+                        </span>
 
 
-                      <small>
-                        Learn & grow
-                      </small>
+                        <div>
+
+                          <strong>
+                            Newsletter
+                          </strong>
+
+
+                          <small>
+                            Latest insights
+                          </small>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPage("weekly")
+                        }
+                      >
+
+                        <span>
+                          ↗
+                        </span>
+
+
+                        <div>
+
+                          <strong>
+                            Weekly Roundup
+                          </strong>
+
+
+                          <small>
+                            Market reports
+                          </small>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+
+
+                      <button
+                        type="button"
+                        className={
+                          activePage === "articles"
+                            ? "wd-nav-item active"
+                            : "wd-nav-item"
+                        }
+                        onClick={() =>
+                          openPage("articles")
+                        }
+                      >
+
+                        <span>
+                          ◈
+                        </span>
+
+                        <b>
+                          Articles & Reports
+                        </b>
+
+                      </button>
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPage("videos")
+                        }
+                      >
+
+                        <span>
+                          ▶
+                        </span>
+
+
+                        <div>
+
+                          <strong>
+                            Videos
+                          </strong>
+
+
+                          <small>
+                            Watch & learn
+                          </small>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPage("articles")
+                        }
+                      >
+
+                        <span>
+                          ◈
+                        </span>
+
+
+                        <div>
+
+                          <strong>
+                            Articles & Reports
+                          </strong>
+
+
+                          <small>
+                            Research & insights
+                          </small>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPage("courses")
+                        }
+                      >
+
+                        <span>
+                          ▶
+                        </span>
+
+
+                        <div>
+
+                          <strong>
+                            Courses
+                          </strong>
+
+
+                          <small>
+                            Learn & grow
+                          </small>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openPage("purchase")
+                        }
+                      >
+
+                        <span>
+                          ▣
+                        </span>
+
+
+                        <div>
+
+                          <strong>
+                            Purchases
+                          </strong>
+
+
+                          <small>
+                            Payment history
+                          </small>
+
+                        </div>
+
+
+                        <b>
+                          →
+                        </b>
+
+                      </button>
+
 
                     </div>
 
 
-                    <b>
-                      →
-                    </b>
-
-                  </button>
+                  </section>
 
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openPage("purchase")
-                    }
-                  >
+                </>
 
-                    <span>
-                      ▣
-                    </span>
-
-
-                    <div>
-
-                      <strong>
-                        Purchases
-                      </strong>
-
-
-                      <small>
-                        Payment history
-                      </small>
-
-                    </div>
-
-
-                    <b>
-                      →
-                    </b>
-
-                  </button>
-
-
-                </div>
-
-
-              </section>
-
-
-            </>
-
-          )}
+              )}
 
         </div>
- <footer className="wd-dashboard-footer">
+        <footer className="wd-dashboard-footer">
           <span>
             © 2026 Wealthoria Education Pvt. Ltd. All rights reserved.
           </span>

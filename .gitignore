@@ -4,3 +4,12 @@ dist/
 *.log
 .vite/
 interview-prep/
+*_dump.json
+*.csv
+*.xlsx
+*.zip
+*.cjs
+november_final_exact.json
+october_final_exact.json
+report_summary.json
+Wealthoria_*_Report*

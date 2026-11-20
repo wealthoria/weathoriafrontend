@@ -378,8 +378,20 @@ function resolve(path) {
   if (path === "/admin/enquiries") {
     return { name: "enquiries" };
   }
-  if (path === "/admin/prebook-orders") {
-    return { name: "prebook-orders" };
+  if (
+    path === "/admin/products/hoodikeya-vijnana" ||
+    path === "/admin/prebook-orders" ||
+    path === "/admin/products"
+  ) {
+    return { name: "hoodikeya-vijnana-orders" };
+  }
+
+  if (
+    path === "/admin/products/art-of-price" ||
+    path === "/admin/art-of-price-orders" ||
+    path === "/admin/the-art-of-price-orders"
+  ) {
+    return { name: "art-of-price-orders" };
   }
 
   if (path === "/admin/generate-label") {
@@ -422,6 +434,16 @@ function resolve(path) {
   }
 
 
+
+  if (
+    path === "/admin/upcoming-subscriptions" ||
+    path === "/admin/upcoming-renewals" ||
+    path === "/admin/upcoming"
+  ) {
+    return {
+      name: "upcoming-subscriptions"
+    };
+  }
 
   if (
     path === "/admin/unsubscribed-members" ||
@@ -862,24 +884,50 @@ function ProtectedRoute({
     }
 
 
-    case "prebook-orders": {
+    case "prebook-orders":
+    case "hoodikeya-vijnana-orders": {
       const AdminPrebookOrders =
         getAdmin("AdminPrebookOrders");
 
       return (
-        <AdminShell title="Pre-book Orders">
-
+        <AdminShell title="Hoodikeya Vijnana · Pre-book Orders">
           {AdminPrebookOrders ? (
-            <AdminPrebookOrders />
+            <AdminPrebookOrders
+              collectionName="bookOrders"
+              bookTitle="Hoodikeya Vijnana"
+              bookSubtitle="ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ"
+              defaultPrice={1499}
+              sku="HOODIKEYA-VIJNANA"
+            />
           ) : (
             <div className="page">
-              <h1>Pre-book Orders</h1>
-              <p>
-                Pre-book Orders page is not loaded.
-              </p>
+              <h1>Hoodikeya Vijnana · Pre-book Orders</h1>
+              <p>Pre-book Orders page is not loaded.</p>
             </div>
           )}
+        </AdminShell>
+      );
+    }
 
+    case "art-of-price-orders": {
+      const AdminPrebookOrders =
+        getAdmin("AdminPrebookOrders");
+
+      return (
+        <AdminShell title="The Art of Price · Pre-book Orders">
+          {AdminPrebookOrders ? (
+            <AdminPrebookOrders
+              collectionName="artOfPriceOrders"
+              bookTitle="The Art of Price"
+                            defaultPrice={999}
+              sku="THE-ART-OF-PRICE"
+            />
+          ) : (
+            <div className="page">
+              <h1>The Art of Price · Pre-book Orders</h1>
+              <p>The Art of Price Orders page is not loaded.</p>
+            </div>
+          )}
         </AdminShell>
       );
     }
@@ -1030,6 +1078,47 @@ function ProtectedRoute({
       );
     }
 
+
+    /* ---------------------------------------------------------------------
+       UPCOMING SUBSCRIPTIONS
+       --------------------------------------------------------------------- */
+
+    case "upcoming-subscriptions": {
+      const UpcomingScreen =
+        getAdmin("AdminUpcomingSubscriptions") ||
+        getAdmin("UpcomingSubscriptions");
+
+      if (!isAdmin) {
+        const AccessDenied = getAdmin("AccessDenied");
+        return (
+          <AdminShell title="Access Denied">
+            {AccessDenied ? (
+              <AccessDenied />
+            ) : (
+              <div className="page">
+                <h1>Access Denied</h1>
+              </div>
+            )}
+          </AdminShell>
+        );
+      }
+
+      if (UpcomingScreen) {
+        return (
+          <AdminShell title="Upcoming Subscriptions">
+            <UpcomingScreen />
+          </AdminShell>
+        );
+      }
+
+      return (
+        <AdminShell title="Upcoming Subscriptions">
+          <div className="psplash2">
+            <div className="spinner2" />
+          </div>
+        </AdminShell>
+      );
+    }
 
     /* ---------------------------------------------------------------------
        UNSUBSCRIBED MEMBERS & LEADS

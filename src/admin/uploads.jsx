@@ -1,6 +1,11 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import AdminVideoCommentsModal from "./AdminVideoCommentsModal.jsx";
+import {
+  findInternalExcerptMarkers,
+  validatePublishExcerpt
+} from "./excerptGuard.js";
+import { optimizeThumbnailToWebP } from "../utils/optimizeThumbnail.js";
 
 /* =========================================================================
    WEALTHORIA ADMIN — UPLOADS
@@ -44,6 +49,9 @@ const {
 
 const {
   MIcon,
+  StatusPill,
+  ExcerptSocialFields,
+  ExcerptPublishError,
   useMToast,
   useConfirm
 } = window;
@@ -434,6 +442,16 @@ function VideoModal({
   ] = useState("");
 
   const [
+    socialCaption,
+    setSocialCaption
+  ] = useState("");
+
+  const [
+    publishError,
+    setPublishError
+  ] = useState("");
+
+  const [
     category,
     setCategory
   ] = useState("Videos");
@@ -504,7 +522,7 @@ function VideoModal({
      ======================================================= */
 
   const chooseThumbnail =
-    (event) => {
+    async (event) => {
       const file =
         event.target.files?.[0];
 
@@ -543,6 +561,8 @@ function VideoModal({
         return;
       }
 
+      const optimized = await optimizeThumbnailToWebP(file);
+
       if (thumbnailPreview) {
         URL.revokeObjectURL(
           thumbnailPreview
@@ -550,12 +570,12 @@ function VideoModal({
       }
 
       setThumbnailFile(
-        file
+        optimized
       );
 
       setThumbnailPreview(
         URL.createObjectURL(
-          file
+          optimized
         )
       );
     };
@@ -589,6 +609,23 @@ function VideoModal({
 
       return;
     }
+
+    const publishCheck =
+      validatePublishExcerpt(
+        status,
+        cleanDescription
+      );
+
+    if (!publishCheck.ok) {
+      setPublishError(
+        publishCheck.message
+      );
+
+      return;
+    }
+
+    setPublishError("");
+
 onSave({
       type: "video",
 
@@ -597,6 +634,9 @@ onSave({
 
       description:
         cleanDescription,
+
+      socialCaption:
+        socialCaption.trim(),
 
       category,
 
@@ -733,25 +773,19 @@ onSave({
 
 
         {/* =================================================
-            DESCRIPTION
+            DESCRIPTION & SOCIAL CAPTION
         ================================================= */}
 
-        <div className="field">
-          <label>
-            Description
-          </label>
-
-          <textarea
-            className="textarea"
-            value={description}
-            onChange={(event) =>
-              setDescription(
-                event.target.value
-              )
-            }
-            placeholder="Short description"
-          />
-        </div>
+        <ExcerptSocialFields
+          description={description}
+          onDescriptionChange={(val) => {
+            setDescription(val);
+            setPublishError("");
+          }}
+          socialCaption={socialCaption}
+          onSocialCaptionChange={setSocialCaption}
+          descriptionPlaceholder="Short description shown to members"
+        />
 
 
         {/* =================================================
@@ -1007,11 +1041,12 @@ onSave({
           <select
             className="select"
             value={status}
-            onChange={(event) =>
+            onChange={(event) => {
               setStatus(
                 event.target.value
-              )
-            }
+              );
+              setPublishError("");
+            }}
           >
             <option value="published">
               Published
@@ -1019,6 +1054,10 @@ onSave({
 
             <option value="draft">
               Draft
+            </option>
+
+            <option value="under_review">
+              Under Review
             </option>
           </select>
         </div>
@@ -1055,6 +1094,9 @@ onSave({
             Firestore.
           </div>
         </div>
+
+
+        <ExcerptPublishError error={publishError} />
 
 
         {/* =================================================
@@ -1120,6 +1162,19 @@ function EditContentModal({
     asset.description ||
     ""
   );
+
+  const [
+    socialCaption,
+    setSocialCaption
+  ] = useState(
+    asset.socialCaption ||
+    ""
+  );
+
+  const [
+    publishError,
+    setPublishError
+  ] = useState("");
 
   const [
     category,
@@ -1265,7 +1320,7 @@ function EditContentModal({
      THUMBNAIL
      ======================================================= */
 
-  const chooseThumbnail = (
+  const chooseThumbnail = async (
     event
   ) => {
     const file =
@@ -1307,12 +1362,14 @@ function EditContentModal({
       return;
     }
 
+    const optimized = await optimizeThumbnailToWebP(file);
+
     setThumbnailFile(
-      file
+      optimized
     );
 
     setThumbnailName(
-      file.name
+      optimized.name
     );
   };
 
@@ -1343,6 +1400,23 @@ function EditContentModal({
 
       return;
     }
+
+    const publishCheck =
+      validatePublishExcerpt(
+        status,
+        cleanDescription
+      );
+
+    if (!publishCheck.ok) {
+      setPublishError(
+        publishCheck.message
+      );
+
+      return;
+    }
+
+    setPublishError("");
+
 if (isVideo) {
 
       const cleanVideoUrl =
@@ -1361,6 +1435,9 @@ onSave({
 
         description:
           cleanDescription,
+
+        socialCaption:
+          socialCaption.trim(),
 
         category,
 
@@ -1404,6 +1481,9 @@ onSave({
 
       description:
         cleanDescription,
+
+      socialCaption:
+        socialCaption.trim(),
 
       category,
 
@@ -1534,24 +1614,18 @@ onSave({
         </div>
 
 
-        {/* DESCRIPTION */}
+        {/* DESCRIPTION & SOCIAL CAPTION */}
 
-        <div className="field">
-          <label>
-            Description
-          </label>
-
-          <textarea
-            className="textarea"
-            value={description}
-            onChange={(event) =>
-              setDescription(
-                event.target.value
-              )
-            }
-            placeholder="Short description"
-          />
-        </div>
+        <ExcerptSocialFields
+          description={description}
+          onDescriptionChange={(val) => {
+            setDescription(val);
+            setPublishError("");
+          }}
+          socialCaption={socialCaption}
+          onSocialCaptionChange={setSocialCaption}
+          descriptionPlaceholder="Short description shown to members"
+        />
 
 
         {/* VIDEO INFORMATION */}
@@ -1725,11 +1799,12 @@ onSave({
             value={
               status
             }
-            onChange={(event) =>
+            onChange={(event) => {
               setStatus(
                 event.target.value
-              )
-            }
+              );
+              setPublishError("");
+            }}
           >
 
             <option value="published">
@@ -1738,6 +1813,10 @@ onSave({
 
             <option value="draft">
               Draft
+            </option>
+
+            <option value="under_review">
+              Under Review
             </option>
 
           </select>
@@ -1847,6 +1926,9 @@ onSave({
           </button>
 
         </div>
+
+
+        <ExcerptPublishError error={publishError} />
 
 
         {/* ACTIONS */}
@@ -2043,6 +2125,24 @@ function UploadsScreen() {
     type,
     setType
   ] = useState("all");
+
+
+  const [
+    statusFilter,
+    setStatusFilter
+  ] = useState("all");
+
+
+  const [
+    searchQuery,
+    setSearchQuery
+  ] = useState("");
+
+
+  const [
+    onlyFlaggedNotes,
+    setOnlyFlaggedNotes
+  ] = useState(false);
 
 
   const [
@@ -2369,6 +2469,19 @@ function UploadsScreen() {
     );
 
 
+  const flaggedAssetsCount =
+    useMemo(
+      () =>
+        scoped.filter(
+          (item) =>
+            findInternalExcerptMarkers(
+              item.description
+            ).length > 0
+        ).length,
+      [scoped]
+    );
+
+
   /* =======================================================
      FILTER
      ======================================================= */
@@ -2376,6 +2489,12 @@ function UploadsScreen() {
   const filtered =
     useMemo(
       () => {
+
+        const needle =
+          searchQuery
+            .trim()
+            .toLowerCase();
+
 
         let rows =
           scoped.filter(
@@ -2400,9 +2519,51 @@ function UploadsScreen() {
                   type;
 
 
+              const statusMatch =
+                statusFilter ===
+                  "all" ||
+                (
+                  item.status ||
+                  "published"
+                ) ===
+                  statusFilter;
+
+
+              const flaggedMatch =
+                !onlyFlaggedNotes ||
+                findInternalExcerptMarkers(
+                  item.description
+                ).length > 0;
+
+
+              const queryMatch =
+                !needle ||
+                [
+                  item.title,
+                  item.name,
+                  item.description,
+                  item.socialCaption,
+                  item.category,
+                  ...(Array.isArray(
+                    item.tags
+                  )
+                    ? item.tags
+                    : [])
+                ]
+                  .filter(Boolean)
+                  .some((val) =>
+                    String(val)
+                      .toLowerCase()
+                      .includes(needle)
+                  );
+
+
               return (
                 categoryMatch &&
-                typeMatch
+                typeMatch &&
+                statusMatch &&
+                flaggedMatch &&
+                queryMatch
               );
 
             }
@@ -2472,6 +2633,9 @@ function UploadsScreen() {
         scoped,
         cat,
         type,
+        statusFilter,
+        onlyFlaggedNotes,
+        searchQuery,
         sort
       ]
     );
@@ -2749,6 +2913,18 @@ function UploadsScreen() {
           ).toLowerCase() ===
           "video";
 
+        const publishCheck =
+          validatePublishExcerpt(
+            meta.status,
+            meta.description
+          );
+
+        if (!publishCheck.ok) {
+          throw new Error(
+            publishCheck.message
+          );
+        }
+
 
         const updateData = {
           type:
@@ -2761,6 +2937,9 @@ function UploadsScreen() {
 
           description:
             meta.description.trim(),
+
+          socialCaption:
+            (meta.socialCaption || "").trim(),
 
           category:
             meta.category,
@@ -3264,6 +3443,36 @@ function UploadsScreen() {
           </div>
 
 
+          {/* SEARCH */}
+
+          <div
+            className="tb-search"
+            style={{
+              minWidth: 220,
+              maxWidth: 300
+            }}
+          >
+            <span className="ic">
+              <MIcon
+                name="search"
+                size={15}
+              />
+            </span>
+
+            <input
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(
+                  event.target.value
+                );
+                setPage(1);
+              }}
+              placeholder="Search title, excerpt, caption..."
+              aria-label="Search all uploaded content"
+            />
+          </div>
+
+
           {/* TYPE */}
 
           <select
@@ -3356,6 +3565,49 @@ function UploadsScreen() {
           </select>
 
 
+          {/* STATUS */}
+
+          <select
+            className="selectmini"
+            value={
+              statusFilter
+            }
+            onChange={
+              (
+                event
+              ) => {
+
+                setStatusFilter(
+                  event.target.value
+                );
+
+                setPage(
+                  1
+                );
+
+              }
+            }
+          >
+
+            <option value="all">
+              All status
+            </option>
+
+            <option value="published">
+              Published
+            </option>
+
+            <option value="draft">
+              Draft
+            </option>
+
+            <option value="under_review">
+              Under Review
+            </option>
+
+          </select>
+
+
           {/* SORT */}
 
           <select
@@ -3383,7 +3635,66 @@ function UploadsScreen() {
 
           </select>
 
+
+          {/* FLAGGED NOTES TOGGLE */}
+
+          <button
+            type="button"
+            className={`btn btn-sm ${
+              onlyFlaggedNotes
+                ? "btn-green"
+                : "btn-ghost"
+            }`}
+            onClick={() => {
+              setOnlyFlaggedNotes(
+                (v) => !v
+              );
+              setPage(1);
+            }}
+          >
+            {onlyFlaggedNotes
+              ? `Flagged notes (${flaggedAssetsCount}) ✓`
+              : `Flagged notes (${flaggedAssetsCount})`}
+          </button>
+
         </div>
+
+
+        {flaggedAssetsCount > 0 && (
+          <div
+            className="flagged-banner"
+            role="status"
+          >
+            <span>
+              <strong>{flaggedAssetsCount}</strong> item
+              {flaggedAssetsCount === 1
+                ? ""
+                : "s"}{" "}
+              contain internal editor markers (
+              <code>One-liner</code>,{" "}
+              <code>WhatsApp:</code>,{" "}
+              <code>TODO</code>,{" "}
+              <code>Note:</code>) in the excerpt.
+              Click <strong>Edit</strong> to move them to{" "}
+              <strong>Social caption</strong>.
+            </span>
+
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setOnlyFlaggedNotes(
+                  (v) => !v
+                );
+                setPage(1);
+              }}
+            >
+              {onlyFlaggedNotes
+                ? "Show all items"
+                : "Show flagged only"}
+            </button>
+          </div>
+        )}
 
 
         {/* =================================================
@@ -3796,6 +4107,20 @@ function UploadsScreen() {
                           </span>
 
                         </div>
+
+
+                        {findInternalExcerptMarkers(
+                          item.description
+                        ).length > 0 && (
+                          <div style={{ marginTop: 6 }}>
+                            <span className="internal-note-pill">
+                              Internal note:{" "}
+                              {findInternalExcerptMarkers(
+                                item.description
+                              ).join(", ")}
+                            </span>
+                          </div>
+                        )}
 
 
                         {/* VIDEO ID */}
@@ -4438,27 +4763,51 @@ function UploadsScreen() {
                         </div>
 
 
-                        {/* PUBLISHED */}
+                        {/* PUBLISHED & STATUS */}
 
                         <div
                           style={{
+                            display:
+                              "flex",
+
+                            alignItems:
+                              "center",
+
+                            justifyContent:
+                              "space-between",
+
+                            gap: 8,
+
                             marginTop:
-                              10,
-
-                            fontSize:
-                              11,
-
-                            opacity:
-                              0.5
+                              10
                           }}
                         >
-                          Published:
-                          {" "}
-                          {
-                            formatDate(
-                              item.publishedAt
-                            )
-                          }
+                          <span
+                            style={{
+                              fontSize:
+                                11,
+
+                              opacity:
+                                0.5
+                            }}
+                          >
+                            Published:
+                            {" "}
+                            {
+                              formatDate(
+                                item.publishedAt
+                              )
+                            }
+                          </span>
+
+                          {StatusPill && (
+                            <StatusPill
+                              status={
+                                item.status ||
+                                "published"
+                              }
+                            />
+                          )}
                         </div>
 
                       </div>
@@ -5103,6 +5452,18 @@ function UploadsScreen() {
                       "Firestore is not initialized."
                     );
                   }
+
+                  const publishCheck =
+                    validatePublishExcerpt(
+                      meta.status,
+                      meta.description
+                    );
+
+                  if (!publishCheck.ok) {
+                    throw new Error(
+                      publishCheck.message
+                    );
+                  }
 /* =====================================
                      UPLOAD THUMBNAIL
                   ===================================== */
@@ -5139,6 +5500,9 @@ function UploadsScreen() {
 
                     description:
                       meta.description,
+
+                    socialCaption:
+                      meta.socialCaption || "",
 
                     category:
                       meta.category,
@@ -5321,6 +5685,18 @@ function UploadsScreen() {
 
                   }
 
+                  const publishCheck =
+                    validatePublishExcerpt(
+                      meta.status,
+                      meta.description
+                    );
+
+                  if (!publishCheck.ok) {
+                    throw new Error(
+                      publishCheck.message
+                    );
+                  }
+
 
                   const now =
                     new Date()
@@ -5341,6 +5717,9 @@ function UploadsScreen() {
 
                     description:
                       meta.description,
+
+                    socialCaption:
+                      meta.socialCaption || "",
 
                     category:
                       meta.category,
@@ -5512,6 +5891,22 @@ function PdfMetadataModal({
 
 
   const [
+    socialCaption,
+    setSocialCaption
+  ] = useState(
+    ""
+  );
+
+
+  const [
+    publishError,
+    setPublishError
+  ] = useState(
+    ""
+  );
+
+
+  const [
     category,
     setCategory
   ] = useState(
@@ -5597,7 +5992,7 @@ function PdfMetadataModal({
      ======================================================= */
 
   const chooseThumbnail =
-    (
+    async (
       event
     ) => {
 
@@ -5648,6 +6043,9 @@ function PdfMetadataModal({
       }
 
 
+      const optimized = await optimizeThumbnailToWebP(file);
+
+
       if (
         thumbnailPreview
       ) {
@@ -5660,13 +6058,13 @@ function PdfMetadataModal({
 
 
       setThumbnailFile(
-        file
+        optimized
       );
 
 
       setThumbnailPreview(
         URL.createObjectURL(
-          file
+          optimized
         )
       );
 
@@ -5695,6 +6093,23 @@ function PdfMetadataModal({
 
       return;
     }
+
+    const publishCheck =
+      validatePublishExcerpt(
+        status,
+        cleanDescription
+      );
+
+    if (!publishCheck.ok) {
+      setPublishError(
+        publishCheck.message
+      );
+
+      return;
+    }
+
+    setPublishError("");
+
 onSave({
 
       title:
@@ -5702,6 +6117,9 @@ onSave({
 
       description:
         cleanDescription,
+
+      socialCaption:
+        socialCaption.trim(),
 
       category,
 
@@ -5876,35 +6294,18 @@ onSave({
         </div>
 
 
-        {/* DESCRIPTION */}
+        {/* DESCRIPTION & SOCIAL CAPTION */}
 
-        <div
-          className="field"
-        >
-
-          <label>
-            Description
-          </label>
-
-          <textarea
-            className="textarea"
-            value={
-              description
-            }
-
-            onChange={
-              (
-                event
-              ) =>
-                setDescription(
-                  event.target.value
-                )
-            }
-
-            placeholder="Short description"
-          />
-
-        </div>
+        <ExcerptSocialFields
+          description={description}
+          onDescriptionChange={(val) => {
+            setDescription(val);
+            setPublishError("");
+          }}
+          socialCaption={socialCaption}
+          onSocialCaptionChange={setSocialCaption}
+          descriptionPlaceholder="Short description shown to members"
+        />
 
 
         {/* CATEGORY */}
@@ -6144,10 +6545,12 @@ onSave({
             onChange={
               (
                 event
-              ) =>
+              ) => {
                 setStatus(
                   event.target.value
-                )
+                );
+                setPublishError("");
+              }
             }
           >
 
@@ -6159,9 +6562,16 @@ onSave({
               Draft
             </option>
 
+            <option value="under_review">
+              Under Review
+            </option>
+
           </select>
 
         </div>
+
+
+        <ExcerptPublishError error={publishError} />
 
 
         {/* ACTIONS */}

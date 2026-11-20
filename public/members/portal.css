@@ -9287,3 +9287,71 @@ html[data-theme="dark"] .member-video-reply-target {
 html[data-theme="dark"] .member-video-reply-target b {
   color: #60a5fa;
 }
+
+/* =========================================================
+   STUDY & ADVISOR DISCLAIMER (VIDEOS)
+========================================================= */
+
+.member-study-disclaimer {
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  border-left: 3px solid #d97706;
+  background: rgba(245, 158, 11, 0.08);
+  color: #78350f;
+  font-size: 10.5px;
+  line-height: 1.42;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
+.member-study-disclaimer strong {
+  color: #92400e;
+  font-weight: 700;
+}
+
+.member-study-disclaimer--video {
+  margin-top: 8px;
+}
+
+.member-study-disclaimer--modal {
+  margin-top: 10px;
+  padding: 9px 12px;
+  font-size: 11.5px;
+}
+
+[data-theme="dark"] .member-study-disclaimer,
+html[data-theme="dark"] .member-study-disclaimer {
+  border-color: rgba(251, 191, 36, 0.28);
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fde68a;
+}
+
+[data-theme="dark"] .member-study-disclaimer strong,
+html[data-theme="dark"] .member-study-disclaimer strong {
+  color: #fcd34d;
+}
+
+/* Smooth shimmer placeholder while compressed WebP thumbnail loads */
+@keyframes wlThumbShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.wl-thumb-loading {
+  background: linear-gradient(90deg, #eff1ed 25%, #e5e8e1 50%, #eff1ed 75%);
+  background-size: 200% 100%;
+  animation: wlThumbShimmer 1.3s ease-in-out infinite;
+}
+
+[data-theme="dark"] .wl-thumb-loading,
+html[data-theme="dark"] .wl-thumb-loading {
+  background: linear-gradient(90deg, #161a17 25%, #202622 50%, #161a17 75%);
+  background-size: 200% 100%;
+}
+
+.wl-thumb-loaded {
+  background: transparent;
+  animation: none;
+}

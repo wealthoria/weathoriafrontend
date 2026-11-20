@@ -213,8 +213,8 @@ self.addEventListener("notificationclick", function (event) {
    ========================================================================= */
 
 const CACHE_VERSION = "wealthoria-v19";
-const PRECACHE      = CACHE_VERSION + "-precache";
-const RUNTIME       = CACHE_VERSION + "-runtime";
+const PRECACHE = CACHE_VERSION + "-precache";
+const RUNTIME = CACHE_VERSION + "-runtime";
 
 
 /* =========================================================================
@@ -341,7 +341,7 @@ self.addEventListener("fetch", function (event) {
   if (
     url.origin === self.location.origin &&
     (url.pathname.startsWith("/admin") ||
-     url.pathname.startsWith("/members"))
+      url.pathname.startsWith("/members"))
   ) {
     return;
   }
@@ -372,7 +372,7 @@ self.addEventListener("fetch", function (event) {
             .then(function (cache) {
               return cache.put(request, copy);
             })
-            .catch(function () {});
+            .catch(function () { });
 
           return response;
         })
@@ -430,7 +430,7 @@ self.addEventListener("fetch", function (event) {
                   .then(function (cache) {
                     return cache.put(request, copy);
                   })
-                  .catch(function () {});
+                  .catch(function () { });
 
                 return response;
               })
@@ -464,7 +464,7 @@ self.addEventListener("fetch", function (event) {
                   .then(function (cache) {
                     return cache.put(request, copy);
                   })
-                  .catch(function () {});
+                  .catch(function () { });
               }
               return response;
             })

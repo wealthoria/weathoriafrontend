@@ -58,7 +58,7 @@
     try {
       var saved = localStorage.getItem("wl-lang");
       if (saved === "kn" || saved === "en") return saved;
-    } catch (e) {}
+    } catch (e) { }
     return document.documentElement.lang === "kn" ? "kn" : "en";
   }
 
@@ -66,7 +66,7 @@
     var normalized = lang === "kn" ? "kn" : "en";
     try {
       localStorage.setItem("wl-lang", normalized);
-    } catch (e) {}
+    } catch (e) { }
     document.documentElement.setAttribute("data-lang", normalized);
     if (document.body.getAttribute("data-wl-bilingual") === "true") {
       document.documentElement.lang = normalized;
@@ -99,6 +99,11 @@
       '          <a href="/Book.html">' +
       '            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' +
       "            <span>" + c.bookLabel + "</span>" +
+      "          </a>" +
+      '          <a href="/artofbook.html">' +
+      '            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' +
+      "            <span>" + (lang === "kn" ? "ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್" : "Book · The Art of Price") + "</span>" +
+      '            <span style="margin-left:auto;padding:2px 7px;border-radius:999px;background:rgba(29,182,106,0.16);border:1px solid rgba(29,182,106,0.4);color:#118a4e;font-size:9.5px;font-weight:800;letter-spacing:0.08em;">NEW</span>' +
       "          </a>" +
       "        </div>" +
       "      </div>" +
@@ -135,6 +140,7 @@
       '  <a href="/#about">' + c.about + "</a>" +
       '  <a href="/wealthoria-disclosure.html">' + c.disclosure + "</a>" +
       '  <a href="/Book.html">' + c.bookLabel + "</a>" +
+      '  <a href="/the-art-of-price-prebooking.html">' + (lang === "kn" ? "ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್ · NEW" : "Book · The Art of Price · NEW") + "</a>" +
       '  <div class="wl-drawer-foot">' +
       '    <a class="wl-drawer-login" href="/members/login">' + c.memberFull + "</a>" +
       "  </div>" +

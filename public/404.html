@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Not Found (404) — Wealthoria</title>
+    <meta name="description"
+        content="The page you are looking for could not be found on Wealthoria. Return to Home, Calculators, or Member Login." />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#e8473f" />
+    <link rel="icon" type="image/png" href="/assets/logo-mark.png" />
+    <!-- Official Wealthoria Header & Footer Styles -->
+    <link rel="stylesheet" href="/app/site-shell.css" />
+    <!-- GA4: Track 404 page views & broken inbound links -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9955KR0G6"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-Q9955KR0G6');
+        gtag('event', 'page_not_found', {
+            page_location: window.location.href,
+            page_path: window.location.pathname,
+            page_referrer: document.referrer || '(direct)'
+        });
+    </script>
+    <style>
+        :root {
+            --bg: #fafaf8;
+            --card: #ffffff;
+            --ink: #121417;
+            --muted: #5a6068;
+            --border: #e6e7e2;
+            --brand: #e8473f;
+            --brand-dark: #cf352e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main.wl-404 {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 80px;
+        }
+
+        .wl-404-card {
+            width: 100%;
+            max-width: 560px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 44px 36px;
+            text-align: center;
+            box-shadow: 0 12px 36px rgba(18, 20, 23, 0.06);
+        }
+
+        .wl-404-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(232, 71, 63, 0.1);
+            color: var(--brand);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .wl-404-card h1 {
+            margin: 16px 0 12px;
+            font-size: clamp(28px, 4vw, 36px);
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .wl-404-card p {
+            margin: 0 auto 28px;
+            max-width: 440px;
+            color: var(--muted);
+            font-size: 15.5px;
+            line-height: 1.6;
+        }
+
+        .wl-404-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .wl-404-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .wl-404-btn-primary {
+            background: var(--brand);
+            color: #ffffff;
+            border: 1px solid var(--brand);
+        }
+
+        .wl-404-btn-primary:hover {
+            background: var(--brand-dark);
+            transform: translateY(-1px);
+        }
+
+        .wl-404-btn-secondary {
+            background: #ffffff;
+            color: var(--ink);
+            border: 1px solid var(--border);
+        }
+
+        .wl-404-btn-secondary:hover {
+            border-color: var(--ink);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 520px) {
+            .wl-404-card {
+                padding: 32px 22px;
+            }
+
+            .wl-404-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="wl-header"></div>
+    <main class="wl-404">
+        <section class="wl-404-card" aria-labelledby="wl-404-title">
+            <span class="wl-404-badge">Error 404</span>
+            <h1 id="wl-404-title">This page couldn't be found</h1>
+            <p>
+                The link you followed may be broken, outdated, or moved. Use one of the links below to get back on
+                track.
+            </p>
+            <div class="wl-404-actions">
+                <a class="wl-404-btn wl-404-btn-primary" href="/">Go to Home</a>
+                <a class="wl-404-btn wl-404-btn-secondary" href="/calculators">Calculators</a>
+                <a class="wl-404-btn wl-404-btn-secondary" href="/members/login">Member Login</a>
+            </div>
+        </section>
+    </main>
+    <div id="wl-footer"></div>
+    <script src="/app/site-shell.js" defer></script>
+
+</body>
+
+
+</html>

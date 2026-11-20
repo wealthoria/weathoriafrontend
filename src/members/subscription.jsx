@@ -1,4 +1,5 @@
 import React from "react";
+import { loadRazorpayScript } from "../utils/loadRazorpay.js";
 
 /* global React, window */
 
@@ -144,10 +145,13 @@ if (password !== confirmPassword) {
      
 
     if (typeof window.Razorpay !== "function") {
-
-       setErrors("Razorpay is not loaded.");
-return;
-    
+      setLoading(true);
+      const loaded = await loadRazorpayScript();
+      if (!loaded || typeof window.Razorpay !== "function") {
+        setLoading(false);
+        setErrors("Payment gateway is temporarily unavailable. Please check your connection and try again.");
+        return;
+      }
     }
 
     try {

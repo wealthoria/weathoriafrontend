@@ -4,6 +4,7 @@ import {
   trackMemberContentOpen
 } from "./memberContent.js";
 import React from "react";
+import MemberThumbnail from "./MemberThumbnail.jsx";
 
 /* global React, window */
 
@@ -46,22 +47,22 @@ function Newsletter() {
     });
   }, []);
 
-  const [loading, setLoading] =  useState(true);
+  const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
 
-const [contentType, setContentType] =  useState("all");
+  const [contentType, setContentType] = useState("all");
 
-const [startDate, setStartDate] =
-  useState("");
+  const [startDate, setStartDate] =
+    useState("");
 
-const [endDate, setEndDate] =
-  useState("");
+  const [endDate, setEndDate] =
+    useState("");
 
 
-const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+  const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
   const getFileUrl = (fileUrl) => {
 
@@ -194,12 +195,12 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
                         : [],
 
                     pdfUrl:
-  data.pdfUrl ||
-  "",
+                      data.pdfUrl ||
+                      "",
 
-pdfPath:
-  data.pdfPath ||
-  "",
+                    pdfPath:
+                      data.pdfPath ||
+                      "",
 
                     thumbnailUrl:
                       data.thumbnailUrl ||
@@ -246,126 +247,126 @@ pdfPath:
 
 
 
-const filteredNewsletters =
-  newsletters.filter(
-    (newsletter) => {
+  const filteredNewsletters =
+    newsletters.filter(
+      (newsletter) => {
 
-      const searchText =
-        search.trim().toLowerCase();
+        const searchText =
+          search.trim().toLowerCase();
 
-      const matchesSearch =
-        !searchText ||
-        newsletter.title.toLowerCase().includes(searchText) ||
-        newsletter.description.toLowerCase().includes(searchText) ||
-        newsletter.tags.some(
-          (tag) =>
-            String(tag).toLowerCase().includes(searchText)
-        );
+        const matchesSearch =
+          !searchText ||
+          newsletter.title.toLowerCase().includes(searchText) ||
+          newsletter.description.toLowerCase().includes(searchText) ||
+          newsletter.tags.some(
+            (tag) =>
+              String(tag).toLowerCase().includes(searchText)
+          );
 
-      let newsletterTime = 0;
+        let newsletterTime = 0;
 
-      try {
-        const value = newsletter.publishedAt;
+        try {
+          const value = newsletter.publishedAt;
 
-        if (
-          value &&
-          typeof value.toDate === "function"
-        ) {
-          newsletterTime = value.toDate().getTime();
-        } else {
-          const parsed = new Date(value).getTime();
+          if (
+            value &&
+            typeof value.toDate === "function"
+          ) {
+            newsletterTime = value.toDate().getTime();
+          } else {
+            const parsed = new Date(value).getTime();
 
-          if (!Number.isNaN(parsed)) {
-            newsletterTime = parsed;
+            if (!Number.isNaN(parsed)) {
+              newsletterTime = parsed;
+            }
           }
+        } catch (error) {
+          newsletterTime = 0;
         }
-      } catch (error) {
-        newsletterTime = 0;
+
+        let matchesDate = true;
+
+        if (startDate) {
+          const startTime =
+            new Date(`${startDate}T00:00:00`).getTime();
+
+          matchesDate =
+            newsletterTime > 0 &&
+            newsletterTime >= startTime;
+        }
+
+        if (matchesDate && endDate) {
+          const endTime =
+            new Date(`${endDate}T23:59:59.999`).getTime();
+
+          matchesDate =
+            newsletterTime > 0 &&
+            newsletterTime <= endTime;
+        }
+
+        return matchesSearch && matchesDate;
+      }
+    );
+
+  const getMonthKey = (value) => {
+    try {
+      const date =
+        value && typeof value.toDate === "function"
+          ? value.toDate()
+          : new Date(value);
+
+      if (!date || Number.isNaN(date.getTime())) {
+        return "unknown";
       }
 
-      let matchesDate = true;
-
-      if (startDate) {
-        const startTime =
-          new Date(`${startDate}T00:00:00`).getTime();
-
-        matchesDate =
-          newsletterTime > 0 &&
-          newsletterTime >= startTime;
-      }
-
-      if (matchesDate && endDate) {
-        const endTime =
-          new Date(`${endDate}T23:59:59.999`).getTime();
-
-        matchesDate =
-          newsletterTime > 0 &&
-          newsletterTime <= endTime;
-      }
-
-      return matchesSearch && matchesDate;
-    }
-  );
-
-const getMonthKey = (value) => {
-  try {
-    const date =
-      value && typeof value.toDate === "function"
-        ? value.toDate()
-        : new Date(value);
-
-    if (!date || Number.isNaN(date.getTime())) {
+      return `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+    } catch (error) {
       return "unknown";
     }
+  };
 
-    return `${date.getFullYear()}-${String(
-      date.getMonth() + 1
-    ).padStart(2, "0")}`;
-  } catch (error) {
-    return "unknown";
-  }
-};
+  const getMonthLabel = (value) => {
+    try {
+      const date =
+        value && typeof value.toDate === "function"
+          ? value.toDate()
+          : new Date(value);
 
-const getMonthLabel = (value) => {
-  try {
-    const date =
-      value && typeof value.toDate === "function"
-        ? value.toDate()
-        : new Date(value);
+      if (!date || Number.isNaN(date.getTime())) {
+        return "Other Weekly order wins";
+      }
 
-    if (!date || Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric"
+      });
+    } catch (error) {
       return "Other Weekly order wins";
     }
+  };
 
-    return date.toLocaleDateString("en-IN", {
-      month: "long",
-      year: "numeric"
+  const newsletterMonths = (() => {
+    const groups = {};
+
+    filteredNewsletters.forEach((newsletter) => {
+      const monthKey = getMonthKey(newsletter.publishedAt);
+
+      if (!groups[monthKey]) {
+        groups[monthKey] = {
+          label: getMonthLabel(newsletter.publishedAt),
+          newsletters: []
+        };
+      }
+
+      groups[monthKey].newsletters.push(newsletter);
     });
-  } catch (error) {
-    return "Other Weekly order wins";
-  }
-};
 
-const newsletterMonths = (() => {
-  const groups = {};
-
-  filteredNewsletters.forEach((newsletter) => {
-    const monthKey = getMonthKey(newsletter.publishedAt);
-
-    if (!groups[monthKey]) {
-      groups[monthKey] = {
-        label: getMonthLabel(newsletter.publishedAt),
-        newsletters: []
-      };
-    }
-
-    groups[monthKey].newsletters.push(newsletter);
-  });
-
-  return Object.entries(groups).sort(([a], [b]) =>
-    b.localeCompare(a)
-  );
-})();
+    return Object.entries(groups).sort(([a], [b]) =>
+      b.localeCompare(a)
+    );
+  })();
 
   if (loading) {
     return (
@@ -422,74 +423,74 @@ const newsletterMonths = (() => {
         </div>
 
       </div>
-<div
-  className="newsletter-filters"
->
-
-  <input
-    type="search"
-    value={search}
-    onChange={(event) =>
-      setSearch(event.target.value)
-    }
-    placeholder="Search Weekly order wins..."
-    className="newsletter-search"
-  />
-
-  <div className="newsletter-date-filter-group">
-
-    <div className="newsletter-date-field">
-      <label htmlFor="newsletter-start-date">
-        From Date
-      </label>
-
-      <input
-        id="newsletter-start-date"
-        type="date"
-        value={startDate}
-        onChange={(event) =>
-          setStartDate(event.target.value)
-        }
-        className="newsletter-date-filter"
-      />
-    </div>
-
-    <div className="newsletter-date-field">
-      <label htmlFor="newsletter-end-date">
-        To Date
-      </label>
-
-      <input
-        id="newsletter-end-date"
-        type="date"
-        value={endDate}
-        min={startDate || undefined}
-        onChange={(event) =>
-          setEndDate(event.target.value)
-        }
-        className="newsletter-date-filter"
-      />
-    </div>
-
-    {(search || startDate || endDate) && (
-      <button
-        type="button"
-        onClick={() => {
-          setSearch("");
-          setStartDate("");
-          setEndDate("");
-        }}
-        className="newsletter-clear-filter"
+      <div
+        className="newsletter-filters"
       >
-        Clear
-      </button>
-    )}
 
-  </div>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+          placeholder="Search Weekly order wins..."
+          className="newsletter-search"
+        />
 
-</div>
+        <div className="newsletter-date-filter-group">
 
-     {filteredNewsletters.length === 0  ? (
+          <div className="newsletter-date-field">
+            <label htmlFor="newsletter-start-date">
+              From Date
+            </label>
+
+            <input
+              id="newsletter-start-date"
+              type="date"
+              value={startDate}
+              onChange={(event) =>
+                setStartDate(event.target.value)
+              }
+              className="newsletter-date-filter"
+            />
+          </div>
+
+          <div className="newsletter-date-field">
+            <label htmlFor="newsletter-end-date">
+              To Date
+            </label>
+
+            <input
+              id="newsletter-end-date"
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) =>
+                setEndDate(event.target.value)
+              }
+              className="newsletter-date-filter"
+            />
+          </div>
+
+          {(search || startDate || endDate) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setStartDate("");
+                setEndDate("");
+              }}
+              className="newsletter-clear-filter"
+            >
+              Clear
+            </button>
+          )}
+
+        </div>
+
+      </div>
+
+      {filteredNewsletters.length === 0 ? (
 
 
 
@@ -549,17 +550,11 @@ const newsletterMonths = (() => {
                         <div className="member-newsletter-icon">
 
                           {newsletter.thumbnailUrl ? (
-                            <img
-                              src={getFileUrl(
-                                newsletter.thumbnailUrl
-                              )}
+                            <MemberThumbnail
+                              src={getFileUrl(newsletter.thumbnailUrl)}
                               alt={newsletter.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                display: "block"
-                              }}
+                              width={320}
+                              height={180}
                             />
                           ) : (
                             <span>PDF</span>
@@ -671,7 +666,7 @@ const newsletterMonths = (() => {
 
 
             <iframe
-             src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
+              src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
               title={selectedPdf.title}
               className="member-pdf-frame"
             />

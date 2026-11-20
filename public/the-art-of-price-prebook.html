@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="kn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Pre-book | The Art of Price (ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್) | Wealthoria</title>
+  <meta name="description"
+    content="Pre-book 'The Art of Price' (ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್) — Whispers Beyond Candlesticks. 500+ pages complete technical analysis guide in Kannada with real NSE charts. Launch offer ₹999.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Marcellus&display=swap"
+    rel="stylesheet">
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="/firebase/firebase.js"></script>
+
+  <!-- Meta Pixel Code -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '969336462877276');
+    fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+      content_name: 'The Art of Price (ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್)',
+      content_category: 'Pre-book Book',
+      value: 999,
+      currency: 'INR'
+    });
+  </script>
+  <!-- End Meta Pixel Code -->
+
+  <!-- Google Ads tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18500990314"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'AW-18500990314');
+  </script>
+
+  <style>
+    :root {
+      --ink: #0f172a;
+      --ink-soft: #1e293b;
+      --cream: #f8fafc;
+      --white: #ffffff;
+      --coral: #e8473f;
+      --orange: #f4823c;
+      --brand-grad: linear-gradient(120deg, #e8473f 0%, #f4823c 100%);
+      --line: #e2e8f0;
+      --muted: #64748b;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: #f1f5f9;
+      color: var(--ink);
+      font-family: "Noto Sans Kannada", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    .page {
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      padding: 36px 16px 64px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .form-card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08), 0 0 24px rgba(232, 71, 63, 0.04);
+    }
+
+    /* HEADER */
+    .form-head {
+      background-color: #0f172a;
+      color: white;
+      padding: 32px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-head::after {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .head-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      color: #fb923c;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: #fdba74;
+      text-decoration: underline;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .brand-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c35e;
+      box-shadow: 0 0 8px #22c35e;
+    }
+
+    .book-showcase-strip {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    .book-cover-thumb {
+      width: 74px;
+      height: 108px;
+      border-radius: 4px;
+      object-fit: cover;
+      box-shadow: -3px 8px 18px rgba(0, 0, 0, 0.5), 0 0 16px rgba(34, 197, 94, 0.35);
+      flex-shrink: 0;
+      transform: rotate(-3deg);
+    }
+
+    .head-titles h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    .head-titles p {
+      margin: 0 0 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .offer-callout-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(244, 130, 60, 0.18);
+      border: 1px solid rgba(244, 130, 60, 0.4);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fed7aa;
+    }
+
+    .offer-callout-pill b {
+      color: #ffffff;
+      font-size: 14px;
+    }
+
+    /* FORM BODY */
+    .form-body {
+      padding: 36px 40px;
+    }
+
+    .section-title {
+      margin: 28px 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-title:first-child {
+      margin-top: 0;
+    }
+
+    .section-subtitle {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .field {
+      margin-bottom: 18px;
+      width: 100%;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .field label span.req {
+      color: var(--coral);
+      margin-left: 2px;
+    }
+
+    .field input,
+    .field textarea {
+      display: block;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 14.5px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .field input {
+      height: 48px;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(232, 71, 63, 0.12);
+    }
+
+    .field input[readonly] {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      cursor: default;
+    }
+
+    .field-hint {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+    }
+
+    /* SAME BILLING */
+    .same-billing {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      user-select: none;
+    }
+
+    .same-billing input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--coral);
+      cursor: pointer;
+    }
+
+    /* SUMMARY BOX */
+    .summary-box {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 22px;
+      margin-top: 28px;
+      margin-bottom: 20px;
+    }
+
+    .summary-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .summary-title {
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--ink);
+    }
+
+    .summary-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: #fef3c7;
+      color: #b45309;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid #fde68a;
+    }
+
+    /* QUANTITY STEPPER */
+    .qty-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+
+    /* EDITION SELECTOR */
+    .edition-section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed #cbd5e1;
+      transition: all 0.2s ease;
+    }
+
+    .edition-section.has-error {
+      background: #fef2f2;
+      border: 1.5px solid #f87171;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .edition-label {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .edition-label-hint {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #e8473f;
+    }
+
+    .edition-error-text {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #dc2626;
+    }
+
+    .edition-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 540px) {
+      .edition-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .edition-card {
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      transition: all 0.18s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .edition-card:hover {
+      border-color: #94a3b8;
+      background: #f8fafc;
+    }
+
+    .edition-radio-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+
+    .edition-radio-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #94a3b8;
+      background: #ffffff;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .edition-card.active,
+    .edition-card:has(.edition-radio-input:checked) {
+      border-color: #e8473f;
+      background: #fff8f6;
+      box-shadow: 0 0 0 1px #e8473f;
+    }
+
+    .edition-card.active .edition-radio-circle,
+    .edition-card:has(.edition-radio-input:checked) .edition-radio-circle {
+      border-color: #e8473f;
+      background: #e8473f;
+    }
+
+    .edition-card.active .edition-radio-circle::after,
+    .edition-card:has(.edition-radio-input:checked) .edition-radio-circle::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ffffff;
+    }
+
+    .edition-info {
+      flex: 1;
+      min-width: 0;
+      pointer-events: none;
+    }
+
+    .edition-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.3;
+    }
+
+    .edition-sub {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .edition-badge-tag {
+      font-size: 10.5px;
+      font-weight: 750;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .tag-kn {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .tag-en {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+
+    .qty-meta strong {
+      display: block;
+      font-size: 14px;
+      color: #1e293b;
+    }
+
+    .qty-meta span {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: #f1f5f9;
+      color: #0f172a;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+
+    .qty-btn:hover:not(:disabled) {
+      background: var(--coral);
+      color: #ffffff;
+    }
+
+    .qty-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .qty-input {
+      width: 44px;
+      height: 32px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      outline: none;
+    }
+
+    /* SUMMARY LINE ITEMS */
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13.5px;
+      color: #475569;
+      margin-bottom: 9px;
+    }
+
+    .summary-line.discount {
+      color: #16a34a;
+      font-weight: 700;
+    }
+
+    .summary-line.total {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1.5px solid #cbd5e1;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .summary-line.total .total-amount {
+      font-size: 22px;
+      color: #0f172a;
+      font-weight: 900;
+    }
+
+    /* ERROR BOX */
+    .error-box {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      color: #b91c1c;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .error-box.show {
+      display: block;
+    }
+
+    /* SUBMIT BUTTON */
+    .submit-btn {
+      width: 100%;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--brand-grad);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(232, 71, 63, 0.35);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      filter: brightness(1.06);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 26px rgba(232, 71, 63, 0.45);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .submit-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* SUCCESS SECTION */
+    .success-card {
+      display: none;
+      text-align: center;
+      padding: 48px 24px 36px;
+    }
+
+    .success-card.show {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success-icon-wrap {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: white;
+      font-size: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 10px 24px rgba(34, 197, 94, 0.35);
+    }
+
+    .success-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .success-card p {
+      margin: 0 0 24px;
+      color: #64748b;
+      font-size: 14.5px;
+    }
+
+    .booking-badge-box {
+      background: #f8fafc;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 16px;
+      display: inline-block;
+      margin-bottom: 24px;
+      min-width: 260px;
+    }
+
+    .booking-badge-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .booking-badge-id {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: 0.03em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .details-preview-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: left;
+      margin-bottom: 24px;
+      font-size: 13.5px;
+      color: #334155;
+      line-height: 1.7;
+    }
+
+    .home-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 28px;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+
+    .home-btn:hover {
+      background: #1e293b;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 18px 10px 40px;
+      }
+
+      .form-head {
+        padding: 24px 20px;
+      }
+
+      .head-titles h1 {
+        font-size: 21px;
+      }
+
+      .book-cover-thumb {
+        width: 60px;
+        height: 88px;
+      }
+
+      .form-body {
+        padding: 24px 18px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .summary-box {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page">
+
+    <div class="form-card">
+
+      <!-- HEADER -->
+      <div class="form-head">
+
+        <a href="/"
+          style="display:inline-block;margin-bottom:10px;color:#f4823c;font-size:13px;font-weight:700;text-decoration:none;">←
+          ಮುಖಪುಟ (Home)</a>
+        <div class="brand">Wealthoria · Pre-booking </div>
+
+        <h1>ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್</h1>
+
+        <p>
+          ಖರೀದಿಸಲು ನಿಮ್ಮ ವಿವರಗಳು ಮತ್ತು delivery address ಅನ್ನು ನಮೂದಿಸಿ.
+        </p>
+      </div>
+
+
+      <!-- BODY / FORM -->
+      <div class="form-body">
+
+        <form id="aopPrebookForm">
+
+          <!-- 1. CUSTOMER DETAILS -->
+          <div class="section-title">
+            <span>Customer Details / ಗ್ರಾಹಕರ ವಿವರಗಳು</span>
+            <span class="section-subtitle">Contact Information</span>
+          </div>
+
+          <div class="field">
+            <label for="aopName">Full Name / ಪೂರ್ಣ ಹೆಸರು <span class="req">*</span></label>
+            <input type="text" id="aopName" required placeholder="Enter your full name">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="aopEmail">Email Address / ಇಮೇಲ್ <span class="req">*</span></label>
+              <input type="email" id="aopEmail" required placeholder="name@example.com">
+            </div>
+
+            <div class="field">
+              <label for="aopPhone">Mobile Number (WhatsApp) / ಮೊಬೈಲ್ <span class="req">*</span></label>
+              <input type="tel" id="aopPhone" maxlength="10" inputmode="numeric" required
+                placeholder="10-digit mobile number">
+              <div class="field-hint">Used for dispatch & delivery tracking updates</div>
+            </div>
+          </div>
+
+          <!-- 2. DELIVERY ADDRESS -->
+          <div class="section-title">
+            <span>Delivery Address / ಪುಸ್ತಕ ತಲುಪಿಸಬೇಕಾದ ವಿಳಾಸ</span>
+            <span class="section-subtitle">Free Pan-India Delivery</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="aopDeliveryName">Recipient Name / ಸ್ವೀಕರಿಸುವವರ ಹೆಸರು <span class="req">*</span></label>
+              <input type="text" id="aopDeliveryName" required placeholder="Name on courier package">
+            </div>
+
+            <div class="field">
+              <label for="aopDeliveryPhone">Recipient Phone / ಸಂಪರ್ಕ ಸಂಖ್ಯೆ <span class="req">*</span></label>
+              <input type="tel" id="aopDeliveryPhone" maxlength="10" inputmode="numeric" required
+                placeholder="10-digit mobile number">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="aopAddress">Address Line 1 / ವಿಳಾಸ (ಮನೆ ನಂ, ರಸ್ತೆ) <span class="req">*</span></label>
+            <input type="text" id="aopAddress" maxlength="30" required
+              placeholder="House/Flat No., Building, Street (max 30 chars)">
+          </div>
+
+          <div class="field">
+            <label for="aopAddress2">Address Line 2 (Area, Landmark) / ಪ್ರದೇಶ, ಲ್ಯಾಂಡ್‌ಮಾರ್ಕ್</label>
+            <input type="text" id="aopAddress2" maxlength="30"
+              placeholder="Locality, landmark, near spot (max 30 chars)">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="aopCity">City / ನಗರ <span class="req">*</span></label>
+              <input type="text" id="aopCity" required placeholder="Bengaluru, Mysuru, Hubballi...">
+            </div>
+
+            <div class="field">
+              <label for="aopState">State / ರಾಜ್ಯ <span class="req">*</span></label>
+              <input type="text" id="aopState" required value="Karnataka">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="aopPincode">Pincode / ಪಿನ್‌ಕೋಡ್ <span class="req">*</span></label>
+              <input type="text" id="aopPincode" maxlength="6" inputmode="numeric" required
+                placeholder="6-digit postal code">
+            </div>
+
+            <div class="field">
+              <label>Country / ದೇಶ</label>
+              <input type="text" value="India" readonly>
+            </div>
+          </div>
+
+          <!-- 3. BILLING ADDRESS -->
+          <label class="same-billing">
+            <input type="checkbox" id="aopSameBilling" checked>
+            <span>Billing address is same as delivery address / ಬಿಲ್ಲಿಂಗ್ ವಿಳಾಸವು ಡೆಲಿವರಿ ವಿಳಾಸದಂತೆಯೇ ಇದೆ</span>
+          </label>
+
+          <div id="aopBillingSection" style="display:none;">
+            <div class="section-title">
+              <span>Billing Address / ಬಿಲ್ಲಿಂಗ್ ವಿಳಾಸ</span>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="aopBillingName">Full Name <span class="req">*</span></label>
+                <input type="text" id="aopBillingName" placeholder="Full Name">
+              </div>
+              <div class="field">
+                <label for="aopBillingPhone">Phone <span class="req">*</span></label>
+                <input type="tel" id="aopBillingPhone" maxlength="10" inputmode="numeric"
+                  placeholder="10-digit mobile number">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="aopBillingAddress">Address Line 1 <span class="req">*</span></label>
+              <input type="text" id="aopBillingAddress" maxlength="30" placeholder="Address (max 30 chars)">
+            </div>
+
+            <div class="field">
+              <label for="aopBillingAddress2">Address Line 2</label>
+              <input type="text" id="aopBillingAddress2" maxlength="30" placeholder="Area, Landmark (max 30 chars)">
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="aopBillingCity">City <span class="req">*</span></label>
+                <input type="text" id="aopBillingCity" placeholder="City">
+              </div>
+              <div class="field">
+                <label for="aopBillingState">State <span class="req">*</span></label>
+                <input type="text" id="aopBillingState" value="Karnataka">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="aopBillingPincode">Pincode <span class="req">*</span></label>
+                <input type="text" id="aopBillingPincode" maxlength="6" inputmode="numeric"
+                  placeholder="6-digit pincode">
+              </div>
+              <div class="field">
+                <label>Country</label>
+                <input type="text" value="India" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. ORDER SUMMARY & QUANTITY -->
+          <div class="summary-box">
+            <div class="summary-head">
+              <span class="summary-title">Pre-booking Summary</span>
+              <span class="summary-badge">Launch Offer · ₹999</span>
+            </div>
+
+            <!-- Edition Selector (Must be selected by customer) -->
+            <div class="edition-section" id="editionSection">
+              <label class="edition-label">
+                <span>Select Book Edition / ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ</span> <span class="req">*</span>
+                <span class="edition-label-hint">(ದಯವಿಟ್ಟು ಒಂದು ಆವೃತ್ತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ / Please choose one)</span>
+              </label>
+
+              <div class="edition-grid">
+                <label class="edition-card" id="editionCardKn">
+                  <input type="radio" name="bookEdition" value="kannada" class="edition-radio-input" onchange="setEdition('kannada')">
+                  <span class="edition-radio-circle"></span>
+                  <div class="edition-info">
+                    <div class="edition-title">ಕನ್ನಡ ಆವೃತ್ತಿ (Kannada)</div>
+                    <div class="edition-sub">Hardcover · 500+ Pages · Real NSE Charts</div>
+                  </div>
+                  <span class="edition-badge-tag tag-kn">ಕನ್ನಡ</span>
+                </label>
+
+                <label class="edition-card" id="editionCardEn">
+                  <input type="radio" name="bookEdition" value="english" class="edition-radio-input" onchange="setEdition('english')">
+                  <span class="edition-radio-circle"></span>
+                  <div class="edition-info">
+                    <div class="edition-title">English Edition</div>
+                    <div class="edition-sub">Hardcover · Technical Analysis in English</div>
+                  </div>
+                  <span class="edition-badge-tag tag-en">English</span>
+                </label>
+              </div>
+
+              <div id="editionErrorNotice" class="edition-error-text" style="display:none;">
+                ⚠️ ದಯವಿಟ್ಟು ಪುಸ್ತಕದ ಆವೃತ್ತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ / Please select an edition above to proceed
+              </div>
+            </div>
+
+            <!-- Quantity Stepper -->
+            <div class="qty-row">
+              <div class="qty-meta">
+                <strong id="summaryBookTitle">The Art of Price</strong>
+                <span id="summaryBookDesc">Hardcover · Launch Offer ₹1 per book</span>
+              </div>
+              <div class="qty-stepper">
+                <button type="button" class="qty-btn" id="qtyMinus" onclick="updateQty(-1)"
+                  aria-label="Decrease quantity" disabled>−</button>
+                <input type="number" id="aopQuantity" class="qty-input" value="1" min="1" max="50" inputmode="numeric"
+                  readonly>
+                <button type="button" class="qty-btn" id="qtyPlus" onclick="updateQty(1)"
+                  aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+
+            <div class="summary-line">
+              <span>Item Price (₹1 × <span id="summaryQty">1</span>)</span>
+              <span>₹<span id="summarySubtotal">1</span></span>
+            </div>
+
+            <div class="summary-line">
+              <span>Regular MRP (<del>₹1,499</del> × <span id="summaryQtyMrp">1</span>)</span>
+              <span><del>₹<span id="summaryMrp">1,499</span></del></span>
+            </div>
+
+
+            <div class="summary-line discount">
+              <span>Launch Offer Discount</span>
+              <span>−₹<span id="summarySavings">1,498</span></span>
+            </div>
+
+            <div class="summary-line">
+              <span>Pan-India Delivery</span>
+              <span style="color:#16a34a;font-weight:700;">FREE</span>
+            </div>
+
+            <div class="summary-line total">
+              <span>Total Payable Amount</span>
+              <span class="total-amount">₹<span id="summaryTotal">1</span></span>
+            </div>
+          </div>
+
+          <!-- ERROR MESSAGE BOX -->
+          <div id="aopErrorBox" class="error-box"></div>
+
+          <!-- SUBMIT BUTTON -->
+          <button type="submit" class="submit-btn" id="aopSubmitBtn">
+            <span>Proceed to Pay ₹<span id="btnPayAmount">1</span> / ₹<span id="btnPayAmountKn">1</span> ಪಾವತಿಸಿ</span>
+            <span aria-hidden="true">→</span>
+          </button>
+
+          <div class="submit-note">
+            <span>🔒 100% Secure Payment powered by Razorpay · UPI, Cards, NetBanking</span>
+          </div>
+
+        </form>
+
+        <!-- SUCCESS CARD (Visible after submission) -->
+        <div id="aopSuccessCard" class="success-card">
+          <div class="success-icon-wrap">✓</div>
+          <h2>ಪ್ರಿ-ಬುಕಿಂಗ್ ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಾಗಿದೆ!</h2>
+          <p>Thank you! Your pre-booking for <b>The Art of Price</b> has been successfully recorded.</p>
+
+          <div class="booking-badge-box">
+            <div class="booking-badge-label">Pre-booking ID / ಬುಕಿಂಗ್ ಐಡಿ</div>
+            <div class="booking-badge-id" id="displayBookingId">AOP-2026-0001</div>
+          </div>
+
+          <div class="details-preview-box" id="detailsPreview">
+            <!-- Dynamically populated via JS -->
+          </div>
+
+          <p style="font-size:13.5px;color:#64748b;margin-bottom:26px;">
+            ಪುಸ್ತಕ ಮುದ್ರಣ ಮತ್ತು dispatch ಅಪ್‌ಡೇಟ್‌ಗಳಿಗಾಗಿ ನಮ್ಮ ತಂಡವು ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಗೆ WhatsApp / ಕರೆ ಮೂಲಕ
+            ಸಂಪರ್ಕಿಸಲಿದೆ. Shipment starts 13 December 2026.
+          </p>
+
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="/" class="home-btn">ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ (Back to Home)</a>
+            <a href="/the-art-of-price-prebooking.html" class="home-btn" style="background:#e8473f;">ಪುಸ್ತಕದ ಪುಟಕ್ಕೆ
+              ಹೋಗಿ (Book Page)</a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const API_BASE = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
+    const UNIT_PRICE = 1;
+    const MRP_PRICE = 1499;
+
+    let currentQty = 1;
+    let selectedEdition = ""; // NOT set by default - customer must choose!
+
+    function setEdition(ed) {
+      selectedEdition = ed === "english" ? "english" : (ed === "kannada" ? "kannada" : "");
+
+      const cardKn = document.getElementById("editionCardKn");
+      const cardEn = document.getElementById("editionCardEn");
+      const radioKn = document.querySelector('input[name="bookEdition"][value="kannada"]');
+      const radioEn = document.querySelector('input[name="bookEdition"][value="english"]');
+      const bookTitleEl = document.getElementById("summaryBookTitle");
+      const bookDescEl = document.getElementById("summaryBookDesc");
+      const sec = document.getElementById("editionSection");
+      const errNotice = document.getElementById("editionErrorNotice");
+
+      if (sec) sec.classList.remove("has-error");
+      if (errNotice) errNotice.style.display = "none";
+
+      if (selectedEdition === "english") {
+        if (cardKn) cardKn.classList.remove("active");
+        if (cardEn) cardEn.classList.add("active");
+        if (radioEn) radioEn.checked = true;
+        if (radioKn) radioKn.checked = false;
+        if (bookTitleEl) bookTitleEl.innerHTML = 'The Art of Price &middot; <span style="color:#0284c7;font-weight:800;">English Edition</span>';
+        if (bookDescEl) bookDescEl.textContent = "₹1 per book · Hardcover · Complete Technical Analysis in English";
+      } else if (selectedEdition === "kannada") {
+        if (cardKn) cardKn.classList.add("active");
+        if (cardEn) cardEn.classList.remove("active");
+        if (radioKn) radioKn.checked = true;
+        if (radioEn) radioEn.checked = false;
+        if (bookTitleEl) bookTitleEl.innerHTML = 'The Art of Price &middot; <span style="color:#b45309;font-weight:800;">ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್ (ಕನ್ನಡ)</span>';
+        if (bookDescEl) bookDescEl.textContent = "₹1 per book · Hardcover · 500+ Pages in Kannada";
+      }
+    }
+    window.setEdition = setEdition;
+    window.selectEdition = setEdition;
+
+    function bindEditionCardListeners() {
+      const cardKn = document.getElementById("editionCardKn");
+      const cardEn = document.getElementById("editionCardEn");
+      if (cardKn) {
+        cardKn.addEventListener("click", function () { setEdition("kannada"); });
+      }
+      if (cardEn) {
+        cardEn.addEventListener("click", function () { setEdition("english"); });
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        bindEditionCardListeners();
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const ed = (urlParams.get("edition") || "").trim().toLowerCase();
+          if (ed === "kannada" || ed === "kn") setEdition("kannada");
+          else if (ed === "english" || ed === "en") setEdition("english");
+        } catch (_) {}
+      });
+    } else {
+      bindEditionCardListeners();
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ed = (urlParams.get("edition") || "").trim().toLowerCase();
+        if (ed === "kannada" || ed === "kn") setEdition("kannada");
+        else if (ed === "english" || ed === "en") setEdition("english");
+      } catch (_) {}
+    }
+
+    // Auto-sync customer name & phone to delivery recipient
+    const nameEl = document.getElementById("aopName");
+    const phoneEl = document.getElementById("aopPhone");
+    const delNameEl = document.getElementById("aopDeliveryName");
+    const delPhoneEl = document.getElementById("aopDeliveryPhone");
+
+    let delNameManual = false;
+    let delPhoneManual = false;
+
+    if (delNameEl) delNameEl.addEventListener("input", () => { delNameManual = true; });
+    if (delPhoneEl) delPhoneEl.addEventListener("input", () => { delPhoneManual = true; });
+
+    if (nameEl) nameEl.addEventListener("input", () => {
+      if (!delNameManual || !delNameEl.value.trim()) {
+        delNameEl.value = nameEl.value;
+      }
+    });
+
+    if (phoneEl) phoneEl.addEventListener("input", () => {
+      if (!delPhoneManual || !delPhoneEl.value.trim()) {
+        delPhoneEl.value = phoneEl.value;
+      }
+    });
+
+    // Billing toggle
+    const sameBillingCheckbox = document.getElementById("aopSameBilling");
+    const billingSection = document.getElementById("aopBillingSection");
+
+    if (sameBillingCheckbox && billingSection) {
+      sameBillingCheckbox.addEventListener("change", function () {
+        billingSection.style.display = this.checked ? "none" : "block";
+      });
+    }
+
+    // Quantity update
+    function updateQty(delta) {
+      const qtyInput = document.getElementById("aopQuantity");
+      const currentVal = parseInt(qtyInput ? qtyInput.value : currentQty, 10) || 1;
+      const next = currentVal + delta;
+      if (next >= 1 && next <= 50) {
+        currentQty = next;
+        if (qtyInput) qtyInput.value = currentQty;
+        const minusBtn = document.getElementById("qtyMinus");
+        const plusBtn = document.getElementById("qtyPlus");
+        if (minusBtn) minusBtn.disabled = currentQty <= 1;
+        if (plusBtn) plusBtn.disabled = currentQty >= 50;
+        renderSummary();
+      }
+    }
+    window.updateQty = updateQty;
+
+    // Direct click listeners
+    const minusBtnEl = document.getElementById("qtyMinus");
+    const plusBtnEl = document.getElementById("qtyPlus");
+    if (minusBtnEl) {
+      minusBtnEl.onclick = function (e) {
+        e.preventDefault();
+        updateQty(-1);
+      };
+    }
+    if (plusBtnEl) {
+      plusBtnEl.onclick = function (e) {
+        e.preventDefault();
+        updateQty(1);
+      };
+    }
+
+    function renderSummary() {
+      const qtyInput = document.getElementById("aopQuantity");
+      if (qtyInput) {
+        const parsed = parseInt(qtyInput.value, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 50) {
+          currentQty = parsed;
+        }
+      }
+
+      const subtotal = UNIT_PRICE * currentQty;
+      const totalMrp = MRP_PRICE * currentQty;
+      const savings = Math.max(0, (MRP_PRICE - UNIT_PRICE) * currentQty);
+
+      const summaryQty = document.getElementById("summaryQty");
+      if (summaryQty) summaryQty.textContent = currentQty;
+      const summaryQtyMrp = document.getElementById("summaryQtyMrp");
+      if (summaryQtyMrp) summaryQtyMrp.textContent = currentQty;
+      const summarySubtotal = document.getElementById("summarySubtotal");
+      if (summarySubtotal) summarySubtotal.textContent = subtotal.toLocaleString("en-IN");
+      const summaryMrp = document.getElementById("summaryMrp");
+      if (summaryMrp) summaryMrp.textContent = totalMrp.toLocaleString("en-IN");
+      const summarySavings = document.getElementById("summarySavings");
+      if (summarySavings) summarySavings.textContent = savings.toLocaleString("en-IN");
+      const summaryTotal = document.getElementById("summaryTotal");
+      if (summaryTotal) summaryTotal.textContent = subtotal.toLocaleString("en-IN");
+
+      const btnPay = document.getElementById("btnPayAmount");
+      if (btnPay) btnPay.textContent = subtotal.toLocaleString("en-IN");
+      const btnPayKn = document.getElementById("btnPayAmountKn");
+      if (btnPayKn) btnPayKn.textContent = subtotal.toLocaleString("en-IN");
+    }
+
+    function showError(text) {
+      const eb = document.getElementById("aopErrorBox");
+      if (text) {
+        eb.textContent = text;
+        eb.classList.add("show");
+        eb.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        eb.textContent = "";
+        eb.classList.remove("show");
+      }
+    }
+
+    // FORM SUBMISSION WITH RAZORPAY PAYMENT GATEWAY
+    const form = document.getElementById("aopPrebookForm");
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      showError("");
+
+      const name = (document.getElementById("aopName").value || "").trim();
+      const email = (document.getElementById("aopEmail").value || "").trim().toLowerCase();
+      const phoneRaw = document.getElementById("aopPhone").value || "";
+      const phone = phoneRaw.replace(/\D/g, "").slice(-10);
+
+      const delName = (document.getElementById("aopDeliveryName").value || "").trim();
+      const delPhoneRaw = document.getElementById("aopDeliveryPhone").value || "";
+      const delPhone = delPhoneRaw.replace(/\D/g, "").slice(-10);
+      const address = (document.getElementById("aopAddress").value || "").trim();
+      const address2 = (document.getElementById("aopAddress2").value || "").trim();
+      const city = (document.getElementById("aopCity").value || "").trim();
+      const state = (document.getElementById("aopState").value || "").trim();
+      const pincodeRaw = document.getElementById("aopPincode").value || "";
+      const pincode = pincodeRaw.replace(/\D/g, "").slice(0, 6);
+
+      // Validation
+      if (!name) return showError("Please enter your full name.");
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Please enter a valid email address.");
+      if (!phone || phone.length !== 10) return showError("Please enter a valid 10-digit mobile number.");
+      if (!delName) return showError("Please enter recipient name for delivery.");
+      if (!delPhone || delPhone.length !== 10) return showError("Please enter a valid 10-digit delivery phone number.");
+      if (!address) return showError("Please enter delivery address Line 1.");
+      if (address.length > 30 || address2.length > 30) return showError("Address Line 1 and Line 2 must be under 30 characters each.");
+      if (!city) return showError("Please enter city.");
+      if (!state) return showError("Please enter state.");
+      if (!pincode || pincode.length !== 6) return showError("Please enter a valid 6-digit postal pincode.");
+
+      // Book Edition Validation (Customer must explicitly select Kannada or English)
+      if (!selectedEdition) {
+        const sec = document.getElementById("editionSection");
+        const errNotice = document.getElementById("editionErrorNotice");
+        if (sec) {
+          sec.classList.add("has-error");
+          sec.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (errNotice) errNotice.style.display = "block";
+        return showError("Please select a book edition (Kannada or English) / ದಯವಿಟ್ಟು ಪುಸ್ತಕದ ಭಾಷಾ ಆವೃತ್ತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.");
+      }
+
+      // Billing Address
+      const sameBilling = sameBillingCheckbox.checked;
+      let billingAddress;
+      if (sameBilling) {
+        billingAddress = {
+          sameAsDelivery: true,
+          name: delName,
+          phone: delPhone,
+          address,
+          address2,
+          city,
+          state,
+          pincode,
+          country: "India",
+        };
+      } else {
+        const bName = (document.getElementById("aopBillingName").value || delName).trim();
+        const bPhone = (document.getElementById("aopBillingPhone").value || delPhone).replace(/\D/g, "").slice(-10);
+        const bAddress = (document.getElementById("aopBillingAddress").value || address).trim();
+        const bAddress2 = (document.getElementById("aopBillingAddress2").value || address2).trim();
+        const bCity = (document.getElementById("aopBillingCity").value || city).trim();
+        const bState = (document.getElementById("aopBillingState").value || state).trim();
+        const bPincode = (document.getElementById("aopBillingPincode").value || pincode).replace(/\D/g, "").slice(0, 6);
+
+        billingAddress = {
+          sameAsDelivery: false,
+          name: bName,
+          phone: bPhone,
+          address: bAddress,
+          address2: bAddress2,
+          city: bCity,
+          state: bState,
+          pincode: bPincode,
+          country: "India",
+        };
+      }
+
+      const submitBtn = document.getElementById("aopSubmitBtn");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = "<span>Connecting to Razorpay / ಪಾವತಿ ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ...</span>";
+
+      const submitQtyInput = document.getElementById("aopQuantity");
+      if (submitQtyInput) {
+        const parsed = parseInt(submitQtyInput.value, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 50) currentQty = parsed;
+      }
+      const totalAmount = UNIT_PRICE * currentQty;
+
+      const orderPayload = {
+        name,
+        email,
+        phone,
+        edition: selectedEdition,
+        shippingAddress: {
+          name: delName,
+          phone: delPhone,
+          address,
+          address2,
+          landmark: address2,
+          city,
+          state,
+          pincode,
+          country: "India",
+        },
+        billingAddress,
+        quantity: currentQty,
+        source: new URLSearchParams(window.location.search).get("source") || "the_art_of_price_prebook",
+      };
+
+      try {
+        // 1. Create Razorpay Payment Order (This endpoint also writes draft order into artOfPriceOrders so NO DATA IS MISSED)
+        const orderRes = await fetch(`${API_BASE}/art-of-price/create-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+
+        const orderData = await orderRes.json();
+        if (!orderRes.ok || !orderData.success) {
+          throw new Error(orderData.message || "Failed to initialize payment gateway.");
+        }
+
+        const chosenEditionTitle = selectedEdition === "english"
+          ? "The Art of Price (English Edition)"
+          : "The Art of Price (ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್ - ಕನ್ನಡ)";
+        const chosenSku = orderData.order?.sku || (selectedEdition === "english" ? "THE-ART-OF-PRICE-EN-EDITION" : "THE-ART-OF-PRICE-KN-EDITION");
+
+        // 2. Open Razorpay Checkout Modal
+        const rzpOptions = {
+          key: orderData.keyId || "rzp_live_TgapWXBpVsHDBm",
+          amount: orderData.amount, // in paise (100 = ₹1)
+          currency: "INR",
+          name: "Wealthoria",
+          description: chosenEditionTitle,
+          image: "/assets/logo-mark.png",
+          order_id: orderData.orderId,
+          prefill: {
+            name: orderData.customer?.name || name,
+            email: orderData.customer?.email || email,
+            contact: orderData.customer?.phone || phone,
+          },
+          notes: {
+            bookingId: orderData.bookingId,
+            edition: selectedEdition,
+            sku: chosenSku,
+            bookTitle: chosenEditionTitle,
+          },
+          theme: {
+            color: "#f4823c",
+          },
+          modal: {
+            ondismiss: function () {
+              fetch(`${API_BASE}/art-of-price/payment-attempt`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: orderData.orderId,
+                  reason: "User closed Razorpay checkout modal",
+                }),
+              }).catch(() => { });
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = `<span>Proceed to Pay ₹${totalAmount} / ₹${totalAmount} ಪಾವತಿಸಿ →</span>`;
+            },
+          },
+          handler: async function (response) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "<span>Verifying Payment / ಪಾವತಿ ದೃಢೀಕರಿಸಲಾಗುತ್ತಿದೆ...</span>";
+
+            try {
+              const verifyRes = await fetch(`${API_BASE}/art-of-price/verify-payment`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyRes.json();
+              if (!verifyRes.ok || !verifyData.success) {
+                throw new Error(verifyData.message || "Payment verification failed.");
+              }
+
+              // Fire conversion pixels
+              if (window.fbq) {
+                fbq('track', 'Purchase', {
+                  content_name: chosenEditionTitle,
+                  value: totalAmount,
+                  currency: 'INR'
+                });
+              }
+              if (window.gtag) {
+                gtag('event', 'purchase', {
+                  transaction_id: response.razorpay_payment_id,
+                  value: totalAmount,
+                  currency: 'INR'
+                });
+              }
+
+              // Display Success Confirmation
+              document.getElementById("aopPrebookForm").style.display = "none";
+              document.getElementById("displayBookingId").textContent = orderData.bookingId;
+
+              const editionDisplayBadge = selectedEdition === "english"
+                ? '<span style="color:#0284c7;font-weight:750;">English Edition</span>'
+                : '<span style="color:#b45309;font-weight:750;">ಕನ್ನಡ ಆವೃತ್ತಿ / Kannada Edition</span>';
+
+              document.getElementById("detailsPreview").innerHTML = `
+                <div style="margin-bottom:8px;"><strong>Status:</strong> <span style="color:#16a34a;font-weight:700;">✓ Payment Confirmed & Pre-booking Recorded</span></div>
+                <div style="margin-bottom:8px;"><strong>Booking ID:</strong> ${orderData.bookingId}</div>
+                <div style="margin-bottom:8px;"><strong>Razorpay Payment ID:</strong> ${response.razorpay_payment_id}</div>
+                <div style="margin-bottom:8px;"><strong>Book:</strong> ${chosenEditionTitle}</div>
+                <div style="margin-bottom:8px;"><strong>Edition:</strong> ${editionDisplayBadge}</div>
+                <div style="margin-bottom:8px;"><strong>Quantity:</strong> ${currentQty} Copy / Copies</div>
+                <div style="margin-bottom:8px;"><strong>Amount Paid:</strong> ₹${totalAmount.toLocaleString("en-IN")}.00 (Free Pan-India Delivery)</div>
+                <div style="margin-bottom:8px;"><strong>Customer:</strong> ${name} · ${phone}</div>
+                <div><strong>Delivery To:</strong> ${delName}, ${address}${address2 ? ', ' + address2 : ''}, ${city}, ${state} - ${pincode}</div>
+              `;
+
+              const successCard = document.getElementById("aopSuccessCard");
+              successCard.classList.add("show");
+              successCard.scrollIntoView({ behavior: "smooth", block: "start" });
+
+              const redirectLang = selectedEdition === 'english' ? 'en' : 'kn';
+              const redirectSku = chosenSku || (selectedEdition === 'english' ? 'THE-ART-OF-PRICE-EN-EDITION' : 'THE-ART-OF-PRICE-KN-EDITION');
+              const thankYouUrl = (location.protocol === 'file:' ? './thank-you.html' : '/thank-you.html') + 
+                '?lang=' + encodeURIComponent(redirectLang) +
+                '&sku=' + encodeURIComponent(redirectSku) +
+                '&s=ok' +
+                '&o=' + encodeURIComponent(orderData.bookingId);
+              setTimeout(function(){
+                location.href = thankYouUrl;
+              }, 1200);
+            } catch (verErr) {
+              console.error("Verification error:", verErr);
+              showError("Payment received (" + response.razorpay_payment_id + "), but verification check failed: " + verErr.message + ". Your Booking ID is " + orderData.bookingId + ". Please contact support if needed.");
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = `<span>Proceed to Pay ₹${totalAmount} / ₹${totalAmount} ಪಾವತಿಸಿ →</span>`;
+            }
+          },
+        };
+
+        if (typeof window.Razorpay !== "function") {
+          throw new Error("Razorpay SDK could not be loaded. Please disable ad-blockers or reload the page.");
+        }
+
+        const rzp = new window.Razorpay(rzpOptions);
+        rzp.on("payment.failed", function (resp) {
+          fetch(`${API_BASE}/art-of-price/payment-attempt`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: orderData.orderId,
+              reason: resp.error?.description || "Payment failed",
+              error: resp.error,
+            }),
+          }).catch(() => { });
+
+          showError("Payment Failed: " + (resp.error?.description || "Payment could not be processed. Please try again."));
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>Proceed to Pay ₹${totalAmount} / ₹${totalAmount} ಪಾವತಿಸಿ →</span>`;
+        });
+
+        rzp.open();
+      } catch (err) {
+        console.error("Payment initiation error:", err);
+        showError("Failed to initiate payment: " + (err.message || "Please check your details and try again."));
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Proceed to Pay ₹${totalAmount} / ₹${totalAmount} ಪಾವತಿಸಿ →</span>`;
+      }
+    });
+
+    // Initial calculation
+    renderSummary();
+  </script>
+
+</body>
+
+</html>

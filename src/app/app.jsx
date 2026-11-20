@@ -108,17 +108,22 @@ function checkPublicDependencies() {
    PUBLIC WEBSITE
    ========================================================= */
 
+function getInitialLang() {
+  try {
+    const p = (window.location.pathname || "").toLowerCase();
+    if (p === "/kn" || p.startsWith("/kn/")) return "kn";
+    const sp = new URLSearchParams(window.location.search).get("lang");
+    if (sp === "kn" || sp === "en") return sp;
+  } catch {}
+  return localStorage.getItem("wl-lang") || "en";
+}
+
 function App() {
 
   const [
     lang,
     setLangState
-  ] = useState(
-    () =>
-      localStorage.getItem(
-        "wl-lang"
-      ) || "en"
-  );
+  ] = useState(getInitialLang);
 
 
   const [
@@ -173,6 +178,16 @@ function App() {
           ? "kn"
           : "en";
 
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        canonical.setAttribute(
+          "href",
+          lang === "kn"
+            ? "https://www.wealthoria.in/kn/"
+            : "https://www.wealthoria.in/"
+        );
+      }
+
     },
     [lang]
   );
@@ -189,6 +204,20 @@ function App() {
         setLangState(
           language
         );
+
+        try {
+          const p = (window.location.pathname || "").toLowerCase();
+          if (p === "/" || p === "/index.html" || p === "/kn" || p === "/kn/") {
+            const target = language === "kn" ? "/kn/" : "/";
+            if (window.location.pathname !== target) {
+              window.history.replaceState(
+                {},
+                "",
+                target + window.location.search + window.location.hash
+              );
+            }
+          }
+        } catch {}
 
       },
       []
@@ -297,30 +326,31 @@ function App() {
   };
 
 
-const currentPage = new URLSearchParams(
-  window.location.search
-).get("page");
+  const currentPage = new URLSearchParams(
+    window.location.search
+  ).get("page");
 
-const currentPath = window.location.pathname.toLowerCase();
+  const currentPath = window.location.pathname.toLowerCase();
 
-const isPrivacyPolicy =
-  currentPath === "/privacy-policy.html" ||
-  currentPage === "privacy-policy";
+  const isPrivacyPolicy =
+    currentPath === "/privacy-policy.html" ||
+    currentPage === "privacy-policy";
 
-const isTermsPage =
-  currentPath === "/terms.html" ||
-  currentPage === "terms";
+  const isTermsPage =
+    currentPath === "/terms.html" ||
+    currentPage === "terms";
 
   const isRefundPolicy =
-  currentPath === "/refund-policy.html" ||
-  currentPage === "refund-policy";
+    currentPath === "/refund-policy.html" ||
+    currentPage === "refund-policy";
 
 
   const isContactUs =
-  currentPath === "/contactus.html" ||
-  currentPage === "contactus";
+    currentPath === "/contact.html" ||
+    currentPath === "/contactus.html" ||
+    currentPage === "contactus";
 
-const PrivacyPolicy = window.PrivacyPolicy;
+  const PrivacyPolicy = window.PrivacyPolicy;
   /* =======================================================
      RENDER
      ======================================================= */
@@ -366,150 +396,150 @@ const PrivacyPolicy = window.PrivacyPolicy;
         </main>
       ) : isRefundPolicy ? (
         <main className="privacy-page">
-        
-<article className="privacy-card">
 
-  <h1>Cancellation &amp; Refund Policy</h1>
-
-  <div className="privacy-divider" />
-
-  <h2>1. Membership Subscription</h2>
-  <p>
-    Wealthoria offers a membership subscription at ₹99 per month.
-    Active subscribers receive access to a dedicated member portal
-    and dashboard, where they can watch videos, access weekly
-    round-ups, and view the latest updates and available membership
-    content.
-  </p>
-
-  <h2>2. Subscription Renewal and Auto-Debit</h2>
-  <p>
-    Your subscription may renew automatically each month according
-    to your selected payment method and auto-debit authorization.
-    If you cancel your auto-debit authorization, future automatic
-    subscription payments will stop. You can continue accessing the
-    member portal until the end of the subscription period you have
-    already paid for.
-  </p>
-
-  <h2>3. Access After Subscription Expiry</h2>
-  <p>
-    Once your paid subscription period ends, access to the member
-    portal and subscription content will be suspended if your
-    subscription has not been renewed.
-  </p>
-
-  <h2>4. Reactivating Your Membership</h2>
-  <p>
-    You can subscribe again using the same email address associated
-    with your existing account. Once your new subscription is
-    successfully activated, your membership access will be restored.
-  </p>
-
-  <h2>5. Cancellation and Refunds</h2>
-  <p>
-    Subscription payments are generally non-refundable once a
-    subscription period has started, except where a refund is
-    required by applicable law or approved by Wealthoria.
-  </p>
-  <p>
-    If Wealthoria cancels a paid service and you are eligible for
-    a refund, the refund will be processed as applicable.
-  </p>
-
-  <h2>6. Contact Us</h2>
-  <p>
-    For assistance with subscriptions, auto-debit cancellation,
-    membership access, or refunds, contact{" "}
-    <a href="mailto:support@wealthoria.in">
-      support@wealthoria.in
-    </a>.
-  </p>
-</article>
-        </main>
-      ) 
-      : isContactUs ? (
-        <main className="privacy-page">
           <article className="privacy-card">
 
-            <h1>Contact Us</h1>
+            <h1>Cancellation &amp; Refund Policy</h1>
+
             <div className="privacy-divider" />
 
+            <h2>1. Membership Subscription</h2>
             <p>
-              We're here to help you with your Wealthoria membership,
-              subscriptions, webinars, and learning experience.
+              Wealthoria offers a membership subscription at ₹99 per month.
+              Active subscribers receive access to a dedicated member portal
+              and dashboard, where they can watch videos, access weekly
+              round-ups, and view the latest updates and available membership
+              content.
             </p>
 
-            <h2>How Can We Help You?</h2>
-            <ul>
-              <li>Membership subscriptions, renewals, and auto-debit cancellation.</li>
-              <li>Member portal login, dashboard access, and subscription activation.</li>
-              <li>Webinar registration, payments, and joining links.</li>
-              <li>Educational videos, weekly round-ups, and membership updates.</li>
-              <li>Payment confirmation and eligible refund queries.</li>
-            </ul>
-
-            <h2>Contact Information</h2>
+            <h2>2. Subscription Renewal and Auto-Debit</h2>
             <p>
-              <strong>Email:</strong>{" "}
+              Your subscription may renew automatically each month according
+              to your selected payment method and auto-debit authorization.
+              If you cancel your auto-debit authorization, future automatic
+              subscription payments will stop. You can continue accessing the
+              member portal until the end of the subscription period you have
+              already paid for.
+            </p>
+
+            <h2>3. Access After Subscription Expiry</h2>
+            <p>
+              Once your paid subscription period ends, access to the member
+              portal and subscription content will be suspended if your
+              subscription has not been renewed.
+            </p>
+
+            <h2>4. Reactivating Your Membership</h2>
+            <p>
+              You can subscribe again using the same email address associated
+              with your existing account. Once your new subscription is
+              successfully activated, your membership access will be restored.
+            </p>
+
+            <h2>5. Cancellation and Refunds</h2>
+            <p>
+              Subscription payments are generally non-refundable once a
+              subscription period has started, except where a refund is
+              required by applicable law or approved by Wealthoria.
+            </p>
+            <p>
+              If Wealthoria cancels a paid service and you are eligible for
+              a refund, the refund will be processed as applicable.
+            </p>
+
+            <h2>6. Contact Us</h2>
+            <p>
+              For assistance with subscriptions, auto-debit cancellation,
+              membership access, or refunds, contact{" "}
               <a href="mailto:support@wealthoria.in">
                 support@wealthoria.in
-              </a>
-            </p>
-
-            <p>
-              <strong>Phone:</strong>{" "}
-              <a href="tel:+919019759001">
-                +91 90197 59001
-              </a>
-            </p>
-
-            <p>
-              <strong>Website:</strong>{" "}
-              <a href="https://www.wealthoria.in/">
-                www.wealthoria.in
-              </a>
-            </p>
-             <p>
-              <strong>Location:</strong>{" "}
-              Wealthoria Education Private Limited, No.2687/1, D-1, 2nd Floor, 5th Cross, Kalidasa Road, V V Mohalla, Mysuru - 570002, Karnataka
-            </p>
-
-            <p>
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=Wealthoria+Education+Private+Limited+Kalidasa+Road+VV+Mohalla+Mysuru+570002"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View on Google Maps →
-              </a>
-            </p>
-
-            <h2>Need Assistance?</h2>
-            <p>
-              Email us with a brief description of your issue. For
-              account-related queries, include your registered email
-              address. Please do not send passwords, OTPs, or card details.
+              </a>.
             </p>
           </article>
-        </main>):(
-        <main>
-          <Hero onNav={onNav} />
-          <Ticker />
-          <IntroVideo />
-          <Metrics />
-          <Narrative />
-          <Why />
-          <Programs onNav={onNav} />
-          <Process />
-          <Founder />
-          <Testimonials />
-          <YouTube />
-          <Library />
-          <EnquiryForm />
-          <FAQ />
         </main>
-      )}
+      )
+        : isContactUs ? (
+          <main className="privacy-page">
+            <article className="privacy-card">
+
+              <h1>Contact Us</h1>
+              <div className="privacy-divider" />
+
+              <p>
+                We're here to help you with your Wealthoria membership,
+                subscriptions, webinars, and learning experience.
+              </p>
+
+              <h2>How Can We Help You?</h2>
+              <ul>
+                <li>Membership subscriptions, renewals, and auto-debit cancellation.</li>
+                <li>Member portal login, dashboard access, and subscription activation.</li>
+                <li>Webinar registration, payments, and joining links.</li>
+                <li>Educational videos, weekly round-ups, and membership updates.</li>
+                <li>Payment confirmation and eligible refund queries.</li>
+              </ul>
+
+              <h2>Contact Information</h2>
+              <p>
+                <strong>Email:</strong>{" "}
+                <a href="mailto:support@wealthoria.in">
+                  support@wealthoria.in
+                </a>
+              </p>
+
+              <p>
+                <strong>Phone:</strong>{" "}
+                <a href="tel:+919019759001">
+                  +91 90197 59001
+                </a>
+              </p>
+
+              <p>
+                <strong>Website:</strong>{" "}
+                <a href="https://www.wealthoria.in/">
+                  www.wealthoria.in
+                </a>
+              </p>
+              <p>
+                <strong>Location:</strong>{" "}
+                Wealthoria Education Private Limited, No.2687/1, D-1, 2nd Floor, 5th Cross, Kalidasa Road, V V Mohalla, Mysuru - 570002, Karnataka
+              </p>
+
+              <p>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Wealthoria+Education+Private+Limited+Kalidasa+Road+VV+Mohalla+Mysuru+570002"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on Google Maps →
+                </a>
+              </p>
+
+              <h2>Need Assistance?</h2>
+              <p>
+                Email us with a brief description of your issue. For
+                account-related queries, include your registered email
+                address. Please do not send passwords, OTPs, or card details.
+              </p>
+            </article>
+          </main>) : (
+          <main>
+            <Hero onNav={onNav} />
+            <Ticker />
+            <IntroVideo />
+            <Metrics />
+            <Narrative />
+            <Why />
+            <Programs onNav={onNav} />
+            <Process />
+            <Founder />
+            <Testimonials />
+            <YouTube />
+            <Library />
+            <EnquiryForm />
+            <FAQ />
+          </main>
+        )}
 
       {typeof window.WealthoriaAIFloat === "function" && (
         <window.WealthoriaAIFloat lang={lang} />
@@ -605,7 +635,7 @@ function RootApp() {
     path.startsWith("/members/")
   ) {
 
-   
+
 
     if (
       typeof MembersRouter === "function"

@@ -4,6 +4,7 @@ import {
   trackMemberContentOpen
 } from "./memberContent.js";
 import React from "react";
+import MemberThumbnail from "./MemberThumbnail.jsx";
 
 /* global React, window */
 
@@ -75,32 +76,32 @@ function RatioAnalysis() {
 
     return API_BASE_URL + "/" + fileUrl;
   };
-const getFreshThumbnailUrl = async (contentId, token) => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/members/content-thumbnail-url/${contentId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+  const getFreshThumbnailUrl = async (contentId, token) => {
+    const response = await fetch(
+      `${API_BASE_URL}/api/members/content-thumbnail-url/${contentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
       }
-    }
-  );
-
-  const data = await response.json();
-
-  if (
-    !response.ok ||
-    !data?.success ||
-    !data?.url
-  ) {
-    throw new Error(
-      data?.message ||
-      "Unable to load thumbnail."
     );
-  }
 
-  return data.url;
-};
+    const data = await response.json();
+
+    if (
+      !response.ok ||
+      !data?.success ||
+      !data?.url
+    ) {
+      throw new Error(
+        data?.message ||
+        "Unable to load thumbnail."
+      );
+    }
+
+    return data.url;
+  };
   const formatDate = (value) => {
 
     if (!value) {
@@ -179,7 +180,7 @@ const getFreshThumbnailUrl = async (contentId, token) => {
           "category",
 
           "==",
-         "Ratio Analysis"
+          "Ratio Analysis"
         )
         .where(
           "status",
@@ -188,7 +189,7 @@ const getFreshThumbnailUrl = async (contentId, token) => {
         )
         .onSnapshot(
 
-         async (snapshot) => {
+          async (snapshot) => {
 
             const rows =
               snapshot.docs.map(
@@ -215,13 +216,13 @@ const getFreshThumbnailUrl = async (contentId, token) => {
                         ? data.tags
                         : [],
 
-                   pdfUrl:
-  data.pdfUrl ||
-  "",
+                    pdfUrl:
+                      data.pdfUrl ||
+                      "",
 
-pdfPath:
-  data.pdfPath ||
-  "",
+                    pdfPath:
+                      data.pdfPath ||
+                      "",
 
                     thumbnailUrl:
                       data.thumbnailUrl ||
@@ -237,64 +238,9 @@ pdfPath:
               );
 
 
-     const currentUid =
-  localStorage.getItem("wealthoria-current-member");
-
-const sessionsData =
-  localStorage.getItem("wealthoria-member-sessions");
-
-let sessions = {};
-
-try {
-  sessions = sessionsData
-    ? JSON.parse(sessionsData)
-    : {};
-} catch {
-  sessions = {};
-}
-
-const member =
-  currentUid
-    ? sessions[currentUid]
-    : null;
-
-const token =
-  member?.token;
-if (token) {
-  const reportsWithFreshThumbnails =
-    await Promise.all(
-      rows.map(async (report) => {
-        if (!report.thumbnailUrl) {
-          return report;
-        }
-
-        try {
-          const freshThumbnailUrl =
-            await getFreshThumbnailUrl(
-              report.id,
-              token
-            );
-
-          return {
-            ...report,
-            thumbnailUrl: freshThumbnailUrl
-          };
-        } catch (error) {
-          console.error(
-            "Thumbnail refresh failed:",
-            report.id,
-            error
-          );
-
-          return report;
-        }
-      })
-    );
-
-  setReports(reportsWithFreshThumbnails);
-} else {
-  setReports(rows);
-}
+            // Render reports immediately; MemberThumbnail lazily fetches
+            // signed URLs & compressed 640px WebP thumbnails as cards enter view.
+            setReports(rows);
 
             setLoading(false);
 
@@ -468,7 +414,7 @@ if (token) {
           </span>
 
           <h2>
-           Ratio Analysis
+            Ratio Analysis
           </h2>
 
           <p>
@@ -543,7 +489,7 @@ if (token) {
         </div>
       ) : (
         <div className="member-newsletter-months">
-          {reportMonths.map((month) => (
+          {reportMonths.map((month, monthIndex) => (
             <section
               className="member-newsletter-month"
               key={month.key}
@@ -561,16 +507,20 @@ if (token) {
               </div>
 
               <div className="member-newsletter-grid">
-                {month.reports.map((report) => (
+                {month.reports.map((report, cardIndex) => (
                   <article
                     className="member-newsletter-card"
                     key={report.id}
                   >
                     <div className="member-newsletter-icon">
                       {report.thumbnailUrl ? (
-                        <img
-                         src={report.thumbnailUrl}
+                        <MemberThumbnail
+                          contentId={report.id}
+                          fallbackUrl={getFileUrl(report.thumbnailUrl)}
                           alt={report.title}
+                          width={320}
+                          height={180}
+                          eager={monthIndex === 0 && cardIndex < 4}
                         />
                       ) : (
                         <span>PDF</span>
@@ -604,7 +554,7 @@ if (token) {
                       type="button"
                       className="member-newsletter-button"
                       disabled={!(report.pdfPath || report.pdfUrl)}
-             onClick={() => openReport(report)}
+                      onClick={() => openReport(report)}
                     >
                       Read Report →
                     </button>
@@ -641,7 +591,7 @@ if (token) {
               <div>
 
                 <span>
-                 Ratio Analysis
+                  Ratio Analysis
                 </span>
 
                 <h3>
@@ -665,7 +615,7 @@ if (token) {
 
 
             <iframe
-             src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
+              src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
               title={selectedPdf.title}
               className="member-pdf-frame"
             />

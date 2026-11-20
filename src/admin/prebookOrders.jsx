@@ -7,12 +7,7 @@ const { MIcon } = window;
 const API_BASE_URL =
   typeof window !== "undefined" && window.WEALTHORIA_API_BASE !== undefined
     ? window.WEALTHORIA_API_BASE
-    : typeof window !== "undefined" &&
-      (window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        !window.location.hostname.endsWith("wealthoria.in"))
-      ? ""
-      : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+    : "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 async function getAdminToken() {
   const currentUser = auth?.currentUser || window.auth?.currentUser;
@@ -394,11 +389,88 @@ function AddressBox({ title, address, onEdit }) {
   );
 }
 
+
+/* =========================================================
+   METRIC & INVENTORY ICONS (Crisp inline SVGs)
+========================================================= */
+function MetricIcon({ type, color = "#2563eb", size = 20 }) {
+  if (type === "orders") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 8v13H3V8" /><path d="M1 3h22v5H1z" /><path d="M10 12h4" />
+      </svg>
+    );
+  }
+  if (type === "paid") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    );
+  }
+  if (type === "revenue") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+    );
+  }
+  if (type === "pending") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+  }
+  if (type === "shipped") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    );
+  }
+  if (type === "delivered") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+      </svg>
+    );
+  }
+  if (type === "book") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    );
+  }
+  if (type === "stock") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" />
+      </svg>
+    );
+  }
+  if (type === "plus") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    );
+  }
+  return null;
+}
+
 /* =========================================================
    MAIN PAGE
 ========================================================= */
 
-function PrebookOrders() {
+function PrebookOrders({
+  collectionName = "bookOrders",
+  bookTitle = "Hoodikeya Vijnana",
+  bookSubtitle = "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ",
+  defaultPrice = 1499,
+  sku = "HOODIKEYA-VIJNANA"
+} = {}) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -425,6 +497,89 @@ function PrebookOrders() {
   const [labelNotice, setLabelNotice] = useState("");
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [selectedLabelOrders, setSelectedLabelOrders] = useState([]);
+
+  /* --- STOCK & INVENTORY STATE --- */
+  const [stockConfig, setStockConfig] = useState(() => {
+    try {
+      const cached = localStorage.getItem(`wealthoria_stock_${collectionName}`);
+      if (cached) return JSON.parse(cached);
+    } catch (_) {}
+    return { kannadaTotalStock: 0, englishTotalStock: 0, updatedAt: null };
+  });
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [stockModalTab, setStockModalTab] = useState("all"); // "kannada", "english", "all"
+  const [stockForm, setStockForm] = useState({
+    kannadaAdd: "",
+    kannadaTotal: "",
+    englishAdd: "",
+    englishTotal: "",
+    mode: "add" // "add" or "set"
+  });
+  const [savingStock, setSavingStock] = useState(false);
+
+  const openStockModal = (tab = "all") => {
+    setStockModalTab(tab);
+    setStockForm({
+      kannadaAdd: "",
+      kannadaTotal: String(stockConfig.kannadaTotalStock || 0),
+      englishAdd: "",
+      englishTotal: String(stockConfig.englishTotalStock || 0),
+      mode: "add"
+    });
+    setShowStockModal(true);
+  };
+
+  const handleSaveStock = async (e) => {
+    if (e) e.preventDefault();
+    setSavingStock(true);
+    try {
+      let finalKannada = stockConfig.kannadaTotalStock || 0;
+      let finalEnglish = stockConfig.englishTotalStock || 0;
+
+      if (stockForm.mode === "add") {
+        const addKn = parseInt(stockForm.kannadaAdd, 10);
+        if (!isNaN(addKn) && addKn > 0) finalKannada += addKn;
+        const addEn = parseInt(stockForm.englishAdd, 10);
+        if (!isNaN(addEn) && addEn > 0) finalEnglish += addEn;
+      } else {
+        const totKn = parseInt(stockForm.kannadaTotal, 10);
+        if (!isNaN(totKn) && totKn >= 0) finalKannada = totKn;
+        const totEn = parseInt(stockForm.englishTotal, 10);
+        if (!isNaN(totEn) && totEn >= 0) finalEnglish = totEn;
+      }
+
+      const updatedPayload = {
+        kannadaTotalStock: Math.max(0, finalKannada),
+        englishTotalStock: Math.max(0, finalEnglish),
+        updatedAt: new Date().toISOString(),
+        updatedBy: "Admin"
+      };
+
+      if (window.db && typeof window.db.collection === "function") {
+        await window.db.collection("prebookStock").doc(collectionName).set(updatedPayload, { merge: true });
+      }
+
+      setStockConfig(updatedPayload);
+      try {
+        localStorage.setItem(`wealthoria_stock_${collectionName}`, JSON.stringify(updatedPayload));
+      } catch (_) {}
+
+      setShowStockModal(false);
+    } catch (err) {
+      console.error("Save stock error:", err);
+      alert(err.message || "Failed to update stock. Please try again.");
+    } finally {
+      setSavingStock(false);
+    }
+  };
+
+  useEffect(() => {
+    setSelected(null);
+    setCurrentPage(1);
+    setSearch("");
+    setOrders([]);
+    setLoading(true);
+  }, [collectionName]);
 
   /* --- EDIT ORDER STATE --- */
   const [editingOrder, setEditingOrder] = useState(null);
@@ -610,7 +765,7 @@ function PrebookOrders() {
         adminNotes: editForm.notes.trim()
       };
 
-      await window.db.collection("bookOrders").doc(editingOrder.id).update(updatePayload);
+      await window.db.collection(collectionName).doc(editingOrder.id).update(updatePayload);
 
       // Optimistically update table row
       setOrders((prev) =>
@@ -652,11 +807,33 @@ function PrebookOrders() {
     let unsubAuth = null;
     let isSubscribed = false;
 
+    let unsubStock = null;
     const startListener = () => {
       if (isSubscribed) return;
       isSubscribed = true;
 
-      unsubscribe = window.db.collection("bookOrders").onSnapshot(
+      // Listen to prebookStock
+      try {
+        unsubStock = window.db.collection("prebookStock").doc(collectionName).onSnapshot(
+          (docSnap) => {
+            if (docSnap && docSnap.exists) {
+              const data = docSnap.data();
+              const cfg = {
+                kannadaTotalStock: Number(data.kannadaTotalStock) || 0,
+                englishTotalStock: Number(data.englishTotalStock) || 0,
+                updatedAt: data.updatedAt || null
+              };
+              setStockConfig(cfg);
+              try {
+                localStorage.setItem(`wealthoria_stock_${collectionName}`, JSON.stringify(cfg));
+              } catch (_) {}
+            }
+          },
+          (err) => console.warn("Stock snapshot listener warning:", err.message)
+        );
+      } catch (_) {}
+
+      unsubscribe = window.db.collection(collectionName).onSnapshot(
         (snapshot) => {
           const rows = snapshot.docs
             .map((doc) => ({
@@ -665,6 +842,16 @@ function PrebookOrders() {
             }))
             .filter((order) => {
               const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
+
+              // For artOfPriceOrders, all submitted pre-bookings are active unless cancelled
+              if (collectionName === "artOfPriceOrders") {
+                return (
+                  payStatus !== "failed" &&
+                  payStatus !== "cancelled" &&
+                  payStatus !== "canceled"
+                );
+              }
+
               const source = String(order.source || "").trim().toLowerCase();
 
               // Allow direct customer details form orders (source: customer-details-page, COD / payment pending, or confirmed book orders)
@@ -756,7 +943,7 @@ function PrebookOrders() {
       if (typeof unsubAuth === "function") unsubAuth();
       if (typeof unsubscribe === "function") unsubscribe();
     };
-  }, []);
+  }, [collectionName]);
 
   /* =======================================================
      DUPLICATE DETECTION
@@ -895,6 +1082,9 @@ function PrebookOrders() {
       const searchable = [
         order.bookingId,
         order.id,
+        order.edition,
+        order.editionLabel,
+        order.sku,
         customer.name,
         customer.email,
         customer.phone,
@@ -1064,6 +1254,59 @@ function PrebookOrders() {
   }, [orders]);
 
   /* =======================================================
+     STOCK & EDITION INVENTORY CALCULATION
+  ======================================================= */
+  const stockMetrics = useMemo(() => {
+    let kannadaBooked = 0;
+    let englishBooked = 0;
+
+    orders.forEach((order) => {
+      const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
+      const orderStatus = String(order.orderStatus || "").trim().toLowerCase();
+      const isCancelled =
+        payStatus === "failed" ||
+        payStatus === "cancelled" ||
+        payStatus === "canceled" ||
+        orderStatus === "cancelled";
+
+      if (!isCancelled) {
+        const qty = Math.max(1, Number(order.quantity || order.product?.quantity) || 1);
+        const ed = String(order.edition || order.product?.edition || "").trim().toLowerCase();
+        const sku = String(order.sku || order.product?.sku || "").trim().toUpperCase();
+        const isEnglish = ed === "english" || ed === "en" || sku.includes("-EN");
+
+        if (isEnglish) {
+          englishBooked += qty;
+        } else {
+          kannadaBooked += qty;
+        }
+      }
+    });
+
+    const kannadaTotal = stockConfig.kannadaTotalStock || 0;
+    const englishTotal = stockConfig.englishTotalStock || 0;
+
+    const kannadaInStock = Math.max(0, kannadaTotal - kannadaBooked);
+    const englishInStock = Math.max(0, englishTotal - englishBooked);
+
+    const totalStock = kannadaTotal + englishTotal;
+    const totalBooked = kannadaBooked + englishBooked;
+    const totalInStock = kannadaInStock + englishInStock;
+
+    return {
+      kannadaTotal,
+      kannadaBooked,
+      kannadaInStock,
+      englishTotal,
+      englishBooked,
+      englishInStock,
+      totalStock,
+      totalBooked,
+      totalInStock
+    };
+  }, [orders, stockConfig]);
+
+  /* =======================================================
      LOAD SheetJS (only when an export is clicked)
   ======================================================= */
 
@@ -1129,6 +1372,8 @@ function PrebookOrders() {
           "RECEIVER MOBILE NO": customer.phone,
           "Phone Number": customer.phone || "",
           "Book ID": order.bookingId || "",
+          "Edition": order.editionLabel || (order.edition === "english" || (order.sku && (order.sku.includes("-EN") || order.sku.endsWith("-EN"))) ? "English" : "Kannada"),
+          "SKU": order.sku || order.product?.sku || (order.edition === "english" ? "THE-ART-OF-PRICE-EN-EDITION" : "THE-ART-OF-PRICE-KN-EDITION"),
           "Quantity": order.quantity || order.product?.quantity || 1,
           "Order Date": getOrderFormattedDate(order),
           "Amount": order.amount ? `₹${order.amount}` : "",
@@ -1141,12 +1386,13 @@ function PrebookOrders() {
       worksheet["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }];
 
       const workbook = window.XLSX.utils.book_new();
-      window.XLSX.utils.book_append_sheet(workbook, worksheet, "Pre-book Orders");
+      window.XLSX.utils.book_append_sheet(workbook, worksheet, bookTitle.slice(0, 31));
 
       const today = new Date().toISOString().slice(0, 10);
+      const safePrefix = bookTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const fileName = showDuplicates
-        ? `wealthoria-duplicate-orders-${today}.xlsx`
-        : `wealthoria-prebook-orders-${today}.xlsx`;
+        ? `wealthoria-${safePrefix}-duplicate-orders-${today}.xlsx`
+        : `wealthoria-${safePrefix}-orders-${today}.xlsx`;
 
       window.XLSX.writeFile(workbook, fileName);
     } catch (err) {
@@ -1295,24 +1541,49 @@ function PrebookOrders() {
       setStatusError("");
       setStatusSuccess("");
 
-      const token = await getAdminToken();
+      let apiSuccess = false;
+      let apiMessage = "";
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/admin/notifications/prebook-orders/${encodeURIComponent(order.id)}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ shippingStatus: newStatus })
+      try {
+        const token = await getAdminToken();
+        const response = await fetch(
+          `${API_BASE_URL}/api/admin/notifications/prebook-orders/${encodeURIComponent(order.id)}/status`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ shippingStatus: newStatus, collectionName })
+          }
+        );
+
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data?.success) {
+          apiSuccess = true;
+        } else {
+          apiMessage = data?.message || "Server returned error";
         }
-      );
+      } catch (fetchErr) {
+        console.warn("API status call failed, trying direct Firestore update:", fetchErr.message);
+      }
 
-      const data = await response.json();
+      // If API failed or was unreachable, fallback to direct Firestore update
+      if (!apiSuccess) {
+        if (window.db && typeof window.db.collection === "function") {
+          const updatePayload = {
+            shippingStatus: newStatus,
+            updatedAt: new Date().toISOString()
+          };
+          if (newStatus === "delivered") updatePayload.orderStatus = "completed";
+          else if (newStatus === "cancelled") updatePayload.orderStatus = "cancelled";
+          else updatePayload.orderStatus = "confirmed";
 
-      if (!response.ok || !data?.success) {
-        throw new Error(data?.message || "Unable to update delivery status.");
+          await window.db.collection(collectionName).doc(order.id).update(updatePayload);
+          apiSuccess = true;
+        } else {
+          throw new Error(apiMessage || "Unable to update delivery status.");
+        }
       }
 
       setOrders((prev) =>
@@ -1332,6 +1603,36 @@ function PrebookOrders() {
       setStatusSuccess(`Delivery status updated to ${newStatus}.`);
     } catch (err) {
       console.error("Delivery status update error:", err);
+      // Secondary fallback
+      if (window.db && typeof window.db.collection === "function") {
+        try {
+          const updatePayload = {
+            shippingStatus: newStatus,
+            updatedAt: new Date().toISOString()
+          };
+          if (newStatus === "delivered") updatePayload.orderStatus = "completed";
+          else if (newStatus === "cancelled") updatePayload.orderStatus = "cancelled";
+          else updatePayload.orderStatus = "confirmed";
+
+          await window.db.collection(collectionName).doc(order.id).update(updatePayload);
+          setOrders((prev) =>
+            prev.map((item) =>
+              item.id === order.id
+                ? { ...item, shippingStatus: newStatus, updatedAt: new Date().toISOString() }
+                : item
+            )
+          );
+          setSelected((prev) =>
+            prev?.id === order.id
+              ? { ...prev, shippingStatus: newStatus, updatedAt: new Date().toISOString() }
+              : prev
+          );
+          setStatusSuccess(`Delivery status updated to ${newStatus}.`);
+          return;
+        } catch (dbErr) {
+          console.error("Secondary direct Firestore update failed:", dbErr);
+        }
+      }
       setStatusError(err.message || "Unable to update delivery status.");
     } finally {
       setUpdatingStatus(false);
@@ -1349,7 +1650,7 @@ function PrebookOrders() {
     if (!confirmed) return;
 
     try {
-      const ref = window.db.collection("bookOrders").doc(order.id);
+      const ref = window.db.collection(collectionName).doc(order.id);
       await ref.delete();
 
       setSelected((prev) => (prev?.id === order.id ? null : prev));
@@ -1623,9 +1924,11 @@ function PrebookOrders() {
         pdf.setFillColor(235, 235, 235);
         pdf.rect(left, pinY, contentWidth, pinHeight, "F");
 
+        const editionCode = order.edition === "english" || (order.sku && (order.sku.includes("-EN") || order.sku.endsWith("-EN"))) ? "EN" : "KN";
+
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(8);
-        pdf.text(`PIN: ${pincode}`, left + 2, pinY + 4);
+        pdf.text(`PIN: ${pincode}  [${editionCode}]`, left + 2, pinY + 4);
       });
 
       const today = new Date().toISOString().slice(0, 10);
@@ -1647,7 +1950,7 @@ function PrebookOrders() {
           const batch = window.db.batch();
 
           chunk.forEach((order) => {
-            const ref = window.db.collection("bookOrders").doc(order.id);
+            const ref = window.db.collection(collectionName).doc(order.id);
             batch.update(ref, {
               labelGenerated: true,
               labelGeneratedAt: generatedAt,
@@ -1716,7 +2019,7 @@ function PrebookOrders() {
         const batch = window.db.batch();
 
         chunk.forEach((order) => {
-          const ref = window.db.collection("bookOrders").doc(order.id);
+          const ref = window.db.collection(collectionName).doc(order.id);
           batch.update(ref, {
             labelGenerated: false,
             labelGeneratedAt: null,
@@ -1813,51 +2116,25 @@ function PrebookOrders() {
           flexWrap: "wrap"
         }}
       >
-        <div>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 25,
-              lineHeight: 1.15,
-              fontWeight: 750,
-              letterSpacing: "-.02em"
-            }}
-          >
-            Pre-book Orders
-          </h2>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 13,
-              color: "#667085",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap"
-            }}
-          >
-            <span>
-              Showing {pageStart}-{pageEnd} of {filteredOrders.length} records · Page {currentPage} of {totalPages}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {couponFilter !== "all" && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 8,
+                background: "#ecfdf3",
+                border: "1px solid #a6f4c5",
+                color: "#027a48",
+                fontWeight: 750,
+                fontSize: 12
+              }}
+            >
+              🏷️ {couponFilter.startsWith("code:") ? couponFilter.slice(5) : "Coupon Filtered"} Total: ₹{filteredMetrics.totalAmount.toLocaleString("en-IN")}
             </span>
-            {couponFilter !== "all" && (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "2px 9px",
-                  borderRadius: 6,
-                  background: "#ecfdf3",
-                  border: "1px solid #a6f4c5",
-                  color: "#027a48",
-                  fontWeight: 750,
-                  fontSize: 12
-                }}
-              >
-                🏷️ {couponFilter.startsWith("code:") ? couponFilter.slice(5) : "Coupon Filtered"} Total: ₹{filteredMetrics.totalAmount.toLocaleString("en-IN")}
-              </span>
-            )}
-          </div>
+          )}
         </div>
 
         <div
@@ -1928,6 +2205,30 @@ function PrebookOrders() {
             Reset Count
           </button>
 
+          {/* MANAGE STOCK BUTTON */}
+          <button
+            type="button"
+            onClick={() => openStockModal("all")}
+            style={{
+              height: 42,
+              padding: "0 15px",
+              border: "1px solid #fed7aa",
+              borderRadius: 10,
+              background: "#fffaf5",
+              color: "#c2410c",
+              fontSize: 13,
+              fontWeight: 750,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              whiteSpace: "nowrap"
+            }}
+          >
+            <MetricIcon type="stock" color="#c2410c" size={16} />
+            Stock ({stockMetrics.totalInStock} left)
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -1976,76 +2277,570 @@ function PrebookOrders() {
       )}
 
       {/* ===================================================
-          SUMMARY CARDS
+          BOOK INVENTORY & EDITION STOCK CONTROL HUB
       =================================================== */}
+      <div
+        style={{
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          borderRadius: 16,
+          padding: "20px 22px",
+          marginBottom: 20,
+          boxShadow: "0 1px 3px rgba(16, 24, 40, 0.05), 0 1px 2px rgba(16, 24, 40, 0.02)"
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: 16,
+            paddingBottom: 14,
+            borderBottom: "1px solid #f1f3f5"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#2563eb",
+                boxShadow: "0 1px 2px rgba(37, 99, 235, 0.12)"
+              }}
+            >
+              <MetricIcon type="stock" color="#2563eb" size={20} />
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 750, color: "#111827" }}>
+                  Book Inventory &amp; Stock Control
+                </h3>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 20,
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    color: "#166534"
+                  }}
+                >
+                  Live Calculation
+                </span>
+              </div>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280" }}>
+                Add stock for Kannada &amp; English editions &bull; Automatically calculates booked copies and remaining in-stock
+              </p>
+            </div>
+          </div>
 
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => openStockModal("kannada")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                height: 36,
+                padding: "0 14px",
+                borderRadius: 9,
+                border: "1px solid #fed7aa",
+                background: "#fffaf5",
+                color: "#c2410c",
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <MetricIcon type="plus" color="#c2410c" size={13} />
+              + Add Kannada Stock
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openStockModal("english")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                height: 36,
+                padding: "0 14px",
+                borderRadius: 9,
+                border: "1px solid #bae6fd",
+                background: "#f0f9ff",
+                color: "#0369a1",
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <MetricIcon type="plus" color="#0369a1" size={13} />
+              + Add English Stock
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openStockModal("all")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                height: 36,
+                padding: "0 14px",
+                borderRadius: 9,
+                border: "none",
+                background: "linear-gradient(135deg, #e8473f 0%, #f4823c 100%)",
+                color: "#ffffff",
+                fontSize: 12.5,
+                fontWeight: 750,
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(232,71,63,0.25)"
+              }}
+            >
+              <MetricIcon type="stock" color="#ffffff" size={14} />
+              Manage Stock
+            </button>
+          </div>
+        </div>
+
+        {/* DUAL EDITION INVENTORY CARDS */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 16
+          }}
+        >
+          {/* KANNADA EDITION CARD */}
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #fed7aa",
+              borderRadius: 14,
+              padding: "16px 18px",
+              position: "relative",
+              boxShadow: "0 1px 2px rgba(234, 88, 12, 0.05)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    background: "#ffedd5",
+                    color: "#c2410c",
+                    letterSpacing: "0.4px"
+                  }}
+                >
+                  ಕನ್ನಡ
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 750, color: "#9a3412" }}>
+                  Kannada Edition
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: stockMetrics.kannadaInStock > 3 ? "#f0fdf4" : stockMetrics.kannadaInStock > 0 ? "#fefce8" : "#fef2f2",
+                  color: stockMetrics.kannadaInStock > 3 ? "#15803d" : stockMetrics.kannadaInStock > 0 ? "#a16207" : "#b91c1c",
+                  border: `1px solid ${stockMetrics.kannadaInStock > 3 ? "#bbf7d0" : stockMetrics.kannadaInStock > 0 ? "#fef08a" : "#fecaca"}`
+                }}
+              >
+                {stockMetrics.kannadaTotal === 0
+                  ? "No Stock Set"
+                  : stockMetrics.kannadaInStock > 0
+                    ? `${stockMetrics.kannadaInStock} In Stock`
+                    : "Sold Out"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 32, fontWeight: 850, color: "#111827", lineHeight: 1 }}>
+                {stockMetrics.kannadaInStock}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>
+                in stock
+              </span>
+            </div>
+
+            <div style={{ fontSize: 12.5, color: "#4b5563", marginBottom: 12, fontWeight: 550 }}>
+              <strong style={{ color: "#c2410c", fontWeight: 750 }}>{stockMetrics.kannadaBooked}</strong> booked out of{" "}
+              <strong style={{ color: "#111827", fontWeight: 750 }}>{stockMetrics.kannadaTotal}</strong> total books
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{ width: "100%", height: 7, borderRadius: 10, background: "#f3f4f6", overflow: "hidden", marginBottom: 12 }}>
+              <div
+                style={{
+                  height: "100%",
+                  borderRadius: 10,
+                  width: `${stockMetrics.kannadaTotal > 0 ? Math.min(100, Math.round((stockMetrics.kannadaBooked / stockMetrics.kannadaTotal) * 100)) : 0}%`,
+                  background: "linear-gradient(90deg, #ea580c 0%, #f97316 100%)",
+                  transition: "width 0.4s ease"
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px dashed #fed7aa" }}>
+              <span style={{ fontSize: 11, color: "#9a3412", fontWeight: 600 }}>
+                SKU: THE-ART-OF-PRICE-KN-EDITION
+              </span>
+              <button
+                type="button"
+                onClick={() => openStockModal("kannada")}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 750,
+                  color: "#ea580c",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0
+                }}
+              >
+                + Add Stock &rarr;
+              </button>
+            </div>
+          </div>
+
+          {/* ENGLISH EDITION CARD */}
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #bae6fd",
+              borderRadius: 14,
+              padding: "16px 18px",
+              position: "relative",
+              boxShadow: "0 1px 2px rgba(2, 132, 199, 0.05)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    background: "#e0f2fe",
+                    color: "#0369a1",
+                    letterSpacing: "0.4px"
+                  }}
+                >
+                  English
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 750, color: "#0369a1" }}>
+                  English Edition
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: stockMetrics.englishInStock > 3 ? "#f0fdf4" : stockMetrics.englishInStock > 0 ? "#fefce8" : "#fef2f2",
+                  color: stockMetrics.englishInStock > 3 ? "#15803d" : stockMetrics.englishInStock > 0 ? "#a16207" : "#b91c1c",
+                  border: `1px solid ${stockMetrics.englishInStock > 3 ? "#bbf7d0" : stockMetrics.englishInStock > 0 ? "#fef08a" : "#fecaca"}`
+                }}
+              >
+                {stockMetrics.englishTotal === 0
+                  ? "No Stock Set"
+                  : stockMetrics.englishInStock > 0
+                    ? `${stockMetrics.englishInStock} In Stock`
+                    : "Sold Out"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 32, fontWeight: 850, color: "#111827", lineHeight: 1 }}>
+                {stockMetrics.englishInStock}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>
+                in stock
+              </span>
+            </div>
+
+            <div style={{ fontSize: 12.5, color: "#4b5563", marginBottom: 12, fontWeight: 550 }}>
+              <strong style={{ color: "#0284c7", fontWeight: 750 }}>{stockMetrics.englishBooked}</strong> booked out of{" "}
+              <strong style={{ color: "#111827", fontWeight: 750 }}>{stockMetrics.englishTotal}</strong> total books
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{ width: "100%", height: 7, borderRadius: 10, background: "#f3f4f6", overflow: "hidden", marginBottom: 12 }}>
+              <div
+                style={{
+                  height: "100%",
+                  borderRadius: 10,
+                  width: `${stockMetrics.englishTotal > 0 ? Math.min(100, Math.round((stockMetrics.englishBooked / stockMetrics.englishTotal) * 100)) : 0}%`,
+                  background: "linear-gradient(90deg, #0284c7 0%, #38bdf8 100%)",
+                  transition: "width 0.4s ease"
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px dashed #bae6fd" }}>
+              <span style={{ fontSize: 11, color: "#0369a1", fontWeight: 600 }}>
+                SKU: THE-ART-OF-PRICE-EN-EDITION
+              </span>
+              <button
+                type="button"
+                onClick={() => openStockModal("english")}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 750,
+                  color: "#0284c7",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0
+                }}
+              >
+                + Add Stock &rarr;
+              </button>
+            </div>
+          </div>
+
+          {/* COMBINED TOTAL OVERVIEW CARD */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+              border: "1px solid #cbd5e1",
+              borderRadius: 14,
+              padding: "16px 18px",
+              position: "relative"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    background: "#e2e8f0",
+                    color: "#334155"
+                  }}
+                >
+                  Combined
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 750, color: "#334155" }}>
+                  Total Inventory
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 6,
+                  background: "#ffffff",
+                  color: "#334155",
+                  border: "1px solid #cbd5e1"
+                }}
+              >
+                {stockMetrics.totalStock > 0
+                  ? `${Math.round((stockMetrics.totalBooked / stockMetrics.totalStock) * 100)}% Booked`
+                  : "0% Booked"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 32, fontWeight: 850, color: "#0f172a", lineHeight: 1 }}>
+                {stockMetrics.totalInStock}
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>
+                total in stock
+              </span>
+            </div>
+
+            <div style={{ fontSize: 12.5, color: "#475467", marginBottom: 12, fontWeight: 550 }}>
+              <strong>{stockMetrics.totalBooked}</strong> total booked out of{" "}
+              <strong>{stockMetrics.totalStock}</strong> total books
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{ width: "100%", height: 7, borderRadius: 10, background: "#e2e8f0", overflow: "hidden", marginBottom: 12 }}>
+              <div
+                style={{
+                  height: "100%",
+                  borderRadius: 10,
+                  width: `${stockMetrics.totalStock > 0 ? Math.min(100, Math.round((stockMetrics.totalBooked / stockMetrics.totalStock) * 100)) : 0}%`,
+                  background: "linear-gradient(90deg, #334155 0%, #64748b 100%)",
+                  transition: "width 0.4s ease"
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px dashed #cbd5e1" }}>
+              <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>
+                {stockMetrics.kannadaBooked} KN &middot; {stockMetrics.englishBooked} EN
+              </span>
+              <button
+                type="button"
+                onClick={() => openStockModal("all")}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 750,
+                  color: "#334155",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0
+                }}
+              >
+                Adjust Stock &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===================================================
+          SUMMARY CARDS (MODERN REDESIGN)
+      =================================================== */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: 14,
           marginBottom: 20
         }}
       >
         {[
-          ["Total orders", counts.total, "inbox", "#f5f7fa"],
-          ["Paid", counts.paid, "check", "#f0fbf3"],
-          ["Paid Revenue", `₹${counts.paidRevenue.toLocaleString("en-IN")}`, "credit-card", "#ecfdf3"],
-          ["Pending shipping", counts.pendingShipping, "package", "#fff8e8"],
-          ["Shipped", counts.shipped, "truck", "#f2f7ff"],
-          ["Delivered", counts.delivered, "check", "#f0fbf3"]
-        ].map(([label, value, iconName, iconBg]) => (
+          {
+            label: "Total Orders",
+            value: counts.total,
+            type: "orders",
+            color: "#2563eb",
+            bgColor: "#eff6ff",
+            accent: "#3b82f6",
+            sub: "All pre-booking entries"
+          },
+          {
+            label: "Paid Orders",
+            value: counts.paid,
+            type: "paid",
+            color: "#059669",
+            bgColor: "#ecfdf5",
+            accent: "#10b981",
+            sub: counts.total > 0 ? `${Math.round((counts.paid / counts.total) * 100)}% payment rate` : "Confirmed"
+          },
+          {
+            label: "Paid Revenue",
+            value: `₹${counts.paidRevenue.toLocaleString("en-IN")}`,
+            type: "revenue",
+            color: "#16a34a",
+            bgColor: "#f0fdf4",
+            accent: "#22c55e",
+            sub: "Total collected"
+          },
+          {
+            label: "Pending Shipping",
+            value: counts.pendingShipping,
+            type: "pending",
+            color: "#d97706",
+            bgColor: "#fffbeb",
+            accent: "#f59e0b",
+            sub: counts.pendingShipping > 0 ? "Awaiting dispatch" : "All dispatched"
+          },
+          {
+            label: "Shipped",
+            value: counts.shipped,
+            type: "shipped",
+            color: "#4f46e5",
+            bgColor: "#eef2ff",
+            accent: "#6366f1",
+            sub: "In transit"
+          },
+          {
+            label: "Delivered",
+            value: counts.delivered,
+            type: "delivered",
+            color: "#0d9488",
+            bgColor: "#f0fdfa",
+            accent: "#14b8a6",
+            sub: "Completed delivery"
+          }
+        ].map((card) => (
           <div
-            key={label}
+            key={card.label}
             style={{
               minWidth: 0,
-              padding: 16,
+              padding: "16px 18px",
               borderRadius: 14,
-              border: "1px solid var(--border, #e8ebef)",
-              background: "var(--card, #fff)",
+              border: "1px solid #e5e7eb",
+              borderTop: `3px solid ${card.accent}`,
+              background: "#ffffff",
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               justifyContent: "space-between",
-              gap: 14
+              gap: 10,
+              boxShadow: "0 1px 3px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.02)"
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "var(--muted, #667085)",
-                  fontWeight: 600,
-                  marginBottom: 7
-                }}
-              >
-                {label}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "#6b7280",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    marginBottom: 6
+                  }}
+                >
+                  {card.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 26,
+                    lineHeight: 1.1,
+                    fontWeight: 850,
+                    color: "#111827"
+                  }}
+                >
+                  {card.value}
+                </div>
               </div>
+
               <div
                 style={{
-                  fontSize: 24,
-                  lineHeight: 1,
-                  fontWeight: 760,
-                  color: "var(--ink, #17191c)"
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  borderRadius: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: card.bgColor
                 }}
               >
-                {value}
+                <MetricIcon type={card.type} color={card.color} size={20} />
               </div>
             </div>
 
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                flexShrink: 0,
-                borderRadius: 11,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: iconBg,
-                color: "#344054"
-              }}
-            >
-              {icon(iconName)}
+            <div style={{ fontSize: 11.5, color: "#9ca3af", fontWeight: 550, borderTop: "1px solid #f9fafb", paddingTop: 8 }}>
+              {card.sub}
             </div>
           </div>
         ))}
@@ -2494,6 +3289,7 @@ function PrebookOrders() {
                   "Row",
                   "Booking ID",
                   "Date",
+                  "Edition",
                   "Name",
                   "Email",
                   "Phone",
@@ -2528,7 +3324,7 @@ function PrebookOrders() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={15}
+                    colSpan={17}
                     style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
                   >
                     Loading pre-book orders...
@@ -2537,7 +3333,7 @@ function PrebookOrders() {
               ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={15}
+                    colSpan={17}
                     style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
                   >
                     {orders.length === 0
@@ -2619,6 +3415,45 @@ function PrebookOrders() {
                         <div style={{ fontWeight: 650, color: "var(--ink, #17191c)" }}>
                           {getOrderFormattedDate(order)}
                         </div>
+                      </td>
+
+                      {/* EDITION */}
+                      <td style={{ padding: "14px", whiteSpace: "nowrap" }}>
+                        {order.edition === "english" || (order.sku && (order.sku.includes("-EN") || order.sku.endsWith("-EN"))) ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              background: "#e0f2fe",
+                              color: "#0369a1",
+                              border: "1px solid #bae6fd",
+                              fontSize: 11,
+                              fontWeight: 750
+                            }}
+                          >
+                            📘 English
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              background: "#fef3c7",
+                              color: "#92400e",
+                              border: "1px solid #fde68a",
+                              fontSize: 11,
+                              fontWeight: 750
+                            }}
+                          >
+                            📙 ಕನ್ನಡ
+                          </span>
+                        )}
                       </td>
 
                       {/* NAME */}
@@ -2898,7 +3733,7 @@ function PrebookOrders() {
                             setEmailSubject(`Wealthoria – Order Confirmation ${bookingId}`);
                             setEmailMessage(
                               `Dear ${name},\n\n` +
-                              `Thank you for purchasing the book "ಹೂಡಿಕೆಯ ವಿಜ್ಞಾನ" with Wealthoria.\n\n` +
+                              `Thank you for purchasing the book "${bookTitle}" with Wealthoria.\n\n` +
                               `Booking ID: ${bookingId}\n` +
                               `Amount Paid: ₹${amount}\n\n` +
                               `We will share shipping updates once your book is dispatched.\n\n` +
@@ -3416,10 +4251,13 @@ function PrebookOrders() {
                   }}
                 >
                   <h3 style={{ margin: "12px 0 4px", fontSize: 15 }}>Product</h3>
-                  <DetailField label="Book">{selected.product?.name}</DetailField>
-                  <DetailField label="Quantity">{selected.product?.quantity || 1}</DetailField>
-                  <DetailField label="SKU">{selected.product?.sku}</DetailField>
-                  <DetailField label="Unit price">₹{selected.product?.unitPrice}</DetailField>
+                  <DetailField label="Book">{selected.product?.name || selected.bookTitle}</DetailField>
+                  <DetailField label="Edition">
+                    {selected.editionLabel || (selected.edition === "english" || (selected.sku && (selected.sku.includes("-EN") || selected.sku.endsWith("-EN"))) ? "English Edition" : "Kannada (ಕನ್ನಡ ಆವೃತ್ತಿ)")}
+                  </DetailField>
+                  <DetailField label="SKU">{selected.sku || selected.product?.sku || (selected.edition === "english" ? "THE-ART-OF-PRICE-EN-EDITION" : "THE-ART-OF-PRICE-KN-EDITION")}</DetailField>
+                  <DetailField label="Quantity">{selected.product?.quantity || selected.quantity || 1}</DetailField>
+                  <DetailField label="Unit price">₹{selected.product?.unitPrice || selected.amount}</DetailField>
                 </div>
               </div>
 
@@ -3538,7 +4376,7 @@ function PrebookOrders() {
                       )
                     ) {
                       try {
-                        await window.db.collection("bookOrders").doc(selected.id).delete();
+                        await window.db.collection(collectionName).doc(selected.id).delete();
                         setSelected(null);
                       } catch (err) {
                         alert("Failed to delete order: " + err.message);
@@ -4394,6 +5232,394 @@ function PrebookOrders() {
           </div>
         </div>
       )}
+
+      {/* =========================================================
+          ADD / MANAGE STOCK MODAL (KANNADA & ENGLISH)
+      ========================================================= */}
+      {showStockModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1100,
+            padding: 16
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !savingStock) {
+              setShowStockModal(false);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 18,
+              width: "100%",
+              maxWidth: 620,
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+              border: "1px solid #e5e7eb",
+              overflow: "hidden"
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid #f1f3f5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 9,
+                    background: "#eff6ff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <MetricIcon type="stock" color="#2563eb" size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#111827" }}>
+                    Manage Book Stock &amp; Inventory
+                  </h3>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280" }}>
+                    Set or add stock for Kannada and English editions
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowStockModal(false)}
+                disabled={savingStock}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: 20,
+                  color: "#9ca3af",
+                  cursor: "pointer",
+                  padding: "4px 8px"
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveStock} style={{ padding: "20px 24px" }}>
+              {/* Mode Selector */}
+              <div
+                style={{
+                  display: "flex",
+                  borderRadius: 10,
+                  background: "#f3f4f6",
+                  padding: 4,
+                  marginBottom: 20
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setStockForm((prev) => ({ ...prev, mode: "add" }))}
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: stockForm.mode === "add" ? "#ffffff" : "transparent",
+                    color: stockForm.mode === "add" ? "#111827" : "#6b7280",
+                    fontWeight: 750,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    boxShadow: stockForm.mode === "add" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+                  }}
+                >
+                  + Add Books to Existing Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockForm((prev) => ({ ...prev, mode: "set" }))}
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: stockForm.mode === "set" ? "#ffffff" : "transparent",
+                    color: stockForm.mode === "set" ? "#111827" : "#6b7280",
+                    fontWeight: 750,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    boxShadow: stockForm.mode === "set" ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+                  }}
+                >
+                  Set Total Stock Count
+                </button>
+              </div>
+
+              {/* KANNADA STOCK SECTION */}
+              <div
+                style={{
+                  background: "#fffaf5",
+                  border: "1px solid #fed7aa",
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 16
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 5, background: "#ffedd5", color: "#c2410c" }}>
+                      ಕನ್ನಡ
+                    </span>
+                    <strong style={{ fontSize: 14, color: "#9a3412" }}>Kannada Edition</strong>
+                  </div>
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>
+                    Current: <strong>{stockMetrics.kannadaTotal}</strong> total &bull; <strong>{stockMetrics.kannadaBooked}</strong> booked &bull; <strong style={{ color: "#16a34a" }}>{stockMetrics.kannadaInStock} in stock</strong>
+                  </span>
+                </div>
+
+                {stockForm.mode === "add" ? (
+                  <div>
+                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 650, color: "#374151", marginBottom: 6 }}>
+                      Books to Add to Kannada:
+                    </label>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 10"
+                        value={stockForm.kannadaAdd}
+                        onChange={(e) => setStockForm((prev) => ({ ...prev, kannadaAdd: e.target.value }))}
+                        style={{
+                          flex: 1,
+                          height: 40,
+                          padding: "0 12px",
+                          borderRadius: 8,
+                          border: "1px solid #d1d5db",
+                          fontSize: 14,
+                          fontWeight: 700
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {[5, 10, 25, 50, 100].map((amt) => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() =>
+                              setStockForm((prev) => ({
+                                ...prev,
+                                kannadaAdd: String((parseInt(prev.kannadaAdd, 10) || 0) + amt)
+                              }))
+                            }
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 6,
+                              border: "1px solid #fed7aa",
+                              background: "#ffffff",
+                              color: "#c2410c",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              cursor: "pointer"
+                            }}
+                          >
+                            +{amt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {parseInt(stockForm.kannadaAdd, 10) > 0 && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: "#16a34a", fontWeight: 650 }}>
+                        &rarr; New Total: {stockMetrics.kannadaTotal + parseInt(stockForm.kannadaAdd, 10)} books &bull; Available: {Math.max(0, stockMetrics.kannadaTotal + parseInt(stockForm.kannadaAdd, 10) - stockMetrics.kannadaBooked)} in stock
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 650, color: "#374151", marginBottom: 6 }}>
+                      Total Kannada Stock Count:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={stockForm.kannadaTotal}
+                      onChange={(e) => setStockForm((prev) => ({ ...prev, kannadaTotal: e.target.value }))}
+                      style={{
+                        width: "100%",
+                        height: 40,
+                        padding: "0 12px",
+                        borderRadius: 8,
+                        border: "1px solid #d1d5db",
+                        fontSize: 14,
+                        fontWeight: 700
+                      }}
+                    />
+                    <div style={{ marginTop: 6, fontSize: 12, color: "#6b7280" }}>
+                      Available in stock will be: <strong>{Math.max(0, (parseInt(stockForm.kannadaTotal, 10) || 0) - stockMetrics.kannadaBooked)}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ENGLISH STOCK SECTION */}
+              <div
+                style={{
+                  background: "#f0f9ff",
+                  border: "1px solid #bae6fd",
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 20
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 5, background: "#e0f2fe", color: "#0369a1" }}>
+                      English
+                    </span>
+                    <strong style={{ fontSize: 14, color: "#0369a1" }}>English Edition</strong>
+                  </div>
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>
+                    Current: <strong>{stockMetrics.englishTotal}</strong> total &bull; <strong>{stockMetrics.englishBooked}</strong> booked &bull; <strong style={{ color: "#16a34a" }}>{stockMetrics.englishInStock} in stock</strong>
+                  </span>
+                </div>
+
+                {stockForm.mode === "add" ? (
+                  <div>
+                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 650, color: "#374151", marginBottom: 6 }}>
+                      Books to Add to English:
+                    </label>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 10"
+                        value={stockForm.englishAdd}
+                        onChange={(e) => setStockForm((prev) => ({ ...prev, englishAdd: e.target.value }))}
+                        style={{
+                          flex: 1,
+                          height: 40,
+                          padding: "0 12px",
+                          borderRadius: 8,
+                          border: "1px solid #d1d5db",
+                          fontSize: 14,
+                          fontWeight: 700
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {[5, 10, 25, 50, 100].map((amt) => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() =>
+                              setStockForm((prev) => ({
+                                ...prev,
+                                englishAdd: String((parseInt(prev.englishAdd, 10) || 0) + amt)
+                              }))
+                            }
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 6,
+                              border: "1px solid #bae6fd",
+                              background: "#ffffff",
+                              color: "#0369a1",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              cursor: "pointer"
+                            }}
+                          >
+                            +{amt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {parseInt(stockForm.englishAdd, 10) > 0 && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: "#16a34a", fontWeight: 650 }}>
+                        &rarr; New Total: {stockMetrics.englishTotal + parseInt(stockForm.englishAdd, 10)} books &bull; Available: {Math.max(0, stockMetrics.englishTotal + parseInt(stockForm.englishAdd, 10) - stockMetrics.englishBooked)} in stock
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ display: "block", fontSize: 12.5, fontWeight: 650, color: "#374151", marginBottom: 6 }}>
+                      Total English Stock Count:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={stockForm.englishTotal}
+                      onChange={(e) => setStockForm((prev) => ({ ...prev, englishTotal: e.target.value }))}
+                      style={{
+                        width: "100%",
+                        height: 40,
+                        padding: "0 12px",
+                        borderRadius: 8,
+                        border: "1px solid #d1d5db",
+                        fontSize: 14,
+                        fontWeight: 700
+                      }}
+                    />
+                    <div style={{ marginTop: 6, fontSize: 12, color: "#6b7280" }}>
+                      Available in stock will be: <strong>{Math.max(0, (parseInt(stockForm.englishTotal, 10) || 0) - stockMetrics.englishBooked)}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 14, borderTop: "1px solid #f1f3f5" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowStockModal(false)}
+                  disabled={savingStock}
+                  style={{
+                    height: 40,
+                    padding: "0 18px",
+                    borderRadius: 8,
+                    border: "1px solid #d1d5db",
+                    background: "#ffffff",
+                    color: "#374151",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: savingStock ? "not-allowed" : "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingStock}
+                  style={{
+                    height: 40,
+                    padding: "0 22px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: "linear-gradient(135deg, #e8473f 0%, #f4823c 100%)",
+                    color: "#ffffff",
+                    fontSize: 13,
+                    fontWeight: 750,
+                    cursor: savingStock ? "not-allowed" : "pointer",
+                    boxShadow: "0 2px 6px rgba(232, 71, 63, 0.25)"
+                  }}
+                >
+                  {savingStock ? "Saving Stock..." : "Save & Update Stock"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

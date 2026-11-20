@@ -1,0 +1,38 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# Short, shareable links (use these in ads / WhatsApp / bio links)
+[[redirects]]
+  from = "/kannada"
+  to = "/kn/"
+  status = 301
+  force = true
+[[redirects]]
+  from = "/english"
+  to = "/en/"
+  status = 301
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Images and libraries rarely change: cache for a week.
+# config.js and book.js are NOT listed, so price/SKU edits go live immediately.
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+[[headers]]
+  for = "/assets/js/gsap.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+[[headers]]
+  for = "/assets/js/ScrollTrigger.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

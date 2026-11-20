@@ -109,6 +109,10 @@
   animation: intro-heading-reveal 1s cubic-bezier(.16, 1, .3, 1) 0.1s both;
 }
 
+html[lang="kn"] .intro-video-content h2 {
+  line-height: 1.3;
+}
+
 /* Orange brand highlight */
 
 .intro-highlight {

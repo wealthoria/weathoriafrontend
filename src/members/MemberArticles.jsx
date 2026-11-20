@@ -3,6 +3,7 @@
 /* global React, window */
 import React from "react";
 import { usePendingContent, trackMemberContentOpen } from "./memberContent.js";
+import MemberThumbnail from "./MemberThumbnail.jsx";
 
 
 const { useState, useEffect } = React;
@@ -32,7 +33,7 @@ function MemberArticles() {
     });
   }, []);
 
-const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
+  const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
   /* =========================================================
      FILE URL
@@ -60,26 +61,26 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
 
 
   const getFreshThumbnailUrl = async (contentId, token) => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/members/content-thumbnail-url/${contentId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+    const response = await fetch(
+      `${API_BASE_URL}/api/members/content-thumbnail-url/${contentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
       }
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok || !data?.success || !data?.url) {
-    throw new Error(
-      data?.message || "Unable to load thumbnail."
     );
-  }
 
-  return data.url;
-};
+    const data = await response.json();
+
+    if (!response.ok || !data?.success || !data?.url) {
+      throw new Error(
+        data?.message || "Unable to load thumbnail."
+      );
+    }
+
+    return data.url;
+  };
   /* =========================================================
      FORMAT DATE
   ========================================================= */
@@ -127,101 +128,101 @@ const API_BASE_URL = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net";
      OPEN PDF
      SAME BEHAVIOUR AS ADMIN UPLOAD
   ========================================================= */
-const openPdf = async (article) => {
-  if (!article) {
-    return;
-  }
-
-  if (!article.pdfPath) {
-    console.error(
-      "PDF path missing:",
-      article
-    );
-
-    return;
-  }
-
-  trackMemberContentOpen({
-    type: "weekly_report",
-    contentId: article.id,
-    contentTitle: article.title || "Weekly Report"
-  });
-
-  try {
-    const currentUid =
-  window.localStorage.getItem(
-    "wealthoria-current-member"
-  );
-
-const sessionsData =
-  window.localStorage.getItem(
-    "wealthoria-member-sessions"
-  );
-
-let sessions = {};
-
-try {
-  sessions = sessionsData
-    ? JSON.parse(sessionsData)
-    : {};
-} catch {
-  sessions = {};
-}
-
-const member =
-  currentUid
-    ? sessions[currentUid]
-    : null;
-
-const token =
-  member?.token;
-
-    if (!token) {
-      alert("Please log in again to open this PDF.");
+  const openPdf = async (article) => {
+    if (!article) {
       return;
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/members/content-pdf-url/${article.id}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization:
-            `Bearer ${token}`,
-          "Content-Type":
-            "application/json"
-        }
+    if (!article.pdfPath) {
+      console.error(
+        "PDF path missing:",
+        article
+      );
+
+      return;
+    }
+
+    trackMemberContentOpen({
+      type: "weekly_report",
+      contentId: article.id,
+      contentTitle: article.title || "Weekly Report"
+    });
+
+    try {
+      const currentUid =
+        window.localStorage.getItem(
+          "wealthoria-current-member"
+        );
+
+      const sessionsData =
+        window.localStorage.getItem(
+          "wealthoria-member-sessions"
+        );
+
+      let sessions = {};
+
+      try {
+        sessions = sessionsData
+          ? JSON.parse(sessionsData)
+          : {};
+      } catch {
+        sessions = {};
       }
-    );
 
-    const data = await response.json();
+      const member =
+        currentUid
+          ? sessions[currentUid]
+          : null;
 
-if (
-  !response.ok ||
-  !data?.success ||
-  !data?.url
-) {
-  throw new Error(
-    data?.message ||
-    "Unable to open PDF."
-  );
-}
+      const token =
+        member?.token;
 
-const pdfUrl = data.url;
-setSelectedPdf({
-  ...article,
-  pdfUrl
-});
+      if (!token) {
+        alert("Please log in again to open this PDF.");
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/members/content-pdf-url/${article.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+            "Content-Type":
+              "application/json"
+          }
+        }
+      );
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        !data?.success ||
+        !data?.url
+      ) {
+        throw new Error(
+          data?.message ||
+          "Unable to open PDF."
+        );
+      }
+
+      const pdfUrl = data.url;
+      setSelectedPdf({
+        ...article,
+        pdfUrl
+      });
 
 
-  } catch (error) {
-    console.error(
-      "Article PDF error:",
-      error
-    );
-    alert(error.message || "Unable to open PDF.");
-  }
-};
+    } catch (error) {
+      console.error(
+        "Article PDF error:",
+        error
+      );
+      alert(error.message || "Unable to open PDF.");
+    }
+  };
 
   // Opens the PDF a push notification points to.
   usePendingContent(articles, openPdf);
@@ -258,7 +259,7 @@ setSelectedPdf({
           "published"
         )
         .onSnapshot(
-  async (snapshot) => {
+          async (snapshot) => {
             const rows =
               snapshot.docs.map((doc) => {
                 const data =
@@ -282,12 +283,12 @@ setSelectedPdf({
                       : [],
 
                   pdfUrl:
-  data.pdfUrl ||
-  "",
+                    data.pdfUrl ||
+                    "",
 
-pdfPath:
-  data.pdfPath ||
-  "",
+                  pdfPath:
+                    data.pdfPath ||
+                    "",
                   thumbnailUrl:
                     data.thumbnailUrl ||
                     "",
@@ -300,71 +301,7 @@ pdfPath:
               });
 
 
-            const currentUid =
-  localStorage.getItem(
-    "wealthoria-current-member"
-  );
-
-const sessionsData =
-  localStorage.getItem(
-    "wealthoria-member-sessions"
-  );
-
-let sessions = {};
-
-try {
-  sessions = sessionsData
-    ? JSON.parse(sessionsData)
-    : {};
-} catch {
-  sessions = {};
-}
-
-const member =
-  currentUid
-    ? sessions[currentUid]
-    : null;
-
-const token =
-  member?.token;
-
-if (token) {
-  const articlesWithFreshThumbnails =
-    await Promise.all(
-      rows.map(async (article) => {
-        if (!article.thumbnailUrl) {
-          return article;
-        }
-
-        try {
-          const freshThumbnailUrl =
-            await getFreshThumbnailUrl(
-              article.id,
-              token
-            );
-
-          return {
-            ...article,
-            thumbnailUrl: freshThumbnailUrl
-          };
-        } catch (error) {
-          console.error(
-            "Thumbnail refresh failed:",
-            article.id,
-            error
-          );
-
-          return article;
-        }
-      })
-    );
-
-  setArticles(articlesWithFreshThumbnails);
-} else {
-  setArticles(articles);
-}
             /* NEWEST FIRST */
-
             rows.sort((a, b) => {
               const getTime = (value) => {
                 if (!value) {
@@ -401,11 +338,13 @@ if (token) {
               );
             });
 
-           setLoading(false);
+            // Render articles immediately; MemberThumbnail lazily fetches
+            // signed URLs & compressed 640px WebP thumbnails as cards enter view.
+            setArticles(rows);
             setLoading(false);
             setError("");
 
-         
+
           },
 
           (err) => {
@@ -481,7 +420,7 @@ if (token) {
 
       return matchesSearch && matchesFrom && matchesTo;
     })
-    .sort((a, b) => getArticleTime(b.publishedAt) - getArticleTime(a.publishedAt));
+      .sort((a, b) => getArticleTime(b.publishedAt) - getArticleTime(a.publishedAt));
 
   const getMonthKey = (value) => {
     const date = getArticleDate(value);
@@ -660,7 +599,7 @@ if (token) {
       ) : (
 
         <div className="member-newsletter-months">
-          {articleMonths.map((month) => (
+          {articleMonths.map((month, monthIndex) => (
             <section className="member-newsletter-month" key={month.key}>
               <div className="member-newsletter-month-header">
                 <div>
@@ -673,263 +612,249 @@ if (token) {
               </div>
 
               <div className="member-newsletter-grid">
-                {month.articles.map((article) => (
-              <article
-                className="member-newsletter-card"
-                key={article.id}
-              >
+                {month.articles.map((article, cardIndex) => (
+                  <article
+                    className="member-newsletter-card"
+                    key={article.id}
+                  >
 
-                {/* =================================================
+                    {/* =================================================
                     CLICKABLE THUMBNAIL
                     SAME AS ADMIN
                 ================================================= */}
 
-                <div
-                  role="button"
-                  tabIndex={
-                    article.pdfUrl ? 0 : -1
-                  }
-                  onClick={() =>
-                    openPdf(article)
-                  }
-                  onKeyDown={(event) => {
+                    <div
+                      role="button"
+                      tabIndex={
+                        article.pdfUrl ? 0 : -1
+                      }
+                      onClick={() =>
+                        openPdf(article)
+                      }
+                      onKeyDown={(event) => {
 
-                    if (
-                      event.key === "Enter" ||
-                      event.key === " "
-                    ) {
-                      event.preventDefault();
-                      openPdf(article);
-                    }
+                        if (
+                          event.key === "Enter" ||
+                          event.key === " "
+                        ) {
+                          event.preventDefault();
+                          openPdf(article);
+                        }
 
-                  }}
-                  className="member-newsletter-icon article-clickable-thumbnail"
-                  style={{
-                    cursor: article.pdfUrl ? "pointer" : "default"
-                  }}
-                >
-
-                  {article.thumbnailUrl ? (
-
-                    <img
-                     src={article.thumbnailUrl}
-                      alt={article.title}
-                      onError={(event) => {
-                        console.error(
-                          "Thumbnail failed:",
-                          getFileUrl(
-                            article.thumbnailUrl
-                          )
-                        );
-
-                        event.currentTarget.style.display =
-                          "none";
                       }}
+                      className="member-newsletter-icon article-clickable-thumbnail"
                       style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        display: "block",
-                        pointerEvents: "none"
+                        cursor: article.pdfUrl ? "pointer" : "default"
                       }}
-                    />
+                    >
 
-                  ) : (
+                      {article.thumbnailUrl ? (
 
-                    <span>
-                      PDF
-                    </span>
+                        <MemberThumbnail
+                          contentId={article.id}
+                          fallbackUrl={getFileUrl(article.thumbnailUrl)}
+                          alt={article.title}
+                          width={320}
+                          height={180}
+                          eager={monthIndex === 0 && cardIndex < 4}
+                          style={{ pointerEvents: "none" }}
+                        />
 
-                  )}
+                      ) : (
 
-                </div>
+                        <span>
+                          PDF
+                        </span>
+
+                      )}
+
+                    </div>
 
 
-                {/* =================================================
+                    {/* =================================================
                     CONTENT
                 ================================================= */}
 
-                <div
-                  className="member-newsletter-content"
+                    <div
+                      className="member-newsletter-content"
 
-                >
+                    >
 
-                  {/* DATE */}
+                      {/* DATE */}
 
-                  <span className="member-newsletter-date">
-                    {formatDate(
-                      article.publishedAt
-                    )}
-                  </span>
-
-
-                  {/* TITLE */}
-
-                  <h3>
-                    {article.title}
-                  </h3>
+                      <span className="member-newsletter-date">
+                        {formatDate(
+                          article.publishedAt
+                        )}
+                      </span>
 
 
-                  {/* DESCRIPTION — CSS limits this to exactly two lines */}
-                  {article.description && (
-                    expandedDescriptionId === article.id ? (
-                      <p className="member-newsletter-description article-description-expanded">
-                        {article.description}
-                        {article.description.length > 0 && (
-                          <span
-                            className="member-article-description-toggle"
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => setExpandedDescriptionId(null)}
+                      {/* TITLE */}
+
+                      <h3>
+                        {article.title}
+                      </h3>
+
+
+                      {/* DESCRIPTION — CSS limits this to exactly two lines */}
+                      {article.description && (
+                        expandedDescriptionId === article.id ? (
+                          <p className="member-newsletter-description article-description-expanded">
+                            {article.description}
+                            {article.description.length > 0 && (
+                              <span
+                                className="member-article-description-toggle"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => setExpandedDescriptionId(null)}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    setExpandedDescriptionId(null);
+                                  }
+                                }}
+                              >
+                                less
+                              </span>
+                            )}
+                          </p>
+                        ) : (
+                          <p
+                            className={`member-newsletter-description ${article.description.length > 120
+                              ? "article-description-collapsed article-description-expandable"
+                              : ""
+                              }`}
+                            role={article.description.length > 120 ? "button" : undefined}
+                            tabIndex={article.description.length > 120 ? 0 : undefined}
+                            onClick={() => {
+                              if (article.description.length > 120) {
+                                setExpandedDescriptionId(article.id);
+                              }
+                            }}
                             onKeyDown={(event) => {
-                              if (event.key === "Enter" || event.key === " ") {
+                              if (
+                                article.description.length > 120 &&
+                                (event.key === "Enter" || event.key === " ")
+                              ) {
                                 event.preventDefault();
-                                setExpandedDescriptionId(null);
+                                setExpandedDescriptionId(article.id);
                               }
                             }}
                           >
-                            less
-                          </span>
-                        )}
-                      </p>
-                    ) : (
-                      <p
-                        className={`member-newsletter-description ${
-                          article.description.length > 120
-                            ? "article-description-collapsed article-description-expandable"
-                            : ""
-                        }`}
-                        role={article.description.length > 120 ? "button" : undefined}
-                        tabIndex={article.description.length > 120 ? 0 : undefined}
-                        onClick={() => {
-                          if (article.description.length > 120) {
-                            setExpandedDescriptionId(article.id);
-                          }
-                        }}
-                        onKeyDown={(event) => {
-                          if (
-                            article.description.length > 120 &&
-                            (event.key === "Enter" || event.key === " ")
-                          ) {
-                            event.preventDefault();
-                            setExpandedDescriptionId(article.id);
-                          }
-                        }}
-                      >
-                        {article.description}
-                      </p>
-                    )
-                  )}
+                            {article.description}
+                          </p>
+                        )
+                      )}
 
 
-                  {/* TAGS
+                      {/* TAGS
                       First 4 tags + ...
                       Click ... to show all tags.
                       Click less to collapse.
                   */}
 
-                  {article.tags.length > 0 && (
-                    <div className="article-report-tags">
+                      {article.tags.length > 0 && (
+                        <div className="article-report-tags">
 
-                      {expandedTagsId === article.id ? (
-                        <>
-                          {article.tags.map((tag, index) => (
-                            <span
-                              key={`${tag}-${index}`}
-                              className="badge badge-soft"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                          {expandedTagsId === article.id ? (
+                            <>
+                              {article.tags.map((tag, index) => (
+                                <span
+                                  key={`${tag}-${index}`}
+                                  className="badge badge-soft"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
 
-                          {article.tags.length > 4 && (
-                            <span
-                              className="member-article-inline-toggle"
-                              role="button"
-                              tabIndex={0}
-                              onClick={() =>
-                                setExpandedTagsId(null)
-                              }
-                              onKeyDown={(event) => {
-                                if (
-                                  event.key === "Enter" ||
-                                  event.key === " "
-                                ) {
-                                  event.preventDefault();
-                                  setExpandedTagsId(null);
-                                }
-                              }}
-                            >
-                              less
-                            </span>
+                              {article.tags.length > 4 && (
+                                <span
+                                  className="member-article-inline-toggle"
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() =>
+                                    setExpandedTagsId(null)
+                                  }
+                                  onKeyDown={(event) => {
+                                    if (
+                                      event.key === "Enter" ||
+                                      event.key === " "
+                                    ) {
+                                      event.preventDefault();
+                                      setExpandedTagsId(null);
+                                    }
+                                  }}
+                                >
+                                  less
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {article.tags.slice(0, 4).map((tag, index) => (
+                                <span
+                                  key={`${tag}-${index}`}
+                                  className="badge badge-soft"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+
+                              {article.tags.length > 4 && (
+                                <span
+                                  className="member-article-inline-toggle"
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() =>
+                                    setExpandedTagsId(article.id)
+                                  }
+                                  onKeyDown={(event) => {
+                                    if (
+                                      event.key === "Enter" ||
+                                      event.key === " "
+                                    ) {
+                                      event.preventDefault();
+                                      setExpandedTagsId(article.id);
+                                    }
+                                  }}
+                                >
+                                  ...
+                                </span>
+                              )}
+                            </>
                           )}
-                        </>
-                      ) : (
-                        <>
-                          {article.tags.slice(0, 4).map((tag, index) => (
-                            <span
-                              key={`${tag}-${index}`}
-                              className="badge badge-soft"
-                            >
-                              {tag}
-                            </span>
-                          ))}
 
-                          {article.tags.length > 4 && (
-                            <span
-                              className="member-article-inline-toggle"
-                              role="button"
-                              tabIndex={0}
-                              onClick={() =>
-                                setExpandedTagsId(article.id)
-                              }
-                              onKeyDown={(event) => {
-                                if (
-                                  event.key === "Enter" ||
-                                  event.key === " "
-                                ) {
-                                  event.preventDefault();
-                                  setExpandedTagsId(article.id);
-                                }
-                              }}
-                            >
-                              ...
-                            </span>
-                          )}
-                        </>
+                        </div>
                       )}
 
                     </div>
-                  )}
-
-                </div>
 
 
-                {/* =================================================
+                    {/* =================================================
                     READ ARTICLE
                 ================================================= */}
 
-                <div
-                  className="article-report-button-wrap"
+                    <div
+                      className="article-report-button-wrap"
 
-                >
+                    >
 
-                  <button
-                    type="button"
-                    className="member-newsletter-button article-report-button"
-                    onClick={() =>
-                      openPdf(article)
-                    }
-                    style={{
-                      cursor: article.pdfUrl ? "pointer" : "default"
-                    }}
-                  >
-                    Read Article →
-                  </button>
+                      <button
+                        type="button"
+                        className="member-newsletter-button article-report-button"
+                        onClick={() =>
+                          openPdf(article)
+                        }
+                        style={{
+                          cursor: article.pdfUrl ? "pointer" : "default"
+                        }}
+                      >
+                        Read Article →
+                      </button>
 
-                </div>
+                    </div>
 
-              </article>
+                  </article>
                 ))}
               </div>
             </section>
@@ -999,7 +924,7 @@ if (token) {
               {/* PDF */}
 
               <iframe
-               src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
+                src={`${selectedPdf.pdfUrl}#toolbar=0&navpanes=0`}
                 title={selectedPdf.title}
                 className="member-pdf-frame"
               />

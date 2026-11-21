@@ -1046,7 +1046,7 @@
             <div class="qty-row">
               <div class="qty-meta">
                 <strong id="summaryBookTitle">The Art of Price</strong>
-                <span id="summaryBookDesc">Hardcover · Launch Offer ₹1 per book</span>
+                <span id="summaryBookDesc">Hardcover · Launch Offer ₹999 per book</span>
               </div>
               <div class="qty-stepper">
                 <button type="button" class="qty-btn" id="qtyMinus" onclick="updateQty(-1)"
@@ -1059,8 +1059,8 @@
             </div>
 
             <div class="summary-line">
-              <span>Item Price (₹1 × <span id="summaryQty">1</span>)</span>
-              <span>₹<span id="summarySubtotal">1</span></span>
+              <span>Item Price (₹999 × <span id="summaryQty">1</span>)</span>
+              <span>₹<span id="summarySubtotal">999</span></span>
             </div>
 
             <div class="summary-line">
@@ -1071,7 +1071,7 @@
 
             <div class="summary-line discount">
               <span>Launch Offer Discount</span>
-              <span>−₹<span id="summarySavings">1,498</span></span>
+              <span>−₹<span id="summarySavings">500</span></span>
             </div>
 
             <div class="summary-line">
@@ -1081,7 +1081,7 @@
 
             <div class="summary-line total">
               <span>Total Payable Amount</span>
-              <span class="total-amount">₹<span id="summaryTotal">1</span></span>
+              <span class="total-amount">₹<span id="summaryTotal">999</span></span>
             </div>
           </div>
 
@@ -1090,7 +1090,7 @@
 
           <!-- SUBMIT BUTTON -->
           <button type="submit" class="submit-btn" id="aopSubmitBtn">
-            <span>Proceed to Pay ₹<span id="btnPayAmount">1</span> / ₹<span id="btnPayAmountKn">1</span> ಪಾವತಿಸಿ</span>
+            <span>Proceed to Pay ₹<span id="btnPayAmount">999</span> / ₹<span id="btnPayAmountKn">999</span> ಪಾವತಿಸಿ</span>
             <span aria-hidden="true">→</span>
           </button>
 
@@ -1135,7 +1135,7 @@
 
   <script>
     const API_BASE = "https://asia-south1-wealthoria-6fc11.cloudfunctions.net/api";
-    const UNIT_PRICE = 1;
+    const UNIT_PRICE = 999;
     const MRP_PRICE = 1499;
 
     let currentQty = 1;
@@ -1162,14 +1162,14 @@
         if (radioEn) radioEn.checked = true;
         if (radioKn) radioKn.checked = false;
         if (bookTitleEl) bookTitleEl.innerHTML = 'The Art of Price &middot; <span style="color:#0284c7;font-weight:800;">English Edition</span>';
-        if (bookDescEl) bookDescEl.textContent = "₹1 per book · Hardcover · Complete Technical Analysis in English";
+        if (bookDescEl) bookDescEl.textContent = "₹999 per book · Hardcover · Complete Technical Analysis in English";
       } else if (selectedEdition === "kannada") {
         if (cardKn) cardKn.classList.add("active");
         if (cardEn) cardEn.classList.remove("active");
         if (radioKn) radioKn.checked = true;
         if (radioEn) radioEn.checked = false;
         if (bookTitleEl) bookTitleEl.innerHTML = 'The Art of Price &middot; <span style="color:#b45309;font-weight:800;">ದಿ ಆರ್ಟ್ ಆಫ್ ಪ್ರೈಸ್ (ಕನ್ನಡ)</span>';
-        if (bookDescEl) bookDescEl.textContent = "₹1 per book · Hardcover · 500+ Pages in Kannada";
+        if (bookDescEl) bookDescEl.textContent = "₹999 per book · Hardcover · 500+ Pages in Kannada";
       }
     }
     window.setEdition = setEdition;

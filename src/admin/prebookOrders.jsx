@@ -498,6 +498,11 @@ function PrebookOrders({
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [selectedLabelOrders, setSelectedLabelOrders] = useState([]);
 
+  /* --- ART OF PRICE LEADS & ABANDONED CHECKOUTS --- */
+  const [activeLeadTab, setActiveLeadTab] = useState("captured"); // "captured" or "abandoned"
+  const [draftLeads, setDraftLeads] = useState([]);
+  const [copiedLeadId, setCopiedLeadId] = useState(null);
+
   /* --- STOCK & INVENTORY STATE --- */
   const [stockConfig, setStockConfig] = useState(() => {
     try {
@@ -808,9 +813,31 @@ function PrebookOrders({
     let isSubscribed = false;
 
     let unsubStock = null;
+    let unsubDrafts = null;
     const startListener = () => {
       if (isSubscribed) return;
       isSubscribed = true;
+
+      // Listen to abandoned/draft leads for artOfPriceOrders
+      if (collectionName === "artOfPriceOrders") {
+        try {
+          unsubDrafts = window.db.collection("artOfPriceDrafts").onSnapshot(
+            (draftSnap) => {
+              if (draftSnap) {
+                const list = draftSnap.docs
+                  .map((d) => ({ id: d.id, ...d.data() }))
+                  .filter((d) => {
+                    const payStatus = String(d.paymentStatus || d.status || "").trim().toLowerCase();
+                    return payStatus !== "paid" && payStatus !== "confirmed" && (d.customer?.phone || d.customer?.name);
+                  })
+                  .sort((a, b) => getOrderTime(b) - getOrderTime(a));
+                setDraftLeads(list);
+              }
+            },
+            (err) => console.warn("Drafts listener notice:", err.message)
+          );
+        } catch (_) {}
+      }
 
       // Listen to prebookStock
       try {
@@ -936,6 +963,8 @@ function PrebookOrders({
     return () => {
       if (typeof unsubAuth === "function") unsubAuth();
       if (typeof unsubscribe === "function") unsubscribe();
+      if (typeof unsubStock === "function") unsubStock();
+      if (typeof unsubDrafts === "function") unsubDrafts();
     };
   }, [collectionName]);
 
@@ -3258,23 +3287,332 @@ function PrebookOrders({
           overflow: "hidden"
         }}
       >
+        {/* TABLE TAB HEADER: CAPTURED VS ABANDONED LEADS */}
         <div
           style={{
-            padding: "14px 16px",
+            padding: "12px 16px",
             borderBottom: "1px solid var(--border, #e8ebef)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: 10
+            gap: 12,
+            flexWrap: "wrap",
+            background: "#fcfdfd"
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 700 }}>Orders</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => setActiveLeadTab("captured")}
+              style={{
+                height: 38,
+                padding: "0 14px",
+                borderRadius: 8,
+                border: activeLeadTab === "captured" ? "2px solid #16a34a" : "1px solid #d0d5dd",
+                background: activeLeadTab === "captured" ? "#ecfdf5" : "#ffffff",
+                color: activeLeadTab === "captured" ? "#065f46" : "#344054",
+                fontWeight: 750,
+                fontSize: 13,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7
+              }}
+            >
+              <span>✓ Captured & Paid Orders</span>
+              <span
+                style={{
+                  background: activeLeadTab === "captured" ? "#16a34a" : "#f2f4f7",
+                  color: activeLeadTab === "captured" ? "#ffffff" : "#475467",
+                  padding: "1px 7px",
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 800
+                }}
+              >
+                {filteredOrders.length}
+              </span>
+            </button>
+
+            {collectionName === "artOfPriceOrders" && (
+              <button
+                type="button"
+                onClick={() => setActiveLeadTab("abandoned")}
+                style={{
+                  height: 38,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  border: activeLeadTab === "abandoned" ? "2px solid #ea580c" : "1px solid #d0d5dd",
+                  background: activeLeadTab === "abandoned" ? "#fff7ed" : "#ffffff",
+                  color: activeLeadTab === "abandoned" ? "#9a3412" : "#344054",
+                  fontWeight: 750,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7
+                }}
+              >
+                <span>⚠️ Abandoned / Follow-up Leads</span>
+                <span
+                  style={{
+                    background: activeLeadTab === "abandoned" ? "#ea580c" : "#f2f4f7",
+                    color: activeLeadTab === "abandoned" ? "#ffffff" : "#475467",
+                    padding: "1px 7px",
+                    borderRadius: 12,
+                    fontSize: 11,
+                    fontWeight: 800
+                  }}
+                >
+                  {draftLeads.length}
+                </span>
+              </button>
+            )}
+          </div>
+
           <div style={{ fontSize: 12, color: "#667085" }}>
-            Rows {pageStart}-{pageEnd}
+            {activeLeadTab === "captured"
+              ? `Rows ${pageStart}-${pageEnd} of ${filteredOrders.length}`
+              : `${draftLeads.length} leads requiring follow-up`}
           </div>
         </div>
 
-        <div style={{ overflowX: "auto", width: "100%" }}>
+        {activeLeadTab === "abandoned" && collectionName === "artOfPriceOrders" ? (
+          /* ABANDONED LEADS FOLLOW-UP TABLE */
+          <div style={{ overflowX: "auto", width: "100%" }}>
+            <table style={{ width: "100%", minWidth: 1280, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#fff7ed", borderBottom: "1px solid #fed7aa" }}>
+                  {[
+                    "#",
+                    "Draft / Order ID",
+                    "Attempted At",
+                    "Edition",
+                    "Customer Name",
+                    "Mobile Number",
+                    "Email",
+                    "Delivery Address",
+                    "Qty & Offer",
+                    "Status",
+                    "Follow-up Actions"
+                  ].map((h, i) => (
+                    <th
+                      key={i}
+                      style={{
+                        textAlign: "left",
+                        padding: "13px 14px",
+                        fontSize: 11,
+                        fontWeight: 750,
+                        color: "#9a3412",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {draftLeads.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={11}
+                      style={{ padding: 50, textAlign: "center", color: "#667085", fontSize: 13 }}
+                    >
+                      No abandoned leads found. All orders captured successfully!
+                    </td>
+                  </tr>
+                ) : (
+                  draftLeads.map((lead, idx) => {
+                    const cust = lead.customer || {};
+                    const ship = lead.shippingAddress || {};
+                    const phone = String(cust.phone || ship.phone || "").replace(/\D/g, "").slice(-10);
+                    const name = cust.name || ship.name || "Customer";
+                    const email = cust.email || "";
+                    const isKn = String(lead.edition || "").toLowerCase().includes("kannada");
+                    const editionLabel = isKn ? "Kannada (ಕನ್ನಡ)" : "English";
+                    const fullAddress = [ship.address, ship.address2 || ship.landmark, ship.city, ship.state, ship.pincode].filter(Boolean).join(", ");
+                    const attemptTime = getOrderTime(lead);
+                    const timeStr = attemptTime
+                      ? new Date(attemptTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+                      : "—";
+                    const qty = lead.quantity || 1;
+                    const waMsg = `Hello ${name}, this is Wealthoria Team. We noticed you started pre-booking 'The Art of Price' (${editionLabel} Edition) with delivery to ${ship.city || 'your address'}. Would you like any assistance completing your pre-booking? Free Pan-India Delivery is included! Link: https://www.wealthoria.in/the-art-of-price-prebook.html?edition=${isKn ? 'kannada' : 'english'}`;
+                    const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(waMsg)}`;
+
+                    return (
+                      <tr key={lead.id || idx} style={{ borderBottom: "1px solid #edf0f3" }}>
+                        <td style={{ padding: "12px 14px", fontSize: 12, color: "#667085", fontWeight: 700 }}>{idx + 1}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 12, fontWeight: 750, color: "#111" }}>
+                          <div>{lead.bookingId || lead.id}</div>
+                          <div style={{ fontSize: 10, color: "#98a2b3", fontFamily: "monospace" }}>{lead.id}</div>
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: 12, color: "#475467", whiteSpace: "nowrap" }}>{timeStr}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 12 }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "3px 8px",
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 750,
+                              background: isKn ? "#fff7ed" : "#f0f9ff",
+                              color: isKn ? "#c2410c" : "#0284c7",
+                              border: isKn ? "1px solid #fed7aa" : "1px solid #bae6fd"
+                            }}
+                          >
+                            {editionLabel}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 750, color: "#111" }}>{name}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 700, color: "#111", whiteSpace: "nowrap" }}>
+                          {phone || "—"}
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: 12, color: "#475467" }}>{email || "—"}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 12, color: "#475467", maxWidth: 280 }}>
+                          <div style={{ wordBreak: "break-word" }}>{fullAddress || "—"}</div>
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: 12, fontWeight: 750, color: "#111", whiteSpace: "nowrap" }}>
+                          {qty} copy (₹{qty * 999})
+                        </td>
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "3px 8px",
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 750,
+                              background: "#fef3f2",
+                              color: "#b42318",
+                              border: "1px solid #fee4e2"
+                            }}
+                          >
+                            Cancelled / Incomplete
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            {phone && (
+                              <a
+                                href={waUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  padding: "6px 11px",
+                                  borderRadius: 6,
+                                  background: "#25D366",
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontWeight: 750,
+                                  textDecoration: "none",
+                                  boxShadow: "0 1px 2px rgba(0,0,0,0.06)"
+                                }}
+                                title="Chat on WhatsApp with pre-composed follow-up"
+                              >
+                                💬 WhatsApp
+                              </a>
+                            )}
+                            {phone && (
+                              <a
+                                href={`tel:${phone}`}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  padding: "6px 10px",
+                                  borderRadius: 6,
+                                  background: "#0284c7",
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontWeight: 750,
+                                  textDecoration: "none"
+                                }}
+                                title="Call Customer"
+                              >
+                                📞 Call
+                              </a>
+                            )}
+                            {email && (
+                              <a
+                                href={`mailto:${email}?subject=${encodeURIComponent("The Art of Price Pre-booking assistance")}&body=${encodeURIComponent(waMsg)}`}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  padding: "6px 9px",
+                                  borderRadius: 6,
+                                  background: "#64748b",
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontWeight: 750,
+                                  textDecoration: "none"
+                                }}
+                                title="Send Email"
+                              >
+                                ✉️ Email
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const copyText = `Customer: ${name}\nPhone: ${phone}\nEmail: ${email}\nEdition: ${editionLabel}\nAddress: ${fullAddress}`;
+                                navigator.clipboard.writeText(copyText);
+                                setCopiedLeadId(lead.id || idx);
+                                setTimeout(() => setCopiedLeadId(null), 2000);
+                              }}
+                              style={{
+                                padding: "6px 8px",
+                                borderRadius: 6,
+                                border: "1px solid #d0d5dd",
+                                background: copiedLeadId === (lead.id || idx) ? "#dcfce7" : "#ffffff",
+                                color: copiedLeadId === (lead.id || idx) ? "#15803d" : "#344054",
+                                fontSize: 11,
+                                fontWeight: 750,
+                                cursor: "pointer"
+                              }}
+                              title="Copy details"
+                            >
+                              {copiedLeadId === (lead.id || idx) ? "✓ Copied" : "📋 Copy"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (window.confirm(`Delete abandoned lead for ${name}?`)) {
+                                  try {
+                                    await window.db.collection("artOfPriceDrafts").doc(lead.id).delete();
+                                  } catch (err) {
+                                    alert("Delete failed: " + err.message);
+                                  }
+                                }
+                              }}
+                              style={{
+                                padding: "6px 8px",
+                                borderRadius: 6,
+                                border: "1px solid #fee4e2",
+                                background: "#fff",
+                                color: "#d92d20",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                              title="Dismiss / Delete lead"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* STANDARD CAPTURED ORDERS TABLE */
+          <div style={{ overflowX: "auto", width: "100%" }}>
           <table style={{ width: "100%", minWidth: 1380, borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e8ebef" }}>
@@ -3779,6 +4117,7 @@ function PrebookOrders({
             </tbody>
           </table>
         </div>
+        )}
 
         {/* PAGINATION */}
         {filteredOrders.length > ORDERS_PER_PAGE && (

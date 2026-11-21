@@ -195,24 +195,9 @@ const NAV = [
   { to: "/admin/enquiries", label: "Enquiries", icon: "enquiries" },
 
   {
-    type: "group",
-    id: "products",
-    label: "Products",
-    icon: "courses",
-    children: [
-      {
-        to: "/admin/products/hoodikeya-vijnana",
-        altTo: ["/admin/prebook-orders"],
-        label: "Hoodikeya Vijnana",
-        badge: "Book 1"
-      },
-      {
-        to: "/admin/products/art-of-price",
-        altTo: ["/admin/art-of-price-orders", "/admin/the-art-of-price-orders"],
-        label: "The Art of Price",
-        badge: "Book 2"
-      }
-    ]
+    to: "/admin/prebook-orders",
+    label: "Pre-book Orders",
+    icon: "courses"
   },
 
   {

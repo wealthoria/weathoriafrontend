@@ -195,6 +195,20 @@ function AdminAuthProvider({
              NOT LOGGED IN IN FIREBASE
           ------------------------------------------------ */
           if (!user) {
+            const cached = readCachedAdmin();
+            if (cached) {
+              // Maintain cached session while Firebase reconnects / wakes from sleep
+              setState({
+                loading: false,
+                isAuthenticated: true,
+                isAdmin: true,
+                user: cached,
+                admin: cached,
+                error: null
+              });
+              return;
+            }
+
             saveCachedAdmin(null);
             setState({
               ...adminAuthInitial,
@@ -291,14 +305,14 @@ function AdminAuthProvider({
         }
       );
 
-    // Keep Firebase token fresh proactively every 25 minutes
+    // Keep Firebase token fresh proactively every 10 minutes so admin session never drops
     const tokenRefreshInterval = setInterval(async () => {
       if (window.auth?.currentUser) {
         try {
           await window.auth.currentUser.getIdToken(true);
         } catch (_) {}
       }
-    }, 25 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
     // Refresh token immediately when admin returns to tab after sleep / idle
     const handleVisibilityChange = async () => {
@@ -464,7 +478,7 @@ function AdminAuthProvider({
         });
 
         window.location.replace(
-          "/members/login"
+          "/admin/login"
         );
       },
       []

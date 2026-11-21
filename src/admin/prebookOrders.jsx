@@ -506,6 +506,15 @@ function PrebookOrders({
   const [draftLeads, setDraftLeads] = useState([]);
   const [copiedLeadId, setCopiedLeadId] = useState(null);
 
+  const hasEditionSupport = useMemo(() => {
+    if (collectionName === "artOfPriceOrders") return true;
+    return orders.some(
+      (o) =>
+        o.edition ||
+        (o.sku && (o.sku.includes("-KN") || o.sku.includes("-EN") || o.sku.includes("PRICE") || o.sku.includes("AOP")))
+    );
+  }, [collectionName, orders]);
+
   /* --- STOCK & INVENTORY STATE --- */
   const [stockConfig, setStockConfig] = useState(() => {
     try {
@@ -3341,7 +3350,7 @@ function PrebookOrders({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            {collectionName === "artOfPriceOrders" ? (
+            {hasEditionSupport ? (
               <>
                 {/* KANNADA EDITION TAB */}
                 <button
@@ -3351,8 +3360,8 @@ function PrebookOrders({
                     setSelectedEditionTab("kannada");
                   }}
                   style={{
-                    height: 40,
-                    padding: "0 16px",
+                    height: 42,
+                    padding: "0 18px",
                     borderRadius: 10,
                     border: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
                       ? "2px solid #ea580c"
@@ -3363,26 +3372,26 @@ function PrebookOrders({
                     color: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
                       ? "#c2410c"
                       : "#344054",
-                    fontWeight: 750,
-                    fontSize: 13,
+                    fontWeight: 800,
+                    fontSize: 13.5,
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 8,
                     boxShadow: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
-                      ? "0 2px 6px rgba(234, 88, 12, 0.15)"
+                      ? "0 2px 8px rgba(234, 88, 12, 0.2)"
                       : "none"
                   }}
                 >
-                  <span style={{ fontSize: 13 }}>🟧</span>
+                  <span style={{ fontSize: 14 }}>🟧</span>
                   <span>ಕನ್ನಡ ಆವೃತ್ತಿ (Kannada Edition)</span>
                   <span
                     style={{
-                      background: (activeLeadTab === "captured" && selectedEditionTab === "kannada") ? "#ea580c" : "#f2f4f7",
+                      background: (activeLeadTab === "captured" && selectedEditionTab === "kannada") ? "#ea580c" : "#e2e8f0",
                       color: (activeLeadTab === "captured" && selectedEditionTab === "kannada") ? "#ffffff" : "#475467",
-                      padding: "2px 8px",
+                      padding: "2px 9px",
                       borderRadius: 12,
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: 800
                     }}
                   >
@@ -3398,8 +3407,8 @@ function PrebookOrders({
                     setSelectedEditionTab("english");
                   }}
                   style={{
-                    height: 40,
-                    padding: "0 16px",
+                    height: 42,
+                    padding: "0 18px",
                     borderRadius: 10,
                     border: (activeLeadTab === "captured" && selectedEditionTab === "english")
                       ? "2px solid #0284c7"
@@ -3410,26 +3419,26 @@ function PrebookOrders({
                     color: (activeLeadTab === "captured" && selectedEditionTab === "english")
                       ? "#0369a1"
                       : "#344054",
-                    fontWeight: 750,
-                    fontSize: 13,
+                    fontWeight: 800,
+                    fontSize: 13.5,
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 8,
                     boxShadow: (activeLeadTab === "captured" && selectedEditionTab === "english")
-                      ? "0 2px 6px rgba(2, 132, 199, 0.15)"
+                      ? "0 2px 8px rgba(2, 132, 199, 0.2)"
                       : "none"
                   }}
                 >
-                  <span style={{ fontSize: 13 }}>🟦</span>
+                  <span style={{ fontSize: 14 }}>🟦</span>
                   <span>English Edition</span>
                   <span
                     style={{
-                      background: (activeLeadTab === "captured" && selectedEditionTab === "english") ? "#0284c7" : "#f2f4f7",
+                      background: (activeLeadTab === "captured" && selectedEditionTab === "english") ? "#0284c7" : "#e2e8f0",
                       color: (activeLeadTab === "captured" && selectedEditionTab === "english") ? "#ffffff" : "#475467",
-                      padding: "2px 8px",
+                      padding: "2px 9px",
                       borderRadius: 12,
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: 800
                     }}
                   >
@@ -3445,8 +3454,8 @@ function PrebookOrders({
                     setSelectedEditionTab("all");
                   }}
                   style={{
-                    height: 40,
-                    padding: "0 13px",
+                    height: 42,
+                    padding: "0 14px",
                     borderRadius: 10,
                     border: (activeLeadTab === "captured" && selectedEditionTab === "all")
                       ? "2px solid #16a34a"
@@ -3473,8 +3482,8 @@ function PrebookOrders({
                   type="button"
                   onClick={() => setActiveLeadTab("abandoned")}
                   style={{
-                    height: 40,
-                    padding: "0 13px",
+                    height: 42,
+                    padding: "0 14px",
                     borderRadius: 10,
                     border: activeLeadTab === "abandoned" ? "2px solid #d97706" : "1px solid #d0d5dd",
                     background: activeLeadTab === "abandoned" ? "#fffbeb" : "#ffffff",
@@ -3487,7 +3496,7 @@ function PrebookOrders({
                     gap: 7
                   }}
                 >
-                  <span>⚠️ Unpaid / Follow-up Leads</span>
+                  <span>⚠️ Unpaid Follow-up Leads</span>
                   <span
                     style={{
                       background: activeLeadTab === "abandoned" ? "#d97706" : "#f2f4f7",
@@ -3518,7 +3527,7 @@ function PrebookOrders({
           </div>
         </div>
 
-        {activeLeadTab === "abandoned" && collectionName === "artOfPriceOrders" ? (
+        {activeLeadTab === "abandoned" && hasEditionSupport ? (
           /* ABANDONED LEADS FOLLOW-UP TABLE */
           <div style={{ overflowX: "auto", width: "100%" }}>
             <table style={{ width: "100%", minWidth: 1280, borderCollapse: "collapse" }}>

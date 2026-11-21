@@ -49,7 +49,7 @@ function AdminGuard({ children }) {
       } catch (e) {}
 
       navigate(
-        "/members/login"
+        "/admin/login"
       );
     }
   }, [
@@ -478,7 +478,7 @@ function Shell({
               title="Log out"
               onClick={() => {
                 logout();
-                navigate("/members/login");
+                navigate("/admin/login");
               }}
             >
               <MIcon name="logout" size={18} />

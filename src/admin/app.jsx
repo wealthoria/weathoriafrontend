@@ -44,7 +44,7 @@ const AdminThemeContext =
 const MRouterContext =
   window.MRouterContext ||
   React.createContext({
-    path: "/members/login",
+    path: "/admin/login",
     navigate: () => { }
   });
 
@@ -1360,7 +1360,7 @@ function LoginRedirect({
     if (
       auth.isAuthenticated &&
       auth.isAdmin &&
-      path === "/members/login"
+      (path === "/admin/login" || path === "/members/login")
     ) {
 
       navigate(

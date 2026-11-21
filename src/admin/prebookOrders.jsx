@@ -498,7 +498,10 @@ function PrebookOrders({
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [selectedLabelOrders, setSelectedLabelOrders] = useState([]);
 
-  /* --- ART OF PRICE LEADS & ABANDONED CHECKOUTS --- */
+  /* --- ART OF PRICE EDITION TABS & LEADS --- */
+  const [selectedEditionTab, setSelectedEditionTab] = useState(
+    collectionName === "artOfPriceOrders" ? "kannada" : "all"
+  );
   const [activeLeadTab, setActiveLeadTab] = useState("captured"); // "captured" or "abandoned"
   const [draftLeads, setDraftLeads] = useState([]);
   const [copiedLeadId, setCopiedLeadId] = useState(null);
@@ -1059,6 +1062,32 @@ function PrebookOrders({
     return { withCoupon, withoutCoupon, withCouponAmount, withoutCouponAmount, uniqueCoupons };
   }, [orders]);
 
+  /* --- EDITION COUNTS (KANNADA vs ENGLISH) --- */
+  const editionCounts = useMemo(() => {
+    let kannada = 0;
+    let english = 0;
+    orders.forEach((o) => {
+      const ed = String(o.edition || o.product?.edition || "").trim().toLowerCase();
+      const sku = String(o.sku || o.product?.sku || "").trim().toUpperCase();
+      if (ed.includes("kannada") || ed.includes("kn") || sku.includes("-KN")) {
+        kannada += 1;
+      } else {
+        english += 1;
+      }
+    });
+    return { kannada, english, total: orders.length };
+  }, [orders]);
+
+  const filteredDraftLeads = useMemo(() => {
+    return draftLeads.filter((lead) => {
+      if (selectedEditionTab === "all") return true;
+      const isKn = String(lead.edition || "").toLowerCase().includes("kannada");
+      if (selectedEditionTab === "kannada" && !isKn) return false;
+      if (selectedEditionTab === "english" && isKn) return false;
+      return true;
+    });
+  }, [draftLeads, selectedEditionTab]);
+
   /* =======================================================
      FILTER
   ======================================================= */
@@ -1069,6 +1098,17 @@ function PrebookOrders({
     const result = orders.filter((order) => {
       if (showDuplicates && !duplicateInfo.duplicateOrderIds.has(order.id)) {
         return false;
+      }
+
+      // Edition tab filtering (Kannada vs English)
+      if (selectedEditionTab !== "all") {
+        const ed = String(order.edition || order.product?.edition || "").trim().toLowerCase();
+        const sku = String(order.sku || order.product?.sku || "").trim().toUpperCase();
+        const isKn = ed.includes("kannada") || ed.includes("kn") || sku.includes("-KN");
+        const isEn = ed.includes("english") || ed.includes("en") || sku.includes("-EN");
+
+        if (selectedEditionTab === "kannada" && !isKn) return false;
+        if (selectedEditionTab === "english" && !isEn) return false;
       }
 
       const paymentStatus = String(order.paymentStatus || "").toLowerCase();
@@ -1152,7 +1192,7 @@ function PrebookOrders({
     });
 
     return result;
-  }, [orders, search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates, duplicateInfo, sortOrder]);
+  }, [orders, search, paymentFilter, shippingFilter, couponFilter, startDate, endDate, showDuplicates, duplicateInfo, sortOrder, selectedEditionTab]);
 
   /* =======================================================
      FILTERED METRICS (Total amount & discount for filtered orders / coupon)
@@ -3287,93 +3327,194 @@ function PrebookOrders({
           overflow: "hidden"
         }}
       >
-        {/* TABLE TAB HEADER: CAPTURED VS ABANDONED LEADS */}
+        {/* TABLE TAB HEADER: KANNADA vs ENGLISH vs ALL vs ABANDONED LEADS */}
         <div
           style={{
-            padding: "12px 16px",
+            padding: "14px 18px",
             borderBottom: "1px solid var(--border, #e8ebef)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 12,
             flexWrap: "wrap",
-            background: "#fcfdfd"
+            background: "#ffffff"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={() => setActiveLeadTab("captured")}
-              style={{
-                height: 38,
-                padding: "0 14px",
-                borderRadius: 8,
-                border: activeLeadTab === "captured" ? "2px solid #16a34a" : "1px solid #d0d5dd",
-                background: activeLeadTab === "captured" ? "#ecfdf5" : "#ffffff",
-                color: activeLeadTab === "captured" ? "#065f46" : "#344054",
-                fontWeight: 750,
-                fontSize: 13,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7
-              }}
-            >
-              <span>✓ Captured & Paid Orders</span>
-              <span
-                style={{
-                  background: activeLeadTab === "captured" ? "#16a34a" : "#f2f4f7",
-                  color: activeLeadTab === "captured" ? "#ffffff" : "#475467",
-                  padding: "1px 7px",
-                  borderRadius: 12,
-                  fontSize: 11,
-                  fontWeight: 800
-                }}
-              >
-                {filteredOrders.length}
-              </span>
-            </button>
-
-            {collectionName === "artOfPriceOrders" && (
-              <button
-                type="button"
-                onClick={() => setActiveLeadTab("abandoned")}
-                style={{
-                  height: 38,
-                  padding: "0 14px",
-                  borderRadius: 8,
-                  border: activeLeadTab === "abandoned" ? "2px solid #ea580c" : "1px solid #d0d5dd",
-                  background: activeLeadTab === "abandoned" ? "#fff7ed" : "#ffffff",
-                  color: activeLeadTab === "abandoned" ? "#9a3412" : "#344054",
-                  fontWeight: 750,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 7
-                }}
-              >
-                <span>⚠️ Abandoned / Follow-up Leads</span>
-                <span
+            {collectionName === "artOfPriceOrders" ? (
+              <>
+                {/* KANNADA EDITION TAB */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveLeadTab("captured");
+                    setSelectedEditionTab("kannada");
+                  }}
                   style={{
-                    background: activeLeadTab === "abandoned" ? "#ea580c" : "#f2f4f7",
-                    color: activeLeadTab === "abandoned" ? "#ffffff" : "#475467",
-                    padding: "1px 7px",
-                    borderRadius: 12,
-                    fontSize: 11,
-                    fontWeight: 800
+                    height: 40,
+                    padding: "0 16px",
+                    borderRadius: 10,
+                    border: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
+                      ? "2px solid #ea580c"
+                      : "1px solid #d0d5dd",
+                    background: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
+                      ? "#fff7ed"
+                      : "#ffffff",
+                    color: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
+                      ? "#c2410c"
+                      : "#344054",
+                    fontWeight: 750,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    boxShadow: (activeLeadTab === "captured" && selectedEditionTab === "kannada")
+                      ? "0 2px 6px rgba(234, 88, 12, 0.15)"
+                      : "none"
                   }}
                 >
-                  {draftLeads.length}
-                </span>
-              </button>
+                  <span style={{ fontSize: 13 }}>🟧</span>
+                  <span>ಕನ್ನಡ ಆವೃತ್ತಿ (Kannada Edition)</span>
+                  <span
+                    style={{
+                      background: (activeLeadTab === "captured" && selectedEditionTab === "kannada") ? "#ea580c" : "#f2f4f7",
+                      color: (activeLeadTab === "captured" && selectedEditionTab === "kannada") ? "#ffffff" : "#475467",
+                      padding: "2px 8px",
+                      borderRadius: 12,
+                      fontSize: 11.5,
+                      fontWeight: 800
+                    }}
+                  >
+                    {editionCounts.kannada}
+                  </span>
+                </button>
+
+                {/* ENGLISH EDITION TAB */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveLeadTab("captured");
+                    setSelectedEditionTab("english");
+                  }}
+                  style={{
+                    height: 40,
+                    padding: "0 16px",
+                    borderRadius: 10,
+                    border: (activeLeadTab === "captured" && selectedEditionTab === "english")
+                      ? "2px solid #0284c7"
+                      : "1px solid #d0d5dd",
+                    background: (activeLeadTab === "captured" && selectedEditionTab === "english")
+                      ? "#f0f9ff"
+                      : "#ffffff",
+                    color: (activeLeadTab === "captured" && selectedEditionTab === "english")
+                      ? "#0369a1"
+                      : "#344054",
+                    fontWeight: 750,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    boxShadow: (activeLeadTab === "captured" && selectedEditionTab === "english")
+                      ? "0 2px 6px rgba(2, 132, 199, 0.15)"
+                      : "none"
+                  }}
+                >
+                  <span style={{ fontSize: 13 }}>🟦</span>
+                  <span>English Edition</span>
+                  <span
+                    style={{
+                      background: (activeLeadTab === "captured" && selectedEditionTab === "english") ? "#0284c7" : "#f2f4f7",
+                      color: (activeLeadTab === "captured" && selectedEditionTab === "english") ? "#ffffff" : "#475467",
+                      padding: "2px 8px",
+                      borderRadius: 12,
+                      fontSize: 11.5,
+                      fontWeight: 800
+                    }}
+                  >
+                    {editionCounts.english}
+                  </span>
+                </button>
+
+                {/* ALL ORDERS TAB */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveLeadTab("captured");
+                    setSelectedEditionTab("all");
+                  }}
+                  style={{
+                    height: 40,
+                    padding: "0 13px",
+                    borderRadius: 10,
+                    border: (activeLeadTab === "captured" && selectedEditionTab === "all")
+                      ? "2px solid #16a34a"
+                      : "1px solid #d0d5dd",
+                    background: (activeLeadTab === "captured" && selectedEditionTab === "all")
+                      ? "#ecfdf5"
+                      : "#ffffff",
+                    color: (activeLeadTab === "captured" && selectedEditionTab === "all")
+                      ? "#065f46"
+                      : "#475467",
+                    fontWeight: 750,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 7
+                  }}
+                >
+                  <span>All Captured ({editionCounts.total})</span>
+                </button>
+
+                {/* ABANDONED LEADS TAB */}
+                <button
+                  type="button"
+                  onClick={() => setActiveLeadTab("abandoned")}
+                  style={{
+                    height: 40,
+                    padding: "0 13px",
+                    borderRadius: 10,
+                    border: activeLeadTab === "abandoned" ? "2px solid #d97706" : "1px solid #d0d5dd",
+                    background: activeLeadTab === "abandoned" ? "#fffbeb" : "#ffffff",
+                    color: activeLeadTab === "abandoned" ? "#92400e" : "#475467",
+                    fontWeight: 750,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 7
+                  }}
+                >
+                  <span>⚠️ Unpaid / Follow-up Leads</span>
+                  <span
+                    style={{
+                      background: activeLeadTab === "abandoned" ? "#d97706" : "#f2f4f7",
+                      color: activeLeadTab === "abandoned" ? "#ffffff" : "#475467",
+                      padding: "2px 8px",
+                      borderRadius: 12,
+                      fontSize: 11.5,
+                      fontWeight: 800
+                    }}
+                  >
+                    {draftLeads.length}
+                  </span>
+                </button>
+              </>
+            ) : (
+              <div style={{ fontSize: 13, fontWeight: 700 }}>Orders</div>
             )}
           </div>
 
-          <div style={{ fontSize: 12, color: "#667085" }}>
+          <div style={{ fontSize: 12, color: "#667085", fontWeight: 600 }}>
             {activeLeadTab === "captured"
-              ? `Rows ${pageStart}-${pageEnd} of ${filteredOrders.length}`
-              : `${draftLeads.length} leads requiring follow-up`}
+              ? (selectedEditionTab === "kannada"
+                  ? `Showing Kannada Edition: ${filteredOrders.length} order(s)`
+                  : selectedEditionTab === "english"
+                  ? `Showing English Edition: ${filteredOrders.length} order(s)`
+                  : `Showing All Editions: ${filteredOrders.length} order(s)`)
+              : `${filteredDraftLeads.length} lead(s) for follow-up`}
           </div>
         </div>
 

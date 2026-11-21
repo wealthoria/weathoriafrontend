@@ -843,38 +843,15 @@ function PrebookOrders({
             .filter((order) => {
               const payStatus = String(order.paymentStatus || order.status || "").trim().toLowerCase();
 
-              // For artOfPriceOrders, all submitted pre-bookings are active unless cancelled
-              if (collectionName === "artOfPriceOrders") {
-                return (
-                  payStatus !== "failed" &&
-                  payStatus !== "cancelled" &&
-                  payStatus !== "canceled"
-                );
-              }
-
-              const source = String(order.source || "").trim().toLowerCase();
-
-              // Allow direct customer details form orders (source: customer-details-page, COD / payment pending, or confirmed book orders)
-              const isDirectBookOrder =
-                source === "customer-details-page" ||
-                order.orderStatus === "confirmed" ||
-                (Boolean(order.bookingId) && !order.razorpayOrderId);
-
-              if (isDirectBookOrder) {
-                return (
-                  payStatus !== "failed" &&
-                  payStatus !== "cancelled" &&
-                  payStatus !== "canceled"
-                );
-              }
-
-              // Strictly exclude failed, unpaid, cancelled, or pending attempts
+              // Strictly exclude any failed, cancelled, unpaid, pending, created, or draft orders
               if (
                 payStatus === "failed" ||
                 payStatus === "cancelled" ||
                 payStatus === "canceled" ||
                 payStatus === "unpaid" ||
                 payStatus === "pending" ||
+                payStatus === "payment_pending" ||
+                payStatus === "created" ||
                 payStatus === "draft"
               ) {
                 return false;
@@ -899,9 +876,26 @@ function PrebookOrders({
               const isPaidStatus =
                 payStatus === "paid" ||
                 payStatus === "captured" ||
-                payStatus === "success";
+                payStatus === "success" ||
+                payStatus === "confirmed";
 
-              return isPaidStatus || hasValidPaymentId;
+              // For artOfPriceOrders, strictly display ONLY successfully captured Razorpay orders
+              if (collectionName === "artOfPriceOrders") {
+                return isPaidStatus && hasValidPaymentId;
+              }
+
+              // Allow legacy direct customer details form orders for standard bookOrders
+              const source = String(order.source || "").trim().toLowerCase();
+              const isDirectBookOrder =
+                source === "customer-details-page" ||
+                order.orderStatus === "confirmed" ||
+                (Boolean(order.bookingId) && !order.razorpayOrderId);
+
+              if (isDirectBookOrder) {
+                return true;
+              }
+
+              return isPaidStatus && hasValidPaymentId;
             });
 
           // Strict descending order: newest orders first

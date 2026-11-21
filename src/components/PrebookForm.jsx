@@ -6,7 +6,7 @@ const API_BASE_URL =
 const CREATE_ORDER_URL = `${API_BASE_URL}/prebook/create-order`;
 const VERIFY_PAYMENT_URL = `${API_BASE_URL}/prebook/verify-payment`;
 
-const TEST_PRICE = 1; // Testing price. Change to 999 only when backend is restored to ₹999.
+const BOOK_PRICE = 999;
 
 const emptyForm = {
   name: "",
@@ -538,7 +538,7 @@ export default function PrebookForm() {
               </p>
 
               <div className="prebook-price">
-                <strong>₹{TEST_PRICE}</strong>
+                <strong>₹{BOOK_PRICE}</strong>
                 <span>₹1499</span>
               </div>
 
@@ -796,7 +796,7 @@ export default function PrebookForm() {
 
                 <div className="prebook-total">
                   <span>Pre-book amount</span>
-                  <strong>₹{TEST_PRICE}</strong>
+                  <strong>₹{BOOK_PRICE}</strong>
                 </div>
 
                 <button
@@ -806,7 +806,7 @@ export default function PrebookForm() {
                 >
                   {processing
                     ? "Processing..."
-                    : `Pay ₹${TEST_PRICE} & Pre-book`}
+                    : `Pay ₹${BOOK_PRICE} & Pre-book`}
                 </button>
 
                 <p className="prebook-secure">
